@@ -1,0 +1,18 @@
+NEWS -- an overview of user-visible changes with each release
+
+----------------------------------------------------------------------
+utsushi-0.0.0                                             (2012-10-19)
+----------------------------------------------------------------------
+ * initial release
+ * contains a simple GUI scan dialog
+ * provides a command-line interface
+ * includes a driver for the following scanners:
+   - DS-5500
+   - DS-6500
+   - DS-7500
+   - DS-50000
+   - DS-60000
+   - DS-70000
+ * comes with a SANE backend so you can use supported scanners with
+   any SANE frontend as well
+ * has Japanese translations for all user-visible run-time messages

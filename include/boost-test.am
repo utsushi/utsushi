@@ -1,0 +1,98 @@
+##  boost-test.am -- automake snippet for Boost.Test support
+##  Copyright (C) 2012  AVASYS CORPORATION
+##
+##  License: GPL-3.0+
+##  Author : Olaf Meeuwissen
+##
+##  This file is part of the 'Utsushi' package.
+##  This package is free software: you can redistribute it and/or modify
+##  it under the terms of the GNU General Public License as published by
+##  the Free Software Foundation, either version 3 of the License or, at
+##  your option, any later version.
+##
+##    This program is distributed in the hope that it will be useful,
+##    but WITHOUT ANY WARRANTY; without even the implied warranty of
+##    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+##    GNU General Public License for more details.
+##
+##  You ought to have received a copy of the GNU General Public License
+##  along with this package.  If not, see <http://www.gnu.org/licenses/>.
+
+##  Include this file in your unit test Makefile.am and make sure that
+##  the following variables are defined in that Makefile.am:
+##
+##    LDADD
+##    CLEANFILES
+##    TESTS_ENVIRONMENT
+##
+##  In your unit test Makefile.am, specify which $(TESTS) you want to
+##  run, conditionalised on 'enable_boost_unit_test_framework'.
+##  Typically, you would just define the $(check_PROGRAMS) to be built
+##  and add those to the $(TESTS).
+
+#  Many unit test runners are implemented in a single file.  Setting a
+#  default source extension here removes the need to define *_SOURCES
+#  variables for such test programs.
+
+AM_DEFAULT_SOURCE_EXT = .cpp
+
+#  Create a test module name based on the directory we are run in.
+#  This assumes that test code lives in a subdirectory of the code
+#  subject to testing.  The subdirectory is removed and the remainder
+#  is mangled into a C++ namespace-like test module name.
+
+utsushi_test_module = `echo $(subdir) | sed 's|/[^/]*$$||; s|/|::|g'`
+
+#  Set build-time flags to build Boost.Test Unit Test Framework (UTF)
+#  based test runners.
+
+if enable_boost_unit_test_framework
+AM_CPPFLAGS += -I$(top_srcdir)
+AM_CPPFLAGS += $(BOOST_CPPFLAGS)
+AM_CPPFLAGS += -DBOOST_TEST_NO_MAIN
+if with_shared_enabled
+AM_CPPFLAGS += -DBOOST_TEST_DYN_LINK
+endif
+if with_static_enabled
+AM_CPPFLAGS += -DBOOST_TEST_ALTERNATIVE_INIT_API
+endif
+AM_CPPFLAGS += -DUTSUSHI_TEST_MODULE=\"$(utsushi_test_module)\"
+AM_CPPFLAGS += -DUTSUSHI_TEST_SUITE=\"$*\"
+AM_LDFLAGS  += $(BOOST_LDFLAGS)
+LDADD       += $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+
+#  With test reports enabled, the test runner produces an XML file
+#  that matches *-report.xml and contains detailed test results.
+
+if enable_test_reports
+AM_CPPFLAGS += -DENABLE_TEST_REPORTS
+CLEANFILES  += *-report.xml
+TESTS_ENVIRONMENT += BOOST_TEST_REPORT_FORMAT=xml
+TESTS_ENVIRONMENT += BOOST_TEST_REPORT_LEVEL=detailed
+endif
+
+#  When code coverage is enabled, the compiler produces *.gcno files.
+#  Running programs results in *.gcda files for all source files used
+#  to link the program.  The *.gcno and *.gcda files are used by the
+#  `gcov` utility to analyse the coverage results (which may produce
+#  *.gcov files).
+#  As we assume that tests are run in a subdirectory of the code that
+#  is subject to testing, similar files may be created in the parent
+#  directory as a result of running tests.  Clean up such files here
+#  so that the parent directory's Makefile.am does not have to do so
+#  explicitly.
+
+if enable_code_coverage
+CLEANFILES += *.gcno ../*.gcno
+CLEANFILES += *.gcda ../*.gcda
+CLEANFILES += *.gcov ../*.gcov
+endif
+
+if with_included_boost
+if with_shared_enabled
+TESTS_ENVIRONMENT += \
+	$(LT_MODULE_PATH_VAR)=`cd $(top_builddir) && pwd`/upstream/boost/lib
+endif
+endif
+
+endif # enable_boost_unit_test_framework

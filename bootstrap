@@ -1,0 +1,258 @@
+#! /bin/sh
+#  bootstrap -- clean checkouts to a point where `./configure` succeeds
+#  Copyright (C) 2012  SEIKO EPSON CORPORATION
+#
+#  License: GPL-3.0+
+#  Author : AVASYS CORPORATION
+#
+#  This file is part of the 'Utsushi' package.
+#  This package is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License or, at
+#  your option, any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#  You ought to have received a copy of the GNU General Public License
+#  along with this package.  If not, see <http://www.gnu.org/licenses/>.
+
+#  Show script usage documentation and exits the program with an
+#  optional status passed as its first argument.
+
+usage () {
+    cat <<EOF
+'`basename $0`' clean checkouts to a point where \`./configure\` succeeds
+
+Usage: $0 [options]
+       $0 --help
+
+Analyzes 'configure.ac' and makes sure that any additionally required
+source code is included and up-to-date.  This relies on \`autoreconf\`
+and any environment variables it recognizes will take effect.
+
+The following options are supported:
+
+  -h, --help              display this message and exit
+  -f, --force             replace existing files
+
+For those of you that want/need to include Boost sources, please refer
+to \``dirname $0`/tools/include-boost-src\`.
+
+BUG: should support more \`autoreconf\` options
+EOF
+    exit $1
+}
+
+#  Set initial values of global variables.
+
+DO_HELP=no
+DO_FORCE=no
+
+#  Process command line options and arguments.
+
+parsed_opts=`getopt \
+    --options hf \
+    --longopt help,force \
+    -- "$@"`
+
+if test 0 != $?; then
+    echo "`basename $0`: error parsing command line options" >&2
+    usage 1
+fi
+
+eval set -- "$parsed_opts"
+
+while test x-- != "x$1"; do
+    case "$1" in
+        -h|--help)              DO_HELP=yes; shift;;
+        -f|--force)             DO_FORCE=yes; shift;;
+        *)
+            echo "`basename $0`: internal inconsistency" >&2
+            exit 119            # Japanese emergency phone number ;-)
+            ;;
+    esac
+done
+shift                           # past the '--' marker
+
+test xno != x$DO_HELP && usage
+
+if test 0 -ne $#; then
+    usage 1
+fi
+
+#  Create files that autoconf and automake are looking for but may not
+#  be in the repository because they are maintained automagically.  We
+#  take care to make files only if absolutely necessary and make these
+#  files old enough to trigger their automagic maintenance.
+
+srcdir_file=`autoconf -t AC_CONFIG_SRCDIR:'$1' 2>/dev/null | sed '/^$/d'`
+test -e "$srcdir_file" \
+    || touch -d @0 "$srcdir_file"
+
+aux_dir=`autoconf -t AC_CONFIG_AUX_DIR:'$%'`
+test -d $aux_dir \
+    || mkdir -p $aux_dir
+macro_dir=`autoconf -t AC_CONFIG_MACRO_DIR:'$%'`
+test -d $macro_dir \
+    || mkdir -p $macro_dir
+
+#  AM_INIT_AUTOMAKE GNU Standards compliance
+
+test -e README \
+    || touch -d @0 README
+test -e NEWS \
+    || touch -d @0 NEWS
+test -e ChangeLog \
+    || touch -d @0 ChangeLog
+
+#  Add macro definitions to our sources for distribution
+
+ACLOCAL="aclocal --install -I $macro_dir"
+export ACLOCAL
+
+#  Let autoreconf do the power-lifting
+
+if test xno = x$DO_FORCE; then
+    autoreconf --install
+else
+    autoreconf --install --force
+fi
+
+#  Patch upstream Makefile.am files
+#  Our configure.ac makes sure that a number of AM_* variables are
+#  always available and start out life with a certain value.  Any
+#  upstream automake files ought to append to that.
+
+for f in `autoconf -t AC_CONFIG_FILES:'$*' \
+    | sed -n "/^[ \t]*$aux_dir/p"`
+do
+    test -e "$f.am" || continue
+    sed -i \
+        -e 's/^\( *AM_CPPFLAGS[ \t]*\)=/\1+=/' \
+        -e 's/^\( *AM_CXXFLAGS[ \t]*\)=/\1+=/' \
+        -e 's/^\( *AM_LDFLAGS[ \t]*\)=/\1+=/' \
+        "$f.am"
+    automake "$f"               # update corresponding Makefile.in
+done
+
+#  The patching of ltmain.sh is needed to take care of some special
+#  requirements on SANE backend libraries.  See patch for details.
+#  Note that configure.ac has a minimal libtool version requirement
+#  and also that --without-sane does not require the patch.
+
+eval `sed -n '/^VERSION=/{ p; q }' $aux_dir/ltmain.sh`
+case "$VERSION" in
+    2.4|2.4.*) patch=sane/ltmain.sh-2.4.diff ;;
+    2.2|2.2.*) patch=sane/ltmain.sh-2.2.6b.diff ;;
+esac
+if test -n "$patch"; then
+    if ! `grep "^## Utsushi SANE " $aux_dir/ltmain.sh >/dev/null 2>&1`; then
+        patch -z .orig -p0 < $patch
+    fi
+fi
+
+#  Grab a convenient VC utility (but don't acquire a gnulib dependency)
+#  Note, the svn fixup should only be needed on our aging build target
+#  platform.
+
+script=vc-list-files
+files=`gnulib-tool --extract-filelist $script 2>/dev/null | sed "/^$/q"`
+for file in $files; do
+    gnulib-tool --copy $file upstream/tools/$script
+done
+
+if ! grep .svn upstream/tools/$script >/dev/null 2>&1; then
+    version=`upstream/tools/$script --version \
+        | awk '/vc-list-files/{ print $2 }'`
+    if test "$version" = "2009-07-21.16"; then
+        sed -i "/^else/i\\
+elif test -d .svn; then\\
+  eval exec svn list -R '\"\$dir\"' \$postprocess
+" upstream/tools/$script
+    else
+    cat <<EOF >&2
+Your 'vc-list-files' utility does not support Subversion checkouts.
+This may be a problem when running the test suite and making source
+archives.  Please install the latest version of 'gnulib' to acquire
+Subversion support for 'vc-list-files'.
+EOF
+    fi
+fi
+
+#  Sanity check the result to catch the most common errors that are
+#  not diagnosed by autoreconf itself (or could use some extra help
+#  explaining what to do in those cases).
+
+if grep AX_BOOST configure >/dev/null 2>&1; then
+    cat <<EOF
+It seems 'aclocal' could not find the autoconf macros for the Boost
+library.  These macros are available in the 'autoconf-archive'.  If
+you have this software installed, it is quite likely that they have
+been installed in a location that isn't searched by default by this
+software.  In that case, please note this via:
+
+  `autoconf -t AC_INIT:'$3'`
+
+If you haven't installed the 'autoconf-archive' software, please do
+so and rerun:
+
+  $0 $*
+
+If the 'autoconf-archive' is not packaged for your operating system,
+you can find the sources at:
+
+  http://www.gnu.org/software/autoconf-archive/
+
+EOF
+    exit 1
+fi
+
+#  Patch up AX_BOOST_BASE to suit our purposes
+#  While recent versions do support the ACTION-IF-[NOT-]FOUND API,
+#  they still produce a way too verbose message for the case where
+#  we can fall back to our included Boost sources.
+#  Older versions did not support the ACTION-IF-[NOT-]FOUND API.
+
+serial=`awk '/^#serial/{ if ($2>20) print $2 }' $macro_dir/ax_boost_base.m4`
+if test -n "$serial"; then
+    cat <<EOF >&2
+It seems there is a new AX_BOOST_BASE macro version out there.  The
+local patching that follows has not been tested on this version, so
+there may be trouble ahead.  If everything went fine for you please
+update the serial number used for this check in $0.
+
+When doing so, also check if our patch is still necessary.
+EOF
+fi
+sed -i 's/\(-VERSION\]\))/\1, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])/' \
+    $macro_dir/ax_boost_base.m4
+sed -i '/"$succeeded" != "yes"/q' $macro_dir/ax_boost_base.m4
+sed -i '/"$succeeded" != "yes"/d' $macro_dir/ax_boost_base.m4
+cat <<EOF >> $macro_dir/ax_boost_base.m4
+    if test "\$succeeded" != "yes"; then
+        if test "\$_version" = "0" ; then
+            AC_MSG_RESULT([no])
+        else
+            AC_MSG_RESULT([too old (\$_version)])
+        fi
+        # execute ACTION-IF-NOT-FOUND (if present):
+        ifelse([\$3], , :, [\$3])
+    else
+        AC_SUBST(BOOST_CPPFLAGS)
+        AC_SUBST(BOOST_LDFLAGS)
+        AC_DEFINE(HAVE_BOOST,,[define if the Boost library is available])
+        # execute ACTION-IF-FOUND (if present):
+        ifelse([\$2], , :, [\$2])
+    fi
+    CPPFLAGS="\$CPPFLAGS_SAVED"
+    LDFLAGS="\$LDFLAGS_SAVED"
+fi
+
+])
+EOF
+autoreconf                      # sync build infra-structure
+
+exit

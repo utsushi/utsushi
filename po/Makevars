@@ -1,0 +1,63 @@
+#  Makevars -- snippet for inclusion in po/ -*- Makefile -*-
+#  Copyright (C) 2012  SEIKO EPSON CORPORATION
+#
+#  License: GPL-3.0+
+#  Author : AVASYS CORPORATION
+#
+#  This file is part of the 'Utsushi' package.
+#  This package is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License or, at
+#  your option, any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#  You ought to have received a copy of the GNU General Public License
+#  along with this package.  If not, see <http://www.gnu.org/licenses/>.
+
+#  Message domain to use.
+#  Normally this is the same as the $(PACKAGE_TARNAME), but note that
+#  gettext does not support that variable yet (last checked for 0.17).
+DOMAIN = $(PACKAGE)
+
+#  Copyright holder for the messages in the $(DOMAIN).pot file.
+#  This is the (set of) copyright holder(s) of files listed in the
+#  POTFILES.in file (insofar they contributed translatable strings).
+#  The translators are expected to transfer the copyright for their
+#  translations to the $(COPYRIGHT_HOLDER)(s), or to disclaim their
+#  copyright.
+COPYRIGHT_HOLDER = SEIKO EPSON CORPORATION
+
+#  Where to report problems with translatable strings, that is, the
+#  strings in $(DOMAIN).pot or those that really should be in there.
+MSGID_BUGS_ADDRESS = $(PACKAGE_BUGREPORT)
+
+#  Directory locations.
+#  The $(top_builddir) should be relative to the directory that holds
+#  this Makevars file.  The $(subdir) ought to be set such that a `cd
+#  $(top_builddir)/$(subdir)` has no effect (assuming no symlinks in
+#  the path).
+top_builddir = ..
+subdir = po
+
+#  Options to pass to xgettext.
+#  Additional options may also by specified using AM_XGETTEXT_OPTION
+#  in `$(top_srcdir)/configure.ac`.
+XGETTEXT_OPTIONS = --keyword=_ --keyword=N_
+
+#  Locale categories, in addition to LC_MESSAGES, for which message
+#  catalogs are to be used.
+EXTRA_LOCALE_CATEGORIES =
+
+#  Documentation install target stubs.
+#  The gettext Makefile.in.in does not provide these (yet).
+EMPTY_AUTOMAKE_TARGETS  = install-dvi
+EMPTY_AUTOMAKE_TARGETS += install-html
+EMPTY_AUTOMAKE_TARGETS += install-info
+EMPTY_AUTOMAKE_TARGETS += install-ps
+EMPTY_AUTOMAKE_TARGETS += install-pdf
+.PHONY: $(EMPTY_AUTOMAKE_TARGETS)
+$(EMPTY_AUTOMAKE_TARGETS):

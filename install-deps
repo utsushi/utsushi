@@ -1,0 +1,185 @@
+#! /bin/sh
+#  install-deps -- needed for developer and/or maintainer builds
+#  Copyright (C) 2012  AVASYS CORPORATION
+#
+#  License: GPL-3.0+
+#  Author : Olaf Meeuwissen
+#
+#  This file is part of the 'Utsushi' package.
+#  This package is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License or, at
+#  your option, any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#  You ought to have received a copy of the GNU General Public License
+#  along with this package.  If not, see <http://www.gnu.org/licenses/>.
+
+#  Show script usage documentation and exits the program with an
+#  optional status passed as its first argument.
+
+usage () {
+    cat <<EOF
+'`basename $0`' needed for developer and/or maintainer builds
+
+Usage: $0 [options]
+       $0 --help
+
+Searches the sources for build dependencies and makes sure these are
+satisfied by installing any missing packages using \`sudo\`.  The list
+of build dependencies may be larger than actually necessary for your
+particular build scenario(s).  It covers everything you need to get
+started with a clean repository checkout and pass a \`make distcheck\`
+as well as some extras that we use to generate software metrics.
+
+The following options are supported:
+
+  -h, --help              display this message and exit
+  --with-included-boost   assume that the included Boost sources will
+                          be used (does not install any Boost library
+                          packages).  See \``dirname $0`/tools/include-boost-src\`
+                          on how to include Boost sources.
+
+The script is used on our Ubuntu 10.04LTS based Continuous Integration
+setup.  Your mileage may vary.
+
+BUG: does not really search the sources
+BUG: only supports \`apt-get\`
+EOF
+    exit $1
+}
+
+#  Silently checks whether the argument is a usable command.
+
+has () {
+    type $1 >/dev/null 2>&1
+}
+
+#  Set initial values of global variables.
+
+DO_HELP=no
+WITH_INCLUDED_BOOST=no
+
+#  Process command line options and arguments.
+
+parsed_opts=`getopt \
+    --options h \
+    --longopt help \
+    --longopt with-included-boost \
+    -- "$@"`
+
+if test 0 != $?; then
+    echo "`basename $0`: error parsing command line options" >&2
+    usage 1
+fi
+
+eval set -- "$parsed_opts"
+
+while test x-- != "x$1"; do
+    case "$1" in
+        -h|--help)              DO_HELP=yes; shift;;
+        --with-included-boost)  WITH_INCLUDED_BOOST=yes; shift;;
+        *)
+            echo "`basename $0`: internal inconsistency" >&2
+            exit 119            # Japanese emergency phone number ;-)
+            ;;
+    esac
+done
+shift                           # past the '--' marker
+
+test xno != x$DO_HELP && usage
+
+if test 0 -ne $#; then
+    usage 1
+fi
+
+#  Determine package management system.
+
+PKG_MGR=
+if has apt-get; then            # normally absent on RPM-based systems
+    PKG_MGR=APT
+elif has yum; then              # packaged for Debian, as is 'rpm'
+    PKG_MGR=YUM
+fi
+
+#  Install required software.
+
+case "$PKG_MGR" in
+
+    APT)
+        pkg_list=
+        #  Per Debian Policy 4.2 Package Relationships
+        if ! dpkg-query -W build-essential >/dev/null 2>&1; then
+            pkg_list="$pkg_list build-essential"
+        fi
+        #  Needed by our `./bootstrap` script.  These packages should
+        #  not be necessary when building from a clean source tarball
+        #  unless you plan to perform maintenance activities.
+        #  The cvs dependency can be removed for gettext >= 0.18.
+        has automake    || pkg_list="$pkg_list automake"
+        has autoconf    || pkg_list="$pkg_list autoconf"
+        pkg_list="$pkg_list autoconf-archive"
+        has autopoint   || pkg_list="$pkg_list gettext cvs"
+        has libtool     || pkg_list="$pkg_list libtool"
+        pkg_list="$pkg_list libltdl-dev"
+        has gnulib-tool || pkg_list="$pkg_list gnulib"
+        #  Needed by `./configure`
+        has pkg-config  || pkg_list="$pkg_list pkg-config"
+        #  We use a number of Boost libraries to avoid reinventing
+        #  wheels.  Boost.Test is only used in the unit test suite
+        #  exercised by `make check`.
+        if test xno = x$WITH_INCLUDED_BOOST; then
+            pkg_list="$pkg_list libboost-filesystem-dev"
+            pkg_list="$pkg_list libboost-iostreams-dev"
+            pkg_list="$pkg_list libboost-program-options-dev"
+            pkg_list="$pkg_list libboost-regex-dev"
+            pkg_list="$pkg_list libboost-test-dev"
+            pkg_list="$pkg_list libboost-thread-dev"
+        else
+            has bcp     || pkg_list="$pkg_list libboost-dev"
+            #  Needed to build libboost-iostreams
+            pkg_list="$pkg_list libz-dev"
+            pkg_list="$pkg_list libbz2-dev"
+        fi
+        #  Needed for device detection
+        pkg_list="$pkg_list libhal-dev"
+        pkg_list="$pkg_list libudev-dev"
+        #  Needed to enable optional components
+        pkg_list="$pkg_list libusb-1.0-0-dev"
+        pkg_list="$pkg_list libusb-dev"
+        pkg_list="$pkg_list libgtkmm-2.4-dev"
+        pkg_list="$pkg_list libjpeg-dev"
+        pkg_list="$pkg_list libmagic-dev"
+        pkg_list="$pkg_list libsane-dev"
+        pkg_list="$pkg_list libtiff-dev"
+        #  Needed for logo and icon format conversion
+        has rsvg-convert || pkg_list="$pkg_list librsvg2-bin"
+        has convert      || pkg_list="$pkg_list imagemagick"
+        pkg_list="$pkg_list ttf-dejima-mincho"
+        #  Needed for documentation generation purposes
+        has doxygen     || pkg_list="$pkg_list doxygen"
+        has perl        || pkg_list="$pkg_list perl-base"
+        has dot         || pkg_list="$pkg_list graphviz"
+        #  Needed for style/consistency checking and enforcement
+        has uncrustify  || pkg_list="$pkg_list uncrustify"
+        #  Needed for software metrics collection purposes
+        has xsltproc    || pkg_list="$pkg_list xsltproc"
+        has ohcount     || pkg_list="$pkg_list ohcount"
+        #  Needed at run-time (if libhal-dev support is used)
+        has lshal       || pkg_list="$pkg_list hal"
+
+        sudo apt-get -qy install $pkg_list
+        ;;
+
+    *)
+        echo "`basename $0`: Unsupported package management system" >&2
+        exit 119                # Japanese emergency phone number ;-)
+        ;;
+
+esac
+
+exit 0

@@ -1,0 +1,272 @@
+#! /bin/sh
+#  include-boost-src -- from a recent enough upstream version
+#  Copyright (C) 2012  AVASYS CORPORATION
+#
+#  License: GPL-3.0+
+#  Author : Olaf Meeuwissen
+#
+#  This file is part of the 'Utsushi' package.
+#  This package is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License or, at
+#  your option, any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#  You ought to have received a copy of the GNU General Public License
+#  along with this package.  If not, see <http://www.gnu.org/licenses/>.
+
+#  Show script usage documentation and exits the program with an
+#  optional status passed as its first argument.
+
+usage () {
+    cat <<EOF
+'`basename $0`' from a recent enough upstream version
+
+Usage: $0 [--source=SOURCE] [VERSION [DIRECTORY]]
+       $0 --help
+
+Attempts to copy parts of the Boost upstream sources into the upstream
+sources needed for this project.  It will only consider upstream Boost
+versions that are at least as recent as VERSION (default=$version).  Files
+will be copied into DIRECTORY (default=$upstream_dir).
+
+The script expects an extracted upstream Boost source directory in the
+SOURCE directory.  It may try to download a copy of the upstream Boost
+sources via your distribution's package management system.  If so, the
+archive will be downloaded into the SOURCE directory and extracted.
+
+The following options are supported:
+
+  -h, --help              display this message and exit
+      --source=SOURCE     download, extract and look for upstream sources
+                          in SOURCE (default=$download_dir)
+
+Specifying a DIRECTORY argument is not expected to work as intended.  It
+is only supported to facilitate testing of this script.
+
+BUG: should use the Boost upstream source repository
+BUG: only supports \`apt-get\`
+BUG: requires a suitable deb-src line
+EOF
+    exit $1
+}
+
+#  Set initial values of global variables.
+
+DO_HELP=no
+
+#  Process command line options and arguments.
+
+parsed_opts=`getopt \
+    --options h \
+    --longopt help,source: \
+    -- "$@"`
+
+if test 0 != $?; then
+    echo "`basename $0`: error parsing command line options" >&2
+    usage 1
+fi
+
+eval set -- "$parsed_opts"
+
+while test x-- != "x$1"; do
+    case "$1" in
+        -h|--help)              DO_HELP=yes;;
+        --source)               SOURCE="$2"; shift;;
+        *)                      # Japanese emergency phone number ;-)
+            error 119 "internal inconsistency"
+            ;;
+    esac
+    shift
+done
+shift                           # past the '--' marker
+
+#  Using sed rather than autoconf -t here for two reasons:
+#   1) autoconf -t is slow.  We use these variables in usage() and do not
+#      want to wait that long.
+#   2) tracing AX_BOOST_BASE requires an autom4te.cache.  When we want to
+#      use this script to roll a source archive, i.e. during `make dist`,
+#      that directory does not exist (nor do we want it to!).
+
+configure_ac=`dirname $0`/../configure.ac
+aux_dir=`sed -n \
+    '/AC_CONFIG_AUX_DIR/s/[^(]*([[]\{0,1\}\([^])]*\)[])].*/\1/p' \
+    $configure_ac`
+version=`sed -n \
+    '/AX_BOOST_BASE/s/[^(]*([[]\{0,1\}\([.0123456789]*\).*/\1/p' \
+    $configure_ac | sed '/^$/d'`
+upstream_dir=$aux_dir/boost
+download_dir=$aux_dir/downloads
+
+test xno != x$DO_HELP && usage
+
+if test -n "$1"; then
+    version=`echo $1 | sed 's/_/./g'`
+    shift
+fi
+if test -n "$1"; then
+    upstream_dir=$1
+    shift
+fi
+if test 0 -ne $#; then
+    usage 1
+fi
+
+if test -z "$SOURCE" || test $download_dir = $SOURCE; then
+    :
+else
+    echo "Pointing $download_dir to $SOURCE"
+    if test -z "`echo $SOURCE | sed -n '/^\//p'`"; then
+        source=`dirname $download_dir | sed 's|[^/]*|..|g'`/$SOURCE
+    fi
+    download_dir=$source
+fi
+test -d $upstream_dir || mkdir -p $upstream_dir
+test -d $download_dir || mkdir -p $download_dir
+
+#  Abuse Debian based distribution package repositories to fetch their
+#  current Boost source package (requires deb-src entry!).
+
+if type apt-get >/dev/null 2>&1; then
+    current=`apt-cache showsrc libboost-dev \
+        | awk '/^Version:/{ print $2 }' \
+        | LC_COLLATE=C sort -nr \
+        | sed '1q' \
+        | cut -d. -f1,2`
+    if test -z "$current" \
+        || dpkg --compare-versions $current ge $version; then
+        echo "Downloading Boost sources into $download_dir"
+        (cd $download_dir; apt-get -qd source boost$current)
+        dir=`tar tf $download_dir/boost${current}_*.orig.tar.* 2>/dev/null \
+            | sed '1q'`
+        if ! test -d $download_dir/$dir; then
+            echo -n "Extracting Boost source archive ... "
+            (cd $download_dir; tar xf boost${current}_*.orig.tar.*)
+            echo "done."
+        fi
+    fi
+fi
+
+#  Find the latest extracted sources not older than $version.
+
+version=`echo $version | sed 's/\./_/g'`
+if ! test -e $download_dir/boost_$version; then
+    touch $download_dir/boost_$version
+    remove_stamp=yes
+fi
+l=`LC_COLLATE=C ls -dr $download_dir/boost_* \
+    | sed "s,$download_dir/,,; /\./d; /^boost_$version$/q"`
+set -- $l
+while test -z "$sources" && test x != x$1; do
+    test -d $download_dir/$1 && sources=$download_dir/$1
+    shift
+done
+test xyes = x$remove_stamp && rm $download_dir/boost_$version
+version=`echo $version | sed 's/_/./g'`
+set --
+if test -z "$sources"; then
+    echo "`basename $0`: no Boost sources >= $version found" >&2
+    exit 119
+fi
+
+echo "Using $sources"
+
+#  Figure out what Boost modules are needed for our code base.
+
+uppercase=ABCDEFGHIJKLMNOPQRSTUVWXYZ
+lowercase=abcdefghijklmnopqrstuvwxyz
+boost_modules=`sed -n "/AX_BOOST_/{ \
+    /AX_BOOST_BASE/d; \
+    s/.*AX_BOOST_\([_$uppercase]*\).*/\1/; \
+    y/$uppercase/$lowercase/; \
+    p }" $configure_ac`
+
+#  Include those sources that our code base references (in)directly.
+#  Then, includes full sources for bjam (now Boost.Build) and bcp as
+#  well as the modules our code base used.  This will overwrite some
+#  of the files included in the first step.
+
+#  Full sources of referenced modules are included in order to build
+#  the corresponding libraries that we may want to link against.  If
+#  just shipping those sources found by bcp from our code base, some
+#  files needed to build the library may not be included (because we
+#  don't reference them at all).  In that case bjam cannot build the
+#  library we need and we obviously cannot link against them.
+#  The bjam sources are needed so we can refer to a usable bjam tool
+#  when building the Boost libraries.  The bcp sources are needed so
+#  we have a usable bcp tool to put our source archive together.
+
+bcp --boost=$sources \
+    --scan `find \( -path ./$aux_dir -prune -o -path './_*' -prune \) \
+    -o \( -type f -a -regex '.*\.[chi]pp' \) | sed -n '/\.[chi]pp$/p'` \
+    $upstream_dir
+bcp --boost=$sources bcp build $boost_modules $upstream_dir
+
+#  Make sure we include the Boost License text and root Jamfile and
+#  fix up bootstrap scripts so we can invoke they from places other
+#  than where they live.
+
+cp $sources/LICENSE_1_0.txt $upstream_dir
+cp $sources/Jamroot $upstream_dir
+cp $sources/bootstrap.sh $upstream_dir
+
+for script in `find $upstream_dir -name bootstrap.sh`; do
+    sed -i 's,^my_dir=.*,my_dir=`dirname $0`,' $script
+done
+
+#  Patch up the Boost.Math sources so they build.  It seems that bcp
+#  misses the dependency on the Boost.Math config directory.
+
+if test -d $upstream_dir/libs/math; then
+    if ! test -d $upstream_dir/libs/math/config; then
+        cp -a $sources/libs/math/config $upstream_dir/libs/math
+    fi
+fi
+
+#  Manually add any files that bcp cannot trace due to their #include
+#  statements using macros to compute the file name.  The list likely
+#  depends on compile-time preprocessor flag so we may miss some.
+#  Note, bcp generates CAUTION: lines for such #include statements.
+#
+#  Also note that the list was created using Ubuntu 10.04LTS with an
+#  upstream source tarball from the Ubuntu oneiric archives.  Expect
+#  more recent bcp versions to do a better job.
+
+for f in \
+    boost/function_types/detail/components_impl/arity10_0.hpp \
+    boost/function_types/detail/components_impl/arity10_1.hpp \
+    boost/function_types/detail/components_impl/arity20_0.hpp \
+    boost/function_types/detail/components_impl/arity20_1.hpp \
+    boost/function_types/detail/components_impl/arity30_0.hpp \
+    boost/function_types/detail/components_impl/arity30_1.hpp \
+    boost/function_types/detail/components_impl/arity40_0.hpp \
+    boost/function_types/detail/components_impl/arity40_1.hpp \
+    boost/function_types/detail/components_impl/arity50_0.hpp \
+    boost/function_types/detail/components_impl/arity50_1.hpp \
+    boost/function_types/detail/pp_arity_loop.hpp \
+    boost/function_types/detail/pp_cc_loop/preprocessed.hpp \
+    boost/function_types/detail/pp_tags/cc_tag.hpp \
+    boost/function_types/detail/pp_variate_loop/preprocessed.hpp \
+    boost/proto/detail/local.hpp \
+    ; do
+    test -d $upstream_dir/`dirname $f` || mkdir -p $upstream_dir/`dirname $f`
+    cp -a $sources/$f $upstream_dir/$f
+done
+
+#  Fix up the Boost.Test static library build.  Its documentation says
+#  one ought to define BOOST_TEST_ALTERNATIVE_INIT_API when compiling
+#  both the library and one's test runners in static linking scenarios.
+#  Unless BOOST_TEST_NO_MAIN is defined when building the library, it
+#  will include a definition of main(), which is highly undesirable as
+#  we roll our own.
+
+sed -i '/: requirements <link>shared:<define>BOOST_TEST_DYN_LINK=1/a\
+                   <link>static:<define>BOOST_TEST_ALTERNATIVE_INIT_API=1\
+                   <link>static:<define>BOOST_TEST_NO_MAIN=1' \
+    $upstream_dir/libs/test/build/Jamfile.v2
+
+exit

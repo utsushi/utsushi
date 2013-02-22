@@ -1,0 +1,113 @@
+#! /bin/sh
+#  boost-test-report -- accumulator for matching reports
+#  Copyright (C) 2012  AVASYS CORPORATION
+#
+#  License: GPL-3.0+
+#  Author : Olaf Meeuwissen
+#
+#  This file is part of the 'Utsushi' package.
+#  This package is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License or, at
+#  your option, any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#  You ought to have received a copy of the GNU General Public License
+#  along with this package.  If not, see <http://www.gnu.org/licenses/>.
+
+#  Show script usage documentation and exits the program with an
+#  optional status passed as its first argument.
+
+usage () {
+    cat <<EOF
+'`basename $0`' accumulator for matching reports
+
+Usage: $0 [--root=PATH] [--dest=FILE] [PATTERN]
+       $0 --help
+
+Searches a PATH for Boost test report files that match a PATTERN and
+processes them into a single report understood by the Bitten master.
+The output can be redirected to a FILE for later reporting.
+
+The default PATTERN matches all files but note that each file will be
+subject to a format test to check whether it resembles a Boost test
+report.  Files that fail this test will be skipped.
+The PATH defaults to the current working directory.
+
+The following options are supported:
+
+  -h, --help              display this message and exit
+      --root=PATH         PATH to search for PATTERN matches [current directory]
+      --dest=FILE         collect test report output in FILE [standard output]
+
+Be sure to protect your PATTERN from shell expansions!
+
+BUG: only supports a single PATTERN specification
+EOF
+    exit $1
+}
+
+#  Set initial values of global variables.
+
+DO_HELP=no
+ROOT_PATH=.
+DEST_FILE=
+
+#  Process command line options and arguments.
+
+parsed_opts=`getopt \
+    --options h \
+    --longopt help \
+    --longopt root: \
+    --longopt dest: \
+    -- "$@"`
+
+if test 0 != $?; then
+    echo "`basename $0`: error parsing command line options" >&2
+    usage 1
+fi
+
+eval set -- "$parsed_opts"
+
+while test x-- != "x$1"; do
+    case "$1" in
+	-h|--help)		DO_HELP=yes; shift;;
+	   --root)		ROOT_PATH=$2; shift 2;;
+	   --dest)		DEST_FILE=$2; shift 2;;
+	*)			# Japanese emergency phone number ;-)
+	    error 119 "internal inconsistency"
+	    ;;
+    esac
+done
+shift				# past the '--' marker
+
+test xno != x$DO_HELP && usage
+
+if test 2 -le $#; then          # too many arguments
+    usage 1
+fi
+
+if test x != x"$1"; then
+    pattern=$1
+else
+    pattern=*
+fi
+
+if test x != x"$DEST_FILE"; then
+    exec > "$DEST_FILE"
+fi
+
+find $ROOT_PATH -type f -name "$pattern" \
+    | while read file; do
+    test xyes = x"`sed -n '1s|<TestResult>.*|yes|p; q' \"$file\"`" || continue
+    cat "$file"
+done \
+    | sed '1s|^|<TestResults>|; $s|$|</TestResults>|' \
+    | xsltproc -nonet $0.xsl - \
+    | sed '1d'
+    
+exit 0

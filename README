@@ -1,0 +1,182 @@
+
+  Utsushi - Next Generation Image Acquisition
+
+  Copyright (C) 2012  SEIKO EPSON CORPORATION
+
+
+  SUMMARY
+  =======
+    This software provides applications to easily turn hard-copy
+    documents and imagery into formats that are more amenable to
+    computer processing.
+
+    Included are a native driver for a number of EPSON scanners
+    and a compatibility driver to interface with software built
+    around the SANE standard.
+
+
+  LICENSING
+  =========
+    This software is distributed under the terms of the GNU General
+    Public License, version 3 or at your option any later version.
+    A copy of this license can be found in the 'COPYING' file.
+
+
+USING THE SOFTWARE
+==================
+  The software can be started from a command-line with the `utsushi`
+  command.  This will automatically select a suitable application to
+  control image acquisition and select the default device.  The GUI
+  supports selecting a different device should you want to.
+
+  In case you installed from a binary package, chances are that the
+  binary package maintainer integrated the software in the desktop
+  menu system.  If so, you can probably start up the GUI from there.
+
+  In case you want to automate your image acquisition task, you can
+  use a non-interactive utility for that.  Use the --no-interface
+  option to prevent the automatic UI selection.
+
+  For brief help information, use
+
+    $ utsushi help
+
+  and for help on the image acquisition applications
+
+    $ utsushi help scan
+    $ utsushi help scan --no-interface
+
+  To see which devices are available, use
+
+    $ utsushi list
+
+  and use any of the displayed devices as an argument to the 'scan'
+  command to select a particular device rather than whatever is the
+  default.
+
+  SUPPORTED DEVICES
+  -----------------
+    At present, the following EPSON devices are supported:
+
+      - DS-5500
+      - DS-6500
+      - DS-7500
+      - DS-50000
+      - DS-60000
+      - DS-70000
+
+
+BUILDING/INSTALLING FROM SOURCE
+===============================
+  Generic installation notes can be found in the 'INSTALL' file.  The
+  `./configure` script supports the following special options:
+
+    --enable-code-coverage
+    --enable-sane-config
+    --enable-test-reports
+    --enable-udev-config
+    --with-gtkmm
+    --with-included-boost
+    --with-legacy-usb
+    --with-jpeg
+    --with-sane
+    --with-tiff
+
+  See the output of `./configure --help` for a complete list and more
+  information.  To save time compiling the sources, you can use one of
+  the --disable-static and --disable-shared options.
+
+  After you have `./configure`d the build to taste, all you need to do
+  is just:
+
+    $ make
+    $ sudo make install
+
+  The installation requires administrative privileges, hence the use
+  of `sudo`.  Other means of obtaining the required privileges may be
+  used as well.
+
+  Before you install you may wish to make sure that the software will
+  work as intended.  You can do this with:
+
+    $ make check
+
+  In case the check detects test failures please do as instructed in
+  the output.
+
+  REQUIRED SOFTWARE
+  -----------------
+    In order to be able to build all components and test (and do so in
+    a variety of configurations) a large number of developer oriented
+    software packages are needed.  If you start making changes in the
+    build machinery (autoconf, automake and such), you need even more.
+    To make getting all that software on your system a bit easier, the
+    sources include a script to install all these packages for you.
+    See `./install-deps --help` for details.
+
+
+DEVELOPER NOTES
+===============
+
+  DIRECTORY STRUCTURE
+  -------------------
+    The build infrastructure relies on a number of 'upstream/' files
+    courtesy of other software as well as 'include/' files to reduce
+    code duplication in this package's Makefile.am files.
+
+    In addition to an Utsushi "core", the source code contains a fair
+    number of optional components.  The "core" consists of all files
+    in the 'utsushi/', 'lib/' and 'src/' directories.  The optional
+    components are grouped in subdirectories as follows:
+
+     - connexions  various ways to communicate with hardware
+     - drivers
+       * dbus      for drivers running in a separate process [TODO]
+       * esci      support for ESC/I protocol speaking scanners
+       * mock      virtual scanners, useful for demonstration as well
+                   as testing purposes [TODO]
+       * sane      Utsushi API implemented using the SANE API [TODO]
+                   enables use of SANE backends in Utsushi applications
+     - filters     modify image data to taste
+     - gtkmm       GUI toolkit for Utsushi applications using gtkmm
+     - sane        a SANE backend implemented using the Utsushi API
+                   enables use of Utsushi drivers in SANE frontends
+
+    Test suites are kept apart from the code they test in respective
+    'tests/' directories.
+
+    API documentation can be found in the 'doc/' directory and can be
+    updated with the 'html' and 'pdf' `make` targets.  Doing this at
+    the top level source directory will recursively update all of the
+    available API documentation.
+
+  RUNNING DEVELOPMENT CODE
+  ------------------------
+    Most of the code can be run without the need to install.  Setting
+    the 'srcdir' environment variable to the directory that holds the
+    corresponding sources, normally the current directory, activates
+    special handling of data and configuration file look-up so these
+    will be taken from the source code tree.
+
+    The gtkmm scan application, for example, can be run like so
+
+      $ cd src
+      $ srcdir=. ./scan-gtkmm
+
+    You can also execute commands via the `main` program, like so
+
+      $ cd src
+      $ srcdir=. ./main list
+
+    in case you want to see a list of available devices.  Execution
+    via `main` is the intended mode of operation once the software is
+    installed but may get in the way of debugging.
+
+    Exercising the SANE utsushi backend is a little more involved as
+    you have to make the SANE frontends go places where they normally
+    don't.  For 'scanimage', the following ought to work
+
+      $ cd sane
+      $ echo utsushi > dll.conf
+      $ srcdir=. SANE_CONFIG_DIR=. ../libtool --mode=execute \
+          -dlopen libsane-utsushi.la scanimage -L

@@ -1,0 +1,265 @@
+#  grammar-formats.tcs -- test cases for integer value coding
+#  Copyright (C) 2012  SEIKO EPSON CORPORATION
+#
+#  License: GPL-3.0+
+#  Author : AVASYS CORPORATION
+#
+#  This file is part of the 'Utsushi' package.
+#  This package is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License or, at
+#  your option, any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#  You ought to have received a copy of the GNU General Public License
+#  along with this package.  If not, see <http:#www.gnu.org/licenses/>.
+
+#  This file uses a straightforward format to define a number of parse
+#  tests.  Empty lines and lines starting w/ an # are ignored.  Other
+#  lines are assumed to define a test case.  Each test case is defined
+#  by three or four parameters on a single line in the following order:
+#
+#    test case name ::
+#       descriptive name used in test feedback
+#    expected test result ::
+#       one of 'pass' or 'fail', case insensitive
+#    input data to parse ::
+#       an arbitrary number of bytes enclosed in double quotes
+#    expected parse result ::
+#       integral value expected for test cases that should 'pass'.
+#       Test case names starting with 'x-' take an hexadecimal value
+#       with a leading '0x' to ease test case definition review.
+#
+#  The parameters are separated by white space.
+
+
+#  Test cases for decoding::decimal_ parsers
+
+d-boundary1         fail    "d-001"
+d-boundary2         fail    "d-01"
+d-boundary3         pass    "d000"      0
+d-range1            pass    "d001"      1
+d-range2            pass    "d100"      100
+d-range3            pass    "d123"      123
+d-range4            pass    "d456"      456
+d-range5            pass    "d789"      789
+d-boundary4         pass    "d999"      999
+d-boundary5         pass    "d1000"     100
+d-boundary6         pass    "d0001000"  0
+d-not-octal         pass    "d010"      10
+d-trailing-punct1   pass    "d123-"     123
+d-trailing-punct2   pass    "d123+"     123
+d-trailing-punct3   pass    "d123*"     123
+d-trailing-digits1  pass    "d9990"     999
+d-trailing-digits2  pass    "d9999"     999
+d-trailing-digits3  pass    "d5555a"    555
+d-trailing-digits4  pass    "d5555F"    555
+d-capital           fail    "D111"
+d-minus1            fail    "d-00"
+d-minus2            fail    "d-010"
+d-minus3            fail    "d-000"
+d-minus4            fail    "d-999"
+d-character1        fail    "dabc"
+d-character2        fail    "d12a"
+d-symbol1           fail    "d+12"
+d-symbol2           fail    "d+123"
+d-symbol3           fail    "d12+"
+d-symbol4           fail    "d-12"
+d-symbol5           fail    "d-123"
+d-symbol6           fail    "d12-"
+d-symbol7           fail    "d*12"
+d-symbol8           fail    "d1*2"
+d-symbol9           fail    "d12*"
+d-symbol10          fail    "d/12"
+d-symbol11          fail    "d12/"
+d-symbol12          fail    "d:12"
+d-symbol13          fail    "d12:"
+d-symbol14          fail    "d_12"
+d-symbol15          fail    "d12_"
+d-digits1           fail    "d"
+d-digits2           fail    "d1"
+d-digits3           fail    "d99"
+d-space1            fail    "d 111 "
+d-space2            fail    "d1 11 "
+d-space3            fail    "d 11"
+d-space4            fail    "d  111 "
+d-space5            fail    "d  1"
+d-space6            fail    " d111"
+d-parameter1        fail    "i123"
+d-parameter2        fail    "i1234567"
+d-parameter3        fail    "x123"
+d-parameter4        fail    "x1234567"
+
+#  Test cases for decoding::integer_ parsers
+
+i-boundary1         pass    "i-0000001" -0
+i-boundary2         pass    "i-000001"  -1
+i-boundary3         pass    "i0000000"  0
+i-range1            pass    "i0000001"  1
+i-range2            pass    "i0101010"  101010
+i-range3            pass    "i1000000"  1000000
+i-range4            pass    "i1111111"  1111111
+i-range5            pass    "i1234567"  1234567
+i-range6            pass    "i8901234"  8901234
+i-boundary4         pass    "i9999999"  9999999
+i-boundary5         pass    "i10000000" 1000000
+i-boundary6         pass    "i0001000"  1000
+i-trailing-punct1   pass    "i1234567-" 1234567
+i-trailing-punct2   pass    "i1234567+" 1234567
+i-trailing-punct3   pass    "i1234567*" 1234567
+i-trailing-digits1  pass    "i1234567A" 1234567
+i-trailing-digits2  pass    "i1234567F" 1234567
+i-trailing-digits3  pass    "i12345670" 1234567
+i-trailing-digits4  pass    "i12345678" 1234567
+i-capital1          fail    "I1111111"
+i-capital2          fail    "I-111111"
+i-character1        fail    "i000000a"
+i-character2        fail    "i0ABCDEF"
+i-character3        fail    "ia111111"
+i-symbol1           fail    "i+123456"
+i-symbol2           fail    "i+1234567"
+i-symbol3           fail    "i123456+"
+i-symbol4           fail    "i123456-"
+i-symbol5           fail    "i*123456"
+i-symbol6           fail    "i1*23456"
+i-symbol7           fail    "i123456*"
+i-symbol8           fail    "i/123456"
+i-symbol9           fail    "i123456/"
+i-symbol10          fail    "i:123456"
+i-symbol11          fail    "i123456:"
+i-symbol12          fail    "i_123456"
+i-symbol13          fail    "i123456_"
+i-digits1           fail    "i"
+i-digits2           fail    "i9"
+i-digits3           fail    "i654321"
+i-space1            fail    "i 654321"
+i-space2            fail    "i1 23456"
+i-space3            fail    "i123456 7"
+i-space4            fail    "i 123456"
+i-space5            fail    "i  12345"
+i-space6            fail    "i  1234567"
+i-space7            fail    " i1234567"
+i-parameter1        fail    "d123"
+i-parameter2        fail    "d1234567"
+i-parameter3        fail    "x123"
+i-parameter4        fail    "x1234567"
+
+i-boundary7         pass    "i-000000"  -0
+i-range7            pass    "i-000001"  -1
+i-range8            pass    "i-100000"  -100000
+i-range9            pass    "i-101010"  -101010
+i-range10           pass    "i-012345"  -12345
+i-range11           pass    "i-678901"  -678901
+i-boundary8         pass    "i-999999"  -999999
+i-boundary9         pass    "i-1000000" -100000
+i-boundary10        pass    "i-000100"  -100
+i-trailing-punct4   pass    "i-123456-" -123456
+i-trailing-punct5   pass    "i-123456+" -123456
+i-trailing-punct6   pass    "i-123456*" -123456
+i-trailing-digits5  pass    "i-123456A" -123456
+i-trailing-digits6  pass    "i-123456F" -123456
+i-trailing-digits7  pass    "i-1234560" -123456
+i-trailing-digits8  pass    "i-1234567" -123456
+
+i-character4        fail    "i-01234a"
+i-character5        fail    "i-ABCDEF"
+i-character6        fail    "i-a11111"
+i-symbol14          fail    "i--123456"
+i-symbol15          fail    "i-123-456"
+i-symbol16          fail    "i-/12345"
+i-symbol17          fail    "i-12345/"
+i-symbol18          fail    "i-:12345"
+i-symbol19          fail    "i-12345:"
+i-symbol20          fail    "i-_12345"
+i-symbol21          fail    "i-12345_"
+i-digits22          fail    "i-"
+i-digits23          fail    "i-0"
+i-digits24          pass    "i-123456"  -123456
+i-space8            fail    "i- 123456"
+i-space9            fail    "i-1 23456"
+i-space10           fail    "i-12345 1 "
+i-space11           fail    "i- 123456"
+i-space12           fail    "i - 1234"
+i-space13           fail    "i-  123456"
+i-space14           fail    " i-123456"
+i-parameter5        fail    "d123"
+i-parameter6        fail    "d-123456"
+i-parameter7        fail    "x1234567"
+i-parameter8        fail    "x-123456"
+
+#  Test cases for decoding::hexadecimal_ parsers
+
+x-boundary1         fail    "x-0000001"
+x-boundary2         fail    "x-0010000"
+x-boundary3         pass    "x0000000"  0x0000000
+x-range1            pass    "x0000001"  0x0000001
+x-range2            pass    "x0101010"  0x0101010
+x-range3            pass    "x1000000"  0x1000000
+x-range4            pass    "x1111111"  0x1111111
+x-range5            pass    "x0123456"  0x0123456
+x-range6            pass    "x789ABCD"  0x789ABCD
+x-range7            pass    "xEF01234"  0xEF01234
+x-range8            pass    "x000000A"  0x000000A
+x-range9            pass    "xA000000"  0xA000000
+x-range10           pass    "xAAAAAAA"  0xAAAAAAA
+x-boundary4         pass    "xFFFFFFF"  0xFFFFFFF
+x-boundary5         pass    "x10000000" 0x1000000
+x-boundary6         pass    "x0001000"  0x1000
+x-trailing-punct1   pass    "x1234567-" 0x1234567
+x-trailing-punct2   pass    "x1234567+" 0x1234567
+x-trailing-punct3   pass    "x123456F*" 0x123456F
+x-trailing-digits1  pass    "x1234567A" 0x1234567
+x-trailing-digits2  pass    "x1234567F" 0x1234567
+x-trailing-digits3  pass    "x123A567B" 0x123A567
+x-trailing-digits4  pass    "xABCDEF01" 0xABCDEF0
+x-trailing-digits5  pass    "x01234567" 0x0123456
+x-capital1          fail    "X1111111"
+x-capital2          fail    "X-111111"
+x-lowercase1        fail    "xa000000"
+x-lowercase2        fail    "x0b00000"
+x-lowercase3        fail    "x00c0000"
+x-lowercase4        fail    "x000d000"
+x-lowercase5        fail    "x0000e00"
+x-lowercase6        fail    "x00000f0"
+x-lowercase7        fail    "xabcdef0"
+x-lowercase8        fail    "xABCDEFa"
+x-character1        fail    "x000000G"
+x-character2        fail    "xXABCDEF"
+x-character3        fail    "xi111111"
+x-symbol1           fail    "x+1234567"
+x-symbol2           fail    "x+ABCDEF0"
+x-symbol3           fail    "x123456+"
+x-symbol4           fail    "x-123456"
+x-symbol5           fail    "x-1234567"
+x-symbol6           fail    "x123456-"
+x-symbol7           fail    "x*123456"
+x-symbol8           fail    "x0*123456"
+x-symbol9           fail    "xABCDEF*"
+x-symbol10          fail    "x/1234567"
+x-symbol11          fail    "x123456/"
+x-symbol12          fail    "x:123456"
+x-symbol13          fail    "x123456:"
+x-symbol14          fail    "xABCDEFG"
+x-symbol15          fail    "xG012345"
+x-symbol16          fail    "x_123456"
+x-symbol17          fail    "x123456_"
+x-digits1           fail    "x"
+x-digits2           fail    "xA"
+x-digits3           fail    "x101010"
+x-space1            fail    "x 1234567"
+x-space2            fail    "x1 23456"
+x-space3            fail    "x123456 "
+x-space4            fail    "x 123456"
+x-space5            fail    "x  12345"
+x-space6            fail    "x  1234567"
+x-space7            fail    " x1234567"
+x-parameter1        fail    "d123"
+x-parameter2        fail    "d1234567"
+x-parameter3        fail    "dABCDEF0"
+x-parameter4        fail    "i123"
+x-parameter5        fail    "i1234567"
+x-parameter6        fail    "i0AAAAAA"

@@ -1,0 +1,202 @@
+//  api-specs.dox -- top page for the API specification
+//  Copyright (C) 2012  AVASYS CORPORATION
+//
+//  License: GPL-3.0+
+//  Author : Olaf Meeuwissen
+//
+//  This file is part of the 'Utsushi' package.
+//  This package is free software: you can redistribute it and/or modify
+//  it under the terms of the GNU General Public License as published by
+//  the Free Software Foundation, either version 3 of the License or, at
+//  your option, any later version.
+//
+//    This program is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//  You ought to have received a copy of the GNU General Public License
+//  along with this package.  If not, see <http://www.gnu.org/licenses/>.
+
+/*! \anchor api-specs
+ *  \mainpage API Specifications
+ *
+ *  The following application programmer interface (API)
+ *  specifications are available:
+ *
+ *  - core C++ library
+ *  - \ref cli-spec
+ */
+
+/*! \page cli-spec Command-Line Interface Specification
+ *
+ *  \sa \subpage cli-opts, \subpage env-vars, \subpage cfg-file
+ *
+ *  All @PACKAGE_NAME@ functionality is available through a \e single
+ *  user-space program: \c @PACKAGE_TARNAME@.  The interface has been
+ *  designed to accommodate arbitrary extension of functionality via
+ *  (third-party) plugins.  Plugins may add commands and/or options.
+ *
+ *  The general description of acceptable command-line invocations is
+ *  as follows:
+ *
+ *    \code
+ *    @PACKAGE_TARNAME@ [std_opts] [[cmd] [cmd_opts] [cmd_args]]
+ *    \endcode
+ *
+ *  with \c std_opts the \ref cli-opts "standard options", \c cmd the
+ *  action a user wants to perform, \c cmd_opts options specific to
+ *  \c cmd and \c cmd_args the arguments available to \c cmd.
+ *
+ *  The program shall exit with a success status if all went well and
+ *  a failure status if otherwise.
+ *
+ *  \section Supported Commands
+ *
+ *  The @PACKAGE_NAME@ core functionality supports at least these
+ *  commands:
+ *
+ *  - \ref cmd-help "help"
+ *  - \ref cmd-list "list"
+ *  - \ref cmd-scan "scan"
+ *  - \ref cmd-vers "version"
+ *
+ *  As users typically want to \c scan, this is the default command
+ *  and may be omitted from the command invocation.  Please note that
+ *  the default command is \ref cfg-file "configurable" so \c scan is
+ *  really the \e default default command.
+ *
+ *  A full list of available commands will be listed in the output of
+ *  the \c help command with a short description of their function or
+ *  purpose.
+ *
+ *  \subsection cmd-help Getting Help
+ *
+ *  The \c help command displays usage information for a command and
+ *  exits.  In case no \c cmd is given, the usage information for \c
+ *  @PACKAGE_TARNAME@ itself will be displayed.
+ *
+ *    \code
+ *    @PACKAGE_TARNAME@ [std_opts] help [cmd]
+ *    \endcode
+ *
+ *  Usage information shall contain a summary describing a command's
+ *  purpose and document the supported command options and arguments.
+ *  Usage information shall be localized to match the user's language
+ *  preference if matching translations are available.  However, \ref
+ *  cli-opts "option names" shall remain untranslated.
+ *
+ *  \subsection cmd-list Finding Devices
+ *
+ *  The \c list command shows a list with available image acquisition
+ *  devices.
+ *
+ *    \code
+ *    @PACKAGE_TARNAME@ [std_opts] list [cmd_opts]
+ *    \endcode
+ *
+ *  \subsection cmd-scan Acquiring Images
+ *
+ *  The \c scan command starts a suitable image acquisition interface
+ *  using the selected device \c dev.  Which interface is considered
+ *  suitable will depend on what is available and the user's current
+ *  session characteristics.
+ *
+ *    \code
+ *    @PACKAGE_TARNAME@ [std_opts] scan [cmd_opts] [[dev] [dev_opts]] [dest]
+ *    \endcode
+ *
+ *  Device options \c dev_opts are device specific and may clash with
+ *  the \c scan command's \c cmd_opts.  Which option takes precedence
+ *  is determined by policy and defaults to the device option.
+ *
+ *  The output destination \c dest determines where the acquired image
+ *  is sent to.  It is specified using URI syntax.  At minimum, the \c
+ *  file scheme is supported.  When no scheme is given, \c file shall
+ *  be assumed.  If no \c host is specified, \c localhost is implied.
+ *  In case of relative paths, they shall start from the location that
+ *  was current when @PACKAGE_TARNAME@ was invoked.  So for a relative
+ *  path of \c rel_path, the following destination will be used by the
+ *  \c scan command:
+ *
+ *    \code
+ *    [file:][//localhost][/path_to_current_directory/]rel_path
+ *    \endcode
+ *
+ *  The output image format is deduced from \c dest if it refers to a
+ *  \c file scheme, the configured format otherwise (default is PNM).
+ *  Deduction is based on the file extension.  An \c --image-format
+ *  option may be used to override this logic.  If the requested
+ *  format is not supported, no image shall be acquired.
+ *
+ *  When no \c dest is given, the configured destination will be used
+ *  with a default of standard output.  Use of standard output makes
+ *  it possible to integrate the \c scan command into existing image
+ *  acquisition workflows easily.
+ *
+ *  \note  This is the default command unless configured otherwise.
+ *  \note  The default device is the first device found.  This may be
+ *         a different device with each invocation.
+ *
+ *  \subsection cmd-vers Showing Meta-Information
+ *
+ *  The \c version command shows meta-information for a command.  If
+ *  no \c cmd is given, the information for \c @PACKAGE_TARNAME@ is
+ *  output.
+ *
+ *    \code
+ *    @PACKAGE_TARNAME@ [std_opts] version [cmd]
+ *    \endcode
+ *
+ *  The meta-information contains the command name and version as well
+ *  as copyright and license information.  Output of contact and
+ *  author information is encouraged.  Information may be localized to
+ *  match the user's language preference.  However, copyright notices
+ *  shall remain untranslated.  License information shall be displayed
+ *  untranslated in addition to the translated information, if any.
+ */
+
+/*! \page cli-opts Command-Line Options
+ *
+ *  Command-line options have the following format:
+ *
+ *    \code
+ *    --option-name[=value] | -o [value]
+ *    \endcode
+ *
+ *  Option names and values are \e not subject to internationalization
+ *  so no efforts shall be made to convert them from or to the user's
+ *  language preferences.  All option names and values shall be used
+ *  as specified on the command-line.
+ *
+ *  \section opts-long Supported Long Options
+ *
+ *  \section opts-shrt Supported Short Options
+ *
+ *  \warning  Short options are currently \e not allowed.  Once we have
+ *            a decent idea of which core options are desirable we may
+ *            add short options for some of these.  Plugins will quite
+ *            likely never be allowed to provide short options.
+ */
+
+/*! \page env-vars Environment Variables
+ *
+ *  In addition to the \ref cli-opts, @PACKAGE_NAME@ behavior may be
+ *  influenced by environment variables as well.  The following list
+ *  is not complete but covers the major ones:
+ *
+ *  - \c LANG and the \c LC_* variables
+ *
+ *  Environment variables specific to @PACKAGE_NAME@ all start with \c
+ *  @PACKAGE_ENV_VAR_PREFIX@.
+ */
+
+/*! \page cfg-file Configuration Files
+ *
+ *  Configuration files will be searched for as per XDG Base Directory
+ *  Specification \ref XDG-BDS "[1]".  The file format is based on
+ *  that for Windows @c \.ini files.
+ *
+ *  \anchor XDG-BDS
+ *  [1] http://standards.freedesktop.org/basedir-spec/latest/
+ */

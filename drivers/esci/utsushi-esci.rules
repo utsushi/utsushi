@@ -1,0 +1,38 @@
+#  utsushi-esci.rules -- bring up supported devices as scanners
+#  Copyright (C) 2012  SEIKO EPSON CORPORATION
+#
+#  License: GPL-3.0+
+#  Author : AVASYS CORPORATION
+#
+#  This file is part of the 'Utsushi' package.
+#  This package is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License or, at
+#  your option, any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#  You ought to have received a copy of the GNU General Public License
+#  along with this package.  If not, see <http://www.gnu.org/licenses/>.
+
+ACTION!="add", GOTO="utsushi_esci_rules_end"
+ENV{DEVTYPE}!="usb_device", GOTO="utsushi_esci_rules_end"
+ATTR{idVendor}!="04b8", GOTO="utsushi_esci_rules_end"
+
+LABEL="utsushi_esci_rules_begin"
+
+#  DS-5500, DS-6500, DS-7500
+ATTRS{idProduct}=="0145", ENV{utsushi_driver}="esci"
+#  DS-50000, DS-60000, DS-70000
+ATTRS{idProduct}=="0146", ENV{utsushi_driver}="esci"
+
+#  Give scanner users read/write permissions on the device.
+ENV{utsushi_driver}=="esci", MODE="0666", OWNER="root", GROUP="root"
+
+#  Device detection by libutsushi depends on libsane_matched being set.
+ENV{utsushi_driver}=="esci", ENV{libsane_matched}="yes"
+
+LABEL="utsushi_esci_rules_end"

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--  about.xml :: application meta-data interface definition
+      Copyright (C) 2012  SEIKO EPSON CORPORATION
+
+      License: GPL-3.0+
+      Author : AVASYS CORPORATION
+
+      This file is part of the 'Utsushi' package.
+      This package is free software: you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation, either version 3 of the License or, at
+      your option, any later version.
+    
+        This program is distributed in the hope that it will be useful,
+        but WITHOUT ANY WARRANTY; without even the implied warranty of
+        MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+        GNU General Public License for more details.
+    
+      You ought to have received a copy of the GNU General Public License
+      along with this package.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<interface>
+  <object class="GtkAboutDialog" id="about-dialog">
+    <property name="title">@PACKAGE_NAME@</property>
+    <property name="program_name">@PACKAGE_NAME@</property>
+    <property name="version">@PACKAGE_VERSION@</property>
+    <property name="copyright">Copyright (C) 2012  SEIKO EPSON CORPORATION</property>
+    <property name="website">@PACKAGE_URL@</property>
+    <property name="authors">AVASYS CORPORATION</property>
+  </object>
+</interface>

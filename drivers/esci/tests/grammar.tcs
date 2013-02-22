@@ -1,0 +1,646 @@
+#  grammar.tcs -- test cases for request and reply header packets
+#  Copyright (C) 2012  SEIKO EPSON CORPORATION
+#
+#  License: GPL-3.0+
+#  Author : AVASYS CORPORATION
+#
+#  This file is part of the 'Utsushi' package.
+#  This package is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License or, at
+#  your option, any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#  You ought to have received a copy of the GNU General Public License
+#  along with this package.  If not, see <http:#www.gnu.org/licenses/>.
+
+#  This file uses a straightforward format to define a number of parse
+#  and generation tests.  Empty lines and lines starting with an # are
+#  ignored.  Other lines are assumed to define a test case.  Each test
+#  case is defined by four or five parameters on a single line in the
+#  following order for parse tests:
+#
+#    test case name ::
+#       descriptive name used in test feedback
+#    expected test result ::
+#       one of 'pass', 'fail' or 'throw', case insensitive
+#    input data to parse ::
+#       an arbitrary number of bytes enclosed in double quotes
+#    expected parse result ::
+#       a four byte token name followed by an hexadecimal integral
+#       value expected for test cases that should 'pass'.
+#
+#  For the generation tests the input data and expected result have
+#  been swapped with respect to the parse test case definition.  That
+#  is, the input data consists of a four byte token name and a single
+#  hexadecimal integer.  The expected generation results is a double
+#  quote enclosed sequence of bytes.
+#
+#  All parameters are separated by white space.
+
+
+#  Test cases for request header generation
+#
+#  Note: payload size validation is *not* the responsibility of the
+#        generator.  Requests that never take a payload (either due
+#        to logical consideration or protocol specification) should
+#        deal with this explicitly before calling the generator.
+
+#FIN
+Req-FIN-valid1      pass    "FIN "  0x0000000   "FIN x0000000"
+Req-FIN-space1      fail    " FIN"  0x0000000
+Req-FIN-space3      fail    "F IN"  0x0000000
+Req-FIN-lowercase1  fail    "fIN "  0x0000000
+Req-FIN-lowercase2  fail    "FiN "  0x0000000
+Req-FIN-lowercase3  fail    "FIn "  0x0000000
+Req-FIN-lowercase4  fail    "fin "  0x0000000
+
+#CAN
+Req-CAN-valid1      pass    "CAN "  0x0000000   "CAN x0000000"
+Req-CAN-space1      fail    " CAN"  0x0000000
+Req-CAN-space3      fail    "CA N"  0x0000000
+Req-CAN-lowercase1  fail    "cAN "  0x0000000
+Req-CAN-lowercase2  fail    "CaN "  0x0000000
+Req-CAN-lowercase3  fail    "CAn "  0x0000000
+Req-CAN-lowercase4  fail    "can "  0x0000000
+
+#UNKN -- is a reply code only
+Req-UNKN-invalid1   fail    "UNKN"  0x0000000
+Req-UNKN-lowercase1 fail    "uNKN"  0x0000000
+Req-UNKN-lowercase2 fail    "UnKN"  0x0000000
+Req-UNKN-lowercase3 fail    "UNKn"  0x0000000
+Req-UNKN-lowercase4 fail    "unkn"  0x0000000
+
+#INVD -- is a reply code only
+Req-INVD-invalid1   fail    "INVD"  0x0000000
+Req-INVD-lowercase1 fail    "iNVD"  0x0000000
+Req-INVD-lowercase2 fail    "InvD"  0x0000000
+Req-INVD-lowercase3 fail    "INVd"  0x0000000
+Req-INVD-lowercase4 fail    "invd"  0x0000000
+
+#INFO
+Req-INFO-valid1     pass    "INFO"  0x0000000   "INFOx0000000"
+Req-INFO-lowercase1 fail    "iNFO"  0x0000000
+Req-INFO-lowercase2 fail    "INfO"  0x0000000
+Req-INFO-lowercase3 fail    "INFo"  0x0000000
+Req-INFO-lowercase4 fail    "info"  0x0000000
+
+#CAPA
+Req-CAPA-valid1     pass    "CAPA"  0x0000000   "CAPAx0000000"
+Req-CAPA-lowercase1 fail    "cAPA"  0x0000000
+Req-CAPA-lowercase2 fail    "CApA"  0x0000000
+Req-CAPA-lowercase3 fail    "CAPa"  0x0000000
+Req-CAPA-lowercase4 fail    "capa"  0x0000000
+
+#CAPB
+Req-CAPB-valid1     pass    "CAPB"  0x0000000   "CAPBx0000000"
+Req-CAPB-lowercase1 fail    "cAPB"  0x0000000
+Req-CAPB-lowercase2 fail    "CApB"  0x0000000
+Req-CAPB-lowercase3 fail    "CAPb"  0x0000000
+Req-CAPB-lowercase4 fail    "capb"  0x0000000
+
+#PARA
+Req-PARA-valid1     pass    "PARA"  0x0000001   "PARAx0000001"
+Req-PARA-lowercase1 fail    "pARA"  0x0000005
+Req-PARA-lowercase2 fail    "PArA"  0x0000006
+Req-PARA-lowercase3 fail    "PARa"  0x0000007
+Req-PARA-lowercase4 fail    "para"  0x0000008
+
+#PARB
+Req-PARB-valid1     pass    "PARB"  0x0000002   "PARBx0000002"
+Req-PARB-lowercase1 fail    "pARB"  0x0000008
+Req-PARB-lowercase2 fail    "PaRB"  0x0000009
+Req-PARB-lowercase3 fail    "PARb"  0x000000A
+Req-PARB-lowercase4 fail    "parb"  0x000000B
+
+#RESA
+Req-RESA-valid1     pass    "RESA"  0x000A000   "RESAx000A000"
+Req-RESA-lowercase1 fail    "rESA"  0x000B000
+Req-RESA-lowercase2 fail    "REsA"  0x000B000
+Req-RESA-lowercase3 fail    "RESa"  0x000B000
+Req-RESA-lowercase4 fail    "resa"  0x000B000
+
+#RESB
+Req-RESB-valid1     pass    "RESB"  0x1000000   "RESBx1000000"
+Req-RESB-lowercase1 fail    "rESB"  0x1000000
+Req-RESB-lowercase2 fail    "REsB"  0x1000000
+Req-RESB-lowercase3 fail    "RESb"  0x1000000
+Req-RESB-lowercase4 fail    "resb"  0x1000000
+
+#STAT
+Req-STAT-valid1     pass    "STAT"  0x0000000   "STATx0000000"
+Req-STAT-lowercase1 fail    "sTAT"  0x0000000
+Req-STAT-lowercase2 fail    "StAT"  0x0000000
+Req-STAT-lowercase3 fail    "STAt"  0x0000000
+Req-STAT-lowercase4 fail    "stat"  0x0000000
+
+#MECH
+Req-MECH-valid1     pass    "MECH"  0x0000010   "MECHx0000010"
+Req-MECH-lowercase1 fail    "mECH"  0x0000010
+Req-MECH-lowercase2 fail    "MeCH"  0x0000010
+Req-MECH-lowercase3 fail    "MECh"  0x0000010
+Req-MECH-lowercase4 fail    "mech"  0x0000010
+
+#TRDT
+Req-TRDT-valid1     pass    "TRDT"  0x0000000   "TRDTx0000000"
+Req-TRDT-lowercase1 fail    "tRDT"  0x0000000
+Req-TRDT-lowercase2 fail    "TrDT"  0x0000000
+Req-TRDT-lowercase3 fail    "TRDt"  0x0000000
+Req-TRDT-lowercase4 fail    "trdt"  0x0000000
+
+#IMG
+Req-IMG-valid1      pass    "IMG "  0x0000000   "IMG x0000000"
+Req-IMG-space1      fail    " IMG"  0x0000000
+Req-IMG-space3      fail    "IM G"  0x0000000
+Req-IMG-lowercase1  fail    "iMG "  0x0000000
+Req-IMG-lowercase2  fail    "ImG "  0x0000000
+Req-IMG-lowercase3  fail    "IMg "  0x0000000
+Req-IMG-lowercase4  fail    "img "  0x0000000
+
+#EXT0
+Req-EXT0-valid1     pass    "EXT0"  0x00D0011   "EXT0x00D0011"
+Req-EXT0-lowercase1 fail    "eXT0"  0x00D0011
+Req-EXT0-lowercase2 fail    "Ext0"  0x00D0011
+Req-EXT0-lowercase3 fail    "ext0"  0x00D0011
+
+#EXT1
+Req-EXT1-valid1     pass    "EXT1"  0x1111111   "EXT1x1111111"
+Req-EXT1-lowercase1 fail    "eXT1"  0x1111111
+Req-EXT1-lowercase2 fail    "Ext1"  0x1111111
+Req-EXT1-lowercase3 fail    "ext1"  0x1111111
+
+#EXT2
+Req-EXT2-valid1     pass    "EXT2"  0x0101010   "EXT2x0101010"
+Req-EXT2-lowercase1 fail    "eXT2"  0x0101010
+Req-EXT2-lowercase2 fail    "Ext2"  0x0101010
+Req-EXT2-lowercase3 fail    "ext2"  0x0101010
+
+#  Test cases for reply header parsing
+
+#  Note: payload size validation is *not* the responsibility of the
+#        parser.  The parser's job is strictly limited to converting
+#        the header to a token and size.  Whether that size follows
+#        the protocol payload specifications is something that the
+#        command implementation should deal with.
+
+#FIN
+Rep-FIN-Valid1            pass    "FIN x0000000"    "FIN "    0x0000000
+Rep-FIN-space1            fail    " FINx0000000"
+Rep-FIN-space2            fail    "FINx0000000"
+Rep-FIN-space3            fail    "F INx0000000"
+Rep-FIN-lowercase1        fail    "fIN x0000000"
+Rep-FIN-lowercase2        fail    "FiN x0000000"
+Rep-FIN-lowercase3        fail    "FIn x0000000"
+Rep-FIN-lowercase4        fail    "fin x0000000"
+Rep-FIN-StrangePara1      pass    "FIN x0000001"    "FIN "    0x0000001
+Rep-FIN-StrangePara2      pass    "FIN x1234567"    "FIN "    0x1234567
+Rep-FIN-StrangePara3      pass    "FIN x000000A"    "FIN "    0x000000A
+Rep-FIN-StrangePara4      pass    "FIN xFFFFFFF"    "FIN "    0xFFFFFFF
+Rep-FIN-InvalidPara5      throw   "FIN x-000000"
+Rep-FIN-InvalidPara6      throw   "FIN x-000001"
+Rep-FIN-InvalidPara7      throw   "FIN d0000000"
+Rep-FIN-InvalidPara8      throw   "FIN d000"
+Rep-FIN-InvalidPara9      throw   "FIN i0000000"
+Rep-FIN-InvalidPara10     throw   "FIN i-000000"
+Rep-FIN-InvalidPara11     throw   "FIN i-00000７"
+Rep-FIN-trailing-digits1  pass    "FIN x00000000"   "FIN "    0x0000000
+Rep-FIN-trailing-digits2  pass    "FIN x00000011"   "FIN "    0x0000001
+Rep-FIN-trailing-digits3  pass    "FIN x0000000000000000000000000000000000000000000000000000000001"   "FIN "    0x0000000
+
+#CAN
+Rep-CAN-Valid1            pass    "CAN x0000000"    "CAN "    0x0000000
+Rep-CAN-space1            fail    " CANx0000000"
+Rep-CAN-space2            fail    "CANx0000000"
+Rep-CAN-space3            fail    "CA Nx0000000"
+Rep-CAN-lowercase1        fail    "cAN x0000000"
+Rep-CAN-lowercase2        fail    "CaN x0000000"
+Rep-CAN-lowercase3        fail    "CAn x0000000"
+Rep-CAN-lowercase4        fail    "can x0000000"
+Rep-CAN-StrangePara1      pass    "CAN x0000001"    "CAN "    0x0000001
+Rep-CAN-StrangePara2      pass    "CAN x1234567"    "CAN "    0x1234567
+Rep-CAN-StrangePara3      pass    "CAN x000000A"    "CAN "    0x000000A
+Rep-CAN-StrangePara4      pass    "CAN xFFFFFFF"    "CAN "    0xFFFFFFF
+Rep-CAN-InvalidPara5      throw   "CAN x-000000"
+Rep-CAN-InvalidPara6      throw   "CAN x-000001"
+Rep-CAN-InvalidPara7      throw   "CAN d0000000"
+Rep-CAN-InvalidPara8      throw   "CAN d000"
+Rep-CAN-InvalidPara9      throw   "CAN i0000000"
+Rep-CAN-InvalidPara10     throw   "CAN i-000000"
+Rep-CAN-InvalidPara11     throw   "CAN i-00000７"
+Rep-CAN-trailing-digits1  pass    "CAN x00000000"   "CAN "    0x0000000
+Rep-CAN-trailing-digits2  pass    "CAN x00000011"   "CAN "    0x0000001
+Rep-CAN-trailing-digits3  pass    "CAN x0000000000000000000000000000000000000000000000000000000005"   "CAN "    0x0000000
+
+#UNKN
+Rep-UNKN-Valid1           pass    "UNKNx0000000"    "UNKN"    0x0000000
+Rep-UNKN-space1           fail    " UNKNx0000000"
+Rep-UNKN-space2           throw   "UNKN x0000000"
+Rep-UNKN-space3           fail    "U NKNx0000000"
+Rep-UNKN-lowercase1       fail    "uNKNx0000000"
+Rep-UNKN-lowercase2       fail    "UnKNx0000000"
+Rep-UNKN-lowercase3       fail    "UNKnx0000000"
+Rep-UNKN-lowercase4       fail    "unknx0000000"
+Rep-UNKN-StrangePara1     pass    "UNKNx0000001"    "UNKN"    0x0000001
+Rep-UNKN-StrangePara2     pass    "UNKNx1234567"    "UNKN"    0x1234567
+Rep-UNKN-StrangePara3     pass    "UNKNx000000A"    "UNKN"    0x000000A
+Rep-UNKN-StrangePara4     pass    "UNKNxFFFFFFF"    "UNKN"    0xFFFFFFF
+Rep-UNKN-InvalidPara5     throw   "UNKNx-000000"
+Rep-UNKN-InvalidPara6     throw   "UNKNx-000001"
+Rep-UNKN-InvalidPara7     throw   "UNKNd0000000"
+Rep-UNKN-InvalidPara8     throw   "UNKNd000"
+Rep-UNKN-InvalidPara9     throw   "UNKNi0000000"
+Rep-UNKN-InvalidPara10    throw   "UNKNi-000000"
+Rep-UNKN-InvalidPara11    throw   "UNKNi-00000７"
+Rep-UNKN-trailing-digits1 pass    "UNKNx00000000"   "UNKN"    0x0000000
+Rep-UNKN-trailing-digits2 pass    "UNKNx00000011"   "UNKN"    0x0000001
+Rep-UNKN-trailing-digits3 pass    "UNKNx0000000000000000000000000000000000000000000000000000000005"  "UNKN"    0x0000000
+
+#INVD
+Rep-INVD-Valid1           pass    "INVDx0000000"    "INVD"    0x0000000
+Rep-INVD-space1           fail    " INVDx0000000"
+Rep-INVD-space2           throw   "INVD x0000000"
+Rep-INVD-space3           fail    "I NVDx0000000"
+Rep-INVD-lowercase1       fail    "iNVDx0000000"
+Rep-INVD-lowercase2       fail    "InvDx0000000"
+Rep-INVD-lowercase3       fail    "INVdx0000000"
+Rep-INVD-lowercase4       fail    "invdx0000000"
+Rep-INVD-StrangePara1     pass    "INVDx9000000"    "INVD"    0x9000000
+Rep-INVD-StrangePara2     pass    "INVDx890ABCD"    "INVD"    0x890ABCD
+Rep-INVD-StrangePara3     pass    "INVDx0000F00"    "INVD"    0x0000F00
+Rep-INVD-StrangePara4     pass    "INVDxAAAAAAA"    "INVD"    0xAAAAAAA
+Rep-INVD-InvalidPara5     throw   "INVDx-000000"
+Rep-INVD-InvalidPara6     throw   "INVDx-000001"
+Rep-INVD-InvalidPara7     throw   "INVDd0000000"
+Rep-INVD-InvalidPara8     throw   "INVDd000"
+Rep-INVD-InvalidPara9     throw   "INVDi0000000"
+Rep-INVD-InvalidPara10    throw   "INVDi-000000"
+Rep-INVD-InvalidPara11    throw   "INVDi-00000７"
+Rep-INVD-trailing-digits1 pass    "INVDx00000000"   "INVD"    0x0000000
+Rep-INVD-trailing-digits2 pass    "INVDx00000011"   "INVD"    0x0000001
+Rep-INVD-trailing-digits3 pass    "INVDx0000000000000000000000000000000000000000000000000000000005"  "INVD"    0x0000000
+
+#INFO
+Rep-INFO-Valid1           pass    "INFOxF000300"    "INFO"    0xF000300
+Rep-INFO-space1           fail    " INFOx0000000"
+Rep-INFO-space2           throw   "INFO x0000001"
+Rep-INFO-space3           fail    "I NFOx0000005"
+Rep-INFO-lowercase1       fail    "iNFOx000000A"
+Rep-INFO-lowercase2       fail    "INfOx000000B"
+Rep-INFO-lowercase3       fail    "INFox000000C"
+Rep-INFO-lowercase4       fail    "infox000000D"
+Rep-INFO-Parameter1       pass    "INFOx9000000"    "INFO"    0x9000000
+Rep-INFO-Parameter2       pass    "INFOx890ABCD"    "INFO"    0x890ABCD
+Rep-INFO-Parameter3       pass    "INFOxFFFFFFF"    "INFO"    0xFFFFFFF
+Rep-INFO-Parameter4       pass    "INFOxAAAAAAA"    "INFO"    0xAAAAAAA
+Rep-INFO-digits1          pass    "INFOx00000000"   "INFO"    0x0000000
+Rep-INFO-digits2          pass    "INFOx00000011"   "INFO"    0x0000001
+Rep-INFO-digits3          pass    "INFOx0200000800004000000000000000000000000000000000000000000001"   "INFO"    0x0200000
+Rep-INFO-InvalidPara1     throw   "INFOx-0000000"
+Rep-INFO-InvalidPara2     throw   "INFOx-000001"
+Rep-INFO-InvalidPara3     throw   "INFOd000000A"
+Rep-INFO-InvalidPara4     throw   "INFOd001"
+Rep-INFO-InvalidPara5     throw   "INFOi0000002"
+Rep-INFO-InvalidPara6     throw   "INFOi-000000"
+Rep-INFO-InvalidPara7     throw   "INFOA000000F"
+Rep-INFO-InvalidPara8     throw   "INFO0"
+Rep-INFO-InvalidPara9     throw   "INFO00000040"
+Rep-INFO-InvalidPara10    throw   "INFO"
+
+#CAPA
+Rep-CAPA-Valid1           pass    "CAPAx0123456"    "CAPA"    0x123456
+Rep-CAPA-space1           fail    " CAPAx0000001"
+Rep-CAPA-space2           throw   "CAPA x0000002"
+Rep-CAPA-space3           fail    "C APAx0000003"
+Rep-CAPA-lowercase1       fail    "cAPAx0000004"
+Rep-CAPA-lowercase2       fail    "CApAx0000005"
+Rep-CAPA-lowercase3       fail    "CAPax0000006"
+Rep-CAPA-lowercase4       fail    "capax0000007"
+Rep-CAPA-Parameter1       pass    "CAPAx9000000"    "CAPA"    0x9000000
+Rep-CAPA-Parameter2       pass    "CAPAx890ABCD"    "CAPA"    0x890ABCD
+Rep-CAPA-Parameter3       pass    "CAPAxFFFFFFF"    "CAPA"    0xFFFFFFF
+Rep-CAPA-Parameter4       pass    "CAPAxAAAAAAA"    "CAPA"    0xAAAAAAA
+Rep-CAPA-digits1          pass    "CAPAx00000000"   "CAPA"    0x0000000
+Rep-CAPA-digits2          pass    "CAPAx00000011"   "CAPA"    0x0000001
+Rep-CAPA-digits3          pass    "CAPAx0200000800004000000000000000000000000000000000000000000001"   "CAPA"    0x0200000
+Rep-CAPA-InvalidPara1     throw   "CAPAx-0000000"
+Rep-CAPA-InvalidPara2     throw   "CAPAx-000001"
+Rep-CAPA-InvalidPara3     throw   "CAPAd00C0000"
+Rep-CAPA-InvalidPara4     throw   "CAPAd000"
+Rep-CAPA-InvalidPara5     throw   "CAPAi0000000"
+Rep-CAPA-InvalidPara6     throw   "CAPAi-000050"
+Rep-CAPA-InvalidPara7     throw   "CAPAA0001000"
+Rep-CAPA-InvalidPara8     throw   "CAPA0"
+Rep-CAPA-InvalidPara9     throw   "CAPA01010101"
+Rep-CAPA-InvalidPara10    throw   "CAPA"
+
+#CAPB
+Rep-CAPB-Valid1           pass    "CAPBxABCDEF0"    "CAPB"    0xABCDEF0
+Rep-CAPB-space1           fail    " CAPBx0000001"
+Rep-CAPB-space2           throw   "CAPB x0000002"
+Rep-CAPB-space3           fail    "C APBx0000003"
+Rep-CAPB-lowercase1       fail    "cAPBx0000004"
+Rep-CAPB-lowercase2       fail    "CApBx0000005"
+Rep-CAPB-lowercase3       fail    "CAPbx0000006"
+Rep-CAPB-lowercase4       fail    "capbx0000007"
+Rep-CAPB-Parameter1       pass    "CAPBx9000000"    "CAPB"    0x9000000
+Rep-CAPB-Parameter2       pass    "CAPBx890ABCD"    "CAPB"    0x890ABCD
+Rep-CAPB-Parameter3       pass    "CAPBxFFFFFFF"    "CAPB"    0xFFFFFFF
+Rep-CAPB-Parameter4       pass    "CAPBxAAAAAAA"    "CAPB"    0xAAAAAAA
+Rep-CAPB-digits1          pass    "CAPBx00000000"   "CAPB"    0x0000000
+Rep-CAPB-digits2          pass    "CAPBx00000011"   "CAPB"    0x0000001
+Rep-CAPB-digits3          pass    "CAPBxAAAAAAABB0004000000000000000000000000000000000000000000001"   "CAPB"    0xAAAAAAA
+Rep-CAPB-InvalidPara1     throw   "CAPBx-0000000"
+Rep-CAPB-InvalidPara2     throw   "CAPBx-000001"
+Rep-CAPB-InvalidPara3     throw   "CAPBd0000000"
+Rep-CAPB-InvalidPara4     throw   "CAPBd000"
+Rep-CAPB-InvalidPara5     throw   "CAPBi0000000"
+Rep-CAPB-InvalidPara6     throw   "CAPBi-000000"
+Rep-CAPB-InvalidPara7     throw   "CAPBA0001000"
+Rep-CAPB-InvalidPara8     throw   "CAPB0"
+Rep-CAPB-InvalidPara9     throw   "CAPB01010101"
+Rep-CAPB-InvalidPara10    throw   "CAPB"
+
+#PARA
+Rep-PARA-Valid1           pass    "PARAx0000000"    "PARA"    0x0000000
+Rep-PARA-space1           fail    " PARAx0000000"
+Rep-PARA-space2           throw   "PARA x0000000"
+Rep-PARA-space3           fail    "PA RAx0000000"
+Rep-PARA-lowercase1       fail    "pARAx0000000"
+Rep-PARA-lowercase2       fail    "ParAx0000000"
+Rep-PARA-lowercase3       fail    "PARax0000000"
+Rep-PARA-lowercase4       fail    "parax0000000"
+Rep-PARA-StrangePara1     pass    "PARAx000A000"    "PARA"    0x000A000
+Rep-PARA-StrangePara2     pass    "PARAx890ABCD"    "PARA"    0x890ABCD
+Rep-PARA-StrangePara3     pass    "PARAx0000F00"    "PARA"    0x0000F00
+Rep-PARA-StrangePara4     pass    "PARAxAAAAAAA"    "PARA"    0xAAAAAAA
+Rep-PARA-InvalidPara5     throw   "PARAx-000000"
+Rep-PARA-InvalidPara6     throw   "PARAx-000001"
+Rep-PARA-InvalidPara7     throw   "PARAd0000000"
+Rep-PARA-InvalidPara8     throw   "PARAd000"
+Rep-PARA-InvalidPara9     throw   "PARAi0000000"
+Rep-PARA-InvalidPara10    throw   "PARAi-000000"
+Rep-PARA-InvalidPara11    throw   "PARAi-00000７"
+Rep-PARA-trailing-digits1 pass    "PARAx00000000"   "PARA"    0x0000000
+Rep-PARA-trailing-digits2 pass    "PARAx00000011"   "PARA"    0x0000001
+Rep-PARA-trailing-digits3 pass    "PARAx0000000000000000000000000000000000000000000000000000000005"  "PARA"    0x0000000
+
+#PARB
+Rep-PARB-Valid1           pass    "PARBx0000000"    "PARB"    0x0000000
+Rep-PARB-space1           fail    " PARBx0000000"
+Rep-PARB-space2           throw   "PARB x0000000"
+Rep-PARB-space3           fail    "PA RBx0000000"
+Rep-PARB-lowercase1       fail    "pARBx0000000"
+Rep-PARB-lowercase2       fail    "ParBx0000000"
+Rep-PARB-lowercase3       fail    "PARbx0000000"
+Rep-PARB-lowercase4       fail    "parbx0000000"
+Rep-PARB-StrangePara1     pass    "PARBx000A000"    "PARB"    0x000A000
+Rep-PARB-StrangePara2     pass    "PARBx890ABCD"    "PARB"    0x890ABCD
+Rep-PARB-StrangePara3     pass    "PARBx0000F00"    "PARB"    0x0000F00
+Rep-PARB-StrangePara4     pass    "PARBxAAAAAAA"    "PARB"    0xAAAAAAA
+Rep-PARB-InvalidPara5     throw   "PARBx-000000"
+Rep-PARB-InvalidPara6     throw   "PARBx-000005"
+Rep-PARB-InvalidPara7     throw   "PARBd0000000"
+Rep-PARB-InvalidPara8     throw   "PARBd000"
+Rep-PARB-InvalidPara9     throw   "PARBi0000000"
+Rep-PARB-InvalidPara10    throw   "PARBi-000000"
+Rep-PARB-InvalidPara11    throw   "PARBi-00000７"
+Rep-PARB-trailing-digits1 pass    "PARBx00000000"   "PARB"    0x0000000
+Rep-PARB-trailing-digits2 pass    "PARBx00000011"   "PARB"    0x0000001
+Rep-PARB-trailing-digits3 pass    "PARBx0000000400000000000000000000000000000000000000000000000005"  "PARB"    0x0000000
+
+#RESA
+Rep-RESA-Valid1           pass    "RESAxABCDEF0"    "RESA"    0xABCDEF0
+Rep-RESA-space1           fail    " RESAx0000001"
+Rep-RESA-space2           throw   "RESA x0000002"
+Rep-RESA-space3           fail    "R ESAx0000003"
+Rep-RESA-lowercase1       fail    "rESAx0000004"
+Rep-RESA-lowercase2       fail    "REsAx0000005"
+Rep-RESA-lowercase3       fail    "RESax0000006"
+Rep-RESA-lowercase4       fail    "resax0000007"
+Rep-RESA-Parameter1       pass    "RESAx9000000"    "RESA"    0x9000000
+Rep-RESA-Parameter2       pass    "RESAx890ABCD"    "RESA"    0x890ABCD
+Rep-RESA-Parameter3       pass    "RESAxFFFFFFF"    "RESA"    0xFFFFFFF
+Rep-RESA-Parameter4       pass    "RESAxAAAAAAA"    "RESA"    0xAAAAAAA
+Rep-RESA-digits1          pass    "RESAx00000000"   "RESA"    0x0000000
+Rep-RESA-digits2          pass    "RESAx00000011"   "RESA"    0x0000001
+Rep-RESA-digits3          pass    "RESAxAAAAAAABB0004000000000000000000000000000000000000000000001"   "RESA"    0xAAAAAAA
+Rep-RESA-InvalidPara1     throw   "RESAx-0000000"
+Rep-RESA-InvalidPara2     throw   "RESAx-000001"
+Rep-RESA-InvalidPara3     throw   "RESAd0000000"
+Rep-RESA-InvalidPara4     throw   "RESAd000"
+Rep-RESA-InvalidPara5     throw   "RESAi0000000"
+Rep-RESA-InvalidPara6     throw   "RESAi-000000"
+Rep-RESA-InvalidPara7     throw   "RESAA0001000"
+Rep-RESA-InvalidPara8     throw   "RESA0"
+Rep-RESA-InvalidPara9     throw   "RESA01010101"
+Rep-RESA-InvalidPara10    throw   "RESA"
+
+#RESB
+Rep-RESB-Valid1           pass    "RESBxABCDEF0"    "RESB"    0xABCDEF0
+Rep-RESB-space1           fail    " RESBx0000001"
+Rep-RESB-space2           throw   "RESB x0000002"
+Rep-RESB-space3           fail    "R ESBx0000003"
+Rep-RESB-lowercase1       fail    "rESBx0000004"
+Rep-RESB-lowercase2       fail    "REsBx0000005"
+Rep-RESB-lowercase3       fail    "RESbx0000006"
+Rep-RESB-lowercase4       fail    "resbx0000007"
+Rep-RESB-Parameter1       pass    "RESBx0101010"    "RESB"    0x0101010
+Rep-RESB-Parameter2       pass    "RESBx890ABCD"    "RESB"    0x890ABCD
+Rep-RESB-Parameter3       pass    "RESBxFFFFFFF"    "RESB"    0xFFFFFFF
+Rep-RESB-Parameter4       pass    "RESBxAAAAAAA"    "RESB"    0xAAAAAAA
+Rep-RESB-digits1          pass    "RESBx00000000"   "RESB"    0x0000000
+Rep-RESB-digits2          pass    "RESBx00000011"   "RESB"    0x0000001
+Rep-RESB-digits3          pass    "RESBxAAAAAAABB0004000000000000000000000000000000000000000000001"   "RESB"    0xAAAAAAA
+Rep-RESB-InvalidPara1     throw   "RESBx-0000000"
+Rep-RESB-InvalidPara2     throw   "RESBx-000001"
+Rep-RESB-InvalidPara3     throw   "RESBd0000000"
+Rep-RESB-InvalidPara4     throw   "RESBd000"
+Rep-RESB-InvalidPara5     throw   "RESBi0000000"
+Rep-RESB-InvalidPara6     throw   "RESBi-000000"
+Rep-RESB-InvalidPara7     throw   "RESBA0001000"
+Rep-RESB-InvalidPara8     throw   "RESB0"
+Rep-RESB-InvalidPara9     throw   "RESB01010101"
+Rep-RESB-InvalidPara10    throw   "RESB"
+
+#STAT
+Rep-STAT-Valid1           pass    "STATxABCDEF0"    "STAT"    0xABCDEF0
+Rep-STAT-space1           fail    " STATx000000A"
+Rep-STAT-space2           throw   "STAT x000000B"
+Rep-STAT-space3           fail    "S TATx000000C"
+Rep-STAT-lowercase1       fail    "sTATx000000D"
+Rep-STAT-lowercase2       fail    "STaTx000000E"
+Rep-STAT-lowercase3       fail    "STAtx000000F"
+Rep-STAT-lowercase4       fail    "statx0000007"
+Rep-STAT-Parameter1       pass    "STATx0101010"    "STAT"    0x0101010
+Rep-STAT-Parameter2       pass    "STATx890ABCD"    "STAT"    0x890ABCD
+Rep-STAT-Parameter3       pass    "STATxFFFFFFF"    "STAT"    0xFFFFFFF
+Rep-STAT-Parameter4       pass    "STATxAAAAAAA"    "STAT"    0xAAAAAAA
+Rep-STAT-digits1          pass    "STATx00000000"   "STAT"    0x0000000
+Rep-STAT-digits2          pass    "STATx00000011"   "STAT"    0x0000001
+Rep-STAT-digits3          pass    "STATxAAAAAAABB0004000000000000000000000000000000000000000000001"   "STAT"    0xAAAAAAA
+Rep-STAT-InvalidPara1     throw   "STATx-0000000"
+Rep-STAT-InvalidPara2     throw   "STATx-000001"
+Rep-STAT-InvalidPara3     throw   "STATd0000000"
+Rep-STAT-InvalidPara4     throw   "STATd000"
+Rep-STAT-InvalidPara5     throw   "STATi0000000"
+Rep-STAT-InvalidPara6     throw   "STATi-000000"
+Rep-STAT-InvalidPara7     throw   "STATA0001000"
+Rep-STAT-InvalidPara8     throw   "STAT0"
+Rep-STAT-InvalidPara9     throw   "STAT01010101"
+Rep-STAT-InvalidPara10    throw   "STAT"
+
+#MECH
+Rep-MECH-Valid1           pass    "MECHx0000000"    "MECH"    0x0000000
+Rep-MECH-space1           fail    " MECHx0000000"
+Rep-MECH-space2           throw   "MECH_x0000000"
+Rep-MECH-space3           fail    "ME CHx0000000"
+Rep-MECH-lowercase1       fail    "mECHx0000000"
+Rep-MECH-lowercase2       fail    "MeCHx0000000"
+Rep-MECH-lowercase3       fail    "MEcHx0000000"
+Rep-MECH-lowercase4       fail    "mechx0000000"
+Rep-MECH-StrangePara1     pass    "MECHx000A000"    "MECH"    0x000A000
+Rep-MECH-StrangePara2     pass    "MECHx890ABCD"    "MECH"    0x890ABCD
+Rep-MECH-StrangePara3     pass    "MECHx0000F00"    "MECH"    0x0000F00
+Rep-MECH-StrangePara4     pass    "MECHxAAAAAAA"    "MECH"    0xAAAAAAA
+Rep-MECH-InvalidPara5     throw   "MECHx-000000"
+Rep-MECH-InvalidPara6     throw   "MECHx-000005"
+Rep-MECH-InvalidPara7     throw   "MECHd0000000"
+Rep-MECH-InvalidPara8     throw   "MECHd000"
+Rep-MECH-InvalidPara9     throw   "MECHi0000000"
+Rep-MECH-InvalidPara10    throw   "MECHi-000000"
+Rep-MECH-InvalidPara11    throw   "MECHi-00000７"
+Rep-MECH-trailing-digits1 pass    "MECHx00000000"   "MECH"    0x0000000
+Rep-MECH-trailing-digits2 pass    "MECHx00000011"   "MECH"    0x0000001
+Rep-MECH-trailing-digits3 pass    "MECHx0000000400000000000000000000000000000000000000000000000005"  "MECH"    0x0000000
+
+#TRDT
+Rep-TRDT-Valid1           pass    "TRDTx0000000"    "TRDT"    0x0000000
+Rep-TRDT-space1           fail    " TRDTx0000000"
+Rep-TRDT-space2           fail    "_TRDTx0000000"
+Rep-TRDT-space3           fail    "TR DTx0000000"
+Rep-TRDT-lowercase1       fail    "tRDTx0000000"
+Rep-TRDT-lowercase2       fail    "TrDTx0000000"
+Rep-TRDT-lowercase3       fail    "TRDtx0000000"
+Rep-TRDT-lowercase4       fail    "trdtx0000000"
+Rep-TRDT-StrangePara1     pass    "TRDTx000A000"    "TRDT"    0x000A000
+Rep-TRDT-StrangePara2     pass    "TRDTx890ABCD"    "TRDT"    0x890ABCD
+Rep-TRDT-StrangePara3     pass    "TRDTx0000F00"    "TRDT"    0x0000F00
+Rep-TRDT-StrangePara4     pass    "TRDTxAAAAAAA"    "TRDT"    0xAAAAAAA
+Rep-TRDT-InvalidPara5     throw   "TRDTx-000000"
+Rep-TRDT-InvalidPara6     throw   "TRDTx-000005"
+Rep-TRDT-InvalidPara7     throw   "TRDTd0000000"
+Rep-TRDT-InvalidPara8     throw   "TRDTd000"
+Rep-TRDT-InvalidPara9     throw   "TRDTi0000000"
+Rep-TRDT-InvalidPara10    throw   "TRDTi-000000"
+Rep-TRDT-InvalidPara11    throw   "TRDTi-00000７"
+Rep-TRDT-trailing-digits1 pass    "TRDTx00000000"   "TRDT"    0x0000000
+Rep-TRDT-trailing-digits2 pass    "TRDTx00000011"   "TRDT"    0x0000001
+Rep-TRDT-trailing-digits3 pass    "TRDTx0000000400000000000000000000000000000000000000000000000005"  "TRDT"    0x0000000
+
+#IMG
+Rep-IMG-Valid1            pass    "IMG xABCDEF0"    "IMG "    0xABCDEF0
+Rep-IMG-space1            fail    " IMG x000000A"
+Rep-IMG-space2            throw   "IMG  x000000B"
+Rep-IMG-space3            fail    "I MGx000000C"
+Rep-IMG-lowercase1        fail    "iMG x000000D"
+Rep-IMG-lowercase2        fail    "IMg x000000E"
+Rep-IMG-lowercase3        fail    "img x0000007"
+Rep-IMG-Parameter1        pass    "IMG x0101010"    "IMG "    0x0101010
+Rep-IMG-Parameter2        pass    "IMG x890ABCD"    "IMG "    0x890ABCD
+Rep-IMG-Parameter3        pass    "IMG xFFFFFFF"    "IMG "    0xFFFFFFF
+Rep-IMG-Parameter4        pass    "IMG xAAAAAAA"    "IMG "    0xAAAAAAA
+Rep-IMG-digits1           pass    "IMG x00000000"   "IMG "    0x0000000
+Rep-IMG-digits2           pass    "IMG x00000011"   "IMG "    0x0000001
+Rep-IMG-digits3           pass    "IMG x1234567890004000000000000000000000000000000000000000000001"   "IMG "    0x1234567
+Rep-IMG-InvalidPara1      throw   "IMG x-0000000"
+Rep-IMG-InvalidPara2      throw   "IMG x-000001"
+Rep-IMG-InvalidPara3      throw   "IMG d0000000"
+Rep-IMG-InvalidPara4      throw   "IMG d000"
+Rep-IMG-InvalidPara5      throw   "IMG i0000000"
+Rep-IMG-InvalidPara6      throw   "IMG i-000000"
+Rep-IMG-InvalidPara7      throw   "IMG A0001000"
+Rep-IMG-InvalidPara8      throw   "IMG 0"
+Rep-IMG-InvalidPara9      throw   "IMG 01010101"
+Rep-IMG-InvalidPara10     throw   "IMG "
+
+#EXT0
+Rep-EXT0-Valid1           pass    "EXT0xABCDEF0"    "EXT0"    0xABCDEF0
+Rep-EXT0-space1           fail    " EXT0x000000A"
+Rep-EXT0-space2           throw   "EXT0 x000000B"
+Rep-EXT0-space3           fail    "E XT0x000000C"
+Rep-EXT0-lowercase1       fail    "eXT0x000000D"
+Rep-EXT0-lowercase2       fail    "ext0x0000007"
+Rep-EXT0-Parameter1       pass    "EXT0x0101010"    "EXT0"    0x0101010
+Rep-EXT0-Parameter2       pass    "EXT0x890ABCD"    "EXT0"    0x890ABCD
+Rep-EXT0-Parameter3       pass    "EXT0xFFFFFFF"    "EXT0"    0xFFFFFFF
+Rep-EXT0-Parameter4       pass    "EXT0xAAAAAAA"    "EXT0"    0xAAAAAAA
+Rep-EXT0-digits1          pass    "EXT0x00000000"   "EXT0"    0x0000000
+Rep-EXT0-digits2          pass    "EXT0x00000011"   "EXT0"    0x0000001
+Rep-EXT0-digits3          pass    "EXT0x1234567890004000000000000000000000000000000000000000000001"   "EXT0"    0x1234567
+Rep-EXT0-InvalidPara1     throw   "EXT0x-0000000"
+Rep-EXT0-InvalidPara2     throw   "EXT0x-000001"
+Rep-EXT0-InvalidPara3     throw   "EXT0d0000000"
+Rep-EXT0-InvalidPara4     throw   "EXT0d000"
+Rep-EXT0-InvalidPara5     throw   "EXT0i0000000"
+Rep-EXT0-InvalidPara6     throw   "EXT0i-000000"
+Rep-EXT0-InvalidPara7     throw   "EXT0A0001000"
+Rep-EXT0-InvalidPara8     throw   "EXT00"
+Rep-EXT0-InvalidPara9     throw   "EXT001010101"
+Rep-EXT0-InvalidPara10    throw   "EXT0"
+Rep-EXT0-InvalidPara11    fail    "EXT3x000000E"
+
+#EXT1
+Rep-EXT1-Valid1           pass    "EXT1xABCDEF0"    "EXT1"    0xABCDEF0
+Rep-EXT1-space1           fail    " EXT1x000000A"
+Rep-EXT1-space2           throw   "EXT1 x000000B"
+Rep-EXT1-space3           fail    "E XT1x000000C"
+Rep-EXT1-lowercase1       fail    "eXT1x000000D"
+Rep-EXT1-lowercase2       fail    "ext1x0000007"
+Rep-EXT1-Parameter1       pass    "EXT1x0101010"    "EXT1"    0x0101010
+Rep-EXT1-Parameter2       pass    "EXT1x890ABCD"    "EXT1"    0x890ABCD
+Rep-EXT1-Parameter3       pass    "EXT1xFFFFFFF"    "EXT1"    0xFFFFFFF
+Rep-EXT1-Parameter4       pass    "EXT1xAAAAAAA"    "EXT1"    0xAAAAAAA
+Rep-EXT1-digits1          pass    "EXT1x00000000"   "EXT1"    0x0000000
+Rep-EXT1-digits2          pass    "EXT1x00000011"   "EXT1"    0x0000001
+Rep-EXT1-digits3          pass    "EXT1x1234567890004000000000000000000000000000000000000000000001"   "EXT1"    0x1234567
+Rep-EXT1-InvalidPara1     throw   "EXT1x-0000000"
+Rep-EXT1-InvalidPara2     throw   "EXT1x-000001"
+Rep-EXT1-InvalidPara3     throw   "EXT1d0000000"
+Rep-EXT1-InvalidPara4     throw   "EXT1d000"
+Rep-EXT1-InvalidPara5     throw   "EXT1i0000000"
+Rep-EXT1-InvalidPara6     throw   "EXT1i-000000"
+Rep-EXT1-InvalidPara7     throw   "EXT1A0001000"
+Rep-EXT1-InvalidPara8     throw   "EXT10"
+Rep-EXT1-InvalidPara9     throw   "EXT101010101"
+Rep-EXT1-InvalidPara10    throw   "EXT1"
+Rep-EXT1-InvalidPara11    throw   "EXT00x000000E"
+
+#EXT2
+Rep-EXT2-Valid1           pass    "EXT2xABCDEF0"    "EXT2"    0xABCDEF0
+Rep-EXT2-space1           fail    " EXT2x000000A"
+Rep-EXT2-space2           throw   "EXT2 x000000B"
+Rep-EXT2-space3           fail    "E XT2x000000C"
+Rep-EXT2-lowercase1       fail    "eXT2x000000D"
+Rep-EXT2-lowercase2       fail    "ext2x0000007"
+Rep-EXT2-Parameter1       pass    "EXT2x0101010"    "EXT2"    0x0101010
+Rep-EXT2-Parameter2       pass    "EXT2x890ABCD"    "EXT2"    0x890ABCD
+Rep-EXT2-Parameter3       pass    "EXT2xFFFFFFF"    "EXT2"    0xFFFFFFF
+Rep-EXT2-Parameter4       pass    "EXT2xAAAAAAA"    "EXT2"    0xAAAAAAA
+Rep-EXT2-digits1          pass    "EXT2x00000000"   "EXT2"    0x0000000
+Rep-EXT2-digits2          pass    "EXT2x00000011"   "EXT2"    0x0000001
+Rep-EXT2-digits3          pass    "EXT2x1234567890004000000000000000000000000000000000000000000001"   "EXT2"    0x1234567
+Rep-EXT2-InvalidPara1     throw   "EXT2x-0000000"
+Rep-EXT2-InvalidPara2     throw   "EXT2x-000001"
+Rep-EXT2-InvalidPara3     throw   "EXT2d0000000"
+Rep-EXT2-InvalidPara4     throw   "EXT2d000"
+Rep-EXT2-InvalidPara5     throw   "EXT2i0000000"
+Rep-EXT2-InvalidPara6     throw   "EXT2i-000000"
+Rep-EXT2-InvalidPara7     throw   "EXT2A0001000"
+Rep-EXT2-InvalidPara8     throw   "EXT20"
+Rep-EXT2-InvalidPara9     throw   "EXT201010101"
+Rep-EXT2-InvalidPara10    throw   "EXT2"
+Rep-EXT2-InvalidPara11    fail    "EXT5x000000E"
