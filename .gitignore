@@ -1,0 +1,91 @@
+#  .gitignore -- patterns for automatically generated and/or updated stuff
+#  Copyright (C) 2013  Olaf Meeuwissen
+#
+#  License: GPL-3.0+
+#  Author : Olaf Meeuwissen
+#
+#  This file is part of the 'Utsushi' package.
+#  This package is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License or, at
+#  your option, any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#  You ought to have received a copy of the GNU General Public License
+#  along with this package.  If not, see <http://www.gnu.org/licenses/>.
+
+#  Text editor intermediate and backup files
+*~
+.\#*
+\#*
+
+#  Stuff courtesy of other software
+/upstream/
+
+#  Autoconf and Automake stuff
+/INSTALL
+/aclocal.m4
+/autom4te.cache/
+/config.*
+/configure
+/stamp-h1
+Makefile
+Makefile.in
+
+#  Libtool stuff
+*.l[ao]
+*.o
+.deps/
+.libs/
+/libtool
+
+#  Gettext stuff
+/ABOUT-NLS
+/po/
+!/po/*.po
+!/po/LINGUAS
+!/po/Makevars
+!/po/POTFILES.in
+
+#  Code coverage data
+*.gcda
+*.gcno
+*.gcov
+
+#  Unit test runners and reports
+*-report.xml
+*.utr
+
+#  Source archives
+/utsushi-*.tar.gz
+/utsushi-*/
+
+#  Doxygen API documentation
+/doc/*.pdf
+/doc/*.tags
+/doc/config.log
+/doc/html/
+/doc/icon*.xpm
+/doc/latex/
+/doc/logo.png
+
+#  Subcommand executables
+/src/help
+/src/list
+/src/main
+/src/scan
+/src/scan-cli
+/src/scan-gtkmm
+/src/version
+
+#  Project specific stuff
+/gtkmm/about.xml
+/lib/tag.cpp
+/sane/sane-utsushi-api.sym
+/tests/uncrustify.cfg
+/tests/vc-dist-files
+/utsushi/tag.hpp
