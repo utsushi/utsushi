@@ -1,5 +1,6 @@
 #! /bin/sh
 #  install-deps -- needed for developer and/or maintainer builds
+#  Copyright (C) 2013  Olaf Meeuwissen
 #  Copyright (C) 2012  AVASYS CORPORATION
 #
 #  License: GPL-3.0+
@@ -164,6 +165,9 @@ case "$PKG_MGR" in
         has doxygen     || pkg_list="$pkg_list doxygen"
         has perl        || pkg_list="$pkg_list perl-base"
         has dot         || pkg_list="$pkg_list graphviz"
+        if has pdflatex; then
+            pkg_list="$pkg_list texlive-fonts-recommended"
+        fi
         #  Needed for style/consistency checking and enforcement
         has uncrustify  || pkg_list="$pkg_list uncrustify"
         #  Needed for software metrics collection purposes
