@@ -1,4 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
+##  Copyright (C) 2013  Olaf Meeuwissen
 ##  Copyright (C) 2012  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
@@ -61,6 +62,13 @@ DISTCHECK_CONFIGURE_FLAGS += --with-jpeg
 DISTCHECK_CONFIGURE_FLAGS += --with-tiff
 DISTCHECK_CONFIGURE_FLAGS += --enable-test-reports
 DISTCHECK_CONFIGURE_FLAGS += --enable-code-coverage
+
+##  Unprivileged users will not be able to install the SANE component
+##  or integrate with the udev activated device set up.  That should
+##  not prevent them from running a distcheck.
+
+DISTCHECK_CONFIGURE_FLAGS += --disable-sane-config
+DISTCHECK_CONFIGURE_FLAGS += --disable-udev-config
 
 ##  API header files
 
