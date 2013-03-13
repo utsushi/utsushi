@@ -76,8 +76,9 @@ while test x-- != "x$1"; do
     case "$1" in
         -h|--help)              DO_HELP=yes;;
         --source)               SOURCE="$2"; shift;;
-        *)                      # Japanese emergency phone number ;-)
-            error 119 "internal inconsistency"
+        *)
+            echo "`basename $0`: internal inconsistency" >&2
+            exit 119            # Japanese emergency phone number ;-)
             ;;
     esac
     shift

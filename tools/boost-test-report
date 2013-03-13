@@ -78,8 +78,9 @@ while test x-- != "x$1"; do
 	-h|--help)		DO_HELP=yes; shift;;
 	   --root)		ROOT_PATH=$2; shift 2;;
 	   --dest)		DEST_FILE=$2; shift 2;;
-	*)			# Japanese emergency phone number ;-)
-	    error 119 "internal inconsistency"
+	*)
+	    echo "`basename $0`: internal inconsistency" >&2
+	    exit 119		# Japanese emergency phone number ;-)
 	    ;;
     esac
 done
