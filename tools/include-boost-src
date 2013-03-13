@@ -1,5 +1,6 @@
 #! /bin/sh
-#  include-boost-src -- from a recent enough upstream version
+#  include-boost-src -- from the preferred upstream version
+#  Copyright (C) 2013  Olaf Meeuwissen
 #  Copyright (C) 2012  AVASYS CORPORATION
 #
 #  License: GPL-3.0+
@@ -24,20 +25,20 @@
 
 usage () {
     cat <<EOF
-'`basename $0`' from a recent enough upstream version
+'`basename $0`' from the preferred upstream VERSION
 
 Usage: $0 [--source=SOURCE] [VERSION [DIRECTORY]]
        $0 --help
 
 Attempts to copy parts of the Boost upstream sources into the upstream
 sources needed for this project.  It will only consider upstream Boost
-versions that are at least as recent as VERSION (default=$version).  Files
-will be copied into DIRECTORY (default=$upstream_dir).
+versions that are at VERSION (default=$version).  Files will be copied
+into DIRECTORY (default=$upstream_dir).
 
 The script expects an extracted upstream Boost source directory in the
-SOURCE directory.  It may try to download a copy of the upstream Boost
-sources via your distribution's package management system.  If so, the
-archive will be downloaded into the SOURCE directory and extracted.
+SOURCE directory.  It will download an archive with the upstream Boost
+sources using \`wget\` from the official download site and extract that
+if necessary.
 
 The following options are supported:
 
@@ -45,12 +46,10 @@ The following options are supported:
       --source=SOURCE     download, extract and look for upstream sources
                           in SOURCE (default=$download_dir)
 
-Specifying a DIRECTORY argument is not expected to work as intended.  It
-is only supported to facilitate testing of this script.
+The DIRECTORY argument is for testing purposes and should normally not
+be used.
 
-BUG: should use the Boost upstream source repository
-BUG: only supports \`apt-get\`
-BUG: requires a suitable deb-src line
+TODO: support additional archive formats
 EOF
     exit $1
 }
@@ -128,49 +127,30 @@ fi
 test -d $upstream_dir || mkdir -p $upstream_dir
 test -d $download_dir || mkdir -p $download_dir
 
-#  Abuse Debian based distribution package repositories to fetch their
-#  current Boost source package (requires deb-src entry!).
+_version_=`echo $version | sed 's/\./_/g'`
+sources=$download_dir/boost_$_version_
 
-if type apt-get >/dev/null 2>&1; then
-    current=`apt-cache showsrc libboost-dev \
-        | awk '/^Version:/{ print $2 }' \
-        | LC_COLLATE=C sort -nr \
-        | sed '1q' \
-        | cut -d. -f1,2`
-    if test -z "$current" \
-        || dpkg --compare-versions $current ge $version; then
-        echo "Downloading Boost sources into $download_dir"
-        (cd $download_dir; apt-get -qd source boost$current)
-        dir=`tar tf $download_dir/boost${current}_*.orig.tar.* 2>/dev/null \
-            | sed '1q'`
-        if ! test -d $download_dir/$dir; then
-            echo -n "Extracting Boost source archive ... "
-            (cd $download_dir; tar xf boost${current}_*.orig.tar.*)
-            echo "done."
-        fi
+url=http://sourceforge.net/projects/boost/files/boost
+fmt=tar.bz2
+
+if ! test -f $sources.stamp; then
+    (cd $download_dir; \
+        wget --timestamping --continue $url/$version/boost_$_version_.$fmt)
+    if test 0 != $?; then
+        echo "`basename $0`: error downloading Boost source archive" >&2
+        exit 1
+    else
+        touch $sources.stamp
     fi
 fi
-
-#  Find the latest extracted sources not older than $version.
-
-version=`echo $version | sed 's/\./_/g'`
-if ! test -e $download_dir/boost_$version; then
-    touch $download_dir/boost_$version
-    remove_stamp=yes
-fi
-l=`LC_COLLATE=C ls -dr $download_dir/boost_* \
-    | sed "s,$download_dir/,,; /\./d; /^boost_$version$/q"`
-set -- $l
-while test -z "$sources" && test x != x$1; do
-    test -d $download_dir/$1 && sources=$download_dir/$1
-    shift
-done
-test xyes = x$remove_stamp && rm $download_dir/boost_$version
-version=`echo $version | sed 's/_/./g'`
-set --
-if test -z "$sources"; then
-    echo "`basename $0`: no Boost sources >= $version found" >&2
-    exit 119
+if ! test -d $sources; then
+    echo -n "Extracting Boost source archive ... "
+    (cd $download_dir; tar xf boost_$_version_.$fmt --bzip2)
+    if test 0 != $?; then
+        echo "`basename $0`: error extracting Boost source archive" >&2
+        exit 1
+    fi
+    echo "done"
 fi
 
 echo "Using $sources"

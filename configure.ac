@@ -206,7 +206,7 @@ AM_CONDITIONAL([with_static_enabled], [test xyes = x$enable_static])
                                 dnl  cross-platform C++ extensions
 AS_IF([test xyes != x$with_included_boost],
   [m4_pattern_forbid(AX_BOOST_BASE)
-   AX_BOOST_BASE([1.46],
+   AX_BOOST_BASE([1.46.1],
      [AX_BOOST_SYSTEM
       AX_BOOST_FILESYSTEM
       AX_BOOST_IOSTREAMS
