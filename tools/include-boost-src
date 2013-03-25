@@ -116,15 +116,8 @@ if test 0 -ne $#; then
     usage 1
 fi
 
-if test -z "$SOURCE" || test $download_dir = $SOURCE; then
-    :
-else
-    echo "Pointing $download_dir to $SOURCE"
-    if test -z "`echo $SOURCE | sed -n '/^\//p'`"; then
-        source=`dirname $download_dir | sed 's|[^/]*|..|g'`/$SOURCE
-    fi
-    download_dir=$source
-fi
+test -z "$SOURCE" || download_dir=$SOURCE
+
 test -d $upstream_dir || mkdir -p $upstream_dir
 test -d $download_dir || mkdir -p $download_dir
 

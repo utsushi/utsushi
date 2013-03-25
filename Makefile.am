@@ -70,6 +70,8 @@ DISTCHECK_CONFIGURE_FLAGS += --enable-code-coverage
 DISTCHECK_CONFIGURE_FLAGS += --disable-sane-config
 DISTCHECK_CONFIGURE_FLAGS += --disable-udev-config
 
+DISTCHECK_CONFIGURE_FLAGS += --with-download-dir=$(DOWNLOAD_DIR)
+
 ##  API header files
 
 pattern_headers  = utsushi/pattern/decorator.hpp
@@ -265,14 +267,7 @@ endif # with_included_boost
 ##  Boost sources is independent from that.
 
 dist-hook:
-	dir1=$(distdir); \
-	dir2=$(top_srcdir); \
-	$(am__relativize); \
-	cmd="(cd $(distdir); tools/include-boost-src \
-	  --source=$$reldir/upstream/downloads)"; \
-	echo $$cmd; \
-	eval $$cmd
-	chmod -R u+w $(distdir)
+	(cd $(distdir); tools/include-boost-src --source=$(DOWNLOAD_DIR))
 
 ##  If successful, the distcheck target removes the whole $(distdir)
 ##  and takes all build results with it.  That includes all coverage

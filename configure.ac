@@ -142,6 +142,12 @@ AC_ARG_WITH(udev-confdir,
      where your udev configuration directory is.]),
   [],
   [with_udev_confdir=guess])
+AC_ARG_WITH(download-dir,
+  AS_HELP_STRING([--with-download-dir@<:@=ABS_DIR@:>@],
+    [where to cache upstream source downloads @<:@/path/to/upstream/downloads@:>@.
+     Distributable creation may include upstream sources in a way that depends
+     on our own distributed sources.  For that to work as intended, it attempts
+     to download upstream archives into this location.]))
 
 dnl  preprocessor symbols for optional/conditional code
 
@@ -516,6 +522,10 @@ AS_IF([test xyes = x$ac_cv_cxx_compiler_gnu],
 
 AC_SUBST([AM_CXXFLAGS], ["-Wall $gcc_AWARE $code_coverage_cxxflags"])
 AC_SUBST([AM_LDFLAGS], [""])
+
+AS_IF([test x = "x$with_download_dir"],
+  [with_download_dir=$am_aux_dir/downloads])
+AC_SUBST(DOWNLOAD_DIR, $with_download_dir)
 
 AC_CONFIG_FILES([
   Makefile
