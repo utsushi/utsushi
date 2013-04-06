@@ -1,5 +1,5 @@
 //  usb.cpp -- shuttle messages between software and USB device
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //  Copyright (C) 2011  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -195,36 +195,87 @@ using std::runtime_error;
         return NULL;
       }
 
-    if (serial_number_matches_(descriptor.iSerialNumber,
-                               device->usb_serial ()))
+    if (!serial_number_matches_(descriptor.iSerialNumber,
+                                device->usb_serial ()))
       {
-        cfg_ = device->usb_configuration ();
-        if_  = device->usb_interface ();
+        libusb_close (handle_);
+        handle_ = NULL;
+        return NULL;
+      }
 
+    int current_cfg;
+    err = libusb_get_configuration (handle_, &current_cfg);
+    if (err)
+      {
+        log::error ("%1%: get configuration: %2%")
+          % __func__
+          % libusb_error_name (err);
+
+        libusb_close (handle_);
+        handle_ = NULL;
+        return NULL;
+      }
+
+    cfg_ = device->usb_configuration ();
+    if (current_cfg != cfg_)
+      {
         err = libusb_set_configuration (handle_, cfg_);
         if (err)
-          log::error ("%1%: set configuration: %2%")
-            % __func__
-            % libusb_error_name (err);
-
-        err = libusb_claim_interface (handle_, if_);
-        if (!err)
           {
-            if (set_bulk_endpoints_(dev))
-              return handle_;   // we got a usable match!
+            log::error ("%1%: set configuration: %2%")
+              % __func__
+              % libusb_error_name (err);
 
-            libusb_release_interface (handle_, if_);
+            libusb_close (handle_);
+            handle_ = NULL;
+            return NULL;
           }
+      }
 
+    if_  = device->usb_interface ();
+    err = libusb_claim_interface (handle_, if_);
+    if (err)
+      {
         log::error ("%1%: claim interface: %2%")
           %  __func__
           % libusb_error_name (err);
+
         if_ = -1;
+        libusb_close (handle_);
+        handle_ = NULL;
+        return NULL;
       }
 
+    err = libusb_get_configuration (handle_, &current_cfg);
+    if (err)
+      {
+        log::error ("%1%: chk configuration: %2%")
+          % __func__
+          % libusb_error_name (err);
+
+        libusb_release_interface (handle_, if_);
+        if_ = -1;
+        libusb_close (handle_);
+        handle_ = NULL;
+        return NULL;
+      }
+
+    if (current_cfg == cfg_)
+      {
+        if (set_bulk_endpoints_(dev))
+          return handle_;   // we got a usable match!
+      }
+    else
+      {
+        log::error ("%1%: interface has wrong configuration: %2%")
+          % __func__
+          % cfg_;
+      }
+
+    libusb_release_interface (handle_, if_);
+    if_ = -1;
     libusb_close (handle_);
     handle_ = NULL;
-
     return NULL;
   }
 

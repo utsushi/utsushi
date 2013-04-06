@@ -46,6 +46,12 @@ store::default_value (const value& v)
   return constraint::default_value (v);
 }
 
+bool
+store::is_singular () const
+{
+  return 1 == size ();
+}
+
 void
 store::operator>> (std::ostream& os) const
 {

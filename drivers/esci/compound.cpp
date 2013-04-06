@@ -81,12 +81,14 @@ compound_base::operator>> (connexion& cnx)
         {
           /**/ if (reply::UNKN == reply_.code)
             {
+              noop_hook_();
               BOOST_THROW_EXCEPTION
                 (invalid_command
                  (_("driver sent unsupported request code")));
             }
           else if (reply::INVD == reply_.code)
             {
+              noop_hook_();
               BOOST_THROW_EXCEPTION
                 (invalid_command
                  (_("driver sent supported request code at the wrong time")));
@@ -524,9 +526,11 @@ compound_base::extension_hook_()
 void
 compound_base::noop_hook_()
 {
-  if (0 != reply_.size)
-    log::trace ("ignoring unexpected payload (%1% bytes)")
-      % reply_.size;
+  if (0 == reply_.size) return;
+
+  log::trace ("%1%: ignoring unexpected payload (%2% bytes)")
+    % str (reply_.code)
+    % reply_.size;
 }
 
 void

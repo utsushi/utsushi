@@ -1,5 +1,5 @@
 //  handle.hpp -- for a SANE scanner object
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -76,18 +76,36 @@ public:
   void cancel ();
 
 protected:
-  utsushi::istream::ptr is_;
-  utsushi::scanner::ptr ptr_;
-  std::string name_;
+  void end_scan_sequence ();
 
-public:
+  //! Decorates utsushi::input::marker()
+  /*! The main reason for this wrapper it to make the stream survive
+   *  across repeated invocations of sane_start() for the duration of
+   *  a whole scan sequence.  Filters that are part of the stream may
+   *  in theory depend on their state carrying over between images to
+   *  achieve the desired effect.
+   *
+   *  A pleasant side effect of keeping the stream around until the
+   *  end of a scan sequence is of course more efficient use of our
+   *  resources and less time wasted setting a stream up.
+   */
+  utsushi::streamsize marker ();
+
+  std::string name_;
+  utsushi::scanner::ptr idev_;
+  utsushi::istream::ptr istr_;
+
+  //! Manage istr_ resource safely in the face of concurrency
+  utsushi::weak_ptr< utsushi::istream > iptr_;
+
   utsushi::streamsize last_marker_;
 
-  sig_atomic_t is_cancelling_;
-  sig_atomic_t is_terminating_;
+  sig_atomic_t work_in_progress_;       // ORDER DEPENDENCY
+  sig_atomic_t cancel_requested_;
 
 private:
   void add_option (utsushi::option& visitor);
+  void update_option (const utsushi::key& k);
 
   utsushi::option::map opt_;
 
@@ -109,6 +127,20 @@ private:
                   const utsushi::string& text = utsushi::string ());
 
   std::vector< option_descriptor > sod_;
+
+  //! Update SANE option capabilities to reflect state
+  /*! Whereas the Utsushi API allows for options to appear and disappear
+   *  at will, the SANE API dictates a fixed number of option descriptor
+   *  objects.  Here we cater to the possibility of disappearing and/or
+   *  reappearing Utsushi options as well as any state changes they may
+   *  have undergone.
+   *
+   *  The optional \a info argument is not modified unless capabilities
+   *  have changed.
+   */
+  void update_capabilities (SANE_Word *info);
+
+  friend struct match_key;
 };
 
 }       // namespace sane

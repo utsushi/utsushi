@@ -28,6 +28,7 @@
 #include <boost/spirit/include/qi_and_predicate.hpp>
 #include <boost/spirit/include/qi_binary.hpp>
 #include <boost/spirit/include/qi_difference.hpp>
+#include <boost/spirit/include/qi_eoi.hpp>
 #include <boost/spirit/include/qi_expect.hpp>
 #include <boost/spirit/include/qi_matches.hpp>
 #include <boost/spirit/include/qi_permutation.hpp>
@@ -58,27 +59,29 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
   namespace value = code_token::value;
 
   capability_rule_ %=
-      (token_(ADF) > caps_adf_rule_)
-    ^ (token_(TPU) > caps_tpu_rule_)
-    ^ (token_(FB ) > caps_fb_rule_)
-    ^ (token_(COL) > token_(value::LIST) > +caps_col_token_)
-    ^ (token_(FMT) > token_(value::LIST) > +caps_fmt_token_)
-    ^ (token_(JPG) > this->decimal_range_)
-    ^ (token_(THR) > this->decimal_range_)
-    ^ (token_(DTH) > token_(value::LIST) > +caps_dth_token_)
-    ^ (token_(GMM) > token_(value::LIST) > +caps_gmm_token_)
-    ^ (token_(GMT) > token_(value::LIST) > +caps_gmt_token_)
-    ^ (token_(CMX) > token_(value::LIST) > +caps_cmx_token_)
-    ^ (token_(SFL) > token_(value::LIST) > +caps_sfl_token_)
-    ^ (token_(MRR) > token_(value::LIST) > +caps_mrr_token_)
-    ^ (token_(BSZ) > (this->range_ | this->numeric_list_))
-    ^ (token_(PAG) > (this->range_ | this->numeric_list_))
-    ^ (token_(RSM) > (this->positive_range_ | this->positive_list_))
-    ^ (token_(RSS) > (this->positive_range_ | this->positive_list_))
-    ^ (token_(CRP) > (this->range_ | this->numeric_list_))
-    ^ (token_(FCS) > caps_fcs_rule_)
-    ^ (token_(FLC) > token_(value::LIST) > +caps_flc_token_)
-    ^ (token_(FLA) > (this->positive_range_ | this->positive_list_))
+    (  (token_(ADF) > caps_adf_rule_)
+     ^ (token_(TPU) > caps_tpu_rule_)
+     ^ (token_(FB ) > caps_fb_rule_)
+     ^ (token_(COL) > token_(value::LIST) > +caps_col_token_)
+     ^ (token_(FMT) > token_(value::LIST) > +caps_fmt_token_)
+     ^ (token_(JPG) > this->decimal_range_)
+     ^ (token_(THR) > this->decimal_range_)
+     ^ (token_(DTH) > token_(value::LIST) > +caps_dth_token_)
+     ^ (token_(GMM) > token_(value::LIST) > +caps_gmm_token_)
+     ^ (token_(GMT) > token_(value::LIST) > +caps_gmt_token_)
+     ^ (token_(CMX) > token_(value::LIST) > +caps_cmx_token_)
+     ^ (token_(SFL) > token_(value::LIST) > +caps_sfl_token_)
+     ^ (token_(MRR) > token_(value::LIST) > +caps_mrr_token_)
+     ^ (token_(BSZ) > (this->range_ | this->numeric_list_))
+     ^ (token_(PAG) > (this->range_ | this->numeric_list_))
+     ^ (token_(RSM) > (this->positive_range_ | this->positive_list_))
+     ^ (token_(RSS) > (this->positive_range_ | this->positive_list_))
+     ^ (token_(CRP) > (this->range_ | this->numeric_list_))
+     ^ (token_(FCS) > caps_fcs_rule_)
+     ^ (token_(FLC) > token_(value::LIST) > +caps_flc_token_)
+     ^ (token_(FLA) > (this->positive_range_ | this->positive_list_))
+     )
+    > qi::eoi
     ;
 
   caps_adf_rule_ %=

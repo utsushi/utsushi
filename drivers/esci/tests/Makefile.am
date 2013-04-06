@@ -30,8 +30,6 @@ TESTS += grammar.utr
 check_PROGRAMS  = setter.utr
 check_PROGRAMS += grammar-formats.utr
 check_PROGRAMS += grammar.utr
-check_PROGRAMS += compound-protocol.utr
-check_PROGRAMS += compound-scanning.utr
 
 AM_CPPFLAGS += -DESCI_GRAMMAR_TRACE=1
 AM_LDFLAGS  += $(BOOST_LDFLAGS)
@@ -39,16 +37,10 @@ AM_LDFLAGS  += $(BOOST_LDFLAGS)
 LDADD = ../libdrv-esci.la $(LIBUTSUSHI_LIBS)
 grammar_formats_utr_LDADD   = $(LDADD) $(BOOST_FILESYSTEM_LIB)
 grammar_utr_LDADD           = $(LDADD) $(BOOST_FILESYSTEM_LIB)
-compound_protocol_utr_LDADD  = $(LDADD)
-compound_protocol_utr_LDADD += ../../../lib/libutsushi.la $(LIBUTSUSHI_LIBS)
-compound_scanning_utr_LDADD  = $(LDADD)
-compound_scanning_utr_LDADD += ../../../lib/libutsushi.la $(LIBUTSUSHI_LIBS)
 ## FIXME: remove once usb connexion is a proper plugin
 setter_utr_LDADD    = $(LDADD) ../../../connexions/libcnx-usb.la
 grammar_formats_utr_LDADD   += ../../../connexions/libcnx-usb.la
 grammar_utr_LDADD           += ../../../connexions/libcnx-usb.la
-compound_protocol_utr_LDADD += ../../../connexions/libcnx-usb.la
-compound_scanning_utr_LDADD += ../../../connexions/libcnx-usb.la
 
 endif
 

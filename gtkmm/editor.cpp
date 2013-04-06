@@ -1,5 +1,5 @@
 //  editor.cpp -- scanning dialog's option value editor
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -25,8 +25,11 @@
 #include <algorithm>
 #include <cmath>
 #include <list>
+#include <set>
+#include <sstream>
 
 #include <boost/assert.hpp>
+#include <boost/assign/list_of.hpp>
 #include <boost/foreach.hpp>
 
 #include <gtkmm/adjustment.h>
@@ -47,6 +50,8 @@
 
 #include "editor.hpp"
 
+using std::stringstream;
+
 namespace utsushi {
 namespace gtkmm {
 
@@ -60,6 +65,18 @@ static void
 on_changed_popup (editor *ed, std::string key, Gtk::ComboBoxText *w)
 {
   ed->set (key, ed->untranslate (key, std::string (w->get_active_text ())));
+}
+
+static void
+on_changed_popup_q (editor *ed, std::string key, Gtk::ComboBoxText *w)
+{
+  stringstream ss;
+  quantity q;
+
+  ss << w->get_active_text ();
+  ss >> q;
+
+  ed->set (key, q);
 }
 
 static void
@@ -86,11 +103,13 @@ class option_visitor
 public:
   option_visitor (editor& ed,
                   editor::widget_map& controls,
+                  editor::signal_map& connects,
                   Glib::RefPtr< Gtk::SizeGroup > hgroup,
                   Glib::RefPtr< Gtk::SizeGroup > vgroup,
                   const option& opt)
     : ed_(&ed)
     , controls_(controls)
+    , connects_(connects)
     , hgroup_(hgroup)
     , vgroup_(vgroup)
     , opt_(opt)
@@ -106,6 +125,7 @@ public:
 protected:
   editor *ed_;
   editor::widget_map& controls_;
+  editor::signal_map& connects_;
   Glib::RefPtr< Gtk::SizeGroup > hgroup_;
   Glib::RefPtr< Gtk::SizeGroup > vgroup_;
   const option& opt_;
@@ -117,6 +137,7 @@ option_visitor::operator() (const quantity& q) const
 {
   Gtk::HBox *widget (0);
   Gtk::Widget *ctrl (0);
+  sigc::connection cnx;
 
   /**/ if (dynamic_cast< range * > (opt_.constraint ().get ()))
     {
@@ -129,7 +150,7 @@ option_visitor::operator() (const quantity& q) const
          (q.is_integral () ?  1 : 0.1),
          (q.is_integral () ? 10 : 1.0));
 
-      range->signal_value_changed ()
+      cnx = range->signal_value_changed ()
         .connect (sigc::bind< editor *, std::string, Gtk::Adjustment * >
                   (sigc::ptr_fun (on_changed_range), ed_, opt_.key (), range));
 
@@ -144,7 +165,33 @@ option_visitor::operator() (const quantity& q) const
     }
   else if (dynamic_cast< store * > (opt_.constraint ().get ()))
     {
-      //! \todo Add support for quantity stores
+      Gtk::ComboBoxText *popup = new Gtk::ComboBoxText ();
+
+      store sc (opt_.constraint< store > ());
+      store::const_iterator it;
+
+      for (it = sc.begin (); sc.end () != it; ++it)
+        {
+          stringstream ss;
+          ss << *it;
+          popup->append_text (ss.str ());
+        }
+      stringstream ss;
+      ss << q;
+      popup->set_active_text (ss.str ());
+
+      BOOST_FOREACH (Gtk::CellRenderer *cr, popup->get_cells ())
+        {
+          // There's no overload yet for Gtk::AlignmentEnum :-(
+          // cr->set_alignment (Gtk::ALIGN_END, Gtk::ALIGN_CENTER);
+          cr->set_alignment (1.0, 0.5);
+        }
+
+      cnx = popup->signal_changed ()
+        .connect (sigc::bind< editor *, std::string, Gtk::ComboBoxText * >
+                  (sigc::ptr_fun (on_changed_popup_q), ed_, opt_.key (), popup));
+
+      ctrl = popup;
     }
   else if (!opt_.constraint ())
     {
@@ -163,6 +210,7 @@ option_visitor::operator() (const quantity& q) const
       vgroup_->add_widget (*ctrl);
 
       controls_[opt_.key ()] = ctrl;
+      connects_[opt_.key ()] = cnx;
     }
 
   return widget;
@@ -174,6 +222,7 @@ option_visitor::operator() (const string& s) const
 {
   Gtk::HBox *widget (0);
   Gtk::Widget *ctrl (0);
+  sigc::connection cnx;
 
   /**/ if (dynamic_cast< store * > (opt_.constraint ().get ()))
     {
@@ -189,7 +238,7 @@ option_visitor::operator() (const string& s) const
         }
       popup->set_active_text (_(s));
 
-      popup->signal_changed ()
+      cnx = popup->signal_changed ()
         .connect (sigc::bind< editor *, std::string, Gtk::ComboBoxText * >
                   (sigc::ptr_fun (on_changed_popup), ed_, opt_.key (), popup));
 
@@ -201,7 +250,7 @@ option_visitor::operator() (const string& s) const
 
       entry->set_text (std::string (s));
 
-      entry->signal_changed ()
+      cnx = entry->signal_changed ()
         .connect (sigc::bind< editor *, std::string, Gtk::Entry * >
                   (sigc::ptr_fun (on_changed_entry), ed_, opt_.key (), entry));
 
@@ -220,6 +269,7 @@ option_visitor::operator() (const string& s) const
       vgroup_->add_widget (*ctrl);
 
       controls_[opt_.key ()] = ctrl;
+      connects_[opt_.key ()] = cnx;
     }
 
   return widget;
@@ -231,7 +281,7 @@ option_visitor::operator() (const toggle& t) const
 {
   Gtk::CheckButton *check = new Gtk::CheckButton (_(opt_.name ()));
   check->set_active (t);
-  check->signal_toggled ()
+  sigc::connection cnx = check->signal_toggled ()
     .connect (sigc::bind< editor *, std::string, Gtk::CheckButton * >
               (sigc::ptr_fun (on_toggled), ed_, opt_.key (), check));
 
@@ -241,6 +291,7 @@ option_visitor::operator() (const toggle& t) const
   vgroup_->add_widget (*widget);
 
   controls_[opt_.key ()] = check;
+  connects_[opt_.key ()] = cnx;
 
   return widget;
 }
@@ -249,8 +300,9 @@ class resetter
   : public value::visitor<>
 {
 public:
-  resetter (Gtk::Widget *w, const option& opt)
+  resetter (Gtk::Widget *w, sigc::connection& cnx, const option& opt)
     : widget_(w)
+    , cnx_(cnx)
     , opt_(opt)
   {}
 
@@ -261,6 +313,7 @@ public:
 
 protected:
   Gtk::Widget *widget_;
+  sigc::connection& cnx_;
   const option& opt_;
 };
 
@@ -268,28 +321,63 @@ template<>
 resetter::result_type
 resetter::operator() (const quantity& q) const
 {
+  cnx_.block ();
   /**/ if (dynamic_cast< range * > (opt_.constraint ().get ()))
     {
       Gtk::SpinButton *spinner = static_cast< Gtk::SpinButton * > (widget_);
+
+      range rc = opt_.constraint< range > ();
+      spinner->set_range (rc.lower ().amount< double > (),
+                          rc.upper ().amount< double > ());
+      spinner->set_digits (q.is_integral () ? 0 : 2);
+      spinner->set_increments (q.is_integral () ?  1 : 0.1,
+                               q.is_integral () ? 10 : 1.0);
       spinner->set_value (q.amount< double > ());
     }
   else if (dynamic_cast< store * > (opt_.constraint ().get ()))
     {
-      //! \todo Add support for quantity stores
+      Gtk::ComboBoxText *popup = static_cast< Gtk::ComboBoxText * > (widget_);
+
+      store sc = opt_.constraint< store > ();
+      store::const_iterator it;
+
+      popup->clear ();
+      for (it = sc.begin (); it != sc.end (); ++it)
+        {
+          stringstream choice;
+          choice << value (*it);
+          popup->append_text (choice.str ());
+        }
+
+      stringstream ss;
+      ss << q;
+      popup->set_active_text (ss.str ());
     }
   else if (!opt_.constraint ())
     {
       //! \todo Add support for free format quantities
     }
+  cnx_.unblock ();
 }
 
 template<>
 resetter::result_type
 resetter::operator() (const string& s) const
 {
+  cnx_.block ();
   /**/ if (dynamic_cast< store * > (opt_.constraint ().get ()))
     {
       Gtk::ComboBoxText *popup = static_cast< Gtk::ComboBoxText * > (widget_);
+
+      store sc = opt_.constraint< store > ();
+      store::const_iterator it;
+
+      popup->clear ();
+      for (it = sc.begin (); it != sc.end (); ++it)
+        {
+          string choice = value (*it);
+          popup->append_text (_(choice));
+        }
       popup->set_active_text (_(s));
     }
   else if (!opt_.constraint ())
@@ -297,19 +385,23 @@ resetter::operator() (const string& s) const
       Gtk::Entry *entry = static_cast< Gtk::Entry * > (widget_);
       entry->set_text (std::string (s));
     }
+  cnx_.unblock ();
 }
 
 template<>
 resetter::result_type
 resetter::operator() (const toggle& t) const
 {
+  cnx_.block ();
   Gtk::CheckButton *check = static_cast< Gtk::CheckButton * > (widget_);
 
   check->set_active (t);
+  cnx_.unblock ();
 }
 
 editor::editor (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
   : base (ptr), matrix_(0), editor_(0)
+  , block_on_toggled_(false)
 {
   builder->get_widget ("toggle-zone", matrix_);
   builder->get_widget ("editor-zone", editor_);
@@ -375,7 +467,8 @@ void
 editor::add_widget (option& opt)
 {
   value val (opt);
-  option_visitor v (*this, this->controls_, hgroup_, vgroup_, opt);
+  option_visitor v (*this, this->controls_, this->connects_,
+                    hgroup_, vgroup_, opt);
 
   Gtk::Widget *widget = val.apply (v);
 
@@ -477,12 +570,28 @@ editor::on_options_changed (option::map::ptr om)
     }
   toggles_["~"]->set_sensitive (count != seen.size ());
 
-  // FIXME hack to get the ADF-only options desensitized
-  (*opts_)["device/doc-source"] = "ADF";
-  (*opts_)["device/doc-source"] = "Flatbed";
+  // FIXME hack to get the other source only options desensitized
+  //       Here's praying this doesn't trigger constraint::violations
+  option source = (*opts_)["device/doc-source"];
+  if (!source.constraint ()->is_singular ())
+    {
+      if (dynamic_cast< store * > (source.constraint ().get ()))
+        {
+          store s = source.constraint< store > ();
 
-  on_toggled ();
+          value current = source;
+          for (store::const_iterator it = s.begin (); it != s.end (); ++it)
+            source = *it;
 
+          source = current;
+        }
+    }
+
+  // Rather than block the individual connections on each toggle, just
+  // turn on_toggled() into a noop for the time being.  As all options
+  // have just been replaced we need to call it explicitly anyway.
+
+  block_on_toggled_ = true;
   {                             // show certain options by default
     Gtk::ToggleButton *toggle;
 
@@ -504,6 +613,9 @@ editor::on_options_changed (option::map::ptr om)
     if (toggle)
       toggle->set_active (toggle->get_sensitive ());
   }
+  block_on_toggled_ = false;
+
+  on_toggled ();                // explicitly update the view
 }
 
 void
@@ -527,7 +639,7 @@ editor::set (const std::string& key, const value& v)
         (_("The selected combination of values is not supported."));
       message.run ();
 
-      resetter r (controls_[key], opt);
+      resetter r (controls_[key], connects_[key], opt);
       value (opt).apply (r);
     }
 
@@ -557,6 +669,8 @@ editor::untranslate (const key& k, const string& s)
 void
 editor::on_toggled ()
 {
+  if (block_on_toggled_) return;
+
   log::brief ("update controller visibility");
 
   for_each (editors_.begin (), editors_.end (),
@@ -594,12 +708,51 @@ editor::update_appearance (keyed_list::value_type& v)
 
   option opt ((*opts_)[k]);
 
+  // FIXME Keep the displayed value in sync with the effective value.
+  //       This hack is needed until the options emit appropriate
+  //       signals that allow us to do this in a suitable callback.
+  if (k == "device/transfer-format")    // has device/mode dependency
+    {
+      resetter r (controls_[k], connects_[k], opt);
+      value (opt).apply (r);
+    }
+
   w->set_sensitive (!opt.is_read_only ());
 
   if (opt.is_active () && active_toggle_(opt.tags ()))
     w->show ();
   else
     w->hide ();
+
+  if (k == "device/scan-area")  // has device/doc-source dependency
+    {
+      resetter r (controls_[k], connects_[k], opt);
+      value (opt).apply (r);
+    }
+
+  const std::set< key > coordinates = boost::assign::list_of
+    ("device/tl-x")
+    ("device/tl-y")
+    ("device/br-x")
+    ("device/br-y")
+    ;
+  if (coordinates.count (k))    // have device/scan-area as well as
+                                // device/doc-source dependency
+    {
+      string v = value ((*opts_)["device/scan-area"]);
+      bool manual = (string ("Manual") == untranslate ("device/scan-area", v));
+
+      keyed_list::iterator jt = editors_.begin ();
+      while (editors_.end () != jt && k != jt->first) ++jt;
+      if (editors_.end () != jt)
+        jt->second->set_sensitive (manual);
+
+      if (!manual)
+        {
+          resetter r (controls_[k], connects_[k], opt);
+          value (opt).apply (r);
+        }
+    }
 }
 
 bool

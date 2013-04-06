@@ -49,6 +49,8 @@ public:
   virtual ~range ();
   virtual const value& operator() (const value& v) const;
 
+  virtual bool is_singular () const;
+
   virtual void operator>> (std::ostream& os) const;
 
   //! Sets the %range's \a lower and \a upper limits

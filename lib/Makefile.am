@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -35,6 +35,7 @@ streams += pump.cpp
 settings  = constraint.cpp
 settings += descriptor.cpp
 settings += key.cpp
+settings += media.cpp
 settings += option.cpp
 settings += preset.cpp
 settings += quantity.cpp
@@ -64,6 +65,7 @@ libutsushi_la_LIBADD  += $(LIBHAL_LIBS)
 libutsushi_la_LIBADD  += $(LIBUDEV_LIBS)
 libutsushi_la_SOURCES  = connexion.cpp
 libutsushi_la_SOURCES += device-info.cpp
+libutsushi_la_SOURCES += exception.cpp
 libutsushi_la_SOURCES += log.cpp
 libutsushi_la_SOURCES += monitor.cpp
 libutsushi_la_SOURCES += run-time.cpp

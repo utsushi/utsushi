@@ -51,6 +51,12 @@ range::operator() (const value& v) const
           : default_);
 }
 
+bool
+range::is_singular () const
+{
+  return lower_ == upper_;
+}
+
 void
 range::operator>> (std::ostream& os) const
 {

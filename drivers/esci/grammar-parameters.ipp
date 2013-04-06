@@ -27,6 +27,7 @@
 #include <boost/spirit/include/qi_alternative.hpp>
 #include <boost/spirit/include/qi_and_predicate.hpp>
 #include <boost/spirit/include/qi_binary.hpp>
+#include <boost/spirit/include/qi_eoi.hpp>
 #include <boost/spirit/include/qi_expect.hpp>
 #include <boost/spirit/include/qi_kleene.hpp>
 #include <boost/spirit/include/qi_permutation.hpp>
@@ -66,27 +67,29 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
   using namespace code_token::parameter;
 
   parameters_rule_ %=
-      (token_(ADF) > *parm_adf_token_)
-    ^ (token_(TPU) > *parm_tpu_token_)
-    ^ (token_(FB ) > *parm_fb_token_)
-    ^ (token_(COL) >  parm_col_token_)
-    ^ (token_(FMT) >  parm_fmt_token_)
-    ^ (token_(JPG) >  this->decimal_)
-    ^ (token_(THR) >  this->decimal_)
-    ^ (token_(DTH) >  parm_dth_token_)
-    ^ (token_(GMM) >  parm_gmm_token_)
-    ^ (token_(GMT) > +gamma_table_rule_)
-    ^ (token_(CMX) >  color_matrix_rule_)
-    ^ (token_(SFL) >  parm_sfl_token_)
-    ^ (token_(MRR) >  parm_mrr_token_)
-    ^ (token_(BSZ) >  this->positive_)
-    ^ (token_(PAG) >  this->decimal_)
-    ^ (token_(RSM) >  this->positive_)
-    ^ (token_(RSS) >  this->positive_)
-    ^ (token_(CRP) >  this->numeric_)
-    ^ (token_(ACQ) >  qi::repeat (4) [ this->positive_ ])
-    ^ (token_(FLC) >  parm_flc_token_)
-    ^ (token_(FLA) >  qi::repeat (4) [ this->positive_ ])
+    (  (token_(ADF) > *parm_adf_token_)
+     ^ (token_(TPU) > *parm_tpu_token_)
+     ^ (token_(FB ) > *parm_fb_token_)
+     ^ (token_(COL) >  parm_col_token_)
+     ^ (token_(FMT) >  parm_fmt_token_)
+     ^ (token_(JPG) >  this->decimal_)
+     ^ (token_(THR) >  this->decimal_)
+     ^ (token_(DTH) >  parm_dth_token_)
+     ^ (token_(GMM) >  parm_gmm_token_)
+     ^ (token_(GMT) > +gamma_table_rule_)
+     ^ (token_(CMX) >  color_matrix_rule_)
+     ^ (token_(SFL) >  parm_sfl_token_)
+     ^ (token_(MRR) >  parm_mrr_token_)
+     ^ (token_(BSZ) >  this->positive_)
+     ^ (token_(PAG) >  this->decimal_)
+     ^ (token_(RSM) >  this->positive_)
+     ^ (token_(RSS) >  this->positive_)
+     ^ (token_(CRP) >  this->numeric_)
+     ^ (token_(ACQ) >  qi::repeat (4) [ this->positive_ ])
+     ^ (token_(FLC) >  parm_flc_token_)
+     ^ (token_(FLA) >  qi::repeat (4) [ this->positive_ ])
+     )
+    > qi::eoi
     ;
 
   gamma_table_rule_ %=

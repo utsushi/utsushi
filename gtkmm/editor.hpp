@@ -1,5 +1,5 @@
 //  editor.hpp -- scanning dialog's option value editor
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -33,6 +33,7 @@
 #include <gtkmm/sizegroup.h>
 #include <gtkmm/table.h>
 #include <gtkmm/togglebutton.h>
+#include <sigc++/connection.h>
 
 #include <utsushi/format.hpp>
 #include <utsushi/option.hpp>
@@ -44,7 +45,8 @@ namespace gtkmm {
 class editor : public Gtk::VBox
 {
 public:
-  typedef std::map< key, Gtk::Widget * > widget_map;
+  typedef std::map< key, Gtk::Widget * >    widget_map;
+  typedef std::map< key, sigc::connection > signal_map;
 
 private:
   typedef Gtk::VBox base;
@@ -62,6 +64,7 @@ private:
   toggle_map toggles_;
   keyed_list editors_;
   widget_map controls_;
+  signal_map connects_;
 
   // Connect each option key to a group key
   std::map< key, key > group_;
@@ -94,6 +97,7 @@ public:
   string untranslate (const key &k, const string &s);
 
 protected:
+  bool block_on_toggled_;
   void on_toggled ();
   void set_toggles_sensitive (const tag_set& tags);
 

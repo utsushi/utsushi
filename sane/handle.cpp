@@ -1,5 +1,5 @@
 //  handle.cpp -- for a SANE scanner object
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -41,6 +41,9 @@
 #include "log.hpp"
 #include "value.hpp"
 
+using std::exception;
+using std::runtime_error;
+
 namespace sane {
 
 //! Keep backend options separate from frontend options
@@ -77,6 +80,7 @@ namespace name
   static const std::string x_resolution ("x-resolution");
   static const std::string y_resolution ("y-resolution");
   static const std::string source ("source");
+  static const std::string mode ("mode");
 
   // Convenience queries for options with similar behaviour
 
@@ -125,6 +129,7 @@ namespace xlate
   static const mapping br_y ("br-y", name::br_y);
 
   static const mapping doc_source ("doc-source", name::source);
+  static const mapping image_type ("image-type", name::mode);
 
 }       // namespace xlate
 
@@ -136,19 +141,21 @@ namespace unit
 using std::logic_error;
 using namespace utsushi;
 
+#define null_ptr 0
+
 handle::handle(const scanner::id& id)
-  : ptr_(scanner::create (connexion::create (id.iftype (), id.path ()), id))
-  , name_(id.name () + " (" + id.udi () + ")")
+  : name_(id.name () + " (" + id.udi () + ")")
+  , idev_(scanner::create (connexion::create (id.iftype (), id.path ()), id))
   , last_marker_(traits::eos ())
-  , is_cancelling_(false)
-  , is_terminating_(false)
+  , work_in_progress_(false)
+  , cancel_requested_(work_in_progress_)
 {
   opt_.add_options ()
     (name::num_options, quantity (0),
      attributes ())
     ;
   opt_.add_option_map ()
-    (option_prefix, ptr_->options ())
+    (option_prefix, idev_->options ())
     ;
 
   sod_.reserve (opt_.size ());
@@ -220,6 +227,24 @@ handle::handle(const scanner::id& id)
   // As per SANE API, sect. 4.4 "Code Flow", the number of options is
   // fixed for a given handle.  Don't let any frontend modify it.
   sod_[0].cap &= ~(SANE_CAP_HARD_SELECT | SANE_CAP_SOFT_SELECT);
+
+  // FIXME hack to get the other source only options desensitized
+  //       Here's praying this doesn't trigger constraint::violations
+  option source = opt_[option_prefix / "doc-source"];
+  if (!source.constraint ()->is_singular ())
+    {
+      if (dynamic_cast< store * > (source.constraint ().get ()))
+        {
+          store s = source.constraint< store > ();
+
+          value current = source;
+          for (store::const_iterator it = s.begin (); it != s.end (); ++it)
+            source = *it;
+
+          source = current;
+        }
+    }
+  update_capabilities (null_ptr);
 }
 
 static void
@@ -304,9 +329,8 @@ handle::is_automatic (SANE_Int index) const
 bool
 handle::is_scanning () const
 {
-  return !(   traits::eoi () == last_marker_
-           || traits::eos () == last_marker_
-           || traits::eof () == last_marker_);
+  return (work_in_progress_
+          && (traits::boi () == last_marker_));
 }
 
 SANE_Status
@@ -327,37 +351,105 @@ handle::get (SANE_Int index, void *value) const
   return status;
 }
 
+void
+handle::update_capabilities (SANE_Word *info)
+{
+  std::vector< option_descriptor >::iterator it = sod_.begin ();
+
+  ++it;                         // do not modify name::num_options
+
+  for (; it != sod_.end (); ++it)
+    {
+      SANE_Int cap = it->cap;
+
+      if (!opt_.count (it->orig_key))
+        {
+          it->cap |= SANE_CAP_INACTIVE;
+        }
+      else                      // check Utsushi option attributes
+        {
+          option opt (opt_[it->orig_key]);
+
+          if (opt.is_active ())
+            {
+              it->cap &= ~SANE_CAP_INACTIVE;
+            }
+          if (opt.is_read_only ())
+            {
+              it->cap &= ~(  SANE_CAP_HARD_SELECT
+                           | SANE_CAP_SOFT_SELECT);
+            }
+        }
+
+      if (info && cap != it->cap) *info |= SANE_INFO_RELOAD_OPTIONS;
+    }
+}
+
 SANE_Status
 handle::set (SANE_Int index, void *value, SANE_Word *info)
 {
+  utsushi::key k (sod_[index].orig_key);
+
+  sane::value v (opt_[k]);
+  v << value;
+  // FIXME remove unit conversion kludge
+  if (name::is_scan_area (sod_[index].sane_key))
+    v /= unit::mm_per_inch;
+
+  if (opt_[k] == v) return SANE_STATUS_GOOD;
+
+  if (is_scanning ()) return SANE_STATUS_DEVICE_BUSY;
+
+  end_scan_sequence ();
+
   SANE_Status status = SANE_STATUS_GOOD;
 
   try
     {
-      utsushi::key k (sod_[index].orig_key);
-
-      sane::value v (opt_[k]);
-      v << value;
-      // FIXME remove unit conversion kludge
-      if (name::is_scan_area (sod_[index].sane_key))
-        v /= unit::mm_per_inch;
       opt_[k] = v;
+
+      // FIXME handling of info is not SANE spec compliant
+
+      if (option_prefix / "image-type" == k)
+        {
+          // update_option (option_prefix / "transfer-format");
+
+          if (info) *info |= SANE_INFO_RELOAD_OPTIONS;
+        }
+      if (option_prefix / "doc-source" == k)
+        {
+          update_option (option_prefix / "duplex");
+          update_option (option_prefix / "scan-area");
+          update_option (option_prefix / "tl-x");
+          update_option (option_prefix / "tl-y");
+          update_option (option_prefix / "br-x");
+          update_option (option_prefix / "br-y");
+
+          if (info) *info |= SANE_INFO_RELOAD_OPTIONS;
+        }
+      if (option_prefix / "scan-area" == k)
+        {
+          update_option (option_prefix / "tl-x");
+          update_option (option_prefix / "tl-y");
+          update_option (option_prefix / "br-x");
+          update_option (option_prefix / "br-y");
+
+          if (info) *info |= SANE_INFO_RELOAD_OPTIONS;
+        }
+
+      update_capabilities (info);
+
+      if (info)
+        {
+          if (v != opt_[k])
+            *info |= SANE_INFO_INEXACT;
+
+          *info |= SANE_INFO_RELOAD_PARAMS;
+        }
     }
   catch (const constraint::violation&)
     {
       status = SANE_STATUS_INVAL;
-    }
-
-  // FIXME This does the bare minimum to approximate the SANE spec
-  // requirement with the current utsushi::option API limitations.
-  // The code sets the reload parameters flag too often and misses
-  // situations where the reload options flag should really be set.
-
-  if (info)
-    {
-      *info |= SANE_INFO_RELOAD_PARAMS;
-      if (name::source == sod_[index].sane_key)
-        *info |= SANE_INFO_RELOAD_OPTIONS;
     }
 
   return status;
@@ -366,42 +458,106 @@ handle::set (SANE_Int index, void *value, SANE_Word *info)
 SANE_Status
 handle::set (SANE_Int index, SANE_Word *info)
 {
+  if (is_scanning ()) return SANE_STATUS_DEVICE_BUSY;
+
+  end_scan_sequence ();
+
   return SANE_STATUS_UNSUPPORTED;
 }
 
 context
 handle::get_context () const
 {
-  if (is_)
-    return is_->get_context ();
+  if (istream::ptr istr = iptr_.lock ())
+    return istr->get_context ();
 
-  return ptr_->get_context ();
+  return idev_->get_context ();
 }
 
 streamsize
 handle::start ()
 {
-  is_ = istream::ptr (new istream ());
-  is_->push (ifilter::ptr (new _flt_::ipadding ()));
-  is_->push (ptr_);
+  // Of all silly things!  Frontends don't always continue reading
+  // until they receive a SANE_Status other than SANE_STATUS_GOOD.
+  // That leaves us in a state where we first have to clean up any
+  // work_in_progress_ before we can get started, really.  To make
+  // things even more entertaining, frontends may decide to cancel
+  // while we are busy cleaning up.
 
-  streamsize rv = is_->marker ();
-
-  if (!is_cancelling_
-      && traits::eof () == rv)
+  if (work_in_progress_)
     {
-      rv = is_->marker ();
+      const streamsize max_length = 1024;
+      octet buffer[max_length];
+
+      streamsize rv;
+
+      do
+        {
+          rv = this->read (buffer, max_length);
+        }
+      while (!traits::is_marker (rv));
+
+      BOOST_ASSERT (!work_in_progress_);
+
+      if (traits::eof () == rv)
+        return rv;
+    }
+
+  BOOST_ASSERT (!work_in_progress_);
+  BOOST_ASSERT (!cancel_requested_);
+
+  BOOST_ASSERT (   traits::eoi () == last_marker_
+                || traits::eos () == last_marker_
+                || traits::eof () == last_marker_);
+
+  // State transitions may be time consuming so there will be some
+  // work_in_progress_, at least until we're mostly done.
+
+  work_in_progress_ = true;
+
+  streamsize lm = last_marker_;
+  streamsize rv = marker ();    // changes value of last_marker_
+
+  if (traits::boi () != rv)
+    {
+      // We try to work our way through a smallish maze of state
+      // transitions to arrive at traits::boi().  Note that this
+      // should not allow the traits::eof() marker to occur more
+      // than once in the sequence, starting from last_marker_.
+
+      /**/ if (traits::eoi () == lm)
+        {
+          if (traits::eos () == rv) rv = marker ();
+          if (traits::eof () == rv) rv = marker ();
+          if (traits::bos () == rv) rv = marker ();
+        }
+      else if (traits::eos () == lm)
+        {
+          if (traits::eof () == rv) rv = marker ();
+          if (traits::bos () == rv) rv = marker ();
+        }
+      else if (traits::eof () == lm)
+        {
+          if (traits::bos () == rv) rv = marker ();
+        }
     }
 
   if (traits::is_marker (rv))
     {
-      last_marker_ = rv;
+      if (   traits::eoi () == rv
+          || traits::eos () == rv
+          || traits::eof () == rv)
+        {
+          work_in_progress_ = false;
+          cancel_requested_ = work_in_progress_;
+        }
+
+      if (traits::boi () != last_marker_) istr_.reset ();
     }
 
-  if (traits::bos () == rv)
-    {
-      rv = is_->marker ();
-    }
+  BOOST_ASSERT (   traits::boi () == last_marker_
+                || traits::eos () == last_marker_
+                || traits::eof () == last_marker_);
 
   return rv;
 }
@@ -409,17 +565,115 @@ handle::start ()
 streamsize
 handle::read (octet *buffer, streamsize length)
 {
-  if (is_)
-    return is_->read (buffer, length);
+  // Not all SANE frontends take a hint when we told them there is no
+  // more image data or the acquisition has been cancelled (even when
+  // said SANE frontend requested cancellation itself!).  Cluebat the
+  // frontend until it takes note.
 
-  return ptr_->read (buffer, length);
+  if (!is_scanning ()) return last_marker_;
+
+  // Now, back to our regular programming.
+
+  BOOST_ASSERT (work_in_progress_);
+  BOOST_ASSERT (traits::boi () == last_marker_);
+
+  streamsize rv;
+
+  try
+    {
+      if (istream::ptr istr = iptr_.lock ())
+        {
+          rv = istr->read (buffer, length);
+        }
+      else
+        {
+          rv = idev_->read (buffer, length);
+        }
+    }
+  catch (const exception& e)
+    {
+      work_in_progress_ = false;
+      cancel_requested_ = work_in_progress_;
+
+      last_marker_ = traits::eof ();
+      istr_.reset ();
+
+      throw;
+    }
+
+  if (traits::is_marker (rv))
+    {
+      if (   traits::eoi () == rv
+          || traits::eof () == rv)
+        {
+          work_in_progress_ = false;
+          cancel_requested_ = work_in_progress_;
+        }
+
+      last_marker_ = rv;
+      if (traits::eof () == last_marker_) istr_.reset ();
+    }
+
+  BOOST_ASSERT (  !traits::is_marker (rv)
+                || traits::eoi () == last_marker_
+                || traits::eof () == last_marker_);
+
+  return rv;
 }
 
 void
 handle::cancel ()
 {
-  ptr_->cancel ();
-  is_.reset ();
+  if ((cancel_requested_ = work_in_progress_))
+    {
+      end_scan_sequence ();
+    }
+}
+
+void
+handle::end_scan_sequence ()
+{
+  idev_->cancel ();
+  istr_.reset ();
+}
+
+streamsize
+handle::marker ()
+{
+  /**/ if (  !istr_
+           || traits::eos () == last_marker_
+           || traits::eof () == last_marker_)
+    {
+      istream::ptr istr (new istream ());
+      istr->push (ifilter::ptr (new _flt_::ipadding ()));
+      istr->push (idev_);
+      istr_ = istr;
+      iptr_ = istr_;
+    }
+
+  streamsize rv = traits::eof ();
+
+  if (istream::ptr istr = iptr_.lock ())
+    {
+      try
+        {
+          rv = istr->marker ();
+        }
+      catch (const exception& e)
+        {
+          work_in_progress_ = false;
+          cancel_requested_ = work_in_progress_;
+
+          last_marker_ = traits::eof ();
+          istr_.reset ();
+
+          throw;
+        }
+    }
+
+  if (traits::is_marker (rv)) last_marker_ = rv;
+
+  return rv;
 }
 
 void
@@ -450,96 +704,44 @@ handle::add_option (option& visitor)
             "The option number count has to be the first option.")));
     }
 
-  option_descriptor sod (visitor);
-
-  // The SANE_Option_Descriptor basics have been taken care off by the
-  // option_descriptor constructor.  Next, deal with the UI constraint
-  // and add an appropriate SANE constraint type (if necessary).
-
-  if (constraint::ptr cp = visitor.constraint ())
+  try
     {
-      /**/ if (typeid (*cp.get ()) == typeid (constraint))
-        {
-          // setting constrained on bounded value type
-        }
-      else if (range *r = dynamic_cast< range * > (cp.get ()))
-        {
-          SANE_Range *sr = new SANE_Range;
-
-          // FIXME remove unit conversion kludge
-          quantity factor (1);
-          if (name::is_scan_area (sod.sane_key))
-            factor = unit::mm_per_inch;
-
-          sane::value (r->lower () * factor, sod.type) >> &sr->min;
-          sane::value (r->upper () * factor, sod.type) >> &sr->max;
-          sane::value (r->quant () * factor, sod.type) >> &sr->quant;
-
-          sod.constraint.range = sr;
-          sod.constraint_type  = SANE_CONSTRAINT_RANGE;
-        }
-      else if (store *s = dynamic_cast< store * > (cp.get ()))
-        {
-          /**/ if (   sod.type == SANE_TYPE_INT
-                   || sod.type == SANE_TYPE_FIXED)
-            {
-              SANE_Word *sw = new SANE_Word[1 + s->size ()];
-              SANE_Word *wp = sw;
-
-              *wp++ = s->size ();
-
-              store::const_iterator it;
-              for (it = s->begin (); s->end () != it; ++wp, ++it)
-                {
-                  sane::value v (*it, sod.type);
-                  // FIXME remove unit conversion kludge
-                  if (name::is_scan_area (sod.sane_key))
-                    v *= unit::mm_per_inch;
-                  v >> wp;
-                }
-
-              sod.constraint.word_list = sw;
-              sod.constraint_type = SANE_CONSTRAINT_WORD_LIST;
-            }
-          else if (SANE_TYPE_STRING == sod.type)
-            {
-              SANE_String_Const *sl = new SANE_String_Const[1 + s->size ()];
-
-              int i = 0;
-              store::const_iterator it = s->begin ();
-              for (; s->end () != it; ++i, ++it)
-                {
-                  string s = *it;
-                  sl[i] = s.c_str ();
-                }
-              sl[i] = NULL;
-
-              sod.constraint.string_list = sl;
-              sod.constraint_type = SANE_CONSTRAINT_STRING_LIST;
-            }
-          else
-            {
-              log::error
-                ("SANE API: list constraint value type not supported");
-              return;
-            }
-        }
-      else
-        {
-          log::error
-            ("SANE API: constraint type not supported");
-          return;
-        }
+      option_descriptor sod (visitor);
+      sod_.push_back (sod);
     }
-  else
+  catch (const runtime_error& e)
     {
-      // setting _not_ constrained on bounded value type
-      // Constraining on bounded value type through the SANE API will
-      // somewhat limit the possibilities but never cause a violation;
-      // setting can be added safely.
+      log::error (e.what ());
     }
+}
 
-  sod_.push_back (sod);
+struct match_key
+{
+  const utsushi::key& k_;
+
+  match_key (const utsushi::key& k)
+    : k_(k)
+  {}
+
+  bool operator() (const handle::option_descriptor& od) const
+  {
+    return k_ == od.orig_key;
+  }
+};
+
+void
+handle::update_option (const utsushi::key& k)
+{
+  if (!opt_.count (k)) return;          // no matching Utsushi option
+
+  std::vector< option_descriptor >::iterator it;
+
+  it = find_if (sod_.begin (), sod_.end (),
+                match_key (k));
+
+  if (sod_.end () == it) return;        // no matching SANE option
+
+  *it = option_descriptor (opt_[k]);
 }
 
 //! Converts an utsushi::key into a valid SANE option descriptor name
@@ -570,6 +772,7 @@ sanitize_(const utsushi::key& k)
     (xlate::resolution_x)
     (xlate::resolution_y)
     (xlate::doc_source)
+    (xlate::image_type)
     ;
 
   BOOST_FOREACH (xlate::mapping entry, well_known)
@@ -604,8 +807,6 @@ sanitize_(const utsushi::key& k)
   return rv;
 }
 
-#define null_ptr 0;
-
 /*! \todo  Make sure SOD::title is a single line?
  *  \todo  Use \c '\\n' to separate paragraphs in SOD::desc
  *  \todo  Remove markup from SOD::title and SOD::desc
@@ -617,7 +818,10 @@ handle::option_descriptor::option_descriptor (const option& visitor)
 
   name  = sane_key.c_str ();
   title = visitor.name ().c_str ();
-  desc  = visitor.text ().c_str ();
+  if (visitor.text ())
+    desc  = visitor.text ().c_str ();
+  else
+    desc  = visitor.name ().c_str ();
 
   const sane::value sv (visitor);
   type = sv.type ();
@@ -643,6 +847,99 @@ handle::option_descriptor::option_descriptor (const option& visitor)
       type = SANE_TYPE_FIXED;
       unit = SANE_UNIT_MM;
     }
+
+  if (name::num_options == sane_key)
+    {
+      return;
+    }
+
+  // The SANE_Option_Descriptor basics have been taken care off now.
+  // Next, deal with the UI constraint and add an appropriate SANE
+  // constraint type (if necessary).
+
+  if (constraint::ptr cp = visitor.constraint ())
+    {
+      /**/ if (typeid (*cp.get ()) == typeid (constraint))
+        {
+          // setting constrained on bounded value type
+        }
+      else if (range *r = dynamic_cast< range * > (cp.get ()))
+        {
+          SANE_Range *sr = new SANE_Range;
+
+          // FIXME remove unit conversion kludge
+          quantity factor (1);
+          if (name::is_scan_area (sane_key))
+            factor = unit::mm_per_inch;
+
+          sane::value (r->lower () * factor, type) >> &sr->min;
+          sane::value (r->upper () * factor, type) >> &sr->max;
+          sane::value (r->quant () * factor, type) >> &sr->quant;
+
+          constraint.range = sr;
+          constraint_type  = SANE_CONSTRAINT_RANGE;
+        }
+      else if (store *s = dynamic_cast< store * > (cp.get ()))
+        {
+          /**/ if (   type == SANE_TYPE_INT
+                   || type == SANE_TYPE_FIXED)
+            {
+              SANE_Word *sw = new SANE_Word[1 + s->size ()];
+              SANE_Word *wp = sw;
+
+              *wp++ = s->size ();
+
+              store::const_iterator it;
+              for (it = s->begin (); s->end () != it; ++wp, ++it)
+                {
+                  sane::value v (*it, type);
+                  // FIXME remove unit conversion kludge
+                  if (name::is_scan_area (sane_key))
+                    v *= unit::mm_per_inch;
+                  v >> wp;
+                }
+
+              constraint.word_list = sw;
+              constraint_type = SANE_CONSTRAINT_WORD_LIST;
+            }
+          else if (SANE_TYPE_STRING == type)
+            {
+              SANE_String_Const *sl = new SANE_String_Const[1 + s->size ()];
+
+              int i = 0;
+              store::const_iterator it = s->begin ();
+              for (; s->end () != it; ++i, ++it)
+                {
+                  string s = *it;
+                  sl[i] = s.c_str ();
+                }
+              sl[i] = NULL;
+
+              constraint.string_list = sl;
+              constraint_type = SANE_CONSTRAINT_STRING_LIST;
+            }
+          else
+            {
+              BOOST_THROW_EXCEPTION
+                (runtime_error
+                 ("SANE API: list constraint value type not supported"));
+            }
+        }
+      else
+        {
+          if (SANE_TYPE_BOOL != type)
+            BOOST_THROW_EXCEPTION
+              (runtime_error
+               ("SANE API: constraint type not supported"));
+        }
+    }
+  else
+    {
+      // setting _not_ constrained on bounded value type
+      // Constraining on bounded value type through the SANE API will
+      // somewhat limit the possibilities but never cause a violation;
+      // setting can be added safely.
+    }
 }
 
 void
@@ -654,10 +951,12 @@ handle::add_group (const key& key, const string& name, const string& text)
   sod.sane_key = sanitize_(key);
   sod.name_ = name;
   sod.desc_ = text;
-
   sod.name  = sod.sane_key.c_str ();
   sod.title = sod.name_.c_str ();
-  sod.desc  = sod.desc_.c_str ();
+  if (sod.desc_)
+    sod.desc  = sod.desc_.c_str ();
+  else
+    sod.desc  = sod.sane_key.c_str ();
   sod.type  = SANE_TYPE_GROUP;
   sod.unit  = SANE_UNIT_NONE;
   sod.size  = 0;

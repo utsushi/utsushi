@@ -1,5 +1,5 @@
 //  context.cpp -- in which to interpret octets in streams
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -30,11 +30,11 @@
 
 namespace utsushi {
 
-#define DEFAULT_MEDIA_TYPE "image/x-raster"
+#define DEFAULT_CONTENT_TYPE "image/x-raster"
 
 context::context (const size_type& width, const size_type& height,
                   const _pxl_type_& pixel_type)
-  : media_type_(DEFAULT_MEDIA_TYPE)
+  : content_type_(DEFAULT_CONTENT_TYPE)
   , pixel_type_(pixel_type)
   , height_(height)
   , width_(width)
@@ -48,9 +48,9 @@ context::context (const size_type& width, const size_type& height,
 }
 
 context::context (const size_type& width, const size_type& height,
-                  const std::string media_type,
+                  const std::string content_type,
                   const context::_pxl_type_& pixel_type)
-  : media_type_(media_type)
+  : content_type_(content_type)
   , pixel_type_(pixel_type)
   , height_(height)
   , width_(width)
@@ -64,27 +64,27 @@ context::context (const size_type& width, const size_type& height,
 }
 
 std::string
-context::media_type () const
+context::content_type () const
 {
-  return media_type_;
+  return content_type_;
 }
 
 void
-context::media_type (const std::string& type)
+context::content_type (const std::string& type)
 {
-  media_type_ = type;
+  content_type_ = type;
 }
 
 bool
 context::is_image () const
 {
-  return (0 == media_type ().find ("image/"));
+  return (0 == content_type ().find ("image/"));
 }
 
 bool
 context::is_raster_image () const
 {
-  return (DEFAULT_MEDIA_TYPE == media_type_);
+  return (DEFAULT_CONTENT_TYPE == content_type_);
 }
 
 bool
@@ -265,7 +265,7 @@ context::check_pixel_type_() const
 
 context::context (const size_type& width, const size_type& height,
                   const short& comps, const short& depth)
-  : media_type_(DEFAULT_MEDIA_TYPE)
+  : content_type_(DEFAULT_CONTENT_TYPE)
   , height_(height)
   , width_(width)
   , h_padding_(0)

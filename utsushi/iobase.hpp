@@ -1,5 +1,5 @@
 //  iobase.hpp -- common aspects of image data I/O
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -35,16 +35,83 @@ public:
 
   virtual ~input ();
 
-  //!  Produces up to \a n octets of image \a data
-  /*!  \return the number of image data octets produced.  If no octets
-   *   were produced a sequence marker is returned.
+  //! Produces up to \a n octets of image \a data
+  /*! The image \a data acquisition process is driven by the read()
+   *  member function.  Each invocation reads up to \a n octets and
+   *  stores these in a \a data buffer provided by the caller.  At
+   *  certain well-defined points in the acquisition process, this
+   *  function reads \e no image data but returns a marker().  Such
+   *  markers indicate state transitions in the acquisition process
+   *  and allow for special processing at each transition.
+   *
+   *  All input objects start out life in the traits::eos() state.
+   *  From there, they pass through traits::bos() and traits::boi()
+   *  before any image \a data is produced.  At the completion of an
+   *  image, the object switches to traits::eoi().  At this point it
+   *  will switch back to traits::boi() when there are more images to
+   *  be acquired.  When the last image's \a data has been acquired,
+   *  the object switches to the traits::eoi() state and finally to
+   *  traits::eos().  This completes a successful scan sequence.
+   *
+   *  Should anything happen that makes it impossible to acquire all
+   *  image data, then read() will, eventually, return traits::eof().
+   *  That is, traits::eof() indicates \e failure to acquire all the
+   *  image data whereas traits::eos() indicates \e success.
+   *
+   *  Summarizing the various state transitions in a diagram leads to
+   *  the following:
+   *
+   *  \dot
+   *  strict digraph
+   *  {
+   *    EOS -> BOS
+   *    EOI -> EOS
+   *    BOI -> EOI
+   *    BOS -> BOI
+   *
+   *    BOI -> BOI
+   *
+   *    BOS -> EOS
+   *    EOI -> BOI
+   *
+   *    BOS -> EOF
+   *    EOS -> EOF
+   *    BOI -> EOF
+   *    EOI -> EOF
+   *
+   *    EOF -> BOS
+   *    EOF -> EOF
+   *
+   *    layout = twopi
+   *    root   = EOF
+   *  }
+   *  \enddot
+   *
+   *  Note that the traits::boi() "transition" to itself is the only
+   *  place where read() may actually produce any image \a data.  In
+   *  this case the return value is non-negative and indicates how
+   *  many octets were acquired.
+   *
+   *  Also note that a successful scan sequence may contain no images
+   *  at all.  In this case the object transitions from traits::bos()
+   *  to traits::eos().  Transitioning from either of these states to
+   *  traits::eof() is usually, but not necessarily, indicative of a
+   *  lack of originals or some kind of hardware trouble.
+   *
+   *  \sa marker(), traits
    */
   virtual streamsize read (octet *data, streamsize n) = 0;
 
-  //!  Returns the value of the current sequence marker
-  /*!  The marker is removed from the image data sequence.  If not at
-   *   a sequence marker, a value different from all marker values is
-   *   returned and the image data sequence is left untouched.
+  //! Returns the value of the current sequence marker
+  /*! The marker is removed from the image data sequence.  If not at
+   *  a sequence marker, a value different from all marker values is
+   *  returned and the image data sequence is left unmodified.
+   *
+   *  This function may be used instead of read() where a marker is
+   *  expected and is functionally equivalent to:
+   *  \code
+   *  read (std::nullptr, 0);
+   *  \endcode
    */
   virtual streamsize marker () = 0;
 

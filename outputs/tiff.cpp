@@ -1,5 +1,5 @@
 //  tiff.cpp -- TIFF image file format support
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -140,7 +140,7 @@ static void set_tags (TIFF *_tiff, const context& ctx);
     }
 
     ctx_ = ctx;
-    ctx_.media_type ("image/tiff");
+    ctx_.content_type ("image/tiff");
 
     partial_line_.reset (new octet[ctx_.octets_per_line ()]);
     partial_size_ = 0;

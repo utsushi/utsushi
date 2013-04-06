@@ -1,5 +1,5 @@
 //  pnm.cpp -- PNM image format support
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -80,7 +80,7 @@ pnm::boi (const context& ctx)
   }
 
   ctx_ = ctx;
-  ctx_.media_type ("image/x-portable-anymap");
+  ctx_.content_type ("image/x-portable-anymap");
 
   std::string header = (fmt % ctx_.width() % ctx_.height()).str();
   io_->write (header.c_str (), header.length ());

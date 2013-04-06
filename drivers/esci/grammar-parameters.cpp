@@ -1,5 +1,5 @@
 //  grammar-parameters.cpp -- component instantiations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -81,15 +81,15 @@ parameters::is_bilevel () const
 }
 
 bool
-parameters::is_monochrome () const
+parameters::is_color () const
 {
   using namespace code_token::parameter::col;
 
   if (!col) return false;
 
-  return ! (   C003 == *col
-            || C024 == *col
-            || C048 == *col);
+  return (   C003 == *col
+          || C024 == *col
+          || C048 == *col);
 }
 
 /*! \note When only a subset of all parameters has been requested,

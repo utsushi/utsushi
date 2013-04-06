@@ -77,7 +77,6 @@ public:
     quantity hi (std::min (quantity (r.upper_), max_));
     quantity dv (lo);
 
-    if (lo == hi) return constraint::ptr ();
     if (lo > hi) std::swap (lo, hi);
     if (lo < 0 && hi > 0) dv = 0;
 
@@ -97,12 +96,13 @@ public:
   {
     using boost::lambda::_1;
 
-    std::vector< quantity > v_capped;
+    std::vector< quantity > v_capped (v.size (), quantity (1 + max_));
 
-    remove_copy_if (v.begin (), v.end (), v_capped.begin (),
-                    _1 > max_);
+    v_capped.erase
+      (remove_copy_if (v.begin (), v.end (), v_capped.begin (), _1 > max_),
+       v_capped.end ());
 
-    if (1 >= v_capped.size ())
+    if (v_capped.empty ())
       return constraint::ptr ();
 
     for_each (quantity q, v_capped) q *= multiplier_;
@@ -209,7 +209,7 @@ capabilities::border_fill () const
       if (!fill.empty ()) s.insert (fill);
     }
 
-  if (1 > s.size ()) return constraint::ptr ();
+  if (s.empty ()) return constraint::ptr ();
 
   return constraint::ptr
     (from< store > ()
@@ -263,7 +263,7 @@ capabilities::document_sources (const quad& default_value) const
   if (tpu) s.insert (N_("TPU"));
   if (fb ) s.insert (N_("Flatbed"));
 
-  if (1 >= s.size ()) return constraint::ptr ();
+  if (s.empty ()) return constraint::ptr ();
 
   std::string default_source;
 
@@ -362,7 +362,7 @@ capabilities::dropouts () const
       if (!dropout.empty ()) s.insert (dropout);
     }
 
-  if (1 > s.size ()) return constraint::ptr ();
+  if (s.empty ()) return constraint::ptr ();
 
   return constraint::ptr
     (from< store > ()
@@ -403,7 +403,7 @@ capabilities::formats (const boost::optional< quad >& default_value) const
         }
     }
 
-  if (1 >= ss.size ()) return constraint::ptr ();
+  if (ss.empty ()) return constraint::ptr ();
 
   if (!default_value)
     default_format = *ss.begin ();
@@ -455,7 +455,7 @@ capabilities::gamma (const boost::optional< quad >& default_value) const
         }
     }
 
-  if (1 >= ss.size ()) return constraint::ptr ();
+  if (ss.empty ()) return constraint::ptr ();
 
   if (!default_value)
     default_gamma = *ss.begin ();
@@ -535,7 +535,7 @@ capabilities::image_types (const boost::optional< quad >& default_value) const
         }
     }
 
-  if (1 >= s.size ()) return constraint::ptr ();
+  if (s.empty ()) return constraint::ptr ();
 
   if (!default_value)
     default_type = *s.begin ();

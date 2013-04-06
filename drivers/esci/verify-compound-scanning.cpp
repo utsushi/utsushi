@@ -1,4 +1,4 @@
-//  compound-scanning.cpp -- scenario tests
+//  verify-compound-scanning.cpp -- scenario tests
 //  Copyright (C) 2012  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
@@ -32,13 +32,11 @@
  *  Note that these tests are \e not meant to test our code.  They are
  *  meant to test the \e firmware that is installed on the device.
  *
- *  \todo  Figure out how to run tests over all available devices that
- *         understand the "compound" protocol variant.
  *  \todo  Figure out how to deal with ADF media reloading.  Right now
  *         you just have to make sure you reload with the right timing
  *         and the correct number of sheets.
  *
- *  \sa compound-protocol.cpp
+ *  \sa verify-compound-protocol.cpp
  */
 
 #include <unistd.h>
@@ -46,19 +44,16 @@
 #include <boost/test/unit_test.hpp>
 
 #include <utsushi/connexion.hpp>
-#include <utsushi/monitor.hpp>
 
-#include "../code-token.hpp"
-#include "../scanner-control.hpp"
+#include "code-token.hpp"
+#include "scanner-control.hpp"
+#include "verify.hpp"
 
 namespace esci = utsushi::_drv_::esci;
 using utsushi::connexion;
-using utsushi::monitor;
 
 using namespace esci::code_token;
 namespace err = reply::info::err;
-
-static monitor mon;             // to discover devices
 
 //! Fixture that combines a connexion with a scanner_control command
 /*! For testing purposes, we would like to have convenient access to a
@@ -70,12 +65,10 @@ struct controller
 {
   connexion::ptr cnx;
 
-  //! \todo  Make sure we only pick up compound protocol devices
   controller ()
     : esci::scanner_control (false)
-  {
-    cnx = connexion::create (mon.begin ()->iftype (), mon.begin ()->path ());
-  }
+    , cnx (verify::cnx)
+  {}
 
   ~controller ()
   {
@@ -204,49 +197,3 @@ BOOST_FIXTURE_TEST_CASE (adf_duplex_jpeg_scan, controller)
 }
 
 BOOST_AUTO_TEST_SUITE_END ();   // scanning
-
-// If no devices are present, at least warn that some testing is being
-// skipped.  Doing so allows us to note this fact in any test reports.
-// Our implementation of init_test_runner() emits copious messages but
-// nothing that will be recorded in a test report.
-
-BOOST_AUTO_TEST_CASE (device_presence)
-{
-  BOOST_WARN_MESSAGE (mon.begin () != mon.end (),
-                      "no scanners detected");
-
-  BOOST_REQUIRE (true);         // prevents Boost.Test warning babble
-}
-
-// Prevent duplicate definition of init_test_runner()
-
-#ifndef BOOST_PARAM_TEST_CASE
-#define BOOST_PARAM_TEST_CASE
-#endif
-
-//! \todo  Make sure we only pick up compound protocol devices
-bool
-init_test_runner ()
-{
-  namespace but = boost::unit_test;
-
-  but::master_test_suite_t& master (but::framework::master_test_suite ());
-  but::test_case_counter tcc;
-  but::test_unit_id tuid;
-
-  BOOST_MESSAGE ("Initializing \"" << master.p_name << "\" test suite");
-
-  if (mon.begin () == mon.end ())
-    {
-      tuid = master.get ("scanning");
-
-      but::traverse_test_tree (tuid, tcc);
-
-      master.remove (tuid);
-      BOOST_MESSAGE ("Disabled \"scanning\" test suite for lack of devices"
-                     " (" << tcc.p_count << " test cases)");
-    }
-  return true;
-}
-
-#include "utsushi/test/runner.ipp"
