@@ -83,6 +83,7 @@ Makefile.in
 /src/version
 
 #  Project specific stuff
+/drivers/esci/verify
 /gtkmm/about.xml
 /lib/tag.cpp
 /sane/sane-utsushi-api.sym
