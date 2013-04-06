@@ -1,5 +1,5 @@
 //  octet.hpp -- type and trait definitions
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -35,7 +35,7 @@ namespace utsushi {
  */
 typedef char octet;
 
-//! Traits extensions for use by utsushi::streams objects
+//! Traits extensions for use by image data producers and consumers
 /*! The standard character traits only provide for an eof() sequence
  *  marker.  The utsushi streams can handle additional markers that
  *  provide for end of scan sequence and end of image type events.

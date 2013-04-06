@@ -63,6 +63,8 @@ public:
    */
   virtual constraint * default_value (const value& v);
 
+  virtual bool is_singular () const;
+
   virtual void operator>> (std::ostream& os) const;
 
   //! Adds values from the range \c [first,last) to the %store

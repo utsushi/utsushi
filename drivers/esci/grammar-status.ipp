@@ -28,6 +28,7 @@
 #include <boost/spirit/include/qi_and_predicate.hpp>
 #include <boost/spirit/include/qi_attr.hpp>
 #include <boost/spirit/include/qi_binary.hpp>
+#include <boost/spirit/include/qi_eoi.hpp>
 #include <boost/spirit/include/qi_expect.hpp>
 #include <boost/spirit/include/qi_permutation.hpp>
 
@@ -54,10 +55,12 @@ basic_grammar_status< Iterator >::basic_grammar_status ()
   using namespace code_token::status;
 
   hardware_status_rule_ %=
-      (token_(PSZ) > stat_psz_rule_)
-    ^ (token_(ERR) > stat_err_rule_)
-    ^ (token_(FCS) > stat_fcs_rule_)
-    ^ (token_(PB ) > this->decimal_)
+    (  (token_(PSZ) > stat_psz_rule_)
+     ^ (token_(ERR) > stat_err_rule_)
+     ^ (token_(FCS) > stat_fcs_rule_)
+     ^ (token_(PB ) > this->decimal_)
+     )
+    > qi::eoi
     ;
 
   stat_psz_rule_ %=

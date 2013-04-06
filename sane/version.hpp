@@ -1,5 +1,5 @@
 //  version.hpp -- information for the SANE utsushi backend
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -60,7 +60,7 @@ extern "C" {                    // needed until sane-backends-1.0.14
  *
  *  \hideinitializer
  */
-#define BACKEND_MINOR  0
+#define BACKEND_MINOR  1
 
 #if (0 > BACKEND_MINOR || 255 < BACKEND_MINOR)
 #error "BACKEND_MINOR value out of range."

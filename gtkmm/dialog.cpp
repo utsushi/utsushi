@@ -1,5 +1,5 @@
 //  dialog.cpp -- to acquire image data
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -23,6 +23,7 @@
 #endif
 
 #include <iostream>
+#include <stdexcept>
 #include <string>
 
 #include <boost/throw_exception.hpp>
@@ -52,6 +53,7 @@ namespace utsushi {
 namespace gtkmm {
 
 using std::logic_error;
+using std::runtime_error;
 
 dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
   : base (ptr), opts_ (new option::map), app_opts_ (new option::map),
@@ -70,20 +72,24 @@ dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
   preview *preview = 0;
   {
     builder->get_widget_derived ("scanner-list", device_list);
+    device_list->unreference ();
     device_list->signal_device_changed ()
       .connect (sigc::mem_fun (*this, &dialog::on_device_changed));
   }
   if (builder->get_object ("presets-list")) {
     presets *widget = 0;
     builder->get_widget_derived ("presets-list", widget);
+    widget->unreference ();
   }
   {
     builder->get_widget_derived ("preview-area", preview);
+    preview->unreference ();
     device_list->signal_device_changed ()
       .connect (sigc::mem_fun (*preview, &preview::on_device_changed));
   }
   {
     builder->get_widget_derived ("editor-pane", editor_);
+    editor_->unreference ();
     signal_options_changed ()
       .connect (sigc::mem_fun (*editor_, &editor::on_options_changed));
   }
@@ -245,36 +251,32 @@ dialog::on_scan (void)
     fs::path filename (std::string (dialog.get_filename ()));
     fs::path::string_type ext = filename.extension ().string ();
 
-    if (ext.empty ()
-        || !(   "pnm"  == ext.substr (1)
-             || "jpg"  == ext.substr (1)
-             || "jpeg" == ext.substr (1)
-             || "pdf"  == ext.substr (1)
-             || "tif"  == ext.substr (1)
-             || "tiff" == ext.substr (1))
-        ) {
-      Gtk::MessageDialog tbd (_("Unsupported file format."),
-                              false, Gtk::MESSAGE_WARNING);
-      tbd.set_secondary_text
-        ((format (_("Support for images in %1% format has not been "
-                    "implemented yet.\n"
-                    "Please use PNM, JPEG, PDF or TIFF for now."))
-          % (ext.empty () ? "default" : ext.substr (1))).str (), true);
-      tbd.run ();
-      return;
-    }
+    std::string fmt;
 
-    // Check whether we need to use raw image data transfer
-
-    bool use_raw_transfer = false;
-    use_raw_transfer |= ((*opts_)["device/image-type"] == "Gray (1 bit)");
-    use_raw_transfer |= ("pnm"  == ext.substr (1));
-    use_raw_transfer |= ("tif"  == ext.substr (1));
-    use_raw_transfer |= ("tiff" == ext.substr (1));
-
-    if (use_raw_transfer)
+    if (!ext.empty ())
       {
-        (*opts_)["device/transfer-format"] = "RAW";
+        /**/ if (".pnm"  == ext) fmt = "PNM";
+        else if (".jpg"  == ext) fmt = "JPEG";
+        else if (".jpeg" == ext) fmt = "JPEG";
+        else if (".pdf"  == ext) fmt = "PDF";
+        else if (".tif"  == ext) fmt = "TIFF";
+        else if (".tiff" == ext) fmt = "TIFF";
+        else
+          log::alert
+            ("cannot infer image format from destination: '%1%'") % filename;
+      }
+
+    if (fmt.empty () && !ext.empty ())
+      {
+        Gtk::MessageDialog tbd (_("Unsupported file format."),
+                                false, Gtk::MESSAGE_WARNING);
+        tbd.set_secondary_text
+          ((format (_("Support for images in %1% format has not been "
+                      "implemented yet.\n"
+                      "Please use PNM, JPEG, PDF or TIFF for now."))
+            % (ext.substr (1))).str (), true);
+        tbd.run ();
+        return;
       }
 
     try
@@ -287,70 +289,118 @@ dialog::on_scan (void)
 
     // Configure the filter chain
 
+    using namespace _flt_;
+
     ostream::ptr ostr (new ostream);
 
-    /**/ if ("pnm"  == ext.substr (1))
+    std::string xfer_fmt;
+    {                      //! \todo get rid of silly type conversion
+      string xfer = value ((*opts_)["device/transfer-format"]);
+      xfer_fmt = std::string (xfer);
+    }
+    /**/ if ("RAW"  == xfer_fmt) {}
+    else if ("JPEG" == xfer_fmt) {}
+    else
       {
-        ostr->push (ofilter::ptr (new _flt_::padding));
-        ostr->push (ofilter::ptr (new _flt_::pnm));
+        log::alert
+          ("unsupported transfer format: '%1%'") % xfer_fmt;
       }
-    else if (   "jpg"  == ext.substr (1)
-             || "jpeg" == ext.substr (1))
+
+    /**/ if ("PNM"  == fmt)
+      {
+        /**/ if ("RAW" == xfer_fmt)
+          ostr->push (ofilter::ptr (new padding));
+        else if ("JPEG" == xfer_fmt)
+          ostr->push (ofilter::ptr (new jpeg::decompressor));
+        else
+          BOOST_THROW_EXCEPTION
+            (runtime_error
+             ((format (_("conversion from %1% to %2% is not supported"))
+               % xfer_fmt
+               % fmt)
+              .str ()));
+        ostr->push (ofilter::ptr (new pnm));
+      }
+    else if ("JPEG" == fmt)
       {
         if ((*opts_)["device/image-type"] == "Gray (1 bit)")
           BOOST_THROW_EXCEPTION
             (logic_error
              (_("JPEG does not support bi-level imagery")));
 
-        if (use_raw_transfer)
+        /**/ if ("RAW" == xfer_fmt)
           {
-            ostr->push (ofilter::ptr (new _flt_::padding));
+            ostr->push (ofilter::ptr (new padding));
             ostr->push (ofilter::ptr (&jpeg_, null_deleter ()));
           }
+        else if ("JPEG" == xfer_fmt)
+          {}
         else
           {
-            (*opts_)["device/transfer-format"] = "JPEG";
+            BOOST_THROW_EXCEPTION
+              (runtime_error
+               ((format (_("conversion from %1% to %2% is not supported"))
+                 % xfer_fmt
+                 % fmt)
+                .str ()));
           }
       }
-    else if ("pdf" == ext.substr (1))
+    else if ("PDF" == fmt)
       {
-        if (use_raw_transfer)
+        /**/ if ("RAW" == xfer_fmt)
           {
-            ostr->push (ofilter::ptr (new _flt_::padding));
+            ostr->push (ofilter::ptr (new padding));
             if ((*opts_)["device/image-type"] == "Gray (1 bit)")
               {
-                ostr->push (ofilter::ptr (new _flt_::g3fax));
+                ostr->push (ofilter::ptr (new g3fax));
               }
             else
               {
                 ostr->push (ofilter::ptr (&jpeg_, null_deleter ()));
               }
           }
+        else if ("JPEG" == xfer_fmt)
+          {}
         else
           {
-            (*opts_)["device/transfer-format"] = "JPEG";
+            BOOST_THROW_EXCEPTION
+              (runtime_error
+               ((format (_("conversion from %1% to %2% is not supported"))
+                 % xfer_fmt
+                 % fmt)
+                .str ()));
           }
-        ostr->push (ofilter::ptr (new _flt_::pdf));
+        ostr->push (ofilter::ptr (new pdf));
       }
-    else if (   "tif"  == ext.substr (1)
-             || "tiff" == ext.substr (1))
+    else if ("TIFF" == fmt)
       {
-        ostr->push (ofilter::ptr (new _flt_::padding));
+        /**/ if ("RAW" == xfer_fmt)
+          ostr->push (ofilter::ptr (new padding));
+        else if ("JPEG" == xfer_fmt)
+          ostr->push (ofilter::ptr (new jpeg::decompressor));
+        else
+          BOOST_THROW_EXCEPTION
+            (runtime_error
+             ((format (_("conversion from %1% to %2% is not supported"))
+               % xfer_fmt
+               % fmt)
+              .str ()));
       }
     else
-      BOOST_THROW_EXCEPTION
-        (logic_error (_("unsupported file format")));
+        {
+          log::brief
+            ("unsupported image format requested, passing data as is");
+        }
 
     // Create an output device
 
     odevice::ptr odev;
 
-    /**/ if ("pdf"  == ext.substr (1))
+    /**/ if ("PDF"  == fmt)
       {
         odev = odevice::ptr (new file_odevice (filename));
       }
-    else if (   "tif"  == ext.substr (1)
-             || "tiff" == ext.substr (1))
+    else if ("TIFF" == fmt)
       {
         odev = odevice::ptr (new _out_::tiff_odevice (filename));
       }

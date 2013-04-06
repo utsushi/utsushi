@@ -63,6 +63,12 @@ constraint::default_value (const value& v)
   return this;
 }
 
+bool
+constraint::is_singular () const
+{
+  return false;
+}
+
 void
 constraint::operator>> (std::ostream& os) const
 {

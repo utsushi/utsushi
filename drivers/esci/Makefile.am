@@ -151,3 +151,61 @@ exec_udev_rulesdir = $(UDEV_SYSCONFDIR)/rules.d
 exec_udev_rules_DATA = utsushi-esci.rules
 
 endif # enable_udev_config
+
+if enable_boost_unit_test_framework
+
+noinst_PROGRAMS  = verify
+
+verify_SOURCES  = verify.cpp
+verify_SOURCES += verify.hpp
+verify_SOURCES += verify-compound-protocol.cpp
+verify_SOURCES += verify-compound-scanning.cpp
+
+verify_CPPFLAGS  = $(AM_CPPFLAGS)
+verify_CPPFLAGS += -DBOOST_TEST_NO_MAIN
+if with_shared_enabled
+verify_CPPFLAGS += -DBOOST_TEST_DYN_LINK
+endif
+if with_static_enabled
+verify_CPPFLAGS += -DBOOST_TEST_ALTERNATIVE_INIT_API
+endif
+
+verify_LDADD  = libdrv-esci.la
+verify_LDADD += ../../lib/libutsushi.la $(LIBUTSUSHI_LIBS)
+verify_LDADD += $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+## FIXME: remove once usb and hexdump connexions are proper plugins
+verify_LDADD += ../../connexions/libcnx-usb.la
+verify_LDADD += ../../connexions/libcnx-hexdump.la
+
+endif # enable_boost_unit_test_framework
+
+##  Data files for use by the verify utility
+
+EXTRA_DIST += data/DS-5500.dat
+EXTRA_DIST += data/DS-6500.dat
+EXTRA_DIST += data/DS-7500.dat
+EXTRA_DIST += data/DS-50000.dat
+EXTRA_DIST += data/DS-60000.dat
+EXTRA_DIST += data/DS-70000.dat
+
+##  A recipe to clone data files from an existing file.  Note that the
+##  $$src and $$dst variables need to have the same length for cloning
+##  to work.  Clones will have their firmware version numbers wiped to
+##  indicate the fact that they aren't based on any hardware out there
+##  in the wild.
+
+clone_dat = \
+	src=`echo $< | sed 's,^.*/,,; s,\.dat$$,,'`; \
+	dst=`echo $@ | sed 's,^.*/,,; s,\.dat$$,,'`; \
+	sed -e "s,\(\#PRDh...\)$$src,\1$$dst," \
+	    -e 's,\([^\#]\)IPL ....,\1IPL     ,' \
+	    -e 's,\([^\#]\)ADF ....,\1ADF     ,' \
+	    -e 's,\([^\#]\)FB  ....,\1FB      ,' \
+	    -e 's,\([^\#]\)TPU ....,\1TPU     ,' \
+	    $< > $@
+
+$(srcdir)/data/DS-6500.dat: $(srcdir)/data/DS-7500.dat
+	$(clone_dat)
+
+$(srcdir)/data/DS-60000.dat: $(srcdir)/data/DS-70000.dat
+	$(clone_dat)

@@ -140,6 +140,8 @@ public:
 
   void share_values (option::map& om);
 
+  void relink ();               //!< \todo Remove relink() wart
+
 protected:
   virtual bool validate (const value::map& vm) const;
   virtual void finalize (const value::map& vm);
@@ -149,6 +151,7 @@ protected:
   void insert (const utsushi::key& name_space, const option::map& om);
   void remove (const option::map& om, value::map& vm);
   void remove (const utsushi::key& name_space, const option::map& om);
+  void relink (const option::map& submap);
 
   //! Prevent std::map<K,T>::operator[] from modifying its map
   /*! This also allows the use of operator[] on constant maps.

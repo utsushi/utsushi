@@ -1,5 +1,5 @@
 //  compound-scanner.cpp -- devices that handle compound commands
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -27,11 +27,15 @@
 #include <stdexcept>
 #include <string>
 
+#include <boost/assert.hpp>
 #include <boost/foreach.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <utsushi/constraint.hpp>
+#include <utsushi/exception.hpp>
 #include <utsushi/i18n.hpp>
+#include <utsushi/media.hpp>
 #include <utsushi/range.hpp>
 
 #include "compound-scanner.hpp"
@@ -42,10 +46,12 @@ namespace utsushi {
 namespace _drv_ {
 namespace esci {
 
+using std::deque;
 using std::domain_error;
 using std::logic_error;
 using std::runtime_error;
 
+static system_error::error_code token_to_error_code (const quad& what);
 static std::string create_message (const quad& part, const quad& what);
 
 // Disable the restriction checking for now to work around limitations
@@ -142,6 +148,131 @@ vectorize (const quad& token, const matrix< double, 3 >& color_matrix)
   return result;
 }
 
+//! Make sure protocol and JPEG image sizes are consistent
+/*! Assuming that the queue's first data_buffer has a pst member, the
+ *  queue is processed until the size info has been patched, a buffer
+ *  with a pen member is encountered or the queue is exhausted.  The
+ *  return value indicates whether patching was successfull.  If not,
+ *  the size information embedded in the JPEG data will be incorrect.
+ *
+ *  The image size information is at byte offsets 3 to 6 in the JPEG
+ *  header's baseline DCT frame.  A baseline DCT frame starts with a
+ *  \c 0xff \c 0xc0 marker.
+ *
+ *  The implementation neither assumes that the baseline DCT is in the
+ *  first buffer, nor that it is wholly contained in a single buffer.
+ *  As a matter of fact, even the height and width may be split across
+ *  adjacent buffers (at the byte level).
+ */
+static bool
+patch_jpeg_image_size_(deque< data_buffer >& q)
+{
+  BOOST_ASSERT (!q.empty ());
+  BOOST_ASSERT ( q.front ().pst);
+
+  byte patch[7];
+
+  // We don't care about the first three bytes of the DCT frame.
+  // These bytes indicate the length of the frame and the image's
+  // bit depth.  Bytes 4 and 5 indicate the image height in big
+  // endian fashion.  Bytes 6 and 7 are the image width.
+
+  patch[3] = 0xff & (q.front ().pst->height / 256);
+  patch[4] = 0xff & (q.front ().pst->height % 256);
+  patch[5] = 0xff & (q.front ().pst->width  / 256);
+  patch[6] = 0xff & (q.front ().pst->width  % 256);
+
+  int patch_size = sizeof (patch) / sizeof (*patch);
+  int offset     = -1;          // into baseline DCT frame payload
+  byte state     = 0x00;        // anything but 0xff
+
+  deque< data_buffer >::iterator it (q.begin ());
+
+  do
+    {
+      byte *head = it->data ();
+      byte *tail = head + it->size ();
+
+      while (head != tail)
+        {
+          if (0 <= offset)      // looking at baseline DCT payload
+            {
+              if (2 < offset)   // looking at image size
+                {
+                  *head = patch[offset];
+                }
+              ++offset;
+            }
+
+          if (0xff == state)
+            {
+              if (0xc0 == *head)
+                {
+                  offset = 0;   // found baseline DCT
+                }
+            }
+
+          state = *head;
+          ++head;
+        }
+      if (it->pen) break;
+    }
+  while (offset < patch_size
+         && ++it != q.end ());
+
+  return (offset == patch_size);
+}
+
+//! Replace image size estimate with actual size
+/*! The implementation works with a queue that has a data_buffer::pst
+ *  on its first buffer.  It searches for the first buffer with a pen
+ *  member and, if one is found, copies the pen member's size to the
+ *  pst member of the buffer at the queue's front.
+ *
+ *  If no buffer with pen member is found or the sizes were identical,
+ *  the queue is left unmodified.
+ *
+ *  The \a format argument is used to invoke add-on functions that
+ *  know how to modify image size information embedded in the image
+ *  data itself if necessary.
+ *
+ *  \sa patch_jpeg_image_size_
+ */
+static bool
+patch_image_size_(deque< data_buffer >& q,
+                  const boost::optional< quad >& format)
+{
+  BOOST_ASSERT (!q.empty ());
+  BOOST_ASSERT ( q.front ().pst);
+
+  deque< data_buffer >::const_iterator it (q.begin ());
+
+  while (it != q.end () && !it->pen) ++it;
+
+  if (it == q.end ())
+    {
+      log::error ("no image end info found");
+      return false;
+    }
+
+  if (   (q.front ().pst->width  == it->pen->width)
+      && (q.front ().pst->height == it->pen->height))
+    {
+      log::trace ("initial image size was correct");
+      return true;
+    }
+
+  q.front ().pst->width  = it->pen->width;
+  q.front ().pst->height = it->pen->height;
+
+  using namespace code_token::parameter;
+
+  if (fmt::JPG == format)
+    return patch_jpeg_image_size_(q);
+
+  return true;
+}
+
 compound_scanner::compound_scanner (const connexion::ptr& cnx)
   : scanner (cnx)
   , info_()                     // initialize reference data
@@ -202,6 +333,32 @@ compound_scanner::configure ()
     insert (doc_source_options (defs_.source ()));
   }
   {
+    constraint::ptr cp (caps_.image_types (defs_.col));
+
+    if (cp)
+      {
+        add_options ()
+          ("image-type", cp,
+           attributes (tag::general)(level::standard),
+           N_("Image Type")
+           )
+          ;
+      }
+  }
+  {
+    constraint::ptr cp (caps_.dropouts ());
+
+    if (cp)
+      {
+        add_options ()
+          ("dropout", cp,
+           attributes (tag::enhancement)(level::standard),
+           N_("Dropout")
+           )
+          ;
+      }
+  }
+  {
     constraint::ptr cp (caps_.formats (defs_.fmt));
 
     if (cp)
@@ -223,6 +380,19 @@ compound_scanner::configure ()
           ("jpeg-quality", cp,
            attributes (),
            N_("JPEG Quality")
+           )
+          ;
+      }
+  }
+  {
+    constraint::ptr cp (caps_.threshold (defs_.thr));
+
+    if (cp)
+      {
+        add_options ()
+          ("threshold", cp,
+           attributes (tag::enhancement)(level::standard),
+           N_("Threshold")
            )
           ;
       }
@@ -264,41 +434,16 @@ compound_scanner::configure ()
           ;
       }
   }
+  //! \todo Change units from bytes to kilobytes
   {
-    constraint::ptr cp (caps_.image_types (defs_.col));
+    constraint::ptr cp (caps_.buffer_size (defs_.bsz));
 
     if (cp)
       {
         add_options ()
-          ("image-type", cp,
-           attributes (tag::general)(level::standard),
-           N_("Image Type")
-           )
-          ;
-      }
-  }
-  {
-    constraint::ptr cp (caps_.dropouts ());
-
-    if (cp)
-      {
-        add_options ()
-          ("dropout", cp,
-           attributes (tag::enhancement)(level::standard),
-           N_("Dropout")
-           )
-          ;
-      }
-  }
-  {
-    constraint::ptr cp (caps_.threshold (defs_.thr));
-
-    if (cp)
-      {
-        add_options ()
-          ("threshold", cp,
-           attributes (tag::enhancement)(level::standard),
-           N_("Threshold")
+          ("transfer-size", cp,
+           attributes (),
+           N_("Transfer Size")
            )
           ;
       }
@@ -349,20 +494,6 @@ compound_scanner::configure ()
             ;
         }
     }
-  //! \todo Change units from bytes to kilobytes
-  {
-    constraint::ptr cp (caps_.buffer_size (defs_.bsz));
-
-    if (cp)
-      {
-        add_options ()
-          ("transfer-size", cp,
-           attributes (),
-           N_("Transfer Size")
-           )
-          ;
-      }
-  }
   /*! \todo Remove this ugly hack.  It is only here to allow scan-cli
    *        to process all the options that might possibly be given on
    *        the command-line.  Its option parser only does a single
@@ -422,8 +553,19 @@ compound_scanner::set_up_image ()
   ctx_ = context (pixel_width (), pixel_height (), pixel_type ());
   ctx_.resolution (*parm_.rsm, *parm_.rss);
 
-  if (fmt::JPG == parm_.fmt)
-    ctx_.media_type ("image/jpeg");
+  if (!(fmt::RAW == parm_.fmt || parm_.is_bilevel ()))
+    {
+      ctx_.content_type ("image/jpeg");
+    }
+
+  if (buffer_.pst
+      && 0 != buffer_.pst->padding
+      && !(fmt::RAW == parm_.fmt || parm_.is_bilevel ()))
+    {
+      log::alert ("ignoring %1% byte padding")
+        % buffer_.pst->padding;
+      buffer_.pst->padding = 0;
+    }
 
   if (buffer_.pst)
     {
@@ -463,12 +605,6 @@ compound_scanner::sgetn (octet *data, streamsize n)
   offset_ += rv;
 
   return rv;
-}
-
-void
-compound_scanner::cancel_()
-{
-  acquire_.cancel ();
 }
 
 void
@@ -518,8 +654,9 @@ compound_scanner::set_up_hardware ()
   if (stat_.error)
     {
       BOOST_THROW_EXCEPTION
-        (runtime_error
-         (create_message (stat_.error->part_, stat_.error->what_)));
+        (system_error
+         (token_to_error_code (stat_.error->what_),
+          create_message (stat_.error->part_, stat_.error->what_)));
     }
 
   *cnx_ << acquire_.start ();
@@ -722,7 +859,7 @@ compound_scanner::set_up_image_mode ()
           ;
     }
 
-  if (parm_.is_monochrome ())
+  if (!parm_.is_color ())
     {
       if (val_.count ("dropout"))
         {
@@ -804,13 +941,6 @@ compound_scanner::set_up_scan_area ()
 
   if (br_x < tl_x) swap (tl_x, br_x);
   if (br_y < tl_y) swap (tl_y, br_y);
-
-  if (br_x - tl_x < min_width_ || br_y - tl_y < min_height_)
-    BOOST_THROW_EXCEPTION
-      (domain_error
-       ((format (_("Scan area too small.\n"
-                   "The area needs to be larger than %1% by %2%."))
-         % min_width_ % min_height_).str ()));
 
   parm_.acq = std::vector< integer > ();
   parm_.acq->push_back ((*parm_.rsm *  tl_x        ).amount< integer > ());
@@ -925,15 +1055,20 @@ compound_scanner::set_up_transfer_size ()
 void
 compound_scanner::fill_buffer_()
 {
-  std::deque< data_buffer >& q
-    (streaming_flip_side_image_ ? rear_ : face_);
+  const parameters&     p (streaming_flip_side_image_ ? parm_flip_ : parm_);
+  deque< data_buffer >& q (streaming_flip_side_image_ ? rear_ : face_);
 
-  while (q.empty ())
+  while (!enough_image_data_(p, q))
     {
+      bool do_cancel = cancel_requested ();
+
+      if (do_cancel) acquire_.cancel ();
+
       data_buffer buf = ++acquire_;
 
       cancelled_ = (buf.empty()
-                    && (do_cancel_ || buf.is_cancel_requested ()));
+                    && (do_cancel || buf.is_cancel_requested ()));
+      if (cancelled_) cancel ();        // notify idevice::read()
 
       if (buf.is_flip_side ())
         rear_.push_back (buf);
@@ -942,15 +1077,38 @@ compound_scanner::fill_buffer_()
 
       if (acquire_.fatal_error ())
         BOOST_THROW_EXCEPTION
-          (runtime_error
-           (create_message (acquire_.fatal_error ()->part,
+          (system_error
+           (token_to_error_code (acquire_.fatal_error ()->what),
+            create_message (acquire_.fatal_error ()->part,
                             acquire_.fatal_error ()->what)));
+    }
+
+  if (q.front ().pst && use_final_image_size_(p))
+    {
+      patch_image_size_(q, p.fmt);
     }
 
   buffer_ = q.front ();
   q.pop_front ();
 
   offset_ = 0;
+}
+
+bool
+compound_scanner::use_final_image_size_(const parameters& parm) const
+{
+  return false;
+}
+
+bool
+compound_scanner::enough_image_data_(const parameters& parm,
+                                     const deque< data_buffer >& q) const
+{
+  if (q.empty ()) return false;
+
+  return (use_final_image_size_(parm)
+          ?  q.back ().pen
+          : !q.empty ());
 }
 
 //! \todo Don't use non-standard map::at() accessor
@@ -1005,7 +1163,87 @@ compound_scanner::finalize (const value::map& vm)
       insert (new_opts, final_vm);
     }
 
+  {
+    string type = final_vm["image-type"];
+
+    if (   type == "Color (1 bit)"
+        || type == "Gray (1 bit)"
+        || type == "Red (1 bit)"
+        || type == "Blue (1 bit)"
+        || type == "Green (1 bit)")
+      {
+        if ((*constraints_["transfer-format"]) (string ("RAW"))
+            != value (string ("RAW")))
+          {
+            constraints_["transfer-format"]
+              = shared_ptr <constraint >
+              (from< store > () -> alternative (N_("RAW")));
+          }
+        final_vm["transfer-format"] = "RAW";
+      }
+    else
+      {
+        constraints_["transfer-format"] = caps_.formats (defs_.fmt);
+        if (final_vm["transfer-format"]
+            != (*constraints_["transfer-format"]) (final_vm["transfer-format"]))
+          {
+            final_vm["transfer-format"]
+              = constraints_["transfer-format"]->default_value ();
+          }
+      }
+  }
+
+  string scan_area = final_vm["scan-area"];
+  if (scan_area != "Manual")
+    {
+      if (scan_area == "Maximum")
+        {
+          // This relies on default values being set to lower() values
+          // for tl-x and tl-y and upper() values for br-x and br-y.
+          // Note that alignment is irrelevant for the maximum size.
+          final_vm["tl-x"] = constraints_["tl-x"]->default_value ();
+          final_vm["tl-y"] = constraints_["tl-y"]->default_value ();
+          final_vm["br-x"] = constraints_["br-x"]->default_value ();
+          final_vm["br-y"] = constraints_["br-y"]->default_value ();
+        }
+      else                      // well-known media size
+        {
+          media size = media::lookup (scan_area);
+
+          quantity tl_x (0.0);
+          quantity tl_y (0.0);
+          quantity br_x = size.width ();
+          quantity br_y = size.height ();
+
+          align_document (final_vm["doc-source"],
+                          tl_x, tl_y, br_x, br_y);
+
+          final_vm["tl-x"] = tl_x;
+          final_vm["tl-y"] = tl_y;
+          final_vm["br-x"] = br_x;
+          final_vm["br-y"] = br_y;
+        }
+    }
+
+  {                             // minimal scan area check
+    quantity tl_x = final_vm["tl-x"];
+    quantity tl_y = final_vm["tl-y"];
+    quantity br_x = final_vm["br-x"];
+    quantity br_y = final_vm["br-y"];
+
+    if (br_x < tl_x) swap (tl_x, br_x);
+    if (br_y < tl_y) swap (tl_y, br_y);
+
+    if (br_x - tl_x < min_width_ || br_y - tl_y < min_height_)
+      BOOST_THROW_EXCEPTION
+        (constraint::violation
+         ((format (_("Scan area too small.\n"
+                     "The area needs to be larger than %1% by %2%."))
+           % min_width_ % min_height_).str ()));
+  }
+
   option::map::finalize (final_vm);
+  relink ();
 
   // Update best effort estimate for the context at time of scan.
   // While not a *hard* requirement, this does make for a better
@@ -1020,8 +1258,10 @@ compound_scanner::finalize (const value::map& vm)
 
   ctx_ = context (pixel_width (), pixel_height (), pixel_type ());
 
-  if (fmt::JPG == parm_.fmt)
-    ctx_.media_type ("image/jpeg");
+  if (!(fmt::RAW == parm_.fmt || parm_.is_bilevel ()))
+    {
+      ctx_.content_type ("image/jpeg");
+    }
 }
 
 //! \todo clarify intent of AMIN and AMAX info_ fields
@@ -1156,7 +1396,18 @@ compound_scanner::add_scan_area_options (option::map& opts,
 
   const std::vector< integer >& area (src.area);
 
+  std::list< std::string > areas = media::within (double (area[0]) / 100,
+                                                  double (area[1]) / 100);
+
   opts.add_options ()
+    ("scan-area", (from< utsushi::store > ()
+                   -> alternatives (areas.begin (), areas.end ())
+                   -> alternative (N_("Manual"))
+                   -> alternative (N_("Maximum"))
+                   -> default_value ("Manual")),
+     attributes (tag::general)(level::standard),
+     N_("Scan Area")
+     )
     ("tl-x", (from< utsushi::range > ()
               -> lower (0.)
               -> upper (double (area[0]) / 100)
@@ -1322,6 +1573,62 @@ compound_scanner::doc_source_options (const value& v) const
   return const_cast< compound_scanner& > (*this).doc_source_options (v);
 }
 
+void
+compound_scanner::align_document (const string& doc_source,
+                                  quantity& tl_x, quantity& tl_y,
+                                  quantity& br_x, quantity& br_y) const
+{
+  using namespace code_token::information;
+
+  BOOST_STATIC_ASSERT ((adf::LEFT == fb::LEFT));
+  BOOST_STATIC_ASSERT ((adf::CNTR == fb::CNTR));
+  BOOST_STATIC_ASSERT ((adf::RIGT == fb::RIGT));
+
+  quad align (adf::CNTR);       // default as per spec
+  double max_width  = 0;
+  double max_height = 0;
+
+  if (doc_source == "ADF")
+    {
+      align = info_.adf->alignment;
+      max_width  = info_.adf->area[0];
+      max_height = info_.adf->area[1];
+    }
+  if (doc_source == "Flatbed")
+    {
+      align = info_.flatbed->alignment;
+      max_width  = info_.flatbed->area[0];
+      max_height = info_.flatbed->area[1];
+    }
+  if (doc_source == "TPU")
+    {
+      // TPU has no alignment "attribute"
+      max_width  = info_.tpu->area[0];
+      max_height = info_.tpu->area[1];
+    }
+
+  if (0 == max_width)           // nothing we can do
+    return;
+  if (0 == max_height)          // nothing we can do
+    return;
+
+  max_width  /= 100.0;          // conversion to inches
+  max_height /= 100.0;
+
+  quantity width (br_x - tl_x);
+  quantity x_shift;
+  quantity y_shift;             // no specification, assume 0
+
+  if (adf::LEFT == align) x_shift =  0.0;
+  if (adf::CNTR == align) x_shift = (max_width - width) / 2;
+  if (adf::RIGT == align) x_shift =  max_width - width;
+
+  tl_x += x_shift;
+  tl_y += y_shift;
+  br_x += x_shift;
+  br_y += y_shift;
+}
+
 context::size_type
 compound_scanner::pixel_width () const
 {
@@ -1397,6 +1704,18 @@ compound_scanner::pixel_type () const
   return context::unknown_type;
 }
 
+static system_error::error_code
+token_to_error_code (const quad& what)
+{
+  using namespace code_token::status;
+
+  /**/ if (err::OPN  == what) return system_error::cover_open;
+  else if (err::PE   == what) return system_error::media_out;
+  else if (err::PJ   == what) return system_error::media_jam;
+
+  return system_error::unknown_error;
+}
+
 // Helper functions for create_message()
 static std::string create_adf_message (const quad& what);
 static std::string create_fb_message (const quad& what);
@@ -1436,6 +1755,10 @@ create_message (const quad& part, const quad& what)
   return fallback_message (part, what);
 }
 
+/*! \warn  The message strings are used by the SANE backend to map some
+ *         exceptions to SANE_Status values as a fallback for the cases
+ *         where it doesn't recognize our system_error exceptions.
+ */
 static std::string
 create_adf_message (const quad& what)
 {

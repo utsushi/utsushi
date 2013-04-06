@@ -64,6 +64,7 @@
 namespace po = boost::program_options;
 
 using namespace utsushi;
+using namespace _flt_;
 
 using std::invalid_argument;
 using std::logic_error;
@@ -418,18 +419,19 @@ main (int argc, char *argv[])
 
       // Self-documenting command options
 
-      std::string fmt ("PNM");
+      std::string fmt;
 
       po::variables_map cmd_vm;
       po::options_description cmd_opts (_("Utility options"));
       cmd_opts
         .add_options ()
         ("debug", _("log device I/O in hexdump format"))
-        ("image-format", (po::value< std::string > (&fmt)
-                          -> default_value (fmt)),
+        ("image-format", (po::value< std::string > (&fmt)),
          _("output image format\n"
            "PNM, JPEG, PDF, TIFF "
-           "or one of the device supported transfer-formats"))
+           "or one of the device supported transfer-formats.  "
+           "The explicitly mentioned types are normally inferred from"
+           " the output file name."))
         ;
 
       po::options_description cmd_line;
@@ -516,7 +518,7 @@ main (int argc, char *argv[])
 
       // Infer desired image format from file extension
 
-      if (!uri.empty () && cmd_vm["image-format"].defaulted ())
+      if (!uri.empty ())
         {
           fs::path path (uri);
 
@@ -527,97 +529,128 @@ main (int argc, char *argv[])
           else if (".tif"  == path.extension ()) fmt = "TIFF";
           else if (".tiff" == path.extension ()) fmt = "TIFF";
           else
-            log::brief
+            log::alert
               ("cannot infer image format from destination: '%1%'") % path;
-        }
-
-      // Check whether we need to use raw image data transfer
-
-      option::map& om (*device->options ());
-
-      bool use_raw_transfer = false;
-      use_raw_transfer |= (om["image-type"] == "Gray (1 bit)");
-      use_raw_transfer |= ("PNM"  == fmt);
-      use_raw_transfer |= ("TIFF" == fmt);
-
-      if (use_raw_transfer)
-        {
-          om["transfer-format"] = "RAW";
         }
 
       // Configure the filter chain
 
-      ostream ostr;
+      option::map& om (*device->options ());
+      ostream::ptr ostr (new ostream);
+
+      std::string xfer_fmt;
+      {                         //! \todo get rid of silly type conversion
+        string xfer = value (om["transfer-format"]);
+        xfer_fmt = std::string (xfer);
+      }
+      /**/ if ("RAW"  == xfer_fmt) {}
+      else if ("JPEG" == xfer_fmt) {}
+      else
+        {
+          log::alert
+            ("unsupported transfer format: '%1%'") % xfer_fmt;
+        }
 
       /**/ if ("PNM" == fmt)
         {
-          ostr.push (ofilter::ptr (new _flt_::padding));
-          ostr.push (ofilter::ptr (new _flt_::pnm));
+          /**/ if ("RAW"  == xfer_fmt)
+            ostr->push (ofilter::ptr (new padding));
+          else if ("JPEG" == xfer_fmt)
+            ostr->push (ofilter::ptr (new jpeg::decompressor));
+          else
+            BOOST_THROW_EXCEPTION
+              (runtime_error
+               ((format (_("conversion from %1% to %2% is not supported"))
+                 % xfer_fmt
+                 % fmt)
+                .str ()));
+          ostr->push (ofilter::ptr (new pnm));
         }
       else if ("JPEG" == fmt)
         {
           if (om["image-type"] == "Gray (1 bit)")
-            {
-              BOOST_THROW_EXCEPTION
-                (logic_error
-                 (_("JPEG does not support bi-level imagery")));
-            }
+            BOOST_THROW_EXCEPTION
+              (logic_error
+               (_("JPEG does not support bi-level imagery")));
 
-          if (use_raw_transfer)
+          /**/ if ("RAW" == xfer_fmt)
             {
-              ostr.push (ofilter::ptr (new _flt_::padding));
-              _flt_::jpeg::ptr jpeg (new _flt_::jpeg);
+              ostr->push (ofilter::ptr (new padding));
+              jpeg::compressor::ptr jpeg (new jpeg::compressor);
               try
                 {
                   (*jpeg->options ())["quality"]
-                    = value (om["device/jpeg-quality"]);
+                    = value (om["jpeg-quality"]);
                 }
               catch (...)
                 {}
-              ostr.push (ofilter::ptr (jpeg));
+              ostr->push (ofilter::ptr (jpeg));
             }
+          else if ("JPEG" == xfer_fmt)
+            {}
           else
             {
-              om["transfer-format"] = "JPEG";
+              BOOST_THROW_EXCEPTION
+                (runtime_error
+                 ((format (_("conversion from %1% to %2% is not supported"))
+                   % xfer_fmt
+                   % fmt)
+                  .str ()));
             }
         }
       else if ("PDF" == fmt)
         {
-          if (use_raw_transfer)
+          /**/ if ("RAW" == xfer_fmt)
             {
-              ostr.push (ofilter::ptr (new _flt_::padding));
+              ostr->push (ofilter::ptr (new padding));
               if (om["image-type"] == "Gray (1 bit)")
                 {
-                  ostr.push (ofilter::ptr (new _flt_::g3fax));
+                  ostr->push (ofilter::ptr (new g3fax));
                 }
               else
                 {
-                  _flt_::jpeg::ptr jpeg (new _flt_::jpeg);
+                  jpeg::compressor::ptr jpeg (new jpeg::compressor);
                   try
                     {
                       (*jpeg->options ())["quality"]
-                        = value (om["device/jpeg-quality"]);
+                        = value (om["jpeg-quality"]);
                     }
                   catch (...)
                     {}
-                  ostr.push (ofilter::ptr (jpeg));
+                  ostr->push (ofilter::ptr (jpeg));
                 }
             }
+          else if ("JPEG" == xfer_fmt)
+            {}
           else
             {
-              om["transfer-format"] = "JPEG";
+              BOOST_THROW_EXCEPTION
+                (runtime_error
+                 ((format (_("conversion from %1% to %2% is not supported"))
+                   % xfer_fmt
+                   % fmt)
+                  .str ()));
             }
-          ostr.push (ofilter::ptr (new _flt_::pdf));
+          ostr->push (ofilter::ptr (new pdf));
         }
       else if ("TIFF" == fmt)
         {
-          ostr.push (ofilter::ptr (new _flt_::padding));
+          /**/ if ("RAW" == xfer_fmt)
+            ostr->push (ofilter::ptr (new padding));
+          else if ("JPEG" == xfer_fmt)
+            ostr->push (ofilter::ptr (new jpeg::decompressor));
+          else
+            BOOST_THROW_EXCEPTION
+              (runtime_error
+               ((format (_("conversion from %1% to %2% is not supported"))
+                 % xfer_fmt
+                 % fmt)
+                .str ()));
         }
       else
         {
-          BOOST_THROW_EXCEPTION
-            (invalid_argument
-             (_("unsupported image-format requested")));
+          log::brief
+            ("unsupported image format requested, passing data as is");
         }
 
       // Create an output device
@@ -630,11 +663,11 @@ main (int argc, char *argv[])
           if (uri.empty ()) uri = "/dev/stdout";
           if ("TIFF" == fmt)
             {
-              ostr.push (odevice::ptr (new _out_::tiff_odevice (uri)));
+              ostr->push (odevice::ptr (new _out_::tiff_odevice (uri)));
             }
           else
             {
-              ostr.push (odevice::ptr (new file_odevice (uri)));
+              ostr->push (odevice::ptr (new file_odevice (uri)));
             }
         }
       else
@@ -644,7 +677,7 @@ main (int argc, char *argv[])
                               ? path.parent_path () / path.stem ()
                               : path.stem (), path.extension ().native ());
 
-          ostr.push (odevice::ptr (new file_odevice (gen)));
+          ostr->push (odevice::ptr (new file_odevice (gen)));
         }
 
       idevice::ptr cancellable_device (new cancellable_idevice (device));
@@ -655,7 +688,7 @@ main (int argc, char *argv[])
       set_signal (SIGTERM, request_cancellation);
       set_signal (SIGINT , request_cancellation);
 
-      streamsize rv = istr | ostr;
+      streamsize rv = istr | *ostr;
 
       if (traits::eof () == rv)
         log::alert ("acquisition was cancelled");

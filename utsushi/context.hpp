@@ -1,5 +1,5 @@
 //  context.hpp -- in which to interpret octets in streams
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -53,17 +53,17 @@ public:
            const size_type& height = unknown_size,
            const _pxl_type_& pixel_type = RGB8);
   context (const size_type& width, const size_type& height,
-           const std::string media_type,
+           const std::string content_type,
            const _pxl_type_& pixel_type = RGB8);
 
-  //! An internet media type identifier as specified in RFC 2046
+  //! A content type identifier as specified in RFC 2046
   /*!
    *  Additional information can be found at:
    *   - http://tools.ietf.org/html/rfc2046
    *   - http://en.wikipedia.org/wiki/Internet_media_type
    */
-  std::string media_type () const;
-  void media_type (const std::string& type);
+  std::string content_type () const;
+  void content_type (const std::string& type);
 
   bool is_image () const;
   bool is_raster_image () const;
@@ -106,7 +106,7 @@ public:
   void resolution (const size_type& x_res, const size_type& y_res);
 
 protected:
-  std::string media_type_;
+  std::string content_type_;
   _pxl_type_  pixel_type_;
 
   size_type height_;

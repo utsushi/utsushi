@@ -1,5 +1,5 @@
 //  backend.cpp -- implementation of the SANE utsushi backend
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //  Copyright (C) 2007  EPSON AVASYS CORPORATION
 //
 //  License: GPL-3.0+
@@ -45,6 +45,7 @@
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/static_assert.hpp>
 
+#include <utsushi/exception.hpp>
 #include <utsushi/monitor.hpp>
 #include "../lib/run-time.ipp"  /*! \todo Get rid of this kludge */
 
@@ -58,7 +59,6 @@
 #include "log.hpp"
 
 using namespace utsushi;
-using std::runtime_error;
 using boost::format;
 
 //! Tracks the devices currently in use by the application
@@ -66,6 +66,7 @@ using boost::format;
  *  initialization status.
  */
 static std::set< SANE_Handle > *backend = NULL;
+static std::set< SANE_Handle > *expired = NULL;
 
 //! Remembers the authorization callback passed to sane_init()
 static SANE_Auth_Callback auth_cb = NULL;
@@ -126,6 +127,15 @@ static SANE_Auth_Callback auth_cb = NULL;
         ;                                                       \
       cxx_exception_aspect_handler (h);                         \
     }                                                           \
+                                                                \
+  if (SANE_STATUS_GOOD != status)                               \
+    {                                                           \
+      log::error                                                \
+        ("%1%: %2%")                                            \
+        % fn_name                                               \
+        % sane_strstatus (status)                               \
+        ;                                                       \
+    }                                                           \
   /**/
 
 //! Implements the common C++ exception aspect part for a handle
@@ -138,9 +148,9 @@ static void
 cxx_exception_aspect_handler (sane::handle *h)
 {
   return_unless (h);
-  return_if (h->is_terminating_);       // prevent recursion
+  return_if (expired->count (h));       // prevent recursion
 
-  h->is_terminating_ = true;
+  expired->insert (h);
 
   log::fatal
     ("closing handle for '%1%'")
@@ -150,6 +160,7 @@ cxx_exception_aspect_handler (sane::handle *h)
   sane_close (h);               // may trigger unhandled exceptions!
   if (backend->erase (h))
     {
+      expired->erase (h);
       delete h;
     }
 }
@@ -200,40 +211,6 @@ cxx_exception_aspect_handler ()
   std::terminate ();
 }
 
-//! Makes sure that image acquisition is really cancelled
-/*! This overload is for those situations where the calling function
- *  has access to a buffer of its own.  One place is in sane_read(),
- *  where the caller already provides one.  Normally, that buffer is
- *  significantly larger than the one provided by the backend.
- */
-static void
-terminate_image_acquisition (sane::handle *h,
-                             octet *buffer, streamsize max_length)
-{
-  return_unless (h->is_cancelling_);
-  return_unless (h->is_scanning ());
-
-  while (traits::eof () != h->read (buffer, max_length))
-    ;                           // condition does the processing
-
-  h->last_marker_ = traits::eof ();
-}
-
-/*! This overload is for those situations where the calling function
- *  does not have access to a buffer of its own.  Likely places are
- *  sane_start() and sane_close().  The backend implementation has a
- *  teensy little static buffer of its own.  While this may be a bit
- *  slow to run to completion, it is foolproof.
- */
-static void
-terminate_image_acquisition (sane::handle *h)
-{
-  static const streamsize max_length = 1024;
-  static octet buffer[max_length];
-
-  terminate_image_acquisition (h, buffer, max_length);
-}
-
 static std::string
 frame_to_string (const SANE_Frame& f)
 {
@@ -248,17 +225,49 @@ frame_to_string (const SANE_Frame& f)
   return "(unknown)";
 }
 
-// FIXME once the utsushi::exception tree has been fleshed out (#424)
+//! Map system_error objects to a corresponding SANE_Status
 static SANE_Status
-interpret_esci_driver_error (const runtime_error& e)
+exception_to_sane_status (const system_error& e)
 {
-  std::string msg (e.what ());
+  log::error ("system_error: %1%") % e.what ();
 
-  if (std::string::npos != msg.rfind ("/PE  "))
+  if (system_error::media_out  == e.code ()) return SANE_STATUS_NO_DOCS;
+  if (system_error::media_jam  == e.code ()) return SANE_STATUS_JAMMED;
+  if (system_error::cover_open == e.code ()) return SANE_STATUS_COVER_OPEN;
+
+  return SANE_STATUS_IO_ERROR;
+}
+
+using std::runtime_error;
+
+//! Map runtime_error objects to a corresponding SANE_Status
+/*! \warn  The implementation relies heavily on the implementation of
+ *         the driver in terms of the message used.
+ *  \note  This overload is used as a fallback for situations where
+ *         the exception handling fails to recognize a system_error
+ *         and would end up in the cxx_exception_aspect_footer().
+ *         This odd behaviour has been observed on Ubuntu 10.04 LTS
+ *         and is believed to be due to an issue in the C++ runtime
+ *         (4.4.3-4ubuntu5.1).  The very same binary code worked as
+ *         intended on Ubuntu 12.04 LTS.
+ */
+static SANE_Status
+exception_to_sane_status (const runtime_error& e)
+{
+  log::error ("runtime_error: %1%") % e.what ();
+
+  if (0 == strcmp (_("Please put your document in the ADF before scanning."),
+                   _(e.what ())))
     return SANE_STATUS_NO_DOCS;
-  if (std::string::npos != msg.rfind ("/PJ  "))
+  if (0 == strcmp (_("Clear the ADF document jam and try again."),
+                   _(e.what ())))
     return SANE_STATUS_JAMMED;
-  if (std::string::npos != msg.rfind ("/OPN "))
+  if (0 == strcmp (_("A multi page feed occurred in the ADF.\n"
+                     "Clear the document feeder and try again."),
+                   _(e.what ())))
+    return SANE_STATUS_JAMMED;
+  if (0 == strcmp (_("Please close the ADF cover and try again."),
+                   _(e.what ())))
     return SANE_STATUS_COVER_OPEN;
 
   return SANE_STATUS_IO_ERROR;
@@ -363,6 +372,7 @@ sane_init (SANE_Int *version_code, SANE_Auth_Callback authorize)
 
       try
         {
+          expired = new std::set< SANE_Handle >;
           backend = new std::set< SANE_Handle >;
           sane::device::pool = new std::vector< sane::device >;
         }
@@ -407,6 +417,8 @@ sane_exit (void)
         }
       delete backend;
       backend = NULL;
+      delete expired;
+      expired = NULL;
 
       //! \todo  Add bit flipping support to log::category
       // log::matching &= ~log::SANE_BACKEND;
@@ -583,7 +595,6 @@ sane_close (SANE_Handle handle)
       h = static_cast< sane::handle * > (handle);
 
       sane_cancel (h);
-      terminate_image_acquisition (h);
 
       backend->erase (h);
       delete h;
@@ -769,15 +780,6 @@ sane_start (SANE_Handle handle)
 
       h = static_cast< sane::handle * > (handle);
 
-      if (h->is_scanning ())
-        {
-          return_value_unless (h->is_cancelling_,
-                               SANE_STATUS_DEVICE_BUSY);
-
-          terminate_image_acquisition (h);
-        }
-      h->is_cancelling_ = false;
-
       streamsize rv = h->start ();
 
       if (traits::boi () != rv)
@@ -785,16 +787,16 @@ sane_start (SANE_Handle handle)
           status = SANE_STATUS_INVAL;
           if (traits::eos () == rv) status = SANE_STATUS_NO_DOCS;
           if (traits::eoi () == rv) status = SANE_STATUS_EOF;
-          if (traits::eof () == rv)
-            {
-              h->is_cancelling_ = false;
-              status = SANE_STATUS_CANCELLED;
-            }
+          if (traits::eof () == rv) status = SANE_STATUS_CANCELLED;
         }
     }
-  catch (runtime_error& e)
+  catch (const system_error& e)
     {
-      status = interpret_esci_driver_error (e);
+      status = exception_to_sane_status (e);
+    }
+  catch (const runtime_error& e)
+    {
+      status = exception_to_sane_status (e);
     }
   cxx_exception_aspect_footer (h);
 
@@ -823,36 +825,20 @@ sane_read (SANE_Handle handle, SANE_Byte *buffer, SANE_Int max_length,
 
       BOOST_STATIC_ASSERT (sizeof (octet) == sizeof (SANE_Byte));
 
-      if (h->is_cancelling_)
-        {
-          terminate_image_acquisition
-            (h, reinterpret_cast< octet * > (buffer), max_length);
+      *length = h->read (reinterpret_cast< octet * > (buffer),
+                         max_length);
 
-          h->is_cancelling_ = false;
-          status = SANE_STATUS_CANCELLED;
-        }
-      else
+      if (traits::is_marker (*length))
         {
-          *length = h->read (reinterpret_cast< octet * > (buffer),
-                             max_length);
-          if (traits::is_marker (*length))
-            {
-              h->last_marker_ = *length;
-              status = SANE_STATUS_IO_ERROR;
-              if (traits::eos () == *length) status = SANE_STATUS_NO_DOCS;
-              if (traits::eoi () == *length) status = SANE_STATUS_EOF;
-              if (traits::eof () == *length)
-                {
-                  h->is_cancelling_ = false;
-                  status = SANE_STATUS_CANCELLED;
-                }
-            }
+          status = SANE_STATUS_IO_ERROR;
+          if (traits::eos () == *length) status = SANE_STATUS_NO_DOCS;
+          if (traits::eoi () == *length) status = SANE_STATUS_EOF;
+          if (traits::eof () == *length) status = SANE_STATUS_CANCELLED;
         }
 
       if (SANE_STATUS_GOOD != status)
         {
           *length = 0;
-          log::error ("%1%: %2%") % fn_name % sane_strstatus (status);
         }
 
       // The SANE specification follows the PNM specification for its
@@ -873,9 +859,13 @@ sane_read (SANE_Handle handle, SANE_Byte *buffer, SANE_Int max_length,
         % *length
         % max_length;
     }
-  catch (runtime_error& e)
+  catch (const system_error& e)
     {
-      status = interpret_esci_driver_error (e);
+      status = exception_to_sane_status (e);
+    }
+  catch (const runtime_error& e)
+    {
+      status = exception_to_sane_status (e);
     }
   cxx_exception_aspect_footer (h);
 
@@ -891,8 +881,15 @@ sane_read (SANE_Handle handle, SANE_Byte *buffer, SANE_Int max_length,
  *
  *  \remarks
  *  It is safe to call this function asynchronously (e.g. from signal
- *  handlers).  Its completion only guarantees that cancellation has
- *  been initiated, \e not that cancellation has completed.
+ *  handlers).  Its completion only guarantees that cancellation of a
+ *  long-running operation has been initiated, not that cancellation
+ *  of that operation has completed.  The long-running operation will
+ *  typically be acquisition of an image but other operations such as
+ *  initiating a scan with sane_start() or performing calibration via
+ *  a call to sane_control_option() for a \c SANE_TYPE_BUTTON option
+ *  could be subject to cancellation as well.  Note, though, that only
+ *  sane_read() lends itself to straightforward cancellation support
+ *  (due to its intended use in a loop construct).
  */
 void
 sane_cancel (SANE_Handle handle)
@@ -904,9 +901,6 @@ sane_cancel (SANE_Handle handle)
       return_unless_known (handle);
 
       h = static_cast< sane::handle * > (handle);
-
-      return_if (h->is_cancelling_);
-      h->is_cancelling_ = true;
 
       h->cancel ();
     }

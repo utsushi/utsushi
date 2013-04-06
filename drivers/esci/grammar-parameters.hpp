@@ -1,5 +1,5 @@
 //  grammar-parameters.hpp -- component rule declarations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -52,7 +52,7 @@ struct parameters
   void clear ();
 
   bool is_bilevel () const;
-  bool is_monochrome () const;
+  bool is_color () const;
   quad source () const;
 
   quantity border_left (const quantity& default_value) const;

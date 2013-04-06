@@ -1,5 +1,5 @@
 //  device.hpp -- interface declarations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -56,7 +56,11 @@ public:
   }
 
 protected:
-  device () {}
+  device ()
+    : last_marker_(traits::eof ())
+  {}
+
+  traits::int_type last_marker_;
 
   mutable marker_signal_type signal_marker_;
   mutable update_signal_type signal_update_;
@@ -77,20 +81,29 @@ public:
   /*! This method prepares the instance to return traits::eof(), the
    *  cancellation marker, on a future invocation of read().
    *
-   *  The implementation arranges for the cancellation marker to be
-   *  returned when read() would normally return traits::eos(), the
-   *  end-of-sequence marker, and calls cancel_().  This arrangement
-   *  allows instances to produce image data until a suitable point
-   *  to cancel has been reached.  Instances can cancel "mid-image"
-   *  by returning traits::eof() from sgetn().  They can cancel at
-   *  the end of any given image by returning \c false from one of
-   *  set_up_image(), obtain_media() or is_consecutive().
-   *
    *  Although this function is typically called in response to user
    *  input, it may be called by the instance itself when it detects
    *  a cancellation request from the device.  Error recovery is yet
    *  another situation where one may want to cancel the acquisition
    *  of image data.
+   *
+   *  It is safe to call this function asynchronously.  It will only
+   *  initiate cancellation and return immediately.  Its return does
+   *  \e not indicate that cancellation has completed.  Cancellation
+   *  has only completed after a subsequent call to read() returns a
+   *  traits::eof() or traits::eos() value.  In the latter case, the
+   *  cancellation request was ignored.
+   *
+   *  The implementation arranges for the cancellation marker to be
+   *  returned when read() would normally return traits::eos(), the
+   *  end-of-sequence marker.  This arrangement allows instances to
+   *  produce image data until a suitable point to cancel has been
+   *  reached.  Instances can either cancel "mid-image" by returning
+   *  traits::eof() from sgetn() or at the end of any given image by
+   *  returning \c false from one of set_up_image(), obtain_media(),
+   *  is_consecutive() or even set_up_sequence().
+   *
+   *  \sa cancel_requested()
    */
   void cancel ();
 
@@ -163,22 +176,75 @@ protected:
    */
   virtual streamsize sgetn (octet *data, streamsize n);
 
-  //! Initiates cancellation of image data production
-  /*! The default implementation does nothing.  This effectively makes
-   *  the device acquire all image data anyway, but still notifies the
-   *  processing pipeline that a cancel was requested.
+  //! Tells whether cancellation has been requested
+  /*! Device implementations that want to support cancellation of the
+   *  image acquisition process can use this query to check whether a
+   *  request for cancellation has been made.
    *
-   *  Subclasses are expected to override the default implementation.
-   *  A typical override will arrange for cancellation on the hardware
-   *  side and release resources that are no longer needed.
+   *  Care should be taken using this function as its return value may
+   *  change asynchronously.  That means that this code
+   *
+   *  \code
+   *  if (!cancel_requested () && cancel_requested ())
+   *    {
+   *      std::clog << "state changed between calls";
+   *    }
+   *  \endcode
+   *
+   *  could in fact produce output, odd as this may seem at first.  We
+   *  suggest that functions locally cache the result of a single call
+   *  and use the cached value instead.  Doing so makes implementing
+   *  your functions a lot easier.  When caching, it is best to cache
+   *  at the smallest convenient scope so that cancellation requests
+   *  are still noticed as soon as possible.  For example, inside the
+   *  body of an iteration statement rather than at function scope.
+   *
+   *  Using caching, the example from above becomes
+   *
+   *  \code
+   *  bool do_cancel = cancel_requested ();
+   *  if (!do_cancel && do_cancel)
+   *    {
+   *      std::clog << "state changed between calls";
+   *    }
+   *  \endcode
+   *
+   *  and be guaranteed to produce no output, ever.
+   *
+   *  \return  \c true if image acquisition should be cancelled,
+   *           \c false otherwise
    */
-  virtual void cancel_();
-
-  traits::int_type last_marker_;
-  sig_atomic_t     do_cancel_;
+  bool cancel_requested () const;
 
 private:
   streamsize read_(octet *data, streamsize n);
+
+  //! Image acquisition process state tracker
+  /*! When this variable's value equals \c true, image acquisition is
+   *  a work_in_progress_.  If \c false there is, very unsurprisingly,
+   *  no work_in_progress_.
+   *
+   *  The value of this variable is maintained by read() and changes
+   *  to \c true just before an attempt to change to traits::bos() is
+   *  made.  This is meant to allow for cancellation support in time
+   *  consuming set_up_sequence() and obtain_media() implementations.
+   *  The variable is reset to \c false when the instance transitions
+   *  to either traits::eos() or traits::eof().  The cancel_requested_
+   *  state tracker is cleared immediately after this (so intervening
+   *  invocations of cancel() cannot preemptively cancel any upcoming
+   *  work_in_progress_).
+   */
+  sig_atomic_t work_in_progress_;       // ORDER DEPENDENCY
+
+  //! Cancellation request state tracker
+  /*! Reality check!  If there is no work_in_progress_ then it cannot
+   *  be cancelled.  For this very reason, cancel_requested_ is only
+   *  ever initialized using work_in_progress_ (even at construction
+   *  time!).  As long as the latter value is set to \c false before
+   *  any assignment, the cancel() function can \e never trigger any
+   *  cancellation of work that is yet to be started.
+   */
+  sig_atomic_t cancel_requested_;
 };
 
 //!  Interface for image data consumers

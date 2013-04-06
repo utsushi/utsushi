@@ -1,6 +1,22 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.1.0                                             (2013-03-04)
+----------------------------------------------------------------------
+ * supports scan area selection via well-known media sizes
+ * automatically adjusts the selected media size to media position
+ * allows for faster image transfer during preview and when saving to
+   PNM or TIFF files
+ * improves compatibility with a number of SANE frontends
+ * improves resource management in the SANE backend
+ * disables JPEG transfer mode for monochrome scans (because the JPEG
+   file format does not support monochrome image data)
+ * fixes error reporting in the SANE backend
+ * fixes resource management in the GUI scan dialog that could leave
+   scanners in a busy state
+ * fixes cancellation issues that led to incorrect error messages
+
+----------------------------------------------------------------------
 utsushi-0.0.0                                             (2012-10-19)
 ----------------------------------------------------------------------
  * initial release

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--  about.xml :: application meta-data interface definition
-      Copyright (C) 2012  SEIKO EPSON CORPORATION
+      Copyright (C) 2013  SEIKO EPSON CORPORATION
 
       License: GPL-3.0+
       Author : AVASYS CORPORATION
@@ -24,7 +24,7 @@
     <property name="title">@PACKAGE_NAME@</property>
     <property name="program_name">@PACKAGE_NAME@</property>
     <property name="version">@PACKAGE_VERSION@</property>
-    <property name="copyright">Copyright (C) 2012  SEIKO EPSON CORPORATION</property>
+    <property name="copyright">Copyright (C) 2012-2013  SEIKO EPSON CORPORATION</property>
     <property name="website">@PACKAGE_URL@</property>
     <property name="authors">AVASYS CORPORATION</property>
   </object>

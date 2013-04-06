@@ -1,6 +1,6 @@
 ##  Makefile.am -- an automake template for Makefile.in
 ##  Copyright (C) 2013  Olaf Meeuwissen
-##  Copyright (C) 2012  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -88,6 +88,7 @@ stream_headers += utsushi/pump.hpp
 setting_headers  = utsushi/constraint.hpp
 setting_headers += utsushi/descriptor.hpp
 setting_headers += utsushi/key.hpp
+setting_headers += utsushi/media.hpp
 setting_headers += utsushi/option.hpp
 setting_headers += utsushi/preset.hpp
 setting_headers += utsushi/quantity.hpp
@@ -118,6 +119,7 @@ nobase_include_HEADERS += $(stream_headers)
 nobase_include_HEADERS += $(setting_headers)
 nobase_include_HEADERS += utsushi/connexion.hpp
 nobase_include_HEADERS += utsushi/device-info.hpp
+nobase_include_HEADERS += utsushi/exception.hpp
 nobase_include_HEADERS += utsushi/i18n.hpp
 nobase_include_HEADERS += utsushi/log.hpp
 nobase_include_HEADERS += utsushi/monitor.hpp

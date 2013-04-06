@@ -1,5 +1,5 @@
 //  g3fax.cpp -- convert scanlines to G3 fascimile format
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -95,7 +95,7 @@ g3fax::boi (const context& ctx)
   BOOST_ASSERT (0 == ctx.padding_octets ());
 
   ctx_ = ctx;
-  ctx_.media_type ("image/g3fax");
+  ctx_.content_type ("image/g3fax");
   ctx_.octets_seen () = 0;
 
   partial_line_.reset (new octet[ctx_.octets_per_line ()]);
@@ -109,7 +109,7 @@ g3fax::eoi (const context& ctx)
   BOOST_ASSERT (ctx_.octets_seen () == ctx.octets_per_image ());
 
   ctx_ = ctx;
-  ctx_.media_type ("image/g3fax");
+  ctx_.content_type ("image/g3fax");
   ctx_.octets_seen () = ctx.octets_per_image ();
 }
 

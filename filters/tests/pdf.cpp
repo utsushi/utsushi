@@ -57,7 +57,7 @@ BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
   shared_ptr<setmem_idevice::generator> gen (new const_generator (0x50));
 
   istr.push (idevice::ptr (new setmem_idevice (gen, ctx, 10)));
-  ostr.push (ofilter::ptr (new jpeg));
+  ostr.push (ofilter::ptr (new jpeg::compressor));
   ostr.push (ofilter::ptr (new pdf));
   ostr.push (odevice::ptr (new file_odevice (name_)));
 

@@ -36,9 +36,10 @@
 #include <utsushi/test/memory.hpp>
 
 #include "../jpeg.hpp"
+#include "../pnm.hpp"
 
 using namespace utsushi;
-using _flt_::jpeg;
+using namespace _flt_;
 
 struct fixture
 {
@@ -48,17 +49,9 @@ struct fixture
   const fs::path name_;
 };
 
-BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
+static void
+test_magic (const fs::path& name, const char *type)
 {
-  istream istr;
-  ostream ostr;
-
-  istr.push (idevice::ptr (new rawmem_idevice (context (32, 32, 3, 8))));
-  ostr.push (ofilter::ptr (new jpeg));
-  ostr.push (odevice::ptr (new file_odevice (name_)));
-
-  istr | ostr;
-
 #if HAVE_LIBMAGIC
 
   magic_t cookie = magic_open (MAGIC_MIME_TYPE);
@@ -70,13 +63,51 @@ BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
                          "libmagic failed to load its database ("
                          << magic_error (cookie) << ")");
 
-  const char *mime = magic_file (cookie, name_.string ().c_str ());
+  const char *mime = magic_file (cookie, name.string ().c_str ());
 
-  BOOST_CHECK_EQUAL ("image/jpeg", mime);
+  BOOST_CHECK_EQUAL (type, mime);
 
   magic_close (cookie);
 
 #endif  /* HAVE_LIBMAGIC */
 }
+
+BOOST_AUTO_TEST_SUITE (compressor);
+
+BOOST_FIXTURE_TEST_CASE (mediatype, fixture)
+{
+  istream istr;
+  ostream ostr;
+
+  istr.push (idevice::ptr (new rawmem_idevice (context (32, 32, 3, 8))));
+  ostr.push (ofilter::ptr (new jpeg::compressor));
+  ostr.push (odevice::ptr (new file_odevice (name_)));
+
+  istr | ostr;
+
+  test_magic (name_, "image/jpeg");
+}
+
+BOOST_AUTO_TEST_SUITE_END (/* compressor */);
+
+BOOST_AUTO_TEST_SUITE (decompressor);
+
+BOOST_FIXTURE_TEST_CASE (mediatype, fixture)
+{
+  istream istr;
+  ostream ostr;
+
+  istr.push (idevice::ptr (new rawmem_idevice (context (32, 32, 3, 8))));
+  ostr.push (ofilter::ptr (new jpeg::compressor));
+  ostr.push (ofilter::ptr (new jpeg::decompressor));
+  ostr.push (ofilter::ptr (new pnm));
+  ostr.push (odevice::ptr (new file_odevice (name_)));
+
+  istr | ostr;
+
+  test_magic (name_, "image/x-portable-pixmap");
+}
+
+BOOST_AUTO_TEST_SUITE_END (/* decompressor */);
 
 #include "utsushi/test/runner.ipp"

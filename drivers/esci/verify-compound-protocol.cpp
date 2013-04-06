@@ -1,4 +1,4 @@
-//  compound-protocol.cpp -- compliance tests
+//  verify-compound-protocol.cpp -- compliance tests
 //  Copyright (C) 2012  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
@@ -30,10 +30,7 @@
  *  Note that these tests are \e not meant to test our code.  They are
  *  meant to test the \e firmware that is installed on the device.
  *
- *  \todo  Figure out how to run tests over all available devices that
- *         understand the "compound" protocol variant.
- *
- *  \sa compound-scanning.cpp
+ *  \sa verify-compound-scanning.cpp
  */
 
 #include <algorithm>
@@ -42,20 +39,17 @@
 #include <boost/test/unit_test.hpp>
 
 #include <utsushi/connexion.hpp>
-#include <utsushi/monitor.hpp>
 
-#include "../code-token.hpp"
-#include "../scanner-control.hpp"
-#include "../scanner-inquiry.hpp"
+#include "code-token.hpp"
+#include "scanner-control.hpp"
+#include "scanner-inquiry.hpp"
+#include "verify.hpp"
 
 namespace esci = utsushi::_drv_::esci;
 using utsushi::connexion;
-using utsushi::monitor;
 
 using namespace esci::code_token;
 namespace par = reply::info::par;
-
-static monitor mon;             // to discover devices
 
 //! Fixture that extends a compound command \c T
 /*! For testing purposes, we would like to have convenient access to a
@@ -84,12 +78,10 @@ struct test_compound
   using T::stat_;
 
   //! Creates a connexion and initializes the command session
-  /*! \todo  Make sure we only pick up compound protocol devices
-   */
   test_compound ()
     : T (false)
+    , cnx (verify::cnx)
   {
-    cnx = connexion::create (mon.begin ()->iftype (), mon.begin ()->path ());
     *cnx << *this;
   }
 
@@ -139,8 +131,8 @@ typedef test_compound< esci::scanner_control > test_control;
 typedef test_compound< esci::scanner_inquiry > test_inquiry;
 
 // Type list of compound commands to instantiate test cases for
-typedef boost::mpl::list< test_inquiry,
-                          test_control
+typedef boost::mpl::list< test_control,
+                          test_inquiry
                           > compound_types;
 
 // For lack of operator<< (std::ostream&, T) implementations
@@ -161,6 +153,49 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE (finish_request, T, compound_types, T)
 
 BOOST_AUTO_TEST_SUITE (getters);
 
+//! Helper function to check capability related assumptions
+/*! We assume that at least one document source is available and that
+ *  a select few capabilities are present.  Without these capabilities
+ *  it would be rather difficult to implement a meaningful driver.
+ */
+static void
+check_caps (const esci::capabilities& caps)
+{
+  BOOST_CHECK (caps.adf || caps.tpu || caps.fb);
+  BOOST_CHECK (caps.col && !caps.col->empty ());
+  BOOST_CHECK (caps.fmt && !caps.fmt->empty ());
+  BOOST_CHECK (caps.rsm);
+  BOOST_CHECK (caps.rss);
+}
+
+//! Helper function to check whether a \e single document source is set
+static void
+check_doc_src (const esci::parameters& parm)
+{
+  BOOST_CHECK (parm.adf || parm.tpu || parm.fb);
+  BOOST_CHECK (!(parm.adf && parm.tpu));
+  BOOST_CHECK (!(parm.tpu && parm.fb ));
+  BOOST_CHECK (!(parm.fb  && parm.adf));
+}
+
+//! Helper function to check parameter related assumptions
+/*! We assume that exactly one document source is selected at any time
+ *  and that we can rely on the presence of a select few parameters.
+ *  Without the parameters we require it would be very difficult to do
+ *  anything meaningful in a driver implementation.
+ */
+static void
+check_parm (const esci::parameters& parm, const esci::status stat)
+{
+  BOOST_REQUIRE (!stat.par || par::OK == *stat.par);
+  check_doc_src (parm);
+  BOOST_CHECK (parm.col);
+  BOOST_CHECK (parm.fmt);
+  BOOST_CHECK (parm.rsm);
+  BOOST_CHECK (parm.rss);
+  BOOST_CHECK (parm.acq && 4 == parm.acq->size ());
+}
+
 //! Verify assumptions regarding device information
 /*! We assume that at least one document source is available and that
  *  a select few pieces of information are present.  Without those it
@@ -180,19 +215,11 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE (information, T, compound_types, T)
 }
 
 //! Verify assumptions regarding device capabilities
-/*! We assume that at least one document source is available and that
- *  a select few capabilities are present.  Without these capabilities
- *  it would be rather difficult to implement a meaningful driver.
- */
 BOOST_FIXTURE_TEST_CASE_TEMPLATE (capabilities, T, compound_types, T)
 {
   *this->cnx << this->get (this->capa_);
 
-  BOOST_CHECK (this->capa_.adf || this->capa_.tpu || this->capa_.fb);
-  BOOST_CHECK (this->capa_.col && !this->capa_.col->empty ());
-  BOOST_CHECK (this->capa_.fmt && !this->capa_.fmt->empty ());
-  BOOST_CHECK (this->capa_.rsm);
-  BOOST_CHECK (this->capa_.rss);
+  check_caps (this->capa_);
 }
 
 //! Verify assumptions regarding device flip-side capabilities, if any
@@ -200,36 +227,24 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE (capabilities_flip, T, compound_types, T)
 {
   *this->cnx << this->get (this->capb_, true);
 
-  if (0 < this->reply_.size)
+  if (verify::caps_flip)
     {
-      BOOST_CHECK (this->capb_.adf || this->capb_.tpu || this->capb_.fb);
-      BOOST_CHECK (this->capb_.col && !this->capb_.col->empty ());
-      BOOST_CHECK (this->capb_.fmt && !this->capb_.fmt->empty ());
-      BOOST_CHECK (this->capb_.rsm);
-      BOOST_CHECK (this->capb_.rss);
+      check_caps (this->capb_);
+    }
+  else
+    {
+      BOOST_CHECK_EQUAL (0, this->reply_.size);
     }
 }
 
 //! Verify assumptions regarding scan settings
-/*! We assume that exactly one document source is selected at any time
- *  and that we can rely on the presence of a select few parameters.
- *  Without the parameters we require it would be very difficult to do
- *  anything meaningful in a driver implementation.
- */
 BOOST_FIXTURE_TEST_CASE_TEMPLATE (parameters, T, compound_types, T)
 {
   *this->cnx << this->get (this->resa_);
 
-  BOOST_REQUIRE (!this->status_.par || par::OK == *this->status_.par);
-  BOOST_CHECK (this->resa_.adf || this->resa_.tpu || this->resa_.fb);
-  BOOST_CHECK (!(this->resa_.adf && this->resa_.tpu));
-  BOOST_CHECK (!(this->resa_.tpu && this->resa_.fb ));
-  BOOST_CHECK (!(this->resa_.fb  && this->resa_.adf));
-  BOOST_CHECK (this->resa_.col);
-  BOOST_CHECK (this->resa_.fmt);
-  BOOST_CHECK (this->resa_.rsm);
-  BOOST_CHECK (this->resa_.rss);
-  BOOST_CHECK (this->resa_.acq && 4 == this->resa_.acq->size ());
+  BOOST_CHECK (!this->status_.par || par::OK == *this->status_.par);
+
+  check_parm (this->resa_, this->status_);
 }
 
 //! Verify assumptions regarding flip-side scan settings, if any
@@ -237,18 +252,15 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE (parameters_flip, T, compound_types, T)
 {
   *this->cnx << this->get (this->resb_, true);
 
-  if (0 < this->reply_.size)
+  BOOST_CHECK (!this->status_.par || par::OK == *this->status_.par);
+
+  if (verify::parm_flip)
     {
-      BOOST_REQUIRE (!this->status_.par || par::OK == *this->status_.par);
-      BOOST_CHECK (this->resb_.adf || this->resb_.tpu || this->resb_.fb);
-      BOOST_CHECK (!(this->resb_.adf && this->resb_.tpu));
-      BOOST_CHECK (!(this->resb_.tpu && this->resb_.fb ));
-      BOOST_CHECK (!(this->resb_.fb  && this->resb_.adf));
-      BOOST_CHECK (this->resb_.col);
-      BOOST_CHECK (this->resb_.fmt);
-      BOOST_CHECK (this->resb_.rsm);
-      BOOST_CHECK (this->resb_.rss);
-      BOOST_CHECK (this->resb_.acq && 4 == this->resb_.acq->size ());
+      check_parm (this->resb_, this->status_);
+    }
+  else
+    {
+      BOOST_CHECK_EQUAL (0, this->reply_.size);
     }
 }
 
@@ -276,12 +288,7 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE (doc_src, T, compound_types, T)
 
   *this->cnx << this->get_parameters (ts);
 
-  BOOST_REQUIRE (!this->status_.par || par::OK == *this->status_.par);
-
-  BOOST_CHECK (this->resa_.adf || this->resa_.tpu || this->resa_.fb);
-  BOOST_CHECK (!(this->resa_.adf && this->resa_.tpu));
-  BOOST_CHECK (!(this->resa_.tpu && this->resa_.fb ));
-  BOOST_CHECK (!(this->resa_.fb  && this->resa_.adf));
+  check_doc_src (this->resa_);
 
   esci::parameters parm;
   parm.adf = this->resa_.adf;
@@ -985,49 +992,3 @@ BOOST_FIXTURE_TEST_CASE (jpeg_quality_override, test_control)
 BOOST_AUTO_TEST_SUITE_END ();   // "setters" test suite
 
 BOOST_AUTO_TEST_SUITE_END ();   // "protocol" test suite
-
-// If no devices are present, at least warn that some testing is being
-// skipped.  Doing so allows us to note this fact in any test reports.
-// Our implementation of init_test_runner() emits copious messages but
-// nothing that will be recorded in a test report.
-
-BOOST_AUTO_TEST_CASE (device_presence)
-{
-  BOOST_WARN_MESSAGE (mon.begin () != mon.end (),
-                      "no scanners detected");
-
-  BOOST_REQUIRE (true);         // prevents Boost.Test warning babble
-}
-
-// Prevent duplicate definition of init_test_runner()
-
-#ifndef BOOST_PARAM_TEST_CASE
-#define BOOST_PARAM_TEST_CASE
-#endif
-
-//! \todo  Make sure we only pick up compound protocol devices
-bool
-init_test_runner ()
-{
-  namespace but = boost::unit_test;
-
-  but::master_test_suite_t& master (but::framework::master_test_suite ());
-  but::test_case_counter tcc;
-  but::test_unit_id tuid;
-
-  BOOST_MESSAGE ("Initializing \"" << master.p_name << "\" test suite");
-
-  if (mon.begin () == mon.end ())
-    {
-      tuid = master.get ("protocol");
-
-      but::traverse_test_tree (tuid, tcc);
-
-      master.remove (tuid);
-      BOOST_MESSAGE ("Disabled \"protocol\" test suite for lack of devices"
-                     " (" << tcc.p_count << " test cases)");
-    }
-  return true;
-}
-
-#include "utsushi/test/runner.ipp"

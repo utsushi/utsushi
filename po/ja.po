@@ -21,8 +21,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.0.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2012-10-25 11:31+0900\n"
-"PO-Revision-Date: 2012-10-18 20:43+0900\n"
+"POT-Creation-Date: 2013-03-22 12:24+0900\n"
+"PO-Revision-Date: 2013-03-22 14:56+0900\n"
 "Last-Translator: AVASYS CORPORATION\n"
 "Language-Team: Japanese\n"
 "MIME-Version: 1.0\n"
@@ -34,75 +34,80 @@ msgstr ""
 msgid "unable to initialise USB support"
 msgstr "USBの初期化ができません"
 
-#: connexions/usb.cpp:113 connexions/usb.cpp:326
+#: connexions/usb.cpp:113 connexions/usb.cpp:377
 msgid "no usable, matching device"
 msgstr "使用可能なデバイスがありません"
 
-#: drivers/esci/compound-scanner.cpp:198 drivers/esci/extended-scanner.cpp:203
+#: drivers/esci/compound-scanner.cpp:329 drivers/esci/extended-scanner.cpp:203
 msgid "Document Source"
-msgstr "取込装置"
+msgstr "取り込み装置"
 
-#: drivers/esci/compound-scanner.cpp:212
-msgid "Transfer Format"
-msgstr "転送形式"
-
-#: drivers/esci/compound-scanner.cpp:225
-msgid "JPEG Quality"
-msgstr "JPEG画質"
-
-#: drivers/esci/compound-scanner.cpp:238
-msgid "Gamma"
-msgstr "ガンマ"
-
-#: drivers/esci/compound-scanner.cpp:255 filters/lut.cpp:129
-msgid "Brightness"
-msgstr "明るさ"
-
-#: drivers/esci/compound-scanner.cpp:262 filters/lut.cpp:138
-msgid "Contrast"
-msgstr "コントラスト"
-
-#: drivers/esci/compound-scanner.cpp:275
+#: drivers/esci/compound-scanner.cpp:343
 msgid "Image Type"
 msgstr "イメージタイプ"
 
-#: drivers/esci/compound-scanner.cpp:288
+#: drivers/esci/compound-scanner.cpp:356
 msgid "Dropout"
 msgstr "ドロップアウト"
 
-#: drivers/esci/compound-scanner.cpp:301 filters/threshold.cpp:49
+#: drivers/esci/compound-scanner.cpp:369
+msgid "Transfer Format"
+msgstr "転送形式"
+
+#: drivers/esci/compound-scanner.cpp:382
+msgid "JPEG Quality"
+msgstr "JPEG画質"
+
+#: drivers/esci/compound-scanner.cpp:395 filters/threshold.cpp:49
 msgid "Threshold"
 msgstr "しきい値"
 
-#: drivers/esci/compound-scanner.cpp:316
-msgid "Border Fill"
-msgstr "境界補正"
+#: drivers/esci/compound-scanner.cpp:408
+msgid "Gamma"
+msgstr "ガンマ"
 
-#: drivers/esci/compound-scanner.cpp:332
-msgid "Left Border"
-msgstr "境界補正量 左"
+#: drivers/esci/compound-scanner.cpp:425 filters/lut.cpp:129
+msgid "Brightness"
+msgstr "明るさ"
 
-#: drivers/esci/compound-scanner.cpp:337
-msgid "Right Border"
-msgstr "境界補正量 右"
+#: drivers/esci/compound-scanner.cpp:432 filters/lut.cpp:138
+msgid "Contrast"
+msgstr "コントラスト"
 
-#: drivers/esci/compound-scanner.cpp:342
-msgid "Top Border"
-msgstr "境界補正量 上"
-
-#: drivers/esci/compound-scanner.cpp:347
-msgid "Bottom Border"
-msgstr "境界補正量 下"
-
-#: drivers/esci/compound-scanner.cpp:361
+#: drivers/esci/compound-scanner.cpp:446
 msgid "Transfer Size"
 msgstr "転送サイズ"
 
-#: drivers/esci/compound-scanner.cpp:384
+#: drivers/esci/compound-scanner.cpp:461
+msgid "Border Fill"
+msgstr "境界補正"
+
+#: drivers/esci/compound-scanner.cpp:477
+msgid "Left Border"
+msgstr "境界補正量 左"
+
+#: drivers/esci/compound-scanner.cpp:482
+msgid "Right Border"
+msgstr "境界補正量 右"
+
+#: drivers/esci/compound-scanner.cpp:487
+msgid "Top Border"
+msgstr "境界補正量 上"
+
+#: drivers/esci/compound-scanner.cpp:492
+msgid "Bottom Border"
+msgstr "境界補正量 下"
+
+#: drivers/esci/compound-scanner.cpp:515
 msgid "esci::compound_scanner(): internal inconsistency"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:811
+#: drivers/esci/compound-scanner.cpp:1180
+#: drivers/esci/grammar-capabilities.cpp:392
+msgid "RAW"
+msgstr "RAW"
+
+#: drivers/esci/compound-scanner.cpp:1240
 #, boost-format
 msgid ""
 "Scan area too small.\n"
@@ -111,88 +116,100 @@ msgstr ""
 "取り込み領域が小さすぎます。\n"
 "領域は、%1%×%2%よりも大きくする必要があります。"
 
-#: drivers/esci/compound-scanner.cpp:1040
+#: drivers/esci/compound-scanner.cpp:1280
 msgid "Duplex"
 msgstr "両面"
 
-#: drivers/esci/compound-scanner.cpp:1052
+#: drivers/esci/compound-scanner.cpp:1292
 msgid "Image Count"
 msgstr "イメージカウント"
 
-#: drivers/esci/compound-scanner.cpp:1064
+#: drivers/esci/compound-scanner.cpp:1304
 msgid "Detect Double Feed"
 msgstr "重送検知（用紙厚設定）"
 
-#: drivers/esci/compound-scanner.cpp:1131 drivers/esci/extended-scanner.cpp:85
+#: drivers/esci/compound-scanner.cpp:1371 drivers/esci/extended-scanner.cpp:85
 msgid "Resolution"
 msgstr "解像度"
 
-#: drivers/esci/compound-scanner.cpp:1139
+#: drivers/esci/compound-scanner.cpp:1379
 msgid "Resolution X"
 msgstr "水平解像度"
 
-#: drivers/esci/compound-scanner.cpp:1143
+#: drivers/esci/compound-scanner.cpp:1383
 msgid "Resolution Y"
 msgstr "垂直解像度"
 
-#: drivers/esci/compound-scanner.cpp:1166
+#: drivers/esci/compound-scanner.cpp:1405
+msgid "Manual"
+msgstr "手動"
+
+#: drivers/esci/compound-scanner.cpp:1406
+msgid "Maximum"
+msgstr "最大"
+
+#: drivers/esci/compound-scanner.cpp:1409
+msgid "Scan Area"
+msgstr "取り込み領域"
+
+#: drivers/esci/compound-scanner.cpp:1417
 #: drivers/esci/extended-scanner.cpp:105
 msgid "Top Left X"
 msgstr "左上 X"
 
-#: drivers/esci/compound-scanner.cpp:1174
+#: drivers/esci/compound-scanner.cpp:1425
 #: drivers/esci/extended-scanner.cpp:121
 msgid "Top Left Y"
 msgstr "左上 Y"
 
-#: drivers/esci/compound-scanner.cpp:1182
+#: drivers/esci/compound-scanner.cpp:1433
 #: drivers/esci/extended-scanner.cpp:113
 msgid "Bottom Right X"
 msgstr "右下 X"
 
-#: drivers/esci/compound-scanner.cpp:1190
+#: drivers/esci/compound-scanner.cpp:1441
 #: drivers/esci/extended-scanner.cpp:129
 msgid "Bottom Right Y"
 msgstr "右下 Y"
 
-#: drivers/esci/compound-scanner.cpp:1213
+#: drivers/esci/compound-scanner.cpp:1464
 msgid "Crop"
 msgstr "切り出し"
 
-#: drivers/esci/compound-scanner.cpp:1224
+#: drivers/esci/compound-scanner.cpp:1475
 msgid "Crop Adjustment"
 msgstr "切り出し位置調整"
 
-#: drivers/esci/compound-scanner.cpp:1248
+#: drivers/esci/compound-scanner.cpp:1499
 msgid "Deskew"
 msgstr "傾き補正"
 
-#: drivers/esci/compound-scanner.cpp:1276
+#: drivers/esci/compound-scanner.cpp:1527
 msgid "Overscan"
 msgstr "オーバースキャン"
 
-#: drivers/esci/compound-scanner.cpp:1298
+#: drivers/esci/compound-scanner.cpp:1549
 msgid "internal error: no document source"
-msgstr "内部エラー: 取込装置がありません"
+msgstr "内部エラー: 取り込み装置がありません"
 
-#: drivers/esci/compound-scanner.cpp:1409
+#: drivers/esci/compound-scanner.cpp:1728
 #, boost-format
 msgid "Unknown device error: %1%/%2%"
 msgstr "不明なデバイスのエラー: %1%/%2%"
 
-#: drivers/esci/compound-scanner.cpp:1445
+#: drivers/esci/compound-scanner.cpp:1768 sane/backend.cpp:269
 msgid "Please close the ADF cover and try again."
 msgstr "ADFのカバーを閉じて、再試行してください。"
 
-#: drivers/esci/compound-scanner.cpp:1447
+#: drivers/esci/compound-scanner.cpp:1770 sane/backend.cpp:262
 msgid "Clear the ADF document jam and try again."
 msgstr "ADFに詰まった原稿を取り除き、再試行してください。"
 
-#: drivers/esci/compound-scanner.cpp:1449
+#: drivers/esci/compound-scanner.cpp:1772 sane/backend.cpp:259
 msgid "Please put your document in the ADF before scanning."
 msgstr "ADFに原稿をセットしてからスキャンしてください。"
 
-#: drivers/esci/compound-scanner.cpp:1451
+#: drivers/esci/compound-scanner.cpp:1774 sane/backend.cpp:265
 msgid ""
 "A multi page feed occurred in the ADF.\n"
 "Clear the document feeder and try again."
@@ -200,7 +217,7 @@ msgstr ""
 "ADFで用紙が重なって給紙されました。\n"
 "カバーを開けて原稿を取り除き、再試行してください。"
 
-#: drivers/esci/compound-scanner.cpp:1454
+#: drivers/esci/compound-scanner.cpp:1777
 msgid ""
 "A fatal ADF error has occurred.\n"
 "Resolve the error condition and try again.  You may have to restart the scan "
@@ -210,7 +227,7 @@ msgstr ""
 "エラーの状態を解決して、再試行してください。スキャンするためにスキャンダイア"
 "ログまたはアプリケーションを再起動する必要があります。"
 
-#: drivers/esci/compound-scanner.cpp:1468
+#: drivers/esci/compound-scanner.cpp:1791
 msgid "A fatal error has occurred"
 msgstr "予期せぬエラーが発生しました。"
 
@@ -218,20 +235,20 @@ msgstr "予期せぬエラーが発生しました。"
 msgid "crossed wires"
 msgstr ""
 
-#: drivers/esci/compound.cpp:86
+#: drivers/esci/compound.cpp:87
 msgid "driver sent unsupported request code"
 msgstr "ドライバーがサポートしていないリクエストコードを送信しました"
 
-#: drivers/esci/compound.cpp:92
+#: drivers/esci/compound.cpp:94
 msgid "driver sent supported request code at the wrong time"
 msgstr "ドライバーが不適切なタイミングでリクエストコードを送信しました"
 
-#: drivers/esci/compound.cpp:98
+#: drivers/esci/compound.cpp:100
 msgid ""
 "driver and device are mutually confused about who's doing what right now"
 msgstr ""
 
-#: drivers/esci/compound.cpp:504
+#: drivers/esci/compound.cpp:506
 msgid "unknown extension designation"
 msgstr "不明なエクステンション指定"
 
@@ -384,10 +401,6 @@ msgstr "青（8 bit）"
 msgid "Blue (16 bit)"
 msgstr "青（16 bit）"
 
-#: drivers/esci/grammar-capabilities.cpp:392
-msgid "RAW"
-msgstr "RAW"
-
 #: drivers/esci/grammar-capabilities.cpp:393
 msgid "JPEG"
 msgstr "JPEG"
@@ -416,33 +429,13 @@ msgstr "グレー（8 bit）"
 msgid "Gray (16 bit)"
 msgstr "グレー（16 bit）"
 
-#: filters/jpeg.cpp:81
+#: filters/jpeg.cpp:188
+msgid "Buffer Size"
+msgstr "バッファーサイズ"
+
+#: filters/jpeg.cpp:209
 msgid "Image Quality"
 msgstr "JPEG画質"
-
-#: filters/jpeg.cpp:120
-msgid "JPEG requires a height!"
-msgstr "JPEGを作成するには画像の高さが必要です"
-
-#: filters/jpeg.cpp:125
-msgid "JPEG requires 8-bits per channel!"
-msgstr "JPEGを作成するには各チャネル8bitのデータが必要です"
-
-#: filters/jpeg.cpp:136
-msgid "Invalid number of components for JPEG!"
-msgstr "JPEGを作成するための画像の構成要素が妥当ではありません"
-
-#: filters/jpeg.cpp:175
-msgid "JPEG filter octet count mismatch while emptying the output buffer"
-msgstr "JPEGデータを出力中に出力データサイズが一致しませんでした"
-
-#: filters/jpeg.cpp:197
-msgid "JPEG filter octet count mismatch while finishing up the image"
-msgstr "JPEGデータを出力中に最終出力データサイズが一致しませんでした"
-
-#: filters/jpeg.cpp:227
-msgid "JPEG filter encountered fatal error"
-msgstr "JPEGフィルターで予期せぬエラーが発生しました"
 
 #: filters/lut.cpp:102
 msgid "lut filter supports 8 or 16 bit only."
@@ -551,27 +544,27 @@ msgstr ""
 msgid "gtk-refresh"
 msgstr ""
 
-#: gtkmm/dialog.cpp:65
+#: gtkmm/dialog.cpp:67
 msgid "Dialog specification requires a 'uimanager'"
 msgstr "ダイアログの指定には'uimanager'が必要です"
 
-#: gtkmm/dialog.cpp:216
+#: gtkmm/dialog.cpp:222
 msgid "Save As"
 msgstr "名前を付けて保存"
 
-#: gtkmm/dialog.cpp:229
+#: gtkmm/dialog.cpp:235
 msgid "Image Files"
 msgstr "画像ファイル"
 
-#: gtkmm/dialog.cpp:235
+#: gtkmm/dialog.cpp:241
 msgid "All Files"
 msgstr "すべてのファイル"
 
-#: gtkmm/dialog.cpp:256
+#: gtkmm/dialog.cpp:271
 msgid "Unsupported file format."
 msgstr "サポートされていないファイル形式です。"
 
-#: gtkmm/dialog.cpp:259
+#: gtkmm/dialog.cpp:274
 #, boost-format
 msgid ""
 "Support for images in %1% format has not been implemented yet.\n"
@@ -580,31 +573,34 @@ msgstr ""
 "%1% の画像形式はサポートされていません。\n"
 "PNM、JPEG、PDFまたはTIFFを使用してください。"
 
-#: gtkmm/dialog.cpp:303 src/scan-cli.cpp:563
+#: gtkmm/dialog.cpp:318 gtkmm/dialog.cpp:342 gtkmm/dialog.cpp:368
+#: gtkmm/dialog.cpp:384 src/scan-cli.cpp:563 src/scan-cli.cpp:595
+#: src/scan-cli.cpp:629 src/scan-cli.cpp:645
+#, boost-format
+msgid "conversion from %1% to %2% is not supported"
+msgstr ""
+
+#: gtkmm/dialog.cpp:329 src/scan-cli.cpp:574
 msgid "JPEG does not support bi-level imagery"
 msgstr "JPEGは、2値画像をサポートしていません"
 
-#: gtkmm/dialog.cpp:342
-msgid "unsupported file format"
-msgstr "サポートされていないファイル形式です"
-
-#: gtkmm/dialog.cpp:367
+#: gtkmm/dialog.cpp:417
 #, boost-format
 msgid "A file named \"%1%\" already exists.  Do you want to replace it?"
 msgstr "\"%1%\" というファイルは既に存在します。上書きしてもよろしいですか?"
 
-#: gtkmm/dialog.cpp:373
+#: gtkmm/dialog.cpp:423
 #, boost-format
 msgid ""
 "The file already exists in \"%1%\".  Replacing it will overwrite its "
 "contents."
 msgstr "\"%1%\" にファイルが既に存在しています。すべての内容を上書きします。"
 
-#: gtkmm/dialog.cpp:385
+#: gtkmm/dialog.cpp:435
 msgid "This may overwrite existing files!"
 msgstr "既存のファイルを上書きする可能性があります。"
 
-#: gtkmm/dialog.cpp:389
+#: gtkmm/dialog.cpp:439
 #, boost-format
 msgid "Files matching \"%1%\" may be overwritten."
 msgstr "%1% と一致するファイルは上書きされるかもしれません。"
@@ -655,19 +651,19 @@ msgid ""
 "\t<b>%1%</b>"
 msgstr ""
 
-#: gtkmm/editor.cpp:356
+#: gtkmm/editor.cpp:448
 msgid "Other"
 msgstr "その他"
 
-#: gtkmm/editor.cpp:367
+#: gtkmm/editor.cpp:459
 msgid "Application"
 msgstr "アプリケーション"
 
-#: gtkmm/editor.cpp:524
+#: gtkmm/editor.cpp:636
 msgid "Restoring previous value"
 msgstr "元の設定に戻します"
 
-#: gtkmm/editor.cpp:527
+#: gtkmm/editor.cpp:639
 msgid "The selected combination of values is not supported."
 msgstr "選択した設定の組み合わせはサポートしていません。"
 
@@ -702,11 +698,11 @@ msgid ""
 "in complete control."
 msgstr ""
 
-#: lib/device.cpp:105
+#: lib/device.cpp:113
 msgid "unhandled state in idevice::read()"
 msgstr ""
 
-#: lib/option.cpp:513
+#: lib/option.cpp:538
 msgid "cannot add option::map to self"
 msgstr ""
 
@@ -831,13 +827,13 @@ msgstr "TIFFのディレクトリー書き込みに失敗しました"
 msgid "Unknown SANE status code %d"
 msgstr "不明なSANEのステータスコード %d"
 
-#: sane/handle.cpp:449
+#: sane/handle.cpp:703
 msgid ""
 "SANE API specification violation\n"
 "The option number count has to be the first option."
 msgstr ""
 
-#: sane/handle.cpp:592
+#: sane/handle.cpp:795
 msgid ""
 "SANE API specification violation\n"
 "Option names must start with a lower-case ASCII character."
@@ -883,25 +879,25 @@ msgstr "適切なツールで画像を取得"
 msgid "next generation image acquisition"
 msgstr "次世代の画像取得ユーティリティ"
 
-#: src/scan-cli.cpp:144
+#: src/scan-cli.cpp:145
 msgid "device found but has no driver"
 msgstr "デバイスに対応したドライバーがありません"
 
-#: src/scan-cli.cpp:159
+#: src/scan-cli.cpp:160
 #, boost-format
 msgid "cannot find '%1%'"
 msgstr "'%1%'が見つかりません"
 
-#: src/scan-cli.cpp:164
+#: src/scan-cli.cpp:165
 msgid "no devices available"
 msgstr "利用可能なデバイスが存在しません"
 
-#: src/scan-cli.cpp:179
+#: src/scan-cli.cpp:180
 #, boost-format
 msgid "%1%: not supported"
 msgstr "%1%: サポートしていません"
 
-#: src/scan-cli.cpp:214
+#: src/scan-cli.cpp:215
 #, boost-format
 msgid ""
 "%1%\n"
@@ -910,47 +906,49 @@ msgstr ""
 "%1%\n"
 "指定可能な値: %2%"
 
-#: src/scan-cli.cpp:221
+#: src/scan-cli.cpp:222
 #, boost-format
 msgid "Allowed values: %1%"
 msgstr "指定可能な値: %1%"
 
-#: src/scan-cli.cpp:319
+#: src/scan-cli.cpp:320
 #, boost-format
 msgid ""
 "option parser internal inconsistency\n"
 "  key = %1%"
 msgstr ""
 
-#: src/scan-cli.cpp:408
+#: src/scan-cli.cpp:409
 msgid "image acquisition device to use"
 msgstr "使用する画像取得デバイス"
 
-#: src/scan-cli.cpp:410
+#: src/scan-cli.cpp:411
 msgid "output destination to use"
 msgstr "使用する出力先"
 
-#: src/scan-cli.cpp:424 src/scan-gtkmm.cpp:73
+#: src/scan-cli.cpp:425 src/scan-gtkmm.cpp:73
 msgid "Utility options"
 msgstr "ユーティリティオプション"
 
-#: src/scan-cli.cpp:427
+#: src/scan-cli.cpp:428
 msgid "log device I/O in hexdump format"
 msgstr "デバイスとの入出力を16進ダンプでログ出力する"
 
 #: src/scan-cli.cpp:430
+#, fuzzy
 msgid ""
 "output image format\n"
-"PNM, JPEG, PDF, TIFF or one of the device supported transfer-formats"
+"PNM, JPEG, PDF, TIFF or one of the device supported transfer-formats.  The "
+"explicitly mentioned types are normally inferred from the output file name."
 msgstr ""
 "出力画像形式\n"
 "PNM、JPEG、PDF、TIFF、またはデバイスがサポートしている転送形式"
 
-#: src/scan-cli.cpp:477
+#: src/scan-cli.cpp:479
 msgid "Device options"
 msgstr "デバイスオプション"
 
-#: src/scan-cli.cpp:488
+#: src/scan-cli.cpp:490
 msgid ""
 "Note: device options may be ignored if their prerequisites are not "
 "satisfied.\n"
@@ -960,10 +958,6 @@ msgstr ""
 "注意: デバイスオプションは前提条件が満たされないとき無視される場合がありま"
 "す。\n"
 "例えば、'--duplex'オプションはADFを選択していないときに無視されます。\n"
-
-#: src/scan-cli.cpp:620
-msgid "unsupported image-format requested"
-msgstr "サポートされていない画像形式です"
 
 #: src/scan-gtkmm.cpp:77
 msgid "use an alternative GUI layout definition file"

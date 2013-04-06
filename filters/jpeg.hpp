@@ -28,46 +28,123 @@
 
 namespace utsushi {
 namespace _flt_ {
+namespace jpeg {
+
+namespace detail {
+
+struct common
+{
+  common ();
+  ~common ();
+
+  //! Work buffer for use by the destination or source manager
+  JOCTET *jbuf_;
+
+  //! Work buffer size
+  /*! The value is configurable at run-time.  At the start of each
+   *  sequence an attempt to increase the work buffer's size is made
+   *  if necessary.  In case of failure, the existing work buffer is
+   *  used as is.
+   */
+  size_t  jbuf_size_;
+
+  //! Attempt to grow the work buffer to \a buf_size octets
+  /*! If the attempt fails, jbuf_ and jbuf_size_ remain unchanged.
+   *  Otherwise, these variables will be updated to correspond to the
+   *  resized buffer.
+   */
+  void resize (size_t buf_size);
+
+  struct jpeg_error_mgr jerr_;
+
+  void error_exit (j_common_ptr cinfo) __attribute__((noreturn));
+
+  static void add_buffer_size_(option::map::ptr om);
+};
+
+}      // namespace detail
 
 //!  Turn a sequence of image data into JPEG format
-/*!  Currently only supports 8-bit images of constant size.
- *
- *   \todo Consider function objects instead of static members for the
- *         callbacks that libjpeg wants.
- */
-class jpeg
+class compressor
   : public ofilter
+  , protected detail::common
 {
 public:
-  jpeg ();
-  ~jpeg ();
+  compressor ();
+  ~compressor ();
 
   streamsize write (const octet *data, streamsize n);
 
 protected:
+  void bos (const context& ctx);
   void boi (const context& ctx);
   void eoi (const context& ctx);
 
+  //! JPEG image quality to use during a single sequence
+  /*! The value is configurable at run-time and fixed at start of
+   *  sequence.
+   */
+  int quality_;
+
   struct jpeg_compress_struct cinfo_;
-  struct jpeg_error_mgr       jerr_;
   struct jpeg_destination_mgr dmgr_;
 
-  JOCTET *jbuf_;
-  size_t  jbuf_size_;
+  void    init_destination ();
+  boolean empty_output_buffer ();
+  void    term_destination ();
 
-  void    init_destination    (j_compress_ptr cinfo);
-  boolean empty_output_buffer (j_compress_ptr cinfo);
-  void    term_destination    (j_compress_ptr cinfo);
+  octet     *cache_;
+  streamsize cache_size_;
+  streamsize cache_fill_;
 
-  static void    init_destination_callback    (j_compress_ptr cinfo);
-  static boolean empty_output_buffer_callback (j_compress_ptr cinfo);
-  static void    term_destination_callback    (j_compress_ptr cinfo);
-
-  void error_exit (j_common_ptr cinfo) __attribute__((noreturn));
-
-  static void error_exit_callback (j_common_ptr cinfo);
+  friend struct callback;
 };
 
+//! Turn a sequence of JPEG data into raw image data
+class decompressor
+  : public ofilter
+  , protected detail::common
+{
+public:
+  decompressor ();
+  ~decompressor ();
+
+  streamsize write (const octet *data, streamsize n);
+
+protected:
+  void bos (const context& ctx);
+  void boi (const context& ctx);
+  void eoi (const context& ctx);
+
+  struct jpeg_decompress_struct cinfo_;
+  struct jpeg_source_mgr        smgr_;
+
+  void    init_source ();
+  boolean fill_input_buffer ();
+  void    skip_input_data (long num_bytes);
+  void    term_source ();
+
+  bool header_done_;
+  bool decompressing_;
+
+  streamsize bytes_to_skip_;
+
+  //! Try to reclaim unused work buffer space
+  /*! Returns \c true if there is \e usable free space in the work
+   *  buffer after reclamation.
+   *
+   *  \note This does \e not return resources to the system.  It only
+   *        rearranges buffer content so that the decompressor stands
+   *        a chance when it tries to append data.
+   */
+  bool reclaim_space ();
+
+  JSAMPROW *sample_rows_;
+
+  friend struct callback;
+};
+
+}       // namespace jpeg
 }       // namespace _flt_
 }       // namespace utsushi
 

@@ -56,7 +56,7 @@ class dialog : public Gtk::Dialog
   option::map::ptr opts_;
   option::map::ptr app_opts_;
 
-  _flt_::jpeg jpeg_;
+  _flt_::jpeg::compressor jpeg_;
 
 public:
   dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder);

@@ -1,5 +1,5 @@
 //  device.cpp -- interface default implementations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -36,8 +36,9 @@ using std::exception;
 using std::logic_error;
 
 idevice::idevice (const context& ctx)
-  : input (ctx), last_marker_(traits::eos())
-  , do_cancel_(false)
+  : input (ctx)
+  , work_in_progress_(false)
+  , cancel_requested_(work_in_progress_)
 {}
 
 streamsize
@@ -50,6 +51,10 @@ idevice::read (octet *data, streamsize n)
   catch (const exception& e)
     {
       last_marker_ = traits::eof ();
+
+      work_in_progress_ = false;
+      cancel_requested_ = work_in_progress_;
+
       throw;
     }
 }
@@ -57,6 +62,8 @@ idevice::read (octet *data, streamsize n)
 streamsize
 idevice::read_(octet *data, streamsize n)
 {
+  const streamsize prev_marker = last_marker_;
+
   if (traits::boi() == last_marker_)
     {
       if (0 < n)
@@ -88,10 +95,11 @@ idevice::read_(octet *data, streamsize n)
   else if (   traits::eos() == last_marker_
            || traits::eof() == last_marker_)
     {
+      work_in_progress_ = true;
       last_marker_ = (set_up_sequence ()
                       && obtain_media ()
                       ? traits::bos()
-                      : traits::eos());
+                      : traits::eof());
     }
   else if (traits::bos() == last_marker_)
     {
@@ -105,17 +113,16 @@ idevice::read_(octet *data, streamsize n)
         (logic_error (_("unhandled state in idevice::read()")));
     }
 
-  if (do_cancel_ && traits::eos() == last_marker_)
+  if (   traits::eos () == last_marker_
+      || traits::eof () == last_marker_)
     {
-      last_marker_ = traits::eof();
-    }
-  if (traits::eof() == last_marker_)
-    {
-      do_cancel_ = false;
+      work_in_progress_ = false;
+      if (cancel_requested_) last_marker_ = traits::eof();
+      cancel_requested_ = work_in_progress_;
     }
 
-  //! \todo Don't emit if not changed
-  signal_marker_(last_marker_);
+  if (prev_marker != last_marker_)
+    signal_marker_(last_marker_);
 
   return last_marker_;
 }
@@ -129,12 +136,7 @@ idevice::marker ()
 void
 idevice::cancel ()
 {
-  if (do_cancel_) return;
-
-  log::brief ("initiating cancellation");
-
-  do_cancel_ = true;
-  cancel_();
+  cancel_requested_ = work_in_progress_;
 }
 
 void
@@ -183,9 +185,10 @@ idevice::sgetn (octet *data, streamsize n)
   return 0;
 }
 
-void
-idevice::cancel_()
+bool
+idevice::cancel_requested () const
 {
+  return cancel_requested_;
 }
 
 void
@@ -193,9 +196,12 @@ odevice::mark (traits::int_type c, const context& ctx)
 {
   output::mark (c, ctx);
 
-  //! \todo Don't emit if not changed
-  if (traits::is_marker (c))
-    signal_marker_(c);
+  if (traits::is_marker (c)
+      && c != last_marker_)
+    {
+      last_marker_ = c;
+      signal_marker_(last_marker_);
+    }
 }
 
 void

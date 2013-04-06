@@ -28,6 +28,7 @@
 #include <boost/spirit/include/qi_and_predicate.hpp>
 #include <boost/spirit/include/qi_binary.hpp>
 #include <boost/spirit/include/qi_difference.hpp>
+#include <boost/spirit/include/qi_eoi.hpp>
 #include <boost/spirit/include/qi_expect.hpp>
 #include <boost/spirit/include/qi_matches.hpp>
 #include <boost/spirit/include/qi_permutation.hpp>
@@ -58,15 +59,17 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
   namespace value = code_token::value;
 
   information_rule_ %=
-      (token_(ADF) > info_adf_rule_)
-    ^ (token_(TPU) > info_tpu_rule_)
-    ^ (token_(FB ) > info_fb_rule_)
-    ^ (token_(IMX) > this->extent_)
-    ^  qi::matches [ token_(PB) ]
-    ^ (token_(PRD) > this->bin_hex_data_)
-    ^ (token_(VER) > this->bin_hex_data_)
-    ^ (token_(DSZ) > this->positive_)
-    ^ (token_(EXT) > token_(value::LIST) > +info_ext_token_)
+    (  (token_(ADF) > info_adf_rule_)
+     ^ (token_(TPU) > info_tpu_rule_)
+     ^ (token_(FB ) > info_fb_rule_)
+     ^ (token_(IMX) > this->extent_)
+     ^  qi::matches [ token_(PB) ]
+     ^ (token_(PRD) > this->bin_hex_data_)
+     ^ (token_(VER) > this->bin_hex_data_)
+     ^ (token_(DSZ) > this->positive_)
+     ^ (token_(EXT) > token_(value::LIST) > +info_ext_token_)
+       )
+    > qi::eoi
     ;
 
   info_adf_rule_ %=
@@ -121,7 +124,8 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
     &(  token_(adf::SCN1)
       | token_(adf::SCN2)
       )
-    > token_;
+    > token_
+    ;
 
   info_adf_ford_token_ %=
     &(  token_(adf::PF1N)

@@ -26,6 +26,7 @@
 #include <boost/throw_exception.hpp>
 
 #include "utsushi/i18n.hpp"
+#include "utsushi/log.hpp"
 #include "utsushi/option.hpp"
 #include "utsushi/range.hpp"
 #include "utsushi/store.hpp"
@@ -115,7 +116,7 @@ option::is_active () const
 bool
 option::is_read_only () const
 {
-  return false;
+  return owner_.constraints_[key_]->is_singular ();
 }
 
 option::option (option::map& owner, const utsushi::key& k)
@@ -447,6 +448,30 @@ option::map::remove (const utsushi::key& name_space, const option::map& om)
     }
 
   if (parent_) parent_->remove (name_space_ / name_space, om);
+}
+
+void
+option::map::relink ()
+{
+  if (parent_) parent_->relink (*this);
+}
+
+void
+option::map::relink (const option::map& om)
+{
+  if (om.parent_ != this)
+    {
+      log::error ("relink request from non-child");
+      return;
+    }
+
+  container< utsushi::key, constraint::ptr >::const_iterator cit;
+  for (cit = om.constraints_.begin (); om.constraints_.end () != cit; ++cit)
+    {
+      constraints_[om.name_space_ / cit->first] = cit->second;
+    }
+
+  if (parent_) parent_->relink ();
 }
 
 option::map::builder::builder (option::map& owner)

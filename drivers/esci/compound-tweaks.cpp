@@ -47,6 +47,18 @@ DS_xxx00::DS_xxx00 (const connexion::ptr& cnx)
   capabilities& caps (const_cast< capabilities& > (caps_));
   parameters&   defs (const_cast< parameters& > (defs_));
 
+  capabilities& caps_flip (const_cast< capabilities& > (caps_flip_));
+  parameters&   defs_flip (const_cast< parameters& > (defs_flip_));
+
+  // Disable flip-side scan parameter support because driver support
+  // for it is not ready yet.  The protocol specification is missing
+  // information needed for implementation.
+  // Flip-side scan parameter support for these models was only added
+  // after their initial launch.
+
+  caps_flip = capabilities ();
+  defs_flip = parameters ();
+
   // Both resolution settings need to be identical
   caps.rss = boost::none;
 

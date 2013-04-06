@@ -1,5 +1,5 @@
 //  preview.cpp -- display/control images before final acquisition
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -35,14 +35,18 @@
 #include <utsushi/log.hpp>
 
 #include "preview.hpp"
+#include "../filters/jpeg.hpp"
 #include "../filters/padding.hpp"
 #include "../filters/pnm.hpp"
 
 namespace utsushi {
 namespace gtkmm {
 
+using namespace _flt_;
+
 using std::bad_alloc;
 using std::logic_error;
+using std::runtime_error;
 
 preview::preview (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
   : base (ptr),
@@ -50,7 +54,7 @@ preview::preview (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
     interp_(Gdk::INTERP_BILINEAR),
     loader_(0), pixbuf_(0)
 {
-  odevice_ = odevice::ptr (this);
+  odevice_ = odevice::ptr (this, null_deleter ());
 
   builder->get_widget ("preview-window", window_);
   if (!window_)
@@ -223,13 +227,6 @@ preview::on_refresh ()
   }
   catch (const std::out_of_range&){}
 
-  value transfer_format;
-  try {
-    transfer_format = (*control_)["transfer-format"];
-    (*control_)["transfer-format"] = string ("RAW");
-  }
-  catch (const std::out_of_range&){}
-
   value image_count;
   try {
     image_count = (*control_)["image-count"];
@@ -244,17 +241,35 @@ preview::on_refresh ()
   }
   catch (const std::out_of_range&){}
 
-  ostream_ = ostream::ptr (new ostream);
-  ostream_->push (ofilter::ptr (new (_flt_::padding)));
-  ostream_->push (ofilter::ptr (new (_flt_::pnm)));
-  ostream_->push (odevice::ptr (odevice_));
-
   try
     {
+      std::string transfer_format;
+
+      try {                 //! \todo get rid of silly type conversion
+        string transfer = value ((*control_)["transfer-format"]);
+        transfer_format = std::string (transfer);
+      } catch (const std::out_of_range&){}
+
+      ostream_ = ostream::ptr (new ostream);
+      /**/ if ("RAW" == transfer_format)
+        {
+          ostream_->push (ofilter::ptr (new (padding)));
+          ostream_->push (ofilter::ptr (new (pnm)));
+        }
+      else
+        {
+          /*! \todo We're blindly assuming Gdk::PixbufLoader can
+           *        handle transfer_format.  We should check the
+           *        supported formats to confirm and take action
+           *        if it doesn't.
+           */
+        }
+      ostream_->push (odevice::ptr (odevice_));
+
       *idevice_ | *ostream_;
       scale ();
     }
-  catch (const std::runtime_error& e)
+  catch (const runtime_error& e)
     {
       log::error (e.what ());
 
@@ -276,10 +291,6 @@ preview::on_refresh ()
   if (value () != image_count)
     {
       (*control_)["image-count"] = image_count;
-    }
-  if (value () != transfer_format)
-    {
-      (*control_)["transfer-format"] = transfer_format;
     }
   if (value () != resolution)
     {

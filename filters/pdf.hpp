@@ -1,5 +1,5 @@
 //  pdf.hpp -- PDF image format support
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -54,7 +54,7 @@ protected:
 private:
   typedef context::size_type size_type;
 
-  std::string media_type_;
+  std::string content_type_;
   size_type _page;              // zero-offset page count, back is odd
   bool _match_direction;
   bool _need_page_trailer;

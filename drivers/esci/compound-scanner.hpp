@@ -1,5 +1,5 @@
 //  compound-scanner.hpp -- devices that handle compound commands
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -50,7 +50,6 @@ protected:
   bool set_up_image ();
   void finish_image ();
   streamsize sgetn (octet *data, streamsize n);
-  void cancel_();
 
   void set_up_initialize ();
   bool set_up_hardware ();
@@ -70,6 +69,17 @@ protected:
   void set_up_transfer_size ();
 
   void fill_buffer_();
+
+  //! Image size information policy query
+  /*! The image size reported at the start of image data acquisition
+   *  is an \e estimate.  The actual image size is only known when all
+   *  image data has been received.  In certain situations it is vital
+   *  and in others desirable to know the final size at the start of
+   *  the acquisition process.
+   */
+  bool use_final_image_size_(const parameters& parm) const;
+  bool enough_image_data_(const parameters& parm,
+                          const std::deque< data_buffer >& q) const;
 
   bool validate (const value::map& vm) const;
   void finalize (const value::map& vm);
@@ -101,6 +111,10 @@ protected:
   option::map& doc_source_options (const value& v);
   const option::map& doc_source_options (const quad& q) const;
   const option::map& doc_source_options (const value& v) const;
+
+  void align_document (const string& doc_source,
+                       quantity& tl_x, quantity& tl_y,
+                       quantity& br_x, quantity& br_y) const;
 
   //! Device Specific Reference Data
   /*! These variables hold various pieces of device information that

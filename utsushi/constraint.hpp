@@ -89,6 +89,9 @@ public:
    */
   virtual constraint * default_value (const value& v);
 
+  //! Tells whether only the default_value() is allowed
+  virtual bool is_singular () const;
+
   virtual void operator>> (std::ostream& os) const;
 
   //! The "anything goes" %constraint symbol

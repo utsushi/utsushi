@@ -1,5 +1,5 @@
 //  pdf.cpp -- PDF image format support
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -83,12 +83,12 @@ pdf::bos (const context& ctx)
 void
 pdf::boi (const context& ctx)
 {
-  BOOST_ASSERT (   "image/jpeg"  == ctx.media_type ()
-                || "image/g3fax" == ctx.media_type ());
+  BOOST_ASSERT (   "image/jpeg"  == ctx.content_type ()
+                || "image/g3fax" == ctx.content_type ());
 
-  media_type_ = ctx.media_type ();
+  content_type_ = ctx.content_type ();
   ctx_ = ctx;
-  ctx_.media_type ("application/pdf");
+  ctx_.content_type ("application/pdf");
 
   // Adjust to PDF default user space coordinates (1/72 inch)
   _pdf_h_sz = (72.0 * ctx_.width ()) / ctx_.x_resolution ();
@@ -242,11 +242,11 @@ pdf::write_image_object (_pdf_::dictionary& image, std::string name)
   image.insert ("Interpolate", _pdf_::primitive ("true"));
 
   _pdf_::dictionary parms;
-  if ("image/jpeg" == media_type_)
+  if ("image/jpeg" == content_type_)
     {
       image.insert ("Filter", _pdf_::primitive ("/DCTDecode"));
     }
-  else if ("image/g3fax" == media_type_)
+  else if ("image/g3fax" == content_type_)
     {
       image.insert ("Filter", _pdf_::primitive ("/CCITTFaxDecode"));
 
