@@ -180,17 +180,10 @@ bcp --boost=$sources \
     $upstream_dir
 bcp --boost=$sources bcp build $boost_modules $upstream_dir
 
-#  Make sure we include the Boost License text and root Jamfile and
-#  fix up bootstrap scripts so we can invoke they from places other
-#  than where they live.
+#  Make sure we include the Boost License text and root Jamfile.
 
 cp $sources/LICENSE_1_0.txt $upstream_dir
 cp $sources/Jamroot $upstream_dir
-cp $sources/bootstrap.sh $upstream_dir
-
-for script in `find $upstream_dir -name bootstrap.sh`; do
-    sed -i 's,^my_dir=.*,my_dir=`dirname $0`,' $script
-done
 
 #  Patch up the Boost.Math sources so they build.  It seems that bcp
 #  misses the dependency on the Boost.Math config directory.

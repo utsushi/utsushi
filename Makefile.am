@@ -203,33 +203,40 @@ endif # with_included_boost
 boostdir = upstream/boost
 
 boost-libs: $(boostdir)/lib/stamp
-$(boostdir)/lib/stamp: $(boostdir)/bjam
+$(boostdir)/lib/stamp: Boost.Build
 	@echo "Building Boost libraries"; \
 	if test $(srcdir) = $(builddir); then \
-	  cmd="cd $(boostdir); ./bjam \
+	  cmd="cd $(boostdir); ./bin/$(BOOST_BUILD) \
 	    --build-dir=. --stagedir=."; \
 	else \
 	  dir1=$(srcdir)/$(boostdir); \
 	  dir2=$(boostdir); \
 	  $(am__relativize); \
-	  cmd="cd $(srcdir)/$(boostdir); $$reldir/bjam \
+	  cmd="cd $(srcdir)/$(boostdir); $$reldir/bin/$(BOOST_BUILD) \
 	    --build-dir=$$reldir --stagedir=$$dir2"; \
 	fi; \
 	cmd="($$cmd variant=debug $(boost_build_link_properties))"; \
 	echo $$cmd; \
 	eval $$cmd && touch $@
 
-$(boostdir)/bjam:
-	@echo "Building Boost.Build (bjam)"; \
+BOOST_BUILD = bjam
+
+Boost.Build: $(boostdir)/bin/$(BOOST_BUILD)
+$(boostdir)/bin/$(BOOST_BUILD):
+	echo "Building Boost.Build ($(BOOST_BUILD))"; \
 	if test $(srcdir) = $(builddir); then \
-	  (cd $(boostdir); ./tools/build/v2/bootstrap.sh); \
+	  (cd $(boostdir)/tools/build/v2; \
+	   ./bootstrap.sh \
+	     && ./$(BOOST_BUILD) install --prefix=../../..); \
 	else \
 	  test -d $(boostdir)/tools/build \
 	    || $(MKDIR_P) $(boostdir)/tools/build; \
 	  cp -a $(srcdir)/$(boostdir)/tools/build/v2 \
 	    $(boostdir)/tools/build; \
 	  find $(boostdir) -type d -exec chmod u+w {} ';'; \
-	  (cd $(boostdir); ./tools/build/v2/bootstrap.sh) \
+	  (cd $(boostdir)/tools/build/v2; \
+	   ./bootstrap.sh \
+	     && ./$(BOOST_BUILD) install --prefix=../../..) \
 	    && rm -rf $(boostdir)/tools/build/v2; \
 	  rmdir $(boostdir)/tools/build || true; \
 	  rmdir $(boostdir)/tools || true; \
