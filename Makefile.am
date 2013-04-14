@@ -147,6 +147,45 @@ if with_included_boost
 
 all-local: boost-libs
 
+if with_shared_enabled
+
+##  Install those Boost libraries that we (likely) need at run-time.
+##  Boost.Test libraries should *not* be needed so we explicitly skip
+##  them here.
+
+install-exec-local: $(boostdir)/lib/stamp
+	@$(NORMAL_INSTALL)
+	@test -z "$(pkglibdir)" || $(MKDIR_P) "$(DESTDIR)$(pkglibdir)"
+	@install_lib="$(INSTALL) $(INSTALL_STRIP_FLAGS)"; \
+	for lib in `ls $(boostdir)/lib/libboost_*$(LT_MODULE_EXT).*`; do \
+	  case $$lib in \
+	    */libboost_unit_test_framework$(LT_MODULE_EXT).*) \
+	      ;; \
+	    */libboost_test_exec_monitor$(LT_MODULE_EXT).*) \
+	      ;; \
+	    */libboost_prg_exec_monitor$(LT_MODULE_EXT).*) \
+	      ;; \
+	    *) \
+	      cmd="$$install_lib $$lib $(DESTDIR)$(pkglibdir)"; \
+	      echo $$cmd; \
+	      eval $$cmd; \
+	      filename=`echo $$lib | sed 's,.*/,,'`; \
+	      linkname=`echo $$filename \
+	        | sed 's/$(LT_MODULE_EXT).*$$/$(LT_MODULE_EXT)/'`; \
+	      test -e $(DESTDIR)$(pkglibdir)/$$linkname \
+	        && rm $(DESTDIR)$(pkglibdir)/$$linkname || true; \
+	      $(LN_S) $$filename $(DESTDIR)$(pkglibdir)/$$linkname ; \
+	      ;; \
+	  esac; \
+	done
+
+uninstall-local:
+	-rm $(DESTDIR)$(pkglibdir)/libboost_*$(LT_MODULE_EXT)*
+
+endif # with_shared_enabled
+
+endif # with_included_boost
+
 ##  The Boost sources take an approach to building that is opposite of
 ##  that used by autoconf and automake.  Whereas the latter build from
 ##  a $(builddir) and get sources from a $(srcdir), the Boost sources
@@ -224,45 +263,6 @@ distclean-local:
 maintainer-clean-local:
 	-rm -r $(srcdir)/$(boostdir)/../downloads/boost*
 	-rm -r $(srcdir)/$(boostdir)
-
-if with_shared_enabled
-
-##  Install those Boost libraries that we (likely) need at run-time.
-##  Boost.Test libraries should *not* be needed so we explicitly skip
-##  them here.
-
-install-exec-local: $(boostdir)/lib/stamp
-	@$(NORMAL_INSTALL)
-	@test -z "$(pkglibdir)" || $(MKDIR_P) "$(DESTDIR)$(pkglibdir)"
-	@install_lib="$(INSTALL) $(INSTALL_STRIP_FLAGS)"; \
-	for lib in `ls $(boostdir)/lib/libboost_*$(LT_MODULE_EXT).*`; do \
-	  case $$lib in \
-	    */libboost_unit_test_framework$(LT_MODULE_EXT).*) \
-	      ;; \
-	    */libboost_test_exec_monitor$(LT_MODULE_EXT).*) \
-	      ;; \
-	    */libboost_prg_exec_monitor$(LT_MODULE_EXT).*) \
-	      ;; \
-	    *) \
-	      cmd="$$install_lib $$lib $(DESTDIR)$(pkglibdir)"; \
-	      echo $$cmd; \
-	      eval $$cmd; \
-	      filename=`echo $$lib | sed 's,.*/,,'`; \
-	      linkname=`echo $$filename \
-	        | sed 's/$(LT_MODULE_EXT).*$$/$(LT_MODULE_EXT)/'`; \
-	      test -e $(DESTDIR)$(pkglibdir)/$$linkname \
-	        && rm $(DESTDIR)$(pkglibdir)/$$linkname || true; \
-	      $(LN_S) $$filename $(DESTDIR)$(pkglibdir)/$$linkname ; \
-	      ;; \
-	  esac; \
-	done
-
-uninstall-local:
-	-rm $(DESTDIR)$(pkglibdir)/libboost_*$(LT_MODULE_EXT)*
-
-endif # with_shared_enabled
-
-endif # with_included_boost
 
 ##  This target should *not* be conditionalized on with_included_boost
 ##  as that only affects build-related actions.  Shipping the upstream
