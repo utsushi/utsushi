@@ -86,7 +86,8 @@ Makefile.in
 /drivers/esci/verify
 /gtkmm/about.xml
 /lib/tag.cpp
-/sane/sane-utsushi-api.sym
+/lib/tests/ipc-cnx
+/sane/sane-api.sym
 /tests/uncrustify.cfg
 /tests/vc-dist-files
 /utsushi/tag.hpp
