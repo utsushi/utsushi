@@ -1,5 +1,5 @@
 //  device.hpp -- OO wrapper for SANE_Device instances
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -39,11 +39,12 @@ namespace sane {
  *  until another call to that function or a call to sane_exit().
  *  This means that all the strings of each \c SANE_Device have to
  *  be owned by the backend because there is no guarantee that the
- *  utsushi::monitor will keep all scanner::id's we use to create a
- *  list of SANE_Device's around for the whole of that time frame.
+ *  utsushi::monitor will keep around all the scanner::info objects
+ *  we use to create a list of SANE_Device's for the whole of that
+ *  time frame.
  *
  *  We wrap \c SANE_Device objects in a thin C++ layer to make sure
- *  that we have ownership of strings returned by scanner::id API.
+ *  that we have ownership of strings returned by scanner::info API.
  *  That way, we can safely set the \c SANE_Device members to point
  *  to c_str() return values.
  */
@@ -58,8 +59,8 @@ class device : public SANE_Device
   void init ();
 
 public:
-  //! Creates an instance from a scanner \a id
-  device (const utsushi::scanner::id& id);
+  //! Creates an instance from a scanner \a info
+  device (const utsushi::scanner::info& info);
   //! Creates a copy of a device object
   device (const device& dev);
   //! Assigns one device to another

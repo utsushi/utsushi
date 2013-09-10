@@ -1,5 +1,5 @@
 //  grammar-capabilities.cpp -- component instantiations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -295,7 +295,7 @@ capabilities::double_feed () const
 
   if (dfl1 && dfl2)
     {
-      store::ptr s (new store);
+      store::ptr s = make_shared< store > ();
 
       s -> alternative (N_("Off"))
         -> alternative (N_("Normal"))
@@ -306,7 +306,7 @@ capabilities::double_feed () const
     }
   if (dfl1)
     {
-      return constraint::ptr (new constraint (toggle ()));
+      return make_shared< constraint > (toggle ());
     }
   if (dfl2)
     {

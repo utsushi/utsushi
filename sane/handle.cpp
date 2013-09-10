@@ -33,9 +33,11 @@
 
 #include <utsushi/range.hpp>
 #include <utsushi/store.hpp>
-#include "../filters/padding.hpp"
 #include <utsushi/stream.hpp>
 #include <utsushi/i18n.hpp>
+
+#include "../filters/jpeg.hpp"
+#include "../filters/padding.hpp"
 
 #include "handle.hpp"
 #include "log.hpp"
@@ -143,9 +145,9 @@ using namespace utsushi;
 
 #define null_ptr 0
 
-handle::handle(const scanner::id& id)
-  : name_(id.name () + " (" + id.udi () + ")")
-  , idev_(scanner::create (connexion::create (id.iftype (), id.path ()), id))
+handle::handle(const scanner::info& info)
+  : name_(info.name () + " (" + info.udi () + ")")
+  , idev_(scanner::create (connexion::create (info.connexion (), info.path ()), info))
   , last_marker_(traits::eos ())
   , work_in_progress_(false)
   , cancel_requested_(work_in_progress_)
@@ -412,7 +414,7 @@ handle::set (SANE_Int index, void *value, SANE_Word *info)
 
       if (option_prefix / "image-type" == k)
         {
-          // update_option (option_prefix / "transfer-format");
+          update_option (option_prefix / "transfer-format");
 
           if (info) *info |= SANE_INFO_RELOAD_OPTIONS;
         }
@@ -644,8 +646,47 @@ handle::marker ()
            || traits::eos () == last_marker_
            || traits::eof () == last_marker_)
     {
-      istream::ptr istr (new istream ());
-      istr->push (ifilter::ptr (new _flt_::ipadding ()));
+      istream::ptr istr = make_shared< istream > ();
+
+      toggle match_height = true;
+      quantity height = -1.0;
+      try
+        {
+          match_height = value (opt_[option_prefix / "match-height"]);
+          height  = value (opt_[option_prefix / "br-y"]);
+          height -= value (opt_[option_prefix / "tl-y"]);
+        }
+      catch (const std::out_of_range&)
+        {
+          match_height = false;
+          height = -1.0;
+        }
+      if (match_height) match_height = (height > 0);
+
+      if (match_height)
+        istr->push (make_shared< _flt_::ibottom_padder > (height));
+
+      std::string xfer_fmt ("RAW");
+      try
+        {
+          string xfer = value (opt_[option_prefix / "transfer-format"]);
+          xfer_fmt = std::string (xfer);
+        }
+      catch (const std::out_of_range&) {}
+
+      /**/ if ("RAW"  == xfer_fmt)
+        istr->push (make_shared< _flt_::ipadding > ());
+      else if ("JPEG" == xfer_fmt)
+        istr->push (make_shared< _flt_::jpeg::idecompressor > ());
+      else
+        {
+          log::alert
+            ("unsupported transfer format: '%1%'") % xfer_fmt;
+
+          last_marker_ = traits::eof ();
+          return last_marker_;
+        }
+
       istr->push (idev_);
       istr_ = istr;
       iptr_ = istr_;
@@ -680,19 +721,6 @@ void
 handle::add_option (option& visitor)
 {
   if (name::num_options == visitor.key () && 0 < sod_.size ())
-    return;
-
-  // Don't expose the transfer-format option until we have suitable
-  // filters that can convert to "RAW" format at our disposal.  The
-  // jpeg-quality option only makes sense when JPEG transfer-format
-  // is selected, so we suppress that as well.
-
-  if (option_prefix / "transfer-format" == visitor.key ())
-    {
-      visitor = "RAW";
-      return;
-    }
-  if (option_prefix / "jpeg-quality" == visitor.key ())
     return;
 
   if (sod_.empty ()

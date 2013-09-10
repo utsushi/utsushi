@@ -1,5 +1,5 @@
 //  list.cpp -- available image acquisition devices
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -61,7 +61,7 @@ main (int argc, char *argv[])
 
       std::for_each (mon.begin (), mon.end (),
                      std::cout
-                     << bind (&utsushi::scanner::id::udi, _1) << "\n");
+                     << bind (&utsushi::scanner::info::udi, _1) << "\n");
     }
   catch (std::exception& e)
     {

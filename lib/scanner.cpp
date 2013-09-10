@@ -1,5 +1,5 @@
 //  scanner.cpp -- interface and support classes
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -29,6 +29,7 @@
 #include <stdexcept>
 
 #include <boost/filesystem.hpp>
+#include <boost/regex.hpp>
 #include <boost/throw_exception.hpp>
 
 #include "utsushi/i18n.hpp"
@@ -52,18 +53,18 @@ get_scanner_factory (const lt_dlhandle& handle)
 }
 
 scanner::ptr
-scanner::create (connexion::ptr cnx, const scanner::id& id)
+scanner::create (connexion::ptr cnx, const scanner::info& info)
 {
-  if (!id.has_driver ())
+  if (!info.is_driver_set ())
     {
       log::error ("driver not known for %1% (%2%)")
-        % id.name ()
-        % id.udi ()
+        % info.name ()
+        % info.udi ()
         ;
       return scanner::ptr ();
     }
 
-  std::string plugin = "libdrv-" + id.driver ();
+  std::string plugin = "libdrv-" + info.driver ();
 
   lt_dlhandle handle = NULL;
   scanner_factory factory = 0;
@@ -72,7 +73,7 @@ scanner::create (connexion::ptr cnx, const scanner::id& id)
 # if (HAVE_LT_DLADVISE)
     {
       log::brief ("looking for preloaded '%1%' driver")
-        % id.driver ();
+        % info.driver ();
 
       lt_dladvise advice;
       lt_dladvise_init (&advice);
@@ -87,7 +88,7 @@ scanner::create (connexion::ptr cnx, const scanner::id& id)
           if (factory)
             {
               log::brief ("using preloaded '%1%' driver")
-                % id.driver ();
+                % info.driver ();
             }
           else
             {
@@ -108,7 +109,7 @@ scanner::create (connexion::ptr cnx, const scanner::id& id)
       path p (*it);
 
       log::brief ("looking for '%1%' driver in '%2%'")
-        % id.driver ()
+        % info.driver ()
         % p.string ()
         ;
 
@@ -137,143 +138,106 @@ scanner::create (connexion::ptr cnx, const scanner::id& id)
   return factory (cnx);
 }
 
-const std::string default_type_("scanner");
 
-bool
-scanner::id::invalid_(const std::string& fragment) const
-{
-  const std::string lower = "abcdefghijklmnopqrstuvwxyz";
-  const std::string upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
-  const std::string valid = lower + upper;
-
-  return std::string::npos != fragment.find_first_not_of (valid);
-}
-
-bool
-scanner::id::promise_(bool nothrow) const
-{
-  bool all_is_well = true;
-
-  std::string::size_type pos = udi_.find (separator);
-
-  {                             // non-empty interface fragment
-    if (all_is_well)
-      all_is_well = (std::string::npos != pos && 0 != pos);
-    if (all_is_well)
-      all_is_well = !invalid_(iftype ());
-  }
-  {                             // possibly empty driver fragment
-    if (all_is_well)
-      all_is_well = (std::string::npos != udi_.find (separator, pos + 1));
-    if (all_is_well)
-      all_is_well = !has_driver () || !invalid_(driver ());
-  }
-
-  if (!nothrow && !all_is_well)
-    {
-      BOOST_THROW_EXCEPTION
-        (invalid_argument
-         ((format (_("syntax error: invalid udi '%1%'")) % udi_).str ()));
-    }
-
-  return all_is_well;
-}
-
-scanner::id::id (const std::string& udi)
+scanner::info::info (const std::string& udi)
   : udi_(udi)
-  , type_(default_type_)
 {
-  promise_();
-}
-
-scanner::id::id (const std::string& model, const std::string& vendor,
-                 const std::string& udi)
-  : udi_(udi)
-  , model_(model)
-  , vendor_(vendor)
-  , type_(default_type_)
-{
-  promise_();
-}
-
-scanner::id::id (const std::string& model, const std::string& vendor,
-                 const std::string& path, const std::string& iftype,
-                 const std::string& driver)
-  : model_(model)
-  , vendor_(vendor)
-  , type_(default_type_)
-{
-  if (invalid_(iftype))
+  if (!is_valid (udi_))
     {
       BOOST_THROW_EXCEPTION
         (invalid_argument
-         ((format (_("syntax error: interface name '%1%' not valid")
-                   ) % iftype).str ()));
+         ((format (_("syntax error: invalid UDI '%1%'")) % udi_).str ()));
     }
-  if (!driver.empty () && invalid_(driver))
-    {
-      BOOST_THROW_EXCEPTION
-        (invalid_argument
-         ((format (_("syntax error: driver name '%1%' not valid")
-                   ) % driver).str ()));
-    }
-  udi_ = iftype + separator + driver + separator + path;
-
-  promise_();
 }
 
 std::string
-scanner::id::path () const
+scanner::info::name () const
 {
-  std::string::size_type pos1 = udi_.find (separator) + 1;
-  std::string::size_type pos2 = udi_.find (separator, pos1);
-
-  return udi_.substr (pos2 + 1);
-}
-
-std::string
-scanner::id::name () const
-{
-  if (!nick_.empty ())
+  if (!name_.empty ())
     {
-      return nick_;
+      return name_;
     }
 
-  if (0 == model_.find (vendor_))
+  if (!model_.empty ())
     {
+      if (!vendor_.empty ()
+          && 0 != model_.find (vendor_))
+        {
+          return vendor_ + " " + model_;
+        }
       return model_;
     }
 
-  return vendor_ + " " + model_;
+  if (!vendor_.empty ())
+    {
+      return vendor_;
+    }
+
+  return udi_;
 }
 
 std::string
-scanner::id::text () const
+scanner::info::text () const
 {
   return text_;
 }
 
-std::string
-scanner::id::model () const
+void
+scanner::info::name (const std::string& name)
 {
-  return model_;
+  name_ = name;
+}
+
+void
+scanner::info::text (const std::string& text)
+{
+  text_ = text;
 }
 
 std::string
-scanner::id::vendor () const
-{
-  return vendor_;
-}
-
-std::string
-scanner::id::type () const
+scanner::info::type () const
 {
   return type_;
 }
 
 std::string
-scanner::id::driver () const
+scanner::info::model () const
+{
+  return model_;
+}
+
+std::string
+scanner::info::vendor () const
+{
+  return vendor_;
+}
+
+void
+scanner::info::type (const std::string& type)
+{
+  type_ = type;
+}
+
+void
+scanner::info::model (const std::string& model)
+{
+  model_ = model;
+}
+
+void
+scanner::info::vendor (const std::string& vendor)
+{
+  vendor_ = vendor;
+}
+
+std::string
+scanner::info::connexion () const
+{
+  return udi_.substr (0, udi_.find (separator));
+}
+
+std::string
+scanner::info::driver () const
 {
   std::string::size_type pos1 = udi_.find (separator) + 1;
   std::string::size_type pos2 = udi_.find (separator, pos1);
@@ -281,36 +245,12 @@ scanner::id::driver () const
   return udi_.substr (pos1, pos2 - pos1);
 }
 
-std::string
-scanner::id::iftype () const
-{
-  return udi_.substr (0, udi_.find (separator));
-}
-
-std::string
-scanner::id::udi () const
-{
-  return udi_;
-}
-
 void
-scanner::id::name (const std::string& name)
-{
-  nick_ = name;
-}
-
-void
-scanner::id::text (const std::string& text)
-{
-  text_ = text;
-}
-
-void
-scanner::id::driver (const std::string& driver)
+scanner::info::driver (const std::string& driver)
 {
   std::string::size_type pos1 = udi_.find (separator) + 1;
 
-  if (has_driver ())
+  if (is_driver_set ())
     {
       std::string::size_type pos2 = udi_.find (separator, pos1);
       udi_.replace (pos1, pos2 - pos1, driver);
@@ -319,39 +259,86 @@ scanner::id::driver (const std::string& driver)
     {
       udi_.insert (pos1, driver);
     }
+}
 
-  promise_();
+std::string
+scanner::info::host () const
+{
+  return std::string ();
+}
+
+std::string
+scanner::info::port () const
+{
+  return std::string ();
+}
+
+std::string
+scanner::info::path () const
+{
+  std::string::size_type pos1 = udi_.find (separator) + 1;
+  std::string::size_type pos2 = udi_.find (separator, pos1);
+
+  return udi_.substr (pos2 + 1);
+}
+
+std::string
+scanner::info::udi () const
+{
+  return udi_;
 }
 
 bool
-scanner::id::is_configured () const
+scanner::info::is_driver_set () const
 {
-  return "virtual" == iftype ();
+  return !driver ().empty ();
 }
 
 bool
-scanner::id::is_local () const
+scanner::info::is_local () const
 {
-  return "net" != iftype ();
+  return (2 > path ().find_first_not_of ('/'));
 }
 
 bool
-scanner::id::has_driver () const
+scanner::info::is_valid (const std::string& udi)
 {
-  return ! driver ().empty ();
+  using std::string;
+  using boost::regex;
+
+  if (3 > udi.length ())
+    return false;
+
+  if (2 <= udi.find_first_not_of (separator))
+    return false;
+
+  string::size_type sep1 = udi.find (separator);
+  if (string::npos == sep1)
+    return false;
+
+  const string cnx (udi.substr (0, sep1));
+  sep1 += 1;
+
+  string::size_type sep2 = udi.find (separator, sep1);
+  if (string::npos == sep2)
+    return false;
+
+  const string drv (udi.substr (sep1, sep2 - sep1));
+  sep2 += 1;
+
+  if (cnx.empty () && drv.empty ())
+    return false;
+
+  const regex scheme ("[[:alpha:]][-+.[:alnum:]]*");
+
+  if (!cnx.empty () && !regex_match (cnx, scheme))
+    return false;
+  if (!drv.empty () && !regex_match (drv, scheme))
+    return false;
+
+  return true;
 }
 
-bool
-scanner::id::is_valid (const std::string& udi)
-{
-  id id (udi, true);
-  return id.promise_(true);
-}
-
-const char scanner::id::separator = ':';
-
-scanner::id::id (const std::string& udi, bool nocheck)
-  : udi_(udi)
-{}
+const char scanner::info::separator = ':';
 
 }       // namespace utsushi

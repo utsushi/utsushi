@@ -1,7 +1,7 @@
 
   Utsushi - Next Generation Image Acquisition
 
-  Copyright (C) 2012  SEIKO EPSON CORPORATION
+  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 
 
   SUMMARY
@@ -58,6 +58,7 @@ USING THE SOFTWARE
   -----------------
     At present, the following EPSON devices are supported:
 
+      - DS-510
       - DS-5500
       - DS-6500
       - DS-7500

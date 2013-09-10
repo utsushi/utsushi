@@ -42,7 +42,7 @@ namespace _drv_ {
 
     public:
       chunk (streamsize size = 0, bool with_error_code = false)
-        : buffer_(0)
+        : buffer_()
         , buffer_size_(size)
         , error_code_(with_error_code)
       {

@@ -40,8 +40,6 @@
 #define BOOST_FIXTURE_TEST_SUITE_END BOOST_AUTO_TEST_SUITE_END
 #endif
 
-static utsushi::monitor mon;    // to discover devices
-
 struct preload_symbols
 {
   preload_symbols ()
@@ -769,6 +767,8 @@ init_test_runner ()
   but::master_test_suite_t& master (but::framework::master_test_suite ());
 
   BOOST_MESSAGE ("Initializing \"" << master.p_name << "\" test suite");
+
+  utsushi::monitor mon;    // to discover devices
 
   if (mon.begin () == mon.end ()
       || "mock" != mon.begin ()->driver ())

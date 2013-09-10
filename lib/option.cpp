@@ -1,5 +1,5 @@
 //  option.cpp -- configurable settings in recursive property maps
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -229,6 +229,10 @@ option::map::assign (const value::map& vm)
     }
   else
     {
+      log::debug ("Invalid value combination");
+      for_each (value::map::value_type element, vm)
+        log::debug ("%1% = %2%") % string (element.first) % element.second;
+
       //! \todo generate (ranked) candidate alternatives to choose from
       BOOST_THROW_EXCEPTION
         (constraint::violation ("value combination not acceptable"));
@@ -485,8 +489,8 @@ option::map::builder::operator() (const utsushi::key& k,
                                   const string& name,
                                   const string& text) const
 {
-  constraint::ptr cp (new utsushi::constraint (v));
-  value::ptr      vp (new value (v));
+  constraint::ptr cp = make_shared< utsushi::constraint > (v);
+  value::ptr      vp = make_shared< value > (v);
 
   return operator() (k, vp, cp, attr, name, text);
 }
@@ -499,7 +503,7 @@ option::map::builder::operator() (const utsushi::key& k,
                                   const string& text) const
 {
   constraint::ptr cp;
-  value::ptr      vp (new value (v));
+  value::ptr      vp = make_shared< value > (v);
 
   return operator() (k, vp, cp, attr, name, text);
 }
@@ -512,7 +516,7 @@ option::map::builder::operator() (const utsushi::key& k,
                                   const string& text) const
 {
   constraint::ptr cp (c);
-  value::ptr      vp (new value ((*c) (value ())));
+  value::ptr      vp = make_shared< value > ((*c) (value ()));
 
   return operator() (k, vp, cp, attr, name, text);
 }
@@ -524,7 +528,7 @@ option::map::builder::operator() (const utsushi::key& k,
                                   const string& name,
                                   const string& text) const
 {
-  value::ptr vp (new value ((*cp) (value ())));
+  value::ptr vp = make_shared< value > ((*cp) (value ()));
 
   return operator() (k, vp, cp, attr, name, text);
 }
@@ -572,7 +576,7 @@ option::map::builder::operator() (const utsushi::key& k,
       BOOST_THROW_EXCEPTION (logic_error (k));
     }
 
-  descriptor::ptr dp (new descriptor (attr));
+  descriptor::ptr dp = make_shared< descriptor > (attr);
   dp->name (name);
   dp->text (text);
 

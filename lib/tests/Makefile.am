@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -23,7 +23,7 @@
 if enable_boost_unit_test_framework
 
 TESTS_ENVIRONMENT =
-TESTS = $(check_PROGRAMS)
+TESTS = $(test_runners)
 
 streams  = octet.utr
 streams += null.utr
@@ -39,12 +39,17 @@ settings += string.utr
 settings += value.utr
 settings += option.utr
 
-check_PROGRAMS  = log-checking.utr
-check_PROGRAMS += log-no-check.utr
-check_PROGRAMS += run-time.utr
-check_PROGRAMS += scanner.utr
-check_PROGRAMS += $(streams)
-check_PROGRAMS += $(settings)
+test_runners  = log-checking.utr
+test_runners += log-no-check.utr
+test_runners += run-time.utr
+test_runners += scanner.utr
+test_runners += $(streams)
+test_runners += $(settings)
+test_runners += monitor.utr
+
+check_PROGRAMS  = $(test_runners)
+check_PROGRAMS += connexion.utr
+check_PROGRAMS += ipc-cnx
 
 log_checking_utr_SOURCES   = log.cpp
 log_checking_utr_CPPFLAGS  = $(AM_CPPFLAGS)
@@ -60,7 +65,7 @@ LDADD  = ../libutsushi.la $(LIBUTSUSHI_LIBS)
 LDADD += ../../connexions/libcnx-usb.la
 
 if have_libtiff
-check_PROGRAMS    += tiff.utr
+test_runners      += tiff.utr
 tiff_utr_CXXFLAGS  = $(AM_CXXFLAGS)
 tiff_utr_CXXFLAGS += $(LIBTIFF_CFLAGS)
 tiff_utr_LDADD     = $(LDADD)

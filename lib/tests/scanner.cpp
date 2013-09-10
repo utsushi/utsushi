@@ -1,5 +1,5 @@
 //  scanner.cpp -- unit tests for the utsushi::scanner API
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -30,63 +30,70 @@ using namespace utsushi;
 
 BOOST_AUTO_TEST_CASE (udi_validation)
 {
-  const std::string digit = "0123456789";
-  const std::string punct = "!\"#$%&'()~=~|-^\\`{+*}<>?_@[;:],./";
+  BOOST_CHECK (!scanner::info::is_valid (""));
 
-  BOOST_CHECK_NO_THROW (scanner::id ("", "", "if::"));
-  BOOST_CHECK_NO_THROW (scanner::id ("", "", "if:drv:"));
-  BOOST_CHECK_NO_THROW (scanner::id ("", "", "if::path"));
-  BOOST_CHECK_NO_THROW (scanner::id ("", "", "if:drv:path"));
-  BOOST_CHECK_NO_THROW (scanner::id ("", "", "if::" + digit));
-  BOOST_CHECK_NO_THROW (scanner::id ("", "", "if::" + punct));
+  BOOST_CHECK (!scanner::info::is_valid (":"));
+  BOOST_CHECK (!scanner::info::is_valid ("cnx:"));
+  BOOST_CHECK (!scanner::info::is_valid (":drv"));
+  BOOST_CHECK (!scanner::info::is_valid ("cnx:drv"));
 
-  BOOST_CHECK_THROW (scanner::id ("", "", "::"),
-                     std::invalid_argument);
-  BOOST_CHECK_THROW (scanner::id ("", "", ":drv:"),
-                     std::invalid_argument);
-  BOOST_CHECK_THROW (scanner::id ("", "", ":drv:path"),
-                     std::invalid_argument);
-  BOOST_CHECK_THROW (scanner::id ("", "", "if\\8::"),
-                     std::invalid_argument);
-  BOOST_CHECK_THROW (scanner::id ("", "", "if\\8:drv:"),
-                     std::invalid_argument);
-  BOOST_CHECK_THROW (scanner::id ("", "", "if\\8:drv:path"),
-                     std::invalid_argument);
-  BOOST_CHECK_THROW (scanner::id ("", "", "if:drv\\8:"),
-                     std::invalid_argument);
-  BOOST_CHECK_THROW (scanner::id ("", "", "if:drv\\8:path"),
-                     std::invalid_argument);
+  BOOST_CHECK (!scanner::info::is_valid ("::"));
+  BOOST_CHECK ( scanner::info::is_valid ("cnx::"));
+  BOOST_CHECK ( scanner::info::is_valid (":drv:"));
+  BOOST_CHECK (!scanner::info::is_valid ("::path"));
 
-  BOOST_CHECK_THROW (scanner::id ("", "", "path", ""),
-                     std::invalid_argument);
-  BOOST_CHECK_THROW (scanner::id ("", "", "path", "if:"),
-                     std::invalid_argument);
-  BOOST_CHECK_THROW (scanner::id ("", "", "path", "if", "d3r"),
-                     std::invalid_argument);
-  BOOST_CHECK_THROW (scanner::id ("", "", "path", "if", "d:r"),
-                     std::invalid_argument);
+  BOOST_CHECK ( scanner::info::is_valid ("cnx:drv:"));
+  BOOST_CHECK ( scanner::info::is_valid ("cnx::path"));
+  BOOST_CHECK ( scanner::info::is_valid (":drv:path"));
+  BOOST_CHECK ( scanner::info::is_valid ("cnx:drv:path"));
+
+  BOOST_CHECK ( scanner::info::is_valid ("cnx-net::"));
+  BOOST_CHECK (!scanner::info::is_valid ("cnx_net::"));
+  BOOST_CHECK ( scanner::info::is_valid (":drv-net:"));
+  BOOST_CHECK (!scanner::info::is_valid (":drv_net:"));
+  BOOST_CHECK ( scanner::info::is_valid ("cnx-net:drv-net:path_net"));
+
+  // Linux USB device below /sys
+  BOOST_CHECK_NO_THROW
+    (scanner::info ("cnx:drv:/sys/devices/pci0000:00/0000:00:1a.2/usb7/7-1"));
+  // IPv4 numeric address with port number
+  BOOST_CHECK_NO_THROW
+    (scanner::info ("ipv4:drv://192.168.0.0:1865"));
+  // IPv6 with leading zeroes replaced by a double colon
+  BOOST_CHECK_NO_THROW
+    (scanner::info ("ipv6:drv://::1"));
 }
 
 BOOST_AUTO_TEST_CASE (fragment_splitting)
 {
-  scanner::id id ("", "", "virtual:mock:office");
+  scanner::info info ("cnx:drv:path");
 
-  BOOST_CHECK_EQUAL ("virtual", id.iftype ());
-  BOOST_CHECK_EQUAL ("mock", id.driver ());
-  BOOST_CHECK_EQUAL ("office", id.path ());
+  BOOST_CHECK_EQUAL ("cnx", info.connexion ());
+  BOOST_CHECK_EQUAL ("drv", info.driver ());
+  BOOST_CHECK_EQUAL ("path", info.path ());
 }
 
 BOOST_AUTO_TEST_CASE (driver_splicing)
 {
-  scanner::id id ("", "", "if::");
+  scanner::info info ("cnx::path");
 
-  std::string path = id.path ();
+  BOOST_CHECK (!info.is_driver_set ());
 
-  id.driver ("drv");
-  BOOST_CHECK_EQUAL ("drv", id.driver ());
-  id.driver ("mock");
-  BOOST_CHECK_EQUAL ("mock", id.driver ());
-  BOOST_CHECK_EQUAL (path, id.path());
+  std::string path = info.path ();
+  BOOST_CHECK_EQUAL ("path", path);
+
+  info.driver ("drv");
+  BOOST_CHECK_EQUAL ("drv", info.driver ());
+  BOOST_CHECK_EQUAL (path, info.path());
+}
+
+BOOST_AUTO_TEST_CASE (local_device)
+{
+  scanner::info local  ("usb:drv:04b8:0123");   // vendor/product ID
+  scanner::info remote ("ipv4:drv://192.168.0.0:1865");
+
+  BOOST_CHECK ( local .is_local ());
+  BOOST_CHECK (!remote.is_local ());
 }
 
 #include "utsushi/test/runner.ipp"

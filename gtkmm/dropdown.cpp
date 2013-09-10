@@ -1,5 +1,5 @@
 //  dropdown.cpp -- menu with three sections
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -120,7 +120,8 @@ dropdown::is_separator (const Glib::RefPtr<Gtk::TreeModel>& model,
 
 void
 dropdown::insert (type_id type,
-                  const std::string& name, const std::string& text)
+                  const std::string& name, const std::string& text,
+                  const std::string& udi)
 {
   Gtk::TreeRow row = *(model_->append ());
 
@@ -128,6 +129,9 @@ dropdown::insert (type_id type,
   row[cols_->name] = name;
   if (!text.empty ()) {
     row[cols_->text] = text;
+  }
+  if (!udi.empty ()) {
+    row[cols_->udi] = udi;
   }
 }
 

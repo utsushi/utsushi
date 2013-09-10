@@ -1,5 +1,5 @@
 //  device-info.cpp -- abstraction layer
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -36,7 +36,7 @@ device_info::create (const std::string& interface, const std::string& path)
   device_info::ptr rv;
 
 #if HAVE_LIBHAL
-  if (!rv) rv = device_info::ptr (new HAL::device (interface, path));
+  if (!rv) rv = make_shared< HAL::device > (interface, path);
 #endif
 
   return rv;

@@ -1,5 +1,5 @@
 //  padding.cpp -- octet and scan line removal
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -23,6 +23,7 @@
 #endif
 
 #include <boost/assert.hpp>
+#include <boost/scoped_array.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <utsushi/i18n.hpp>
@@ -232,6 +233,138 @@ padding::eoi (const context& ctx)
       log::alert
         ("%1% pixels inadvertently cropped when removing padding lines")
         % (ctx.height () - ctx_.height ());
+    }
+}
+
+ibottom_padder::ibottom_padder (const quantity& height)
+  : height_(height)
+  , octets_left_(0)
+  , insert_padding_(false)
+{}
+
+streamsize
+ibottom_padder::read (octet *data, streamsize n)
+{
+  if (insert_padding_)
+    {
+      if (octets_left_)
+        {
+          streamsize cnt = std::min (octets_left_, n);
+
+          traits::assign (data, cnt, 0xff);
+          octets_left_ -= cnt;
+
+          return cnt;
+        }
+      else
+        {
+          insert_padding_ = false;
+          return last_marker_;
+        }
+    }
+
+  streamsize rv = io_->read (data, n);
+
+  if (traits::is_marker (rv))
+    handle_marker (rv);
+  else
+    octets_left_ -= rv;
+
+  if (0 > octets_left_)
+    {
+      rv += octets_left_;
+      octets_left_ = 0;
+    }
+  if (insert_padding_)
+    {
+      return read (data, n);
+    }
+
+  return rv;
+}
+
+streamsize
+ibottom_padder::marker ()
+{
+  if (octets_left_) return traits::not_marker (0);
+
+  return ifilter::marker ();
+}
+
+void
+ibottom_padder::handle_marker (traits::int_type c)
+{
+  if (traits::boi () == c)
+    {
+      logic_error e ("bottom_padder only works with raster images");
+
+      context ctx (io_->get_context ());
+
+      if (!ctx.is_raster_image ())
+        BOOST_THROW_EXCEPTION (e);
+
+      streamsize lines = height_.amount< double > () * ctx.y_resolution ();
+
+      ctx_ = ctx;
+      ctx_.height (lines);
+
+      octets_left_ = lines * ctx_.octets_per_line ();
+    }
+  if (traits::eoi () == c)
+    {
+      insert_padding_ = (0 < octets_left_);
+    }
+  last_marker_ = c;
+}
+
+bottom_padder::bottom_padder (const quantity& height)
+  : height_(height)
+{}
+
+streamsize
+bottom_padder::write (const octet *data, streamsize n)
+{
+  if (!octets_left_) return n;
+
+  streamsize cnt = std::min (octets_left_, n);
+  octets_left_  -= cnt;
+
+  io_->write (data, cnt);
+
+  return n;
+}
+
+void
+bottom_padder::boi (const context& ctx)
+{
+  logic_error e ("bottom_padder only works with raster images");
+
+  if (!ctx.is_raster_image ())
+    BOOST_THROW_EXCEPTION (e);
+
+  streamsize lines = height_.amount< double > () * ctx.y_resolution ();
+
+  ctx_ = ctx;
+  ctx_.height (lines);
+
+  octets_left_ = lines * ctx_.octets_per_line ();
+}
+
+void
+bottom_padder::eoi (const context& ctx)
+{
+  streamsize size = default_buffer_size;
+
+  boost::scoped_array< octet > pad (new octet [size]);
+
+  traits::assign (pad.get (), size, 0xff);
+
+  while (octets_left_)
+    {
+      streamsize cnt = std::min (octets_left_, size);
+      octets_left_  -= cnt;
+
+      io_->write (pad.get (), cnt);
     }
 }
 

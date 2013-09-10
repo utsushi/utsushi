@@ -1,7 +1,7 @@
 #! /bin/sh
 #  bootstrap -- clean checkouts to a point where `./configure` succeeds
 #  Copyright (C) 2013  Olaf Meeuwissen
-#  Copyright (C) 2012  SEIKO EPSON CORPORATION
+#  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 #
 #  License: GPL-3.0+
 #  Author : AVASYS CORPORATION
@@ -85,19 +85,28 @@ if test 0 -ne $#; then
     usage 1
 fi
 
+#  Honour the `autoreconf` environment variables
+
+: ${AUTOCONF:=autoconf}
+: ${AUTOHEADER:=autoheader}
+: ${AUTOMAKE:=automake}
+: ${ACLOCAL:=aclocal}
+: ${AUTOPOINT:=autopoint}
+: ${LIBTOOLIZE:=libtoolize}
+
 #  Create files that autoconf and automake are looking for but may not
 #  be in the repository because they are maintained automagically.  We
 #  take care to make files only if absolutely necessary and make these
 #  files old enough to trigger their automagic maintenance.
 
-srcdir_file=`autoconf -t AC_CONFIG_SRCDIR:'$1' 2>/dev/null | sed '/^$/d'`
+srcdir_file=`${AUTOCONF} -t AC_CONFIG_SRCDIR:'$1' 2>/dev/null | sed '/^$/d'`
 test -e "$srcdir_file" \
     || touch -d @0 "$srcdir_file"
 
-aux_dir=`autoconf -t AC_CONFIG_AUX_DIR:'$%'`
+aux_dir=`${AUTOCONF} -t AC_CONFIG_AUX_DIR:'$%'`
 test -d $aux_dir \
     || mkdir -p $aux_dir
-macro_dir=`autoconf -t AC_CONFIG_MACRO_DIR:'$%'`
+macro_dir=`${AUTOCONF} -t AC_CONFIG_MACRO_DIR:'$%'`
 test -d $macro_dir \
     || mkdir -p $macro_dir
 
@@ -112,7 +121,7 @@ test -e ChangeLog \
 
 #  Add macro definitions to our sources for distribution
 
-ACLOCAL="aclocal --install -I $macro_dir"
+ACLOCAL="${ACLOCAL} --install -I $macro_dir"
 export ACLOCAL
 
 #  Let autoreconf do the power-lifting
@@ -128,7 +137,7 @@ fi
 #  always available and start out life with a certain value.  Any
 #  upstream automake files ought to append to that.
 
-for f in `autoconf -t AC_CONFIG_FILES:'$*' \
+for f in `${AUTOCONF} -t AC_CONFIG_FILES:'$*' \
     | sed -n "/^[ \t]*$aux_dir/p"`
 do
     test -e "$f.am" || continue
@@ -137,7 +146,7 @@ do
         -e 's/^\( *AM_CXXFLAGS[ \t]*\)=/\1+=/' \
         -e 's/^\( *AM_LDFLAGS[ \t]*\)=/\1+=/' \
         "$f.am"
-    automake "$f"               # update corresponding Makefile.in
+    ${AUTOMAKE} "$f"            # update corresponding Makefile.in
 done
 
 #  The patching of ltmain.sh is needed to take care of some special
@@ -196,7 +205,7 @@ you have this software installed, it is quite likely that they have
 been installed in a location that isn't searched by default by this
 software.  In that case, please note this via:
 
-  `autoconf -t AC_INIT:'$3'`
+  `${AUTOCONF} -t AC_INIT:'$3'`
 
 If you haven't installed the 'autoconf-archive' software, please do
 so and rerun:

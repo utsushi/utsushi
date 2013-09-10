@@ -1,5 +1,5 @@
 //  grammar-information.cpp -- component instantiations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -35,6 +35,7 @@ namespace esci {
 information::information ()
   : have_push_button (false)
   , device_buffer_size ()
+  , truncates_at_media_end (false)
 {}
 
 bool
@@ -91,6 +92,12 @@ information::source::operator== (const information::source& rhs) const
 }
 
 bool
+information::source::supports_size_detection () const
+{
+  return false;
+}
+
+bool
 information::tpu_source::operator== (const information::tpu_source& rhs) const
 {
   return (source::operator== (rhs)
@@ -110,6 +117,12 @@ information::fb_source::operator== (const information::fb_source& rhs) const
           && detects_width  == rhs.detects_width
           && detects_height == rhs.detects_height
           && alignment      == rhs.alignment);
+}
+
+bool
+information::fb_source::supports_size_detection () const
+{
+  return detects_width && detects_height;
 }
 
 information::adf_source::adf_source ()

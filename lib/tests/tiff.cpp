@@ -1,5 +1,5 @@
 //  tiff.cpp -- unit tests for the TIFF output implementation
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -82,8 +82,8 @@ BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
   context ctx (643, 487, context::RGB8);
   const fs::path name ("tiff.out");
 
-  istr_.push (idevice::ptr (new setmem_idevice (gen_, ctx)));
-  ostr_.push (odevice::ptr (new tiff_odevice (name)));
+  istr_.push (make_shared< setmem_idevice > (gen_, ctx));
+  ostr_.push (make_shared< tiff_odevice > (name));
 
   istr_ | ostr_;
 
@@ -101,8 +101,8 @@ BOOST_FIXTURE_TEST_CASE (test_magic_multipage, fixture)
   path_generator pathgen ("tiff-", "out");
   const unsigned images = 11;
 
-  istr_.push (idevice::ptr (new setmem_idevice (gen_, ctx, images)));
-  ostr_.push (odevice::ptr (new tiff_odevice (pathgen)));
+  istr_.push (make_shared< setmem_idevice > (gen_, ctx, images));
+  ostr_.push (make_shared< tiff_odevice > (pathgen));
 
   istr_ | ostr_;
 

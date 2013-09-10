@@ -1,5 +1,5 @@
 //  pdf.cpp -- unit tests for the PDF filter implementation
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -54,12 +54,13 @@ BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
   istream istr;
   ostream ostr;
   context ctx (32, 48, 3, 8);
-  shared_ptr<setmem_idevice::generator> gen (new const_generator (0x50));
+  shared_ptr<setmem_idevice::generator> gen
+    = make_shared< const_generator > (0x50);
 
-  istr.push (idevice::ptr (new setmem_idevice (gen, ctx, 10)));
-  ostr.push (ofilter::ptr (new jpeg::compressor));
-  ostr.push (ofilter::ptr (new pdf));
-  ostr.push (odevice::ptr (new file_odevice (name_)));
+  istr.push (make_shared< setmem_idevice > (gen, ctx, 10));
+  ostr.push (make_shared< jpeg::compressor > ());
+  ostr.push (make_shared< pdf > ());
+  ostr.push (make_shared< file_odevice > (name_));
 
   istr | ostr;
 

@@ -25,10 +25,12 @@ if enable_boost_unit_test_framework
 BACKEND_NAME = utsushi
 
 TESTS_ENVIRONMENT =
-TESTS = $(check_PROGRAMS)
+TESTS = $(test_runners)
+
+test_runners  = value.utr
 
 check_PROGRAMS  = backend.utr
-check_PROGRAMS += value.utr
+check_PROGRAMS += $(test_runners)
 
 AM_CPPFLAGS += -DBACKEND_NAME=$(BACKEND_NAME)
 AM_LDFLAGS  += ../libsane-$(BACKEND_NAME).la

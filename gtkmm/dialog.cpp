@@ -28,6 +28,9 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <gdkmm/cursor.h>
+#include <gdkmm/general.h>
+
 #include <gtkmm/action.h>
 #include <gtkmm/filechooserdialog.h>
 #include <gtkmm/messagedialog.h>
@@ -93,9 +96,6 @@ dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
     signal_options_changed ()
       .connect (sigc::mem_fun (*editor_, &editor::on_options_changed));
   }
-
-  if (!device_list->get_model ()->children ().empty ())
-    device_list->set_active (0);
 
   //  customise self
 
@@ -213,6 +213,12 @@ dialog::on_scan_update (traits::int_type c)
       cancel_ = action->signal_activate ()
         .connect (sigc::mem_fun (*this, &Gtk::Widget::hide));
     }
+
+    Glib::RefPtr< Gdk::Window > window = get_window ();
+    if (window)
+      {
+        window->set_cursor ();
+      }
   }
 }
 
@@ -284,20 +290,36 @@ dialog::on_scan (void)
         (*jpeg_.options ())["quality"]
           = value ((*opts_)["device/jpeg-quality"]);
       }
-    catch (...)
+    catch (const std::out_of_range&)
       {}
 
     // Configure the filter chain
 
     using namespace _flt_;
 
-    ostream::ptr ostr (new ostream);
+    ostream::ptr ostr = make_shared< ostream > ();
 
     std::string xfer_fmt;
     {                      //! \todo get rid of silly type conversion
       string xfer = value ((*opts_)["device/transfer-format"]);
       xfer_fmt = std::string (xfer);
     }
+
+    toggle match_height = true;
+    quantity height = -1.0;
+    try
+      {
+        match_height = value ((*opts_)["device/match-height"]);
+        height  = value ((*opts_)["device/br-y"]);
+        height -= value ((*opts_)["device/tl-y"]);
+      }
+    catch (const std::out_of_range&)
+      {
+        match_height = false;
+        height = -1.0;
+      }
+    if (match_height) match_height = (height > 0);
+
     /**/ if ("RAW"  == xfer_fmt) {}
     else if ("JPEG" == xfer_fmt) {}
     else
@@ -309,9 +331,9 @@ dialog::on_scan (void)
     /**/ if ("PNM"  == fmt)
       {
         /**/ if ("RAW" == xfer_fmt)
-          ostr->push (ofilter::ptr (new padding));
+          ostr->push (make_shared< padding > ());
         else if ("JPEG" == xfer_fmt)
-          ostr->push (ofilter::ptr (new jpeg::decompressor));
+          ostr->push (make_shared< jpeg::decompressor> ());
         else
           BOOST_THROW_EXCEPTION
             (runtime_error
@@ -319,7 +341,9 @@ dialog::on_scan (void)
                % xfer_fmt
                % fmt)
               .str ()));
-        ostr->push (ofilter::ptr (new pnm));
+        if (match_height)
+          ostr->push (make_shared< bottom_padder > (height));
+        ostr->push (make_shared< pnm > ());
       }
     else if ("JPEG" == fmt)
       {
@@ -330,11 +354,20 @@ dialog::on_scan (void)
 
         /**/ if ("RAW" == xfer_fmt)
           {
-            ostr->push (ofilter::ptr (new padding));
+            ostr->push (make_shared< padding > ());
+            if (match_height)
+              ostr->push (make_shared< bottom_padder > (height));
             ostr->push (ofilter::ptr (&jpeg_, null_deleter ()));
           }
         else if ("JPEG" == xfer_fmt)
-          {}
+          {
+            if (match_height)
+              {
+                ostr->push (make_shared< jpeg::decompressor > ());
+                ostr->push (make_shared< bottom_padder > (height));
+                ostr->push (ofilter::ptr (&jpeg_, null_deleter ()));
+              }
+          }
         else
           {
             BOOST_THROW_EXCEPTION
@@ -349,10 +382,13 @@ dialog::on_scan (void)
       {
         /**/ if ("RAW" == xfer_fmt)
           {
-            ostr->push (ofilter::ptr (new padding));
+            ostr->push (make_shared< padding > ());
+            if (match_height)
+              ostr->push (make_shared< bottom_padder > (height));
+
             if ((*opts_)["device/image-type"] == "Gray (1 bit)")
               {
-                ostr->push (ofilter::ptr (new g3fax));
+                ostr->push (make_shared< g3fax > ());
               }
             else
               {
@@ -360,7 +396,14 @@ dialog::on_scan (void)
               }
           }
         else if ("JPEG" == xfer_fmt)
-          {}
+          {
+            if (match_height)
+              {
+                ostr->push (make_shared< jpeg::decompressor > ());
+                ostr->push (make_shared< bottom_padder > (height));
+                ostr->push (ofilter::ptr (&jpeg_, null_deleter ()));
+              }
+          }
         else
           {
             BOOST_THROW_EXCEPTION
@@ -370,14 +413,14 @@ dialog::on_scan (void)
                  % fmt)
                 .str ()));
           }
-        ostr->push (ofilter::ptr (new pdf));
+        ostr->push (make_shared< pdf > ());
       }
     else if ("TIFF" == fmt)
       {
         /**/ if ("RAW" == xfer_fmt)
-          ostr->push (ofilter::ptr (new padding));
+          ostr->push (make_shared< padding > ());
         else if ("JPEG" == xfer_fmt)
-          ostr->push (ofilter::ptr (new jpeg::decompressor));
+          ostr->push (make_shared< jpeg::decompressor > ());
         else
           BOOST_THROW_EXCEPTION
             (runtime_error
@@ -385,6 +428,8 @@ dialog::on_scan (void)
                % xfer_fmt
                % fmt)
               .str ()));
+        if (match_height)
+          ostr->push (make_shared< bottom_padder > (height));
       }
     else
         {
@@ -398,15 +443,15 @@ dialog::on_scan (void)
 
     /**/ if ("PDF"  == fmt)
       {
-        odev = odevice::ptr (new file_odevice (filename));
+        odev = make_shared< file_odevice > (filename);
       }
     else if ("TIFF" == fmt)
       {
-        odev = odevice::ptr (new _out_::tiff_odevice (filename));
+        odev = make_shared< _out_::tiff_odevice > (filename);
       }
     else if (idevice_->is_single_image ())
       {
-        odev = odevice::ptr (new file_odevice (filename));
+        odev = make_shared< file_odevice > (filename);
       }
 
     if (odev)
@@ -430,7 +475,7 @@ dialog::on_scan (void)
       path_generator gen (!filename.parent_path ().empty ()
                           ? filename.parent_path () / filename.stem ()
                           : filename.stem (), ext);
-      odev = odevice::ptr (new file_odevice (gen));
+      odev = make_shared< file_odevice > (gen);
 
       Gtk::MessageDialog tbd (_("This may overwrite existing files!"),
                               false, Gtk::MESSAGE_WARNING,
@@ -453,6 +498,13 @@ dialog::on_scan (void)
       cancel_ = action->signal_activate ()
         .connect (sigc::mem_fun (*pump_, &pump::cancel));
     }
+
+    Glib::RefPtr< Gdk::Window > window = get_window ();
+    if (window)
+      {
+        window->set_cursor (Gdk::Cursor (Gdk::WATCH));
+        Gdk::flush ();
+      }
 
     pump_->start (ostr);
   }
@@ -483,7 +535,7 @@ dialog::on_device_changed (utsushi::idevice::ptr idev)
   opts_->add_option_map () ("device", idevice_->options ());
   signal_options_changed_.emit (opts_);
 
-  pump_ = pump::ptr (new pump (idev));
+  pump_ = make_shared< pump > (idev);
 
   pump_->signal_marker (pump::in)
     .connect (sigc::mem_fun (*this, &dialog::on_scan_update));

@@ -68,7 +68,13 @@ protected:
   void set_up_threshold ();
   void set_up_transfer_size ();
 
-  void fill_buffer_();
+  boost::optional< quad > transfer_format_(const parameters& p) const;
+  bool compressed_transfer_(const parameters& p) const;
+  std::string transfer_content_type_(const parameters& p) const;
+
+  void queue_image_data_();
+  void fill_data_queue_();
+  bool media_out () const;
 
   //! Image size information policy query
   /*! The image size reported at the start of image data acquisition
@@ -80,6 +86,9 @@ protected:
   bool use_final_image_size_(const parameters& parm) const;
   bool enough_image_data_(const parameters& parm,
                           const std::deque< data_buffer >& q) const;
+
+  media probe_media_size_(const string& doc_source);
+  void  update_scan_area_(const media& size, value::map& vm) const;
 
   bool validate (const value::map& vm) const;
   void finalize (const value::map& vm);
@@ -166,6 +175,7 @@ protected:
   std::deque< data_buffer > rear_;
   size_t image_count_;          //!< \todo Move to base class
   sig_atomic_t cancelled_;
+  bool         media_out_;
 
   option::map flatbed_;
   option::map adf_;

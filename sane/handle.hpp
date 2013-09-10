@@ -42,7 +42,7 @@ namespace sane {
 class handle
 {
 public:
-  handle (const utsushi::scanner::id& id);
+  handle (const utsushi::scanner::info& info);
   ~handle ();
 
   std::string name () const;

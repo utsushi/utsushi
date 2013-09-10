@@ -1,5 +1,5 @@
 //  grammar-information.ipp -- component rule definitions
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -68,6 +68,8 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
      ^ (token_(VER) > this->bin_hex_data_)
      ^ (token_(DSZ) > this->positive_)
      ^ (token_(EXT) > token_(value::LIST) > +info_ext_token_)
+     ^  qi::matches [ token_(DLS) ]
+     ^ (token_(S_N) > this->bin_hex_data_)
        )
     > qi::eoi
     ;
@@ -225,7 +227,9 @@ BOOST_FUSION_ADAPT_STRUCT
  (std::vector< ESCI_NS::byte >, product)
  (std::vector< ESCI_NS::byte >, version)
  (ESCI_NS::integer, device_buffer_size)
- (std::vector< ESCI_NS::quad >, extension))
+ (std::vector< ESCI_NS::quad >, extension)
+ (bool, truncates_at_media_end)
+ (boost::optional< std::vector< ESCI_NS::byte > >, serial_number))
 
 #undef ESCI_NS
 

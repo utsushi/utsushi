@@ -1,5 +1,5 @@
 //  scan-cli.cpp -- command-line interface based scan utility
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -87,7 +87,7 @@ set_signal (int sig, void (*handler) (int))
   const string msg_failed
     ("cannot set signal handler (%1%)");
   const string msg_revert
-    ("restoring default signal ignore behaviour (%1)");
+    ("restoring default signal ignore behaviour (%1%)");
 
 #if HAVE_SIGACTION
 
@@ -102,7 +102,7 @@ set_signal (int sig, void (*handler) (int))
     {
       log::error (msg_failed) % sig;
     }
-  if (SIG_IGN == rv.sa_handler)
+  if (SIG_IGN == rv.sa_handler && SIG_IGN != handler)
     {
       log::brief (msg_revert) % sig;
       sigaction (sig, &rv, 0);
@@ -116,7 +116,7 @@ set_signal (int sig, void (*handler) (int))
     {
       log::error (msg_failed) % sig;
     }
-  if (SIG_IGN == rv)
+  if (SIG_IGN == rv && SIG_IGN != handler)
     {
       log::brief (msg_revert) % sig;
       std::signal (sig, rv);
@@ -139,7 +139,7 @@ create (const std::string& udi, bool debug)
   if (!udi.empty ())
     {
       it = mon.find (udi);
-      if (it != mon.end () && !it->has_driver ())
+      if (it != mon.end () && !it->is_driver_set ())
         {
           BOOST_THROW_EXCEPTION
             (runtime_error (_("device found but has no driver")));
@@ -148,7 +148,7 @@ create (const std::string& udi, bool debug)
   else
     {
       it = std::find_if (mon.begin (), mon.end (),
-                         boost::bind (&scanner::id::has_driver, _1));
+                         boost::bind (&scanner::info::is_driver_set, _1));
     }
 
   if (it == mon.end ())
@@ -167,10 +167,10 @@ create (const std::string& udi, bool debug)
       BOOST_THROW_EXCEPTION (runtime_error (msg));
     }
 
-  connexion::ptr cnx (connexion::create (it->iftype (), it->path ()));
+  connexion::ptr cnx (connexion::create (it->connexion (), it->path ()));
 
   if (debug)
-    cnx = connexion::ptr (new _cnx_::hexdump (cnx));
+    cnx = make_shared< _cnx_::hexdump > (cnx);
 
   scanner::ptr rv = scanner::create (cnx, *it);
 
@@ -233,13 +233,6 @@ option_visitor::operator() (const T& t) const
      documentation.c_str ());
 }
 
-/*! \todo Add --foo / --no-foo support.  Boost.Program_options has
- *        info on supporting this kind of idiom.
- *
- *  \todo Take toggle value into account, if true --no-foo should be
- *        shown in the documentation, --foo otherwise.  We cannot just
- *        assume that all toggles start life with a value of false.
- */
 template<>
 void
 option_visitor::operator() (const toggle& t) const
@@ -249,8 +242,11 @@ option_visitor::operator() (const toggle& t) const
   if (opt_.text ())             // only translate non-empty strings
     description = _(opt_.text ());
 
+  std::string key (opt_.key ());
+  if (t) key.insert (0, "no-");
+
   desc_.add_options ()
-    (opt_.key ().c_str (), po::bool_switch (), description.c_str ());
+    (key.c_str (), po::bool_switch (), description.c_str ());
 }
 
 //! Dispatch visitation based upon utsushi::value
@@ -271,6 +267,8 @@ public:
 
   void operator() (const option& opt) const
   {
+    if (opt.is_read_only ()) return;
+
     value val (opt);
     option_visitor v (desc_, opt);
 
@@ -303,6 +301,8 @@ public:
   void
   operator() (const po::variables_map::value_type& kv)
   {
+    if (kv.second.defaulted ()) return;
+
     /**/ if (boost::any_cast< quantity > (&kv.second.value ()))
       {
         vm_[kv.first] = kv.second.as< quantity > ();
@@ -313,7 +313,17 @@ public:
       }
     else if (boost::any_cast< bool > (&kv.second.value ()))
       {
-        vm_[kv.first] = toggle (kv.second.as< bool > ());
+        std::string key (kv.first);
+
+        if ("no-" != key.substr (0, 3))
+          {
+            vm_[key] = toggle (kv.second.as< bool > ());
+          }
+        else
+          {
+            key.erase (0, 3);
+            vm_[key] = toggle (!kv.second.as< bool > ());
+          }
       }
     else
       {
@@ -453,7 +463,7 @@ main (int argc, char *argv[])
       po::store (cmd, cmd_vm);
       po::notify (cmd_vm);
 
-      if (uri.empty () && !scanner::id::is_valid (udi))
+      if (uri.empty () && !scanner::info::is_valid (udi))
         {
           uri = udi;
           udi.clear ();
@@ -536,13 +546,29 @@ main (int argc, char *argv[])
       // Configure the filter chain
 
       option::map& om (*device->options ());
-      ostream::ptr ostr (new ostream);
+      ostream::ptr ostr = make_shared< ostream > ();
 
       std::string xfer_fmt;
       {                         //! \todo get rid of silly type conversion
         string xfer = value (om["transfer-format"]);
         xfer_fmt = std::string (xfer);
       }
+
+      toggle match_height = true;
+      quantity height = -1.0;
+      try
+        {
+          match_height = value (om["match-height"]);
+          height  = value (om["br-y"]);
+          height -= value (om["tl-y"]);
+        }
+      catch (const std::out_of_range&)
+        {
+          match_height = false;
+          height = -1.0;
+        }
+      if (match_height) match_height = (height > 0);
+
       /**/ if ("RAW"  == xfer_fmt) {}
       else if ("JPEG" == xfer_fmt) {}
       else
@@ -554,9 +580,9 @@ main (int argc, char *argv[])
       /**/ if ("PNM" == fmt)
         {
           /**/ if ("RAW"  == xfer_fmt)
-            ostr->push (ofilter::ptr (new padding));
+            ostr->push (make_shared< padding > ());
           else if ("JPEG" == xfer_fmt)
-            ostr->push (ofilter::ptr (new jpeg::decompressor));
+            ostr->push (make_shared< jpeg::decompressor > ());
           else
             BOOST_THROW_EXCEPTION
               (runtime_error
@@ -564,7 +590,9 @@ main (int argc, char *argv[])
                  % xfer_fmt
                  % fmt)
                 .str ()));
-          ostr->push (ofilter::ptr (new pnm));
+          if (match_height)
+            ostr->push (make_shared< bottom_padder > (height));
+          ostr->push (make_shared< pnm > ());
         }
       else if ("JPEG" == fmt)
         {
@@ -575,19 +603,36 @@ main (int argc, char *argv[])
 
           /**/ if ("RAW" == xfer_fmt)
             {
-              ostr->push (ofilter::ptr (new padding));
-              jpeg::compressor::ptr jpeg (new jpeg::compressor);
+                ostr->push (make_shared< padding > ());
+              if (match_height)
+                ostr->push (make_shared< bottom_padder > (height));
+              jpeg::compressor::ptr jpeg = make_shared< jpeg::compressor > ();
               try
                 {
                   (*jpeg->options ())["quality"]
                     = value (om["jpeg-quality"]);
                 }
-              catch (...)
+              catch (const std::out_of_range&)
                 {}
               ostr->push (ofilter::ptr (jpeg));
             }
           else if ("JPEG" == xfer_fmt)
-            {}
+            {
+              if (match_height)
+                {
+                  ostr->push (make_shared< jpeg::decompressor > ());
+                  ostr->push (make_shared< bottom_padder > (height));
+                  jpeg::compressor::ptr jpeg = make_shared< jpeg::compressor > ();
+                  try
+                    {
+                      (*jpeg->options ())["quality"]
+                        = value (om["jpeg-quality"]);
+                    }
+                  catch (const std::out_of_range&)
+                    {}
+                  ostr->push (ofilter::ptr (jpeg));
+                }
+            }
           else
             {
               BOOST_THROW_EXCEPTION
@@ -602,26 +647,45 @@ main (int argc, char *argv[])
         {
           /**/ if ("RAW" == xfer_fmt)
             {
-              ostr->push (ofilter::ptr (new padding));
+              ostr->push (make_shared< padding > ());
+              if (match_height)
+                ostr->push (make_shared< bottom_padder > (height));
+
               if (om["image-type"] == "Gray (1 bit)")
                 {
-                  ostr->push (ofilter::ptr (new g3fax));
+                  ostr->push (make_shared< g3fax > ());
                 }
               else
                 {
-                  jpeg::compressor::ptr jpeg (new jpeg::compressor);
+                  jpeg::compressor::ptr jpeg
+                    = make_shared< jpeg::compressor > ();
                   try
                     {
                       (*jpeg->options ())["quality"]
                         = value (om["jpeg-quality"]);
                     }
-                  catch (...)
+                  catch (const std::out_of_range&)
                     {}
                   ostr->push (ofilter::ptr (jpeg));
                 }
             }
           else if ("JPEG" == xfer_fmt)
-            {}
+            {
+              if (match_height)
+                {
+                  ostr->push (make_shared< jpeg::decompressor > ());
+                  ostr->push (make_shared< bottom_padder > (height));
+                  jpeg::compressor::ptr jpeg = make_shared< jpeg::compressor > ();
+                  try
+                    {
+                      (*jpeg->options ())["quality"]
+                        = value (om["jpeg-quality"]);
+                    }
+                  catch (const std::out_of_range&)
+                    {}
+                  ostr->push (ofilter::ptr (jpeg));
+                }
+            }
           else
             {
               BOOST_THROW_EXCEPTION
@@ -631,14 +695,14 @@ main (int argc, char *argv[])
                    % fmt)
                   .str ()));
             }
-          ostr->push (ofilter::ptr (new pdf));
+          ostr->push (make_shared< pdf > ());
         }
       else if ("TIFF" == fmt)
         {
           /**/ if ("RAW" == xfer_fmt)
-            ostr->push (ofilter::ptr (new padding));
+            ostr->push (make_shared< padding > ());
           else if ("JPEG" == xfer_fmt)
-            ostr->push (ofilter::ptr (new jpeg::decompressor));
+            ostr->push (make_shared< jpeg::decompressor > ());
           else
             BOOST_THROW_EXCEPTION
               (runtime_error
@@ -646,6 +710,8 @@ main (int argc, char *argv[])
                  % xfer_fmt
                  % fmt)
                 .str ()));
+          if (match_height)
+            ostr->push (make_shared< bottom_padder > (height));
         }
       else
         {
@@ -663,11 +729,11 @@ main (int argc, char *argv[])
           if (uri.empty ()) uri = "/dev/stdout";
           if ("TIFF" == fmt)
             {
-              ostr->push (odevice::ptr (new _out_::tiff_odevice (uri)));
+              ostr->push (make_shared< _out_::tiff_odevice > (uri));
             }
           else
             {
-              ostr->push (odevice::ptr (new file_odevice (uri)));
+              ostr->push (make_shared< file_odevice > (uri));
             }
         }
       else
@@ -677,10 +743,11 @@ main (int argc, char *argv[])
                               ? path.parent_path () / path.stem ()
                               : path.stem (), path.extension ().native ());
 
-          ostr->push (odevice::ptr (new file_odevice (gen)));
+          ostr->push (make_shared< file_odevice > (gen));
         }
 
-      idevice::ptr cancellable_device (new cancellable_idevice (device));
+      idevice::ptr cancellable_device
+        = make_shared< cancellable_idevice > (device);
 
       istream istr;
       istr.push (cancellable_device);

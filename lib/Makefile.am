@@ -23,6 +23,9 @@
 SUBDIRS  = .
 SUBDIRS += tests
 
+EXTRA_DIST  =
+EXTRA_DIST += devices.conf
+
 streams  = octet.cpp
 streams += context.cpp
 streams += iobase.cpp
@@ -92,6 +95,8 @@ AM_CPPFLAGS += -DPKGLIBEXECDIR="\"$(pkglibexecdir)\""
 AM_CPPFLAGS += -DPKGLIBDIR="\"$(pkglibdir)\""
 AM_CPPFLAGS += -DPKGDATADIR="\"$(pkgdatadir)\""
 AM_CPPFLAGS += -DLOCALEDIR="\"$(localedir)\""
+AM_CPPFLAGS += -DPKGSYSCONFDIR="\"$(pkgsysconfdir)\""
+AM_CPPFLAGS += -DPKGCONFFILE="\"$(PACKAGE_TARNAME).conf\""
 AM_CXXFLAGS += $(LIBHAL_CFLAGS)
 AM_CXXFLAGS += $(LIBUDEV_CFLAGS)
 ## FIXME: remove once the USB connexion has become a proper plugin

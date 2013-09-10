@@ -1,5 +1,5 @@
 //  connexion.hpp -- transport messages between software and device
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -24,6 +24,9 @@
 #ifndef utsushi_connexion_hpp_
 #define utsushi_connexion_hpp_
 
+#include <sys/types.h>
+
+#include "cstdint.hpp"
 #include "memory.hpp"
 #include "octet.hpp"
 #include "option.hpp"
@@ -46,6 +49,65 @@ public:
   static connexion::ptr create (const std::string& type,
                                 const std::string& path);
 };
+
+namespace ipc {
+
+class header
+{
+public:
+  header ();
+
+  uint32_t token () const;
+  uint32_t type () const;
+  uint32_t error () const;
+  int32_t size () const;
+
+  void token (uint32_t token);
+  void type (uint32_t type);
+  void error (uint32_t error);
+  void size (int32_t size);
+
+  enum {                        // \todo get rid of "legacy" types
+    OPEN = 4,
+    CLOSE,
+  };
+
+private:
+  uint32_t token_id_;
+  uint32_t type_;
+  uint32_t error_;
+  int32_t size_;
+};
+
+class connexion
+  : public utsushi::connexion
+{
+public:
+  connexion (const std::string& type, const std::string& path);
+  virtual ~connexion ();
+
+  virtual void send (const octet *message, streamsize size);
+  virtual void recv (      octet *message, streamsize size);
+
+protected:
+  bool connect_();
+  bool fork_();
+
+  streamsize send_message_(const header& hdr, const octet *  payload);
+  streamsize recv_message_(      header& hdr,       octet *& payload);
+  streamsize send_message_(const void *data, streamsize size);
+  streamsize recv_message_(      void *data, streamsize size);
+
+  pid_t pid_;
+  int   port_;
+  int   socket_;
+
+  std::string name_;
+
+  uint32_t id_;
+};
+
+}       // namespace ipc
 
 template<>
 class decorator< connexion >

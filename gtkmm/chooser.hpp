@@ -1,5 +1,5 @@
 //  chooser.hpp -- for scanner device selection and maintenance actions
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -37,8 +37,8 @@ class chooser : public dropdown
 {
   typedef dropdown base;
 
-  std::set<scanner::id> custom_;
-  std::set<scanner::id> system_;
+  std::set<scanner::info> custom_;
+  std::set<scanner::info> system_;
 
 public:
   chooser (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder);
@@ -47,16 +47,18 @@ public:
   signal_device_changed ();
 
 protected:
-  void on_custom (const std::string& name);
-  void on_system (const std::string& name);
+  void on_run ();
+  void on_changed ();
+  void on_custom (const std::string& udi);
+  void on_system (const std::string& udi);
 
 private:
-  void create_device (const std::set<scanner::id>& devices,
-                      const std::string& name);
+  void create_device (const std::set<scanner::info>& devices,
+                      const std::string& udi);
 
-  void insert_device (type_id type, const scanner::id& device);
-  void insert_custom (const scanner::id& device);
-  void insert_system (const scanner::id& device);
+  void insert_device (type_id type, const scanner::info& device);
+  void insert_custom (const scanner::info& device);
+  void insert_system (const scanner::info& device);
 
   sigc::signal<void, scanner::ptr>
   signal_device_changed_;

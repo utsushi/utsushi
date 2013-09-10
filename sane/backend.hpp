@@ -1,5 +1,5 @@
 //  backend.hpp -- SANE backend implementation boiler plate
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //  Copyright (C) 2007  EPSON AVASYS CORPORATION
 //
 //  License: GPL-3.0+

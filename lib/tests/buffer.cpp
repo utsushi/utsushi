@@ -1,5 +1,5 @@
 //  buffer.cpp -- unit tests for the utsushi::buffer API
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -95,7 +95,7 @@ struct fixture
 
 BOOST_FIXTURE_TEST_CASE (buffered_device_read, fixture)
 {
-  idevice::ptr dev (new rawmem_idevice (octets));
+  idevice::ptr dev = make_shared< rawmem_idevice > (octets);
   ibuffer buf;
 
   streamsize count = 0;
@@ -118,7 +118,7 @@ BOOST_FIXTURE_TEST_CASE (buffered_device_read, fixture)
 
 BOOST_FIXTURE_TEST_CASE (buffered_device_write, fixture)
 {
-  odevice::ptr dev (new file_odevice (name));
+  odevice::ptr dev = make_shared< file_odevice > (name);
   obuffer buf;
   context ctx;
 
@@ -139,9 +139,9 @@ BOOST_FIXTURE_TEST_CASE (buffered_device_write, fixture)
 
 BOOST_FIXTURE_TEST_CASE (filtered_device_read, fixture)
 {
-  idevice::ptr dev (new rawmem_idevice (octets));
-  ibuffer::ptr ibp (new ibuffer);
-  ifilter::ptr flt (new thru_ifilter);
+  idevice::ptr dev = make_shared< rawmem_idevice > (octets);
+  ibuffer::ptr ibp = make_shared< ibuffer > ();
+  ifilter::ptr flt = make_shared< thru_ifilter > ();
 
   ibp->open (dev);
   flt->open (ibp);
@@ -151,9 +151,9 @@ BOOST_FIXTURE_TEST_CASE (filtered_device_read, fixture)
 
 BOOST_FIXTURE_TEST_CASE (filtered_device_write, fixture)
 {
-  odevice::ptr dev (new file_odevice (name));
-  obuffer::ptr obp (new obuffer);
-  ofilter::ptr flt (new thru_ofilter);
+  odevice::ptr dev = make_shared< file_odevice > (name);
+  obuffer::ptr obp = make_shared< obuffer > ();
+  ofilter::ptr flt = make_shared< thru_ofilter > ();
 
   obp->open (dev);
   flt->open (obp);
@@ -163,11 +163,11 @@ BOOST_FIXTURE_TEST_CASE (filtered_device_write, fixture)
 
 BOOST_FIXTURE_TEST_CASE (doubly_filtered_device_read, fixture)
 {
-  idevice::ptr dev (new rawmem_idevice (octets));
-  ibuffer::ptr ibp0 (new ibuffer);
-  ifilter::ptr flt0 (new thru_ifilter);
-  ibuffer::ptr ibp (new ibuffer);
-  ifilter::ptr flt (new thru_ifilter);
+  idevice::ptr dev  = make_shared< rawmem_idevice > (octets);
+  ibuffer::ptr ibp0 = make_shared< ibuffer > ();
+  ifilter::ptr flt0 = make_shared< thru_ifilter > ();
+  ibuffer::ptr ibp  = make_shared< ibuffer > ();
+  ifilter::ptr flt  = make_shared< thru_ifilter > ();
 
   ibp0->open (dev);
   flt0->open (ibp0);
@@ -179,11 +179,11 @@ BOOST_FIXTURE_TEST_CASE (doubly_filtered_device_read, fixture)
 
 BOOST_FIXTURE_TEST_CASE (doubly_filtered_device_write, fixture)
 {
-  odevice::ptr dev (new file_odevice (name));
-  obuffer::ptr obp0 (new obuffer);
-  ofilter::ptr flt0 (new thru_ofilter);
-  obuffer::ptr obp (new obuffer);
-  ofilter::ptr flt (new thru_ofilter);
+  odevice::ptr dev  = make_shared< file_odevice > (name);
+  obuffer::ptr obp0 = make_shared< obuffer > ();
+  ofilter::ptr flt0 = make_shared< thru_ofilter > ();
+  obuffer::ptr obp  = make_shared< obuffer > ();
+  ofilter::ptr flt  = make_shared< thru_ofilter > ();
 
   obp0->open (dev);
   flt0->open (obp0);
@@ -226,8 +226,8 @@ BOOST_FIXTURE_TEST_CASE (unprocessed_octets_preserved, fixture_one_odevice)
   for (streamsize i=0; i<dat_size; ++i) traits::assign (in_data[i], i);
   traits::assign (out_data, dat_size, dat_size);
 
-  odevice::ptr dev (new one_odevice (out_data));
-  obuffer::ptr obp (new obuffer (buf_size));
+  odevice::ptr dev = make_shared< one_odevice > (out_data);
+  obuffer::ptr obp = make_shared< obuffer > (buf_size);
 
   obp->open (dev);
 

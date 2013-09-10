@@ -1,5 +1,5 @@
 //  code-token.hpp -- set used by the ESC/I "compound" protocol variants
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -266,6 +266,7 @@ namespace reply {
       const quad LTF  = CODE_TOKEN (UPPER_L, UPPER_T, UPPER_F, SPACE  );
       const quad LOCK = CODE_TOKEN (UPPER_L, UPPER_O, UPPER_C, UPPER_K);
       const quad DFED = CODE_TOKEN (UPPER_D, UPPER_F, UPPER_E, UPPER_D);
+      const quad DTCL = CODE_TOKEN (UPPER_D, UPPER_T, UPPER_C, UPPER_L);
 
     }   // namespace err
 
@@ -413,6 +414,8 @@ namespace information {
   const quad VER  = CODE_TOKEN (NUMBER , UPPER_V, UPPER_E, UPPER_R);
   const quad DSZ  = CODE_TOKEN (NUMBER , UPPER_D, UPPER_S, UPPER_Z);
   const quad EXT  = CODE_TOKEN (NUMBER , UPPER_E, UPPER_X, UPPER_T);
+  const quad DLS  = CODE_TOKEN (NUMBER , UPPER_D, UPPER_L, UPPER_S);
+  const quad S_N  = CODE_TOKEN (NUMBER , UPPER_S, SLASH  , UPPER_N);
 
   //! Automatic document feeder features
   namespace adf {
@@ -531,6 +534,7 @@ namespace capability {
   const quad FCS  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_C, UPPER_S);
   const quad FLC  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_L, UPPER_C);
   const quad FLA  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_L, UPPER_A);
+  const quad QIT  = CODE_TOKEN (NUMBER , UPPER_Q, UPPER_I, UPPER_T);
 
   //! Automatic document feeder options
   /*! Note that the \c LOAD and \c EJCT tokens correspond to the same
@@ -743,6 +747,15 @@ namespace capability {
   //! Fill area settings that can be used
   namespace fla {}
 
+  //! Supported quiet mode settings
+  namespace qit {
+
+    const quad NONE = CODE_TOKEN (UPPER_N, UPPER_O, UPPER_N, UPPER_E);
+    const quad ON   = CODE_TOKEN (UPPER_O, UPPER_N, SPACE  , SPACE  );
+    const quad OFF  = CODE_TOKEN (UPPER_O, UPPER_F, UPPER_F, SPACE  );
+
+  }   // namespace qit
+
 }     // namespace capability
 
 //! Setting and getting scan parameters
@@ -789,6 +802,7 @@ namespace parameter {
   const quad ACQ  = CODE_TOKEN (NUMBER , UPPER_A, UPPER_C, UPPER_Q);
   const quad FLC  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_L, UPPER_C);
   const quad FLA  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_L, UPPER_A);
+  const quad QIT  = CODE_TOKEN (NUMBER , UPPER_Q, UPPER_I, UPPER_T);
 
   namespace adf = capability::adf;
   namespace tpu = capability::tpu;
@@ -833,6 +847,7 @@ namespace parameter {
 
   namespace flc = capability::flc;
   namespace fla = capability::fla;
+  namespace qit = capability::qit;
 
 }     // namespace parameter
 
@@ -884,6 +899,8 @@ namespace status {
     const quad A6H  = CODE_TOKEN (UPPER_A, DIGIT_6, UPPER_H, SPACE  );
     const quad EXV  = CODE_TOKEN (UPPER_E, UPPER_X, UPPER_V, SPACE  );
     const quad EXH  = CODE_TOKEN (UPPER_E, UPPER_X, UPPER_H, SPACE  );
+    const quad HLTV = CODE_TOKEN (UPPER_H, UPPER_L, UPPER_T, UPPER_V);
+    const quad HLTH = CODE_TOKEN (UPPER_H, UPPER_L, UPPER_T, UPPER_H);
     const quad PCV  = CODE_TOKEN (UPPER_P, UPPER_C, UPPER_V, SPACE  );
     const quad PCH  = CODE_TOKEN (UPPER_P, UPPER_C, UPPER_H, SPACE  );
     const quad KGV  = CODE_TOKEN (UPPER_K, UPPER_G, UPPER_V, SPACE  );

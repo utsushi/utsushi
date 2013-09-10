@@ -66,8 +66,29 @@ struct callback
   static void
   error_exit_(j_common_ptr cinfo)
   {
-    common *self = static_cast< common * > (cinfo->client_data);
+    using detail::decompressor;
+
+    common *self;
+    if (cinfo->is_decompressor)
+      self = static_cast< decompressor * > (cinfo->client_data);
+    else
+      self = static_cast<   compressor * > (cinfo->client_data);
+    BOOST_ASSERT (cinfo->err == &self->jerr_);
     self->error_exit (cinfo);
+  }
+
+  static void
+  output_message_(j_common_ptr cinfo)
+  {
+    using detail::decompressor;
+
+    common *self;
+    if (cinfo->is_decompressor)
+      self = static_cast< decompressor * > (cinfo->client_data);
+    else
+      self = static_cast<   compressor * > (cinfo->client_data);
+    BOOST_ASSERT (cinfo->err == &self->jerr_);
+    self->output_message (cinfo);
   }
 
   static void
@@ -97,6 +118,8 @@ struct callback
   static void
   init_source_(j_decompress_ptr cinfo)
   {
+    using detail::decompressor;
+
     decompressor *self = static_cast< decompressor * > (cinfo->client_data);
     BOOST_ASSERT (cinfo == &self->cinfo_);
     self->init_source ();
@@ -105,6 +128,8 @@ struct callback
   static boolean
   fill_input_buffer_(j_decompress_ptr cinfo)
   {
+    using detail::decompressor;
+
     decompressor *self = static_cast< decompressor * > (cinfo->client_data);
     BOOST_ASSERT (cinfo == &self->cinfo_);
     return self->fill_input_buffer ();
@@ -113,6 +138,8 @@ struct callback
   static void
   skip_input_data_(j_decompress_ptr cinfo, long num_bytes)
   {
+    using detail::decompressor;
+
     decompressor *self = static_cast< decompressor * > (cinfo->client_data);
     BOOST_ASSERT (cinfo == &self->cinfo_);
     self->skip_input_data (num_bytes);
@@ -121,6 +148,8 @@ struct callback
   static void
   term_source_(j_decompress_ptr cinfo)
   {
+    using detail::decompressor;
+
     decompressor *self = static_cast< decompressor * > (cinfo->client_data);
     BOOST_ASSERT (cinfo == &self->cinfo_);
     self->term_source ();
@@ -131,7 +160,11 @@ common::common ()
   : jbuf_(null_ptr)
   , jbuf_size_(0)
 {
-  jerr_.error_exit = &callback::error_exit_;
+  jpeg_std_error (&jerr_);
+  jerr_.error_exit     = &callback::error_exit_;
+  jerr_.output_message = &callback::output_message_;
+
+  resize (default_buffer_size);
 }
 
 common::~common ()
@@ -176,6 +209,16 @@ common::error_exit (j_common_ptr cinfo)
 }
 
 void
+common::output_message (j_common_ptr cinfo)
+{
+  char msg[JMSG_LENGTH_MAX];
+
+  jerr_.format_message (cinfo, msg);
+
+  log::error (msg);
+}
+
+void
 common::add_buffer_size_(option::map::ptr om_)
 {
   om_->add_options ()
@@ -216,7 +259,7 @@ compressor::compressor ()
   // when memory is not available.
 
   cinfo_.client_data = this;
-  cinfo_.err         = jpeg_std_error (&jerr_);
+  cinfo_.err         = &jerr_;
 
   jpeg_create_compress (&cinfo_);
 
@@ -240,6 +283,8 @@ streamsize
 compressor::write (const octet *data, streamsize n)
 {
   BOOST_ASSERT ((data && 0 < n) || 0 == n);
+
+  BOOST_ASSERT (0 <= cache_fill_ && cache_fill_ <= cache_size_);
 
   streamsize rv = n;            // we consume all data
 
@@ -282,9 +327,7 @@ compressor::write (const octet *data, streamsize n)
       n    -= ctx_.octets_per_line ();
     }
 
-  BOOST_ASSERT (0 < in_rows);
-
-  for (JDIMENSION out_rows = 0; out_rows != in_rows;)
+  for (JDIMENSION out_rows = 0; out_rows < in_rows;)
     {
       out_rows += jpeg_write_scanlines (&cinfo_, rows.get () + out_rows,
                                         in_rows - out_rows);
@@ -445,21 +488,20 @@ compressor::term_destination ()
     log::alert ("unable to flush JPEG output, %1% octets left") % count;
 }
 
+namespace detail {
+
 decompressor::decompressor ()
   : header_done_(false)
   , decompressing_(false)
+  , flushing_(false)
   , bytes_to_skip_(0)
   , sample_rows_(null_ptr)
 {
-  // Set up filter specific options
-
-  common::add_buffer_size_(option_);
-
   // Set up minimally useful information for our error handler before
   // creating a decompressor.
 
   cinfo_.client_data = this;
-  cinfo_.err         = jpeg_std_error (&jerr_);
+  cinfo_.err         = &jerr_;
 
   jpeg_create_decompress (&cinfo_);
 
@@ -472,205 +514,14 @@ decompressor::decompressor ()
   smgr_.term_source       = &callback::term_source_;
 
   cinfo_.src = &smgr_;
-}
-
-decompressor::~decompressor ()
-{
-  jpeg_destroy_decompress (&cinfo_);
-}
-
-streamsize
-decompressor::write (const octet *data, streamsize n)
-{
-  size_t left = n;
-
-  if (n > bytes_to_skip_)
-    {
-      data += bytes_to_skip_;
-      left -= bytes_to_skip_;
-    }
-  else
-    {
-      bytes_to_skip_ -= n;
-      left -= n;
-    }
-
-  while (0 < left)
-    {
-      JOCTET *next_free_byte = const_cast< JOCTET * >
-        (smgr_.next_input_byte + smgr_.bytes_in_buffer);
-
-      size_t bytes_free = (jbuf_size_ - (next_free_byte - jbuf_));
-      size_t copy_bytes = min (left, bytes_free);
-
-      memcpy (next_free_byte, data, copy_bytes);
-      smgr_.bytes_in_buffer += copy_bytes;
-      data += copy_bytes;
-      left -= copy_bytes;
-
-      if (!header_done_)
-        {
-          if (JPEG_SUSPENDED == jpeg_read_header (&cinfo_, true))
-            {
-              log::trace ("jpeg_read_header suspended");
-              if (!reclaim_space ())
-                {
-                  string msg ("not enough space to read JPEG header");
-                  log::error (msg);
-                  BOOST_THROW_EXCEPTION (runtime_error (msg));
-                }
-              return n - left;
-            }
-
-          log::trace ("read JPEG header");
-          header_done_ = true;
-
-          //! \todo Apply option values to cinfo_
-        }
-
-      if (!decompressing_)
-        {
-          if (!jpeg_start_decompress (&cinfo_))
-            {
-              log::trace ("jpeg_start_decompress suspended");
-              if (!reclaim_space ())
-                {
-                  string msg ("not enough space to start JPEG decompression");
-                  log::error (msg);
-                  BOOST_THROW_EXCEPTION (runtime_error (msg));
-                }
-              return n - left;
-            }
-
-          log::trace ("started JPEG decompression");
-          decompressing_ = true;
-
-          /*! \todo Cross-check ctx_ settings.  Note that these can
-           *        only be set at boi() or eoi() so it is too late
-           *        to update them here.
-           */
-
-          sample_rows_ = new JSAMPROW[cinfo_.rec_outbuf_height];
-          for (int i = 0; i < cinfo_.rec_outbuf_height; ++i)
-            {
-              sample_rows_[i] = new JSAMPLE[ctx_.scan_width ()];
-            }
-        }
-
-      // Write as many decompressed scanlines to output as the
-      // decompressor is willing to provide.
-
-      int count;
-      while (cinfo_.output_scanline < cinfo_.output_height
-             && (count = jpeg_read_scanlines (&cinfo_, sample_rows_,
-                                              cinfo_.rec_outbuf_height)))
-        {
-          for (int i = 0; i < count; ++i)
-            {
-              BOOST_STATIC_ASSERT ((sizeof (JSAMPLE) == sizeof (octet)));
-
-              octet *line = reinterpret_cast< octet * > (sample_rows_[i]);
-              size_t cnt  = ctx_.scan_width ();
-              size_t n    = io_->write (line, cnt);
-
-              while (0 != n && cnt != n)
-                {
-                  line += n;
-                  cnt  -= n;
-                  n = io_->write (line, cnt);
-                }
-
-              if (0 == n)
-                log::alert ("unable to write decompressed JPEG output,"
-                            " dropping %1% octets") % cnt;
-            }
-        }
-    }
-
-  reclaim_space ();
-
-  return n - left;
-}
-
-void
-decompressor::bos (const context& ctx)
-{
-  // Resize the work buffer only if necessary
-
-  quantity sz = value ((*option_)["buffer-size"]);
-  resize (sz.amount< int > ());
-
-  if (!jbuf_)
-    {
-      log::fatal ("could not create JPEG work buffer");
-      BOOST_THROW_EXCEPTION (bad_alloc ());
-    }
-
-  log::trace
-    ("using %1% byte JPEG work buffer")
-    % jbuf_size_
-    ;
 
   smgr_.next_input_byte = jbuf_;
   smgr_.bytes_in_buffer = 0;
 }
 
-void
-decompressor::boi (const context& ctx)
+decompressor::~decompressor ()
 {
-  BOOST_ASSERT ("image/jpeg" == ctx.content_type ());
-
-  ctx_ = ctx;
-  ctx_.content_type ("raw");
-
-  header_done_   = false;
-  decompressing_ = false;
-}
-
-void
-decompressor::eoi (const context& ctx)
-{
-  for (int i = 0; i < cinfo_.rec_outbuf_height; ++i)
-    delete [] sample_rows_[i];
-  delete [] sample_rows_;
-  sample_rows_ = null_ptr;
-
-  if (cinfo_.output_scanline < cinfo_.output_height)
-    {
-      log::error ("JPEG decompressor did not receive all scanlines");
-      jpeg_abort_decompress (&cinfo_);
-    }
-  else
-    {
-      if (!jpeg_finish_decompress (&cinfo_))
-        {
-          log::error ("JPEG decompressor failed to finish cleanly");
-
-          // If we get here the decompressor was suspended and needs
-          // more image data.  There is no more image data and all the
-          // scan lines have been handled as well (as per previous if
-          // statement), so there is something very wrong internally.
-        }
-    }
-
-  // Ensure that the decompressor starts off on the right footing for
-  // the next image.  We do not create a new decompressor with every
-  // image and the jpeg_start_decompress()/jpeg_finish_decompress() is
-  // either dropping the ball here or assuming that the image data is
-  // perfectly specification compliant.
-
-  if (smgr_.bytes_in_buffer)
-    {
-      log::error
-        ("ignoring trailing junk in JPEG image data (%1% bytes)")
-        % smgr_.bytes_in_buffer;
-
-      smgr_.next_input_byte = jbuf_;
-      smgr_.bytes_in_buffer = 0;
-    }
-
-  decompressing_ = false;
-  header_done_   = false;
+  jpeg_destroy_decompress (&cinfo_);
 }
 
 void
@@ -684,7 +535,7 @@ decompressor::fill_input_buffer ()
 {
   reclaim_space ();
 
-  if (!sample_rows_)            // at traits::eoi(), fake JPEG EOI
+  if (!decompressing_)
     {
       log::error ("Premature end of JPEG data");
 
@@ -692,6 +543,8 @@ decompressor::fill_input_buffer ()
 
       smgr_.next_input_byte = jpeg_eoi;
       smgr_.bytes_in_buffer = sizeof (jpeg_eoi) / sizeof (*jpeg_eoi);
+
+      return true;
     }
 
   return false;
@@ -732,6 +585,421 @@ decompressor::reclaim_space ()
   smgr_.next_input_byte = jbuf_;
 
   return (jbuf_size_ != smgr_.bytes_in_buffer);
+}
+
+bool
+decompressor::read_header ()
+{
+  if (!header_done_)
+    {
+      if (JPEG_SUSPENDED == jpeg_read_header (&cinfo_, true))
+        {
+          log::trace ("jpeg_read_header suspended");
+          if (!reclaim_space ())
+            {
+              string msg ("not enough space to read JPEG header");
+              log::error (msg);
+              BOOST_THROW_EXCEPTION (runtime_error (msg));
+            }
+          return header_done_;
+        }
+
+      log::trace ("read JPEG header");
+      header_done_ = true;
+
+      //! \todo Apply option values to cinfo_
+    }
+  return header_done_;
+}
+
+bool
+decompressor::start_decompressing (const context& ctx)
+{
+  if (!decompressing_)
+    {
+      if (!jpeg_start_decompress (&cinfo_))
+        {
+          log::trace ("jpeg_start_decompress suspended");
+          if (!reclaim_space ())
+            {
+              string msg ("not enough space to start JPEG decompression");
+              log::error (msg);
+              BOOST_THROW_EXCEPTION (runtime_error (msg));
+            }
+          return decompressing_;
+        }
+
+      log::trace ("started JPEG decompression");
+      decompressing_ = true;
+
+      /*! \todo Cross-check ctx_ settings.  Note that these can
+       *        only be set at boi() or eoi() so it is too late
+       *        to update them here.
+       */
+
+      sample_rows_ = new JSAMPROW[cinfo_.rec_outbuf_height];
+      for (int i = 0; i < cinfo_.rec_outbuf_height; ++i)
+        {
+          sample_rows_[i] = new JSAMPLE[ctx.scan_width ()];
+        }
+    }
+  return decompressing_;
+}
+
+void
+decompressor::handle_bos (const option::map& om)
+{
+  // Resize the work buffer only if necessary
+
+  quantity sz = value (const_cast< option::map& > (om)["buffer-size"]);
+  resize (sz.amount< int > ());
+
+  if (!jbuf_)
+    {
+      log::fatal ("could not create JPEG work buffer");
+      BOOST_THROW_EXCEPTION (bad_alloc ());
+    }
+
+  log::trace
+    ("using %1% byte JPEG work buffer")
+    % jbuf_size_
+    ;
+
+  smgr_.next_input_byte = jbuf_;
+  smgr_.bytes_in_buffer = 0;
+}
+
+
+context
+decompressor::handle_boi (const context& ctx)
+{
+  BOOST_ASSERT ("image/jpeg" == ctx.content_type ());
+
+  context ctx_(ctx);
+  ctx_.content_type ("image/x-raster");
+
+  header_done_   = false;
+  decompressing_ = false;
+  flushing_      = false;
+
+  return ctx_;
+}
+
+void
+decompressor::handle_eoi ()
+{
+  for (int i = 0; i < cinfo_.rec_outbuf_height; ++i)
+    delete [] sample_rows_[i];
+  delete [] sample_rows_;
+  sample_rows_ = null_ptr;
+
+  if (cinfo_.output_scanline < cinfo_.output_height)
+    {
+      log::error ("JPEG decompressor did not receive all scanlines");
+      jpeg_abort_decompress (&cinfo_);
+    }
+  else
+    {
+      if (!jpeg_finish_decompress (&cinfo_))
+        {
+          log::error ("JPEG decompressor failed to finish cleanly");
+
+          // If we get here the decompressor was suspended and needs
+          // more image data.  There is no more image data and all the
+          // scan lines have been handled as well (as per previous if
+          // statement), so there is something very wrong internally.
+        }
+    }
+
+  // Ensure that the decompressor starts off on the right footing for
+  // the next image.  We do not create a new decompressor with every
+  // image and the jpeg_start_decompress()/jpeg_finish_decompress() is
+  // either dropping the ball here or assuming that the image data is
+  // perfectly specification compliant.
+
+  if (smgr_.bytes_in_buffer)
+    {
+      log::error
+        ("Corrupt JPEG data: %1% extraneous bytes after marker 0xd9")
+        % smgr_.bytes_in_buffer;
+
+      smgr_.next_input_byte = jbuf_;
+      smgr_.bytes_in_buffer = 0;
+    }
+
+  decompressing_ = false;
+  header_done_   = false;
+}
+
+}       // namespace detail
+
+idecompressor::idecompressor ()
+  : lines_left_(0)
+{
+  // Set up filter specific options
+
+  common::add_buffer_size_(option_);
+}
+
+streamsize
+idecompressor::read (octet *data, streamsize n)
+{
+  streamsize left = n;
+
+  if (lines_left_)
+    {
+      while (0 < left && lines_left_)
+        {
+          BOOST_STATIC_ASSERT ((sizeof (JSAMPLE) == sizeof (octet)));
+
+          int i = bytes_to_skip_ / ctx_.scan_width ();
+
+          octet *line = reinterpret_cast< octet * > (sample_rows_[i]);
+          streamsize skip = bytes_to_skip_ % ctx_.scan_width ();
+          streamsize cnt  = min (left, ctx_.scan_width () - skip);
+
+          traits::copy (data, line + skip, cnt);
+          data += cnt;
+          left -= cnt;
+
+          bytes_to_skip_ += cnt;
+          if (0 == bytes_to_skip_ % ctx_.scan_width ())
+            --lines_left_;
+        }
+      return n - left;
+    }
+
+  if (reclaim_space () && !flushing_)
+    {
+      JOCTET *next_free_byte = const_cast< JOCTET * >
+        (smgr_.next_input_byte + smgr_.bytes_in_buffer);
+
+      streamsize rv = io_->read (reinterpret_cast< octet * > (next_free_byte),
+                                 jbuf_size_ - (next_free_byte - jbuf_));
+
+      if (!traits::is_marker (rv))
+        {
+          smgr_.bytes_in_buffer += rv;
+        }
+      else
+        {
+          flushing_ = (traits::eoi() == rv && smgr_.bytes_in_buffer);
+          if (!flushing_)
+            {
+              handle_marker (rv);
+              return rv;
+            }
+        }
+    }
+
+  if (!read_header ())             return n - left;
+  if (!start_decompressing (ctx_)) return n - left;
+
+  int count;
+  while (0 < left
+         && cinfo_.output_scanline < cinfo_.output_height
+         && (count = jpeg_read_scanlines (&cinfo_, sample_rows_,
+                                          cinfo_.rec_outbuf_height)))
+    {
+      bytes_to_skip_ = 0;
+      lines_left_ = count;
+
+      for (int i = 0; 0 < left && lines_left_; ++i)
+        {
+          BOOST_STATIC_ASSERT ((sizeof (JSAMPLE) == sizeof (octet)));
+
+          octet *line = reinterpret_cast< octet * > (sample_rows_[i]);
+          streamsize cnt = min (left, ctx_.scan_width ());
+
+          traits::copy (data, line, cnt);
+          data += cnt;
+          left -= cnt;
+
+          bytes_to_skip_ += cnt;
+          if (0 == bytes_to_skip_ % ctx_.scan_width())
+            --lines_left_;
+        }
+    }
+
+  if (cinfo_.output_scanline < cinfo_.output_height)
+    return n - left;
+
+  // If we get here, there is junk between the last image data and the
+  // JPEG EOI marker.  We skip this so we can produce proper output as
+  // well as continue with the next image, if any.
+
+  int state = !JPEG_REACHED_EOI;
+  while (JPEG_REACHED_EOI != state)
+    {
+      state = jpeg_consume_input (&cinfo_);
+
+      if (!flushing_)
+        {
+          JOCTET *next_free_byte = const_cast< JOCTET * >
+            (smgr_.next_input_byte + smgr_.bytes_in_buffer);
+
+          streamsize rv
+            = io_->read (reinterpret_cast< octet * > (next_free_byte),
+                         jbuf_size_ - (next_free_byte - jbuf_));
+
+          if (!traits::is_marker (rv))
+            {
+              smgr_.bytes_in_buffer += rv;
+            }
+          else
+            {
+              flushing_ = (traits::eoi() == rv && smgr_.bytes_in_buffer);
+              if (!flushing_)
+                {
+                  handle_marker (rv);
+                  return rv;
+                }
+            }
+        }
+      else if (n == left)
+        {
+          flushing_ = false;
+          handle_marker (traits::eoi ());
+          return traits::eoi ();
+        }
+    }
+  return n - left;
+}
+
+void
+idecompressor::handle_marker (traits::int_type c)
+{
+  if (traits::is_marker (c))
+    {
+      if (traits::bos () == c) handle_bos (*option_);
+      if (traits::boi () == c)
+        {
+          ctx_ = handle_boi (io_->get_context ());
+          lines_left_ = 0;
+        }
+      if (traits::eoi () == c)
+        {
+          handle_eoi ();
+          lines_left_ = 0;
+        }
+    }
+}
+
+decompressor::decompressor ()
+{
+  // Set up filter specific options
+
+  common::add_buffer_size_(option_);
+}
+
+streamsize
+decompressor::write (const octet *data, streamsize n)
+{
+  size_t left = n;
+
+  if (n > bytes_to_skip_)
+    {
+      data += bytes_to_skip_;
+      left -= bytes_to_skip_;
+    }
+  else
+    {
+      bytes_to_skip_ -= n;
+      left -= n;
+    }
+
+  while (0 < left
+         && (!decompressing_
+             || cinfo_.output_scanline < cinfo_.output_height))
+    {
+      JOCTET *next_free_byte = const_cast< JOCTET * >
+        (smgr_.next_input_byte + smgr_.bytes_in_buffer);
+
+      size_t bytes_free = (jbuf_size_ - (next_free_byte - jbuf_));
+      size_t copy_bytes = min (left, bytes_free);
+
+      memcpy (next_free_byte, data, copy_bytes);
+      smgr_.bytes_in_buffer += copy_bytes;
+      data += copy_bytes;
+      left -= copy_bytes;
+
+      if (!read_header ())             return n - left;
+      if (!start_decompressing (ctx_)) return n - left;
+
+      // Write as many decompressed scanlines to output as the
+      // decompressor is willing to provide.
+
+      int count;
+      while (cinfo_.output_scanline < cinfo_.output_height
+             && (count = jpeg_read_scanlines (&cinfo_, sample_rows_,
+                                              cinfo_.rec_outbuf_height)))
+        {
+          for (int i = 0; i < count; ++i)
+            {
+              BOOST_STATIC_ASSERT ((sizeof (JSAMPLE) == sizeof (octet)));
+
+              octet *line = reinterpret_cast< octet * > (sample_rows_[i]);
+              size_t cnt  = ctx_.scan_width ();
+              size_t n    = io_->write (line, cnt);
+
+              while (0 != n && cnt != n)
+                {
+                  line += n;
+                  cnt  -= n;
+                  n = io_->write (line, cnt);
+                }
+
+              if (0 == n)
+                log::alert ("unable to write decompressed JPEG output,"
+                            " dropping %1% octets") % cnt;
+            }
+        }
+    }
+
+  reclaim_space ();
+
+  if (cinfo_.output_scanline < cinfo_.output_height)
+    return n - left;
+
+  // If we get here, there is junk between the last image data and the
+  // JPEG EOI marker.  We skip this so we can produce proper output as
+  // well as continue with the next image, if any.
+
+  int state = !JPEG_REACHED_EOI;
+  while (0 < left
+         && JPEG_REACHED_EOI != state)
+    {
+      JOCTET *next_free_byte = const_cast< JOCTET * >
+        (smgr_.next_input_byte + smgr_.bytes_in_buffer);
+
+      size_t bytes_free = (jbuf_size_ - (next_free_byte - jbuf_));
+      size_t copy_bytes = min (left, bytes_free);
+
+      memcpy (next_free_byte, data, copy_bytes);
+      smgr_.bytes_in_buffer += copy_bytes;
+      data += copy_bytes;
+      left -= copy_bytes;
+      state = jpeg_consume_input (&cinfo_);
+    }
+  return n - left;
+}
+
+void
+decompressor::bos (const context& ctx)
+{
+  handle_bos (*option_);
+}
+
+void
+decompressor::boi (const context& ctx)
+{
+  ctx_ = handle_boi (ctx);
+}
+
+void
+decompressor::eoi (const context& ctx)
+{
+  handle_eoi ();
 }
 
 }       // namespace jpeg

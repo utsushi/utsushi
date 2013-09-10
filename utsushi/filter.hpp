@@ -1,5 +1,5 @@
 //  filter.hpp -- interface declarations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -59,6 +59,9 @@ public:
 
   using input::buffer_size;
   virtual void buffer_size (streamsize size);
+
+protected:
+  virtual void handle_marker (traits::int_type c);
 };
 
 //!  Interface for image data consuming filters

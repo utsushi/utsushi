@@ -1,5 +1,5 @@
 //  grammar-information.hpp -- component rule declarations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -56,6 +56,8 @@ struct information
 
     bool operator== (const source& rhs) const;
 
+    virtual bool supports_size_detection () const;
+
     integer resolution;
     std::vector< integer > area;
     std::vector< integer > overscan;
@@ -77,6 +79,8 @@ struct information
     fb_source ();
 
     bool operator== (const fb_source& rhs) const;
+
+    virtual bool supports_size_detection () const;
 
     bool detects_width;
     bool detects_height;
@@ -110,6 +114,8 @@ struct information
   std::vector< byte > version;
   integer device_buffer_size;
   std::vector< quad > extension;
+  bool truncates_at_media_end;
+  boost::optional< std::vector< byte > > serial_number;
 };
 
 namespace decoding {

@@ -1,5 +1,5 @@
 //  grammar-status.ipp -- component rule definitions
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -104,6 +104,8 @@ basic_grammar_status< Iterator >::basic_grammar_status ()
       | token_(psz::A6H)
       | token_(psz::EXV)
       | token_(psz::EXH)
+      | token_(psz::HLTV)
+      | token_(psz::HLTH)
       | token_(psz::PCV)
       | token_(psz::PCH)
       | token_(psz::KGV)
@@ -132,6 +134,7 @@ basic_grammar_status< Iterator >::basic_grammar_status ()
       | token_(err::LTF)
       | token_(err::LOCK)
       | token_(err::DFED)
+      | token_(err::DTCL)
       )
     > token_
     ;

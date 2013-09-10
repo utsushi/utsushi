@@ -1,5 +1,5 @@
 //  verify.cpp -- ESC/I protocol assumptions and specification compliance
-//  Copyright (C) 2012  AVASYS CORPORATION
+//  Copyright (C) 2012, 2013  AVASYS CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : Olaf Meeuwissen
@@ -343,18 +343,18 @@ main (int argc, char *argv[])
       do
         {
           it = std::find_if (mon.begin (), mon.end (),
-                             boost::bind (&scanner::id::has_driver, _1));
+                             boost::bind (&scanner::info::is_driver_set, _1));
         }
       while (it != mon.end () && "esci" != it->driver ());
     }
 
   if (it != mon.end ())
     {
-      verify::cnx = connexion::create (it->iftype (), it->path ());
+      verify::cnx = connexion::create (it->connexion (), it->path ());
 
       if (verify::vm.count ("hexdump"))
         {
-          verify::cnx = connexion::ptr (new _cnx_::hexdump (verify::cnx));
+          verify::cnx = make_shared< _cnx_::hexdump > (verify::cnx);
         }
     }
   else

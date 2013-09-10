@@ -1,5 +1,5 @@
 dnl  configure.ac -- an autoconf template for configure
-dnl  Copyright (C) 2012  SEIKO EPSON CORPORATION
+dnl  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 dnl
 dnl  License: GPL-3.0+
 dnl  Author : AVASYS CORPORATION
@@ -23,7 +23,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.61)
-AC_INIT([Utsushi], [0.1.0],
+AC_INIT([Utsushi], [0.3.0],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -32,6 +32,13 @@ AC_CONFIG_HEADERS([config.h])
 
 AC_CONFIG_AUX_DIR([upstream])
 AC_CONFIG_MACRO_DIR([upstream/aclocal])
+
+dnl  extend the set of Automake pkg*dir variables
+dnl  This is meant to expand to the same form as all the other pkg*dir
+dnl  variables in the Makefiles.
+
+pkgsysconfdir="\$(sysconfdir)/$PACKAGE_TARNAME"
+AC_SUBST([pkgsysconfdir])
 
 dnl  additional command-line options and dependency handling
 
@@ -349,12 +356,18 @@ AS_IF([test xno != "x$with_sane"],
         sane_backenddir=`$PKG_CONFIG --variable libdir sane-backends`/sane
        ],
        [dnl  sane-backends >= 1.0.2
-        dnl  Note that there may be an architecture between lib and sane.
-        dnl  We assume that in those cases >= 1.0.21 is used, so we don't
-        dnl  have to think up with a fix for this here.
+        dnl  Guess that the backends are in a sane directory located on
+        dnl  the same level as the library to which frontends link.  If
+        dnl  such a directory does not exist use a sensible fallback.
+        dnl  Note that there may be an architecture between lib and sane
+        dnl  in the fallback but that is something we don't deal with.
         AS_IF([type sane-config >/dev/null 2>&1],
           [sane_version=`sane-config --version`
-           sane_backenddir=`sane-config --exec-prefix`/lib/sane
+           sane_backenddir=`sane-config --ldflags | sed 's/^-L\(@<:@^ @:>@*\).*/\1/'`
+           AS_IF([test -d "$sane_backenddir/sane"],
+             [sane_backenddir="$sane_backenddir/sane"],
+             [sane_backenddir=`sane-config --exec-prefix`/lib/sane
+             ])
           ])
        ])
      AC_MSG_RESULT([$sane_version])

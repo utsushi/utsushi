@@ -1,5 +1,5 @@
 //  grammar-parameters.ipp -- component rule definitions
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -88,6 +88,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
      ^ (token_(ACQ) >  qi::repeat (4) [ this->positive_ ])
      ^ (token_(FLC) >  parm_flc_token_)
      ^ (token_(FLA) >  qi::repeat (4) [ this->positive_ ])
+     ^ (token_(QIT) >  parm_qit_token_)
      )
     > qi::eoi
     ;
@@ -232,6 +233,14 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     > token_
     ;
 
+  parm_qit_token_ %=
+    &(  token_(qit::NONE)
+      | token_(qit::ON  )
+      | token_(qit::OFF )
+      )
+    > token_
+    ;
+
   ESCI_GRAMMAR_TRACE_NODE (parameters_rule_);
 
   ESCI_GRAMMAR_TRACE_NODE (gamma_table_rule_);
@@ -249,6 +258,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
   ESCI_GRAMMAR_TRACE_NODE (parm_sfl_token_);
   ESCI_GRAMMAR_TRACE_NODE (parm_mrr_token_);
   ESCI_GRAMMAR_TRACE_NODE (parm_flc_token_);
+  ESCI_GRAMMAR_TRACE_NODE (parm_qit_token_);
 }
 
 }       // namespace decoding
@@ -288,6 +298,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     << - karma::buffer [ token_(FLC) << parm_flc_token_ ]
     << - karma::buffer [ token_(FLA)
                          << karma::repeat (4) [ this->positive_ ] ]
+    << - karma::buffer [ token_(QIT) << parm_qit_token_ ]
     ;
 
   parameter_subset_rule_ %=
@@ -318,6 +329,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     SYMBOL_ENTRY (ACQ)
     SYMBOL_ENTRY (FLC)
     SYMBOL_ENTRY (FLA)
+    SYMBOL_ENTRY (QIT)
     ;
 
   parm_adf_token_.add
@@ -428,6 +440,12 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     SYMBOL_ENTRY (flc::BK)
     ;
 
+  parm_qit_token_.add
+    SYMBOL_ENTRY (qit::NONE)
+    SYMBOL_ENTRY (qit::ON  )
+    SYMBOL_ENTRY (qit::OFF )
+    ;
+
 #undef SYMBOL_ENTRY
 
   ESCI_GRAMMAR_TRACE_NODE (parameters_rule_);
@@ -475,6 +493,7 @@ BOOST_FUSION_ADAPT_STRUCT
  (boost::optional< std::vector< ESCI_NS::integer > >, acq)
  (boost::optional< ESCI_NS::quad >, flc)
  (boost::optional< std::vector< ESCI_NS::integer > >, fla)
+ (boost::optional< ESCI_NS::quad >, qit)
 )
 
 #undef ESCI_NS

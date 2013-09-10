@@ -1,5 +1,5 @@
 //  grammar-capabilities.hpp -- component rule declarations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -124,6 +124,7 @@ struct capabilities
   boost::optional< focus_control > fcs;
   boost::optional< std::vector< quad > > flc;
   boost::optional< constraint > fla;
+  boost::optional< std::vector< quad > > qit;
 };
 
 #ifdef ESCI_GRAMMAR_TRACE
@@ -195,6 +196,7 @@ protected:
   qi::rule< Iterator, quad () > caps_sfl_token_;
   qi::rule< Iterator, quad () > caps_mrr_token_;
   qi::rule< Iterator, quad () > caps_flc_token_;
+  qi::rule< Iterator, quad () > caps_qit_token_;
 };
 
 extern template class basic_grammar_capabilities< default_iterator_type >;

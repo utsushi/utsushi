@@ -1,5 +1,5 @@
 //  monitor.hpp -- available scanner devices
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -21,6 +21,7 @@
 #ifndef utsushi_monitor_hpp_
 #define utsushi_monitor_hpp_
 
+#include <istream>
 #include <set>
 
 #include "option.hpp"
@@ -38,10 +39,10 @@ namespace utsushi {
 class monitor
   : public configurable
 {
-  typedef scanner::id key_type;
-  typedef std::set< key_type > container_type;
+  typedef scanner::info key_type;
 
 public:
+  typedef std::set< key_type > container_type;
   typedef container_type::size_type size_type;
   typedef container_type::const_iterator const_iterator;
 
@@ -60,10 +61,12 @@ public:
   size_type max_size () const;
 
   //! Locate a specific scanner device
-  const_iterator find (const scanner::id& id) const;
+  const_iterator find (const scanner::info& info) const;
 
   //! Find out whether a certain scanner device is available
-  size_type count (const scanner::id& id) const;
+  size_type count (const scanner::info& info) const;
+
+  static container_type read (std::istream& istr);
 
   class impl;
 };
