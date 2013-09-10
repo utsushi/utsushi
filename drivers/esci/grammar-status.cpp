@@ -1,5 +1,5 @@
 //  grammar-status.cpp -- component instantiations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -26,11 +26,87 @@
 
 //! \copydoc grammar.cpp
 
+#include <map>
+#include <stdexcept>
+
+#include <boost/assign/list_inserter.hpp>
+#include <boost/throw_exception.hpp>
+
+#include <utsushi/log.hpp>
+#include <utsushi/quantity.hpp>
+
 #include "grammar-status.ipp"
+
+#define nullptr 0
 
 namespace utsushi {
 namespace _drv_ {
 namespace esci {
+
+// Provide a mapping of protocol tokens to utsushi::media instances.
+// We use a custom dictionary for two reasons, 1) we cannot rely on
+// all required media sizes to be predefined by the core library, and
+// 2) the protocol specification may have its own idea about what the
+// media dimensions should be for certain media types independent of
+// whatever the various standards dictate.
+
+namespace {
+
+  using utsushi::length;
+
+  const length inches = 1.0;
+  const length mm     = inches / 25.4;
+
+  typedef std::map< quad, media > dictionary;
+  dictionary *dict = nullptr;
+
+  void initialize_dictionary ()
+  {
+    using namespace code_token::status::psz;
+
+    if (dict) return;
+
+    dict = new dictionary;
+    boost::assign::insert (*dict)
+      (A3V , media (297 * mm, 420 * mm))
+      (WLT , media (11.00 * inches, 17.00 * inches))
+      (B4V , media (257 * mm, 364 * mm))
+      (LGV , media ( 8.50 * inches, 14.00 * inches))
+      (A4V , media (210 * mm, 297 * mm))
+      (A4H , media (297 * mm, 210 * mm))
+      (LTV , media ( 8.50 * inches, 11.00 * inches))
+      (LTH , media (11.00 * inches,  8.50 * inches))
+      (B5V , media (182 * mm, 257 * mm))
+      (B5H , media (257 * mm, 182 * mm))
+      (A5V , media (148 * mm, 210 * mm))
+      (A5H , media (210 * mm, 148 * mm))
+      (B6V , media (128 * mm, 182 * mm))
+      (B6H , media (182 * mm, 128 * mm))
+      (A6V , media (105 * mm, 148 * mm))
+      (A6H , media (148 * mm, 105 * mm))
+      (EXV , media ( 7.25 * inches, 10.50 * inches))
+      (EXH , media (10.50 * inches,  7.25 * inches))
+      (HLTV, media ( 5.50 * inches,  8.50 * inches))
+      (HLTH, media ( 8.50 * inches,  5.50 * inches))
+      (PCV , media (100 * mm, 148 * mm))
+      (PCH , media (148 * mm, 100 * mm))
+      (KGV , media (4.00 * inches, 6.00 * inches))
+      (KGH , media (6.00 * inches, 4.00 * inches))
+      (CKV , media ( 90 * mm, 225 * mm))
+      (CKH , media (225 * mm,  90 * mm))
+      (OTHR, media (length (), length ()))
+      // should INVD throw or return a sentinel value like OTHR?
+      ;
+  }
+}       // namespace
+
+static
+void check_bits (const integer& push_button)
+{
+  if (push_button & ~hardware_status::push_button_mask)
+    log::brief ("undefined push-button bits detected (%1%)")
+      % (push_button & ~hardware_status::push_button_mask);
+}
 
 bool
 hardware_status::operator== (const hardware_status& rhs) const
@@ -47,6 +123,78 @@ hardware_status::clear ()
   *this = hardware_status ();
 }
 
+bool
+hardware_status::size_detected (const quad& part) const
+{
+  using namespace code_token::status::psz;
+
+  return (medium
+          && part == medium->part_
+          && INVD != medium->what_);
+}
+
+media
+hardware_status::size (const quad& part) const
+{
+  if (!medium
+      || part != medium->part_)
+    return utsushi::media (length (), length ());
+
+  if (!dict) initialize_dictionary ();
+
+  return dict->at (medium->what_);
+}
+
+integer
+hardware_status::event () const
+{
+  if (!push_button) return 0;
+
+  check_bits (*push_button);
+
+  return (0x03 & *push_button);
+}
+
+bool
+hardware_status::is_duplex () const
+{
+  if (!push_button) return false;
+
+  check_bits (*push_button);
+
+  return (0x10 & *push_button);
+}
+
+quad
+hardware_status::media_size () const
+{
+  if (!push_button) return quad ();
+
+  check_bits (*push_button);
+
+  using namespace code_token::status;
+
+  static const quad size[] =
+    {
+      psz::OTHR,                // use software side setting
+      psz::A4V,
+      psz::LTV,
+      psz::LGV,
+      psz::B4V,
+      psz::A3V,
+      psz::WLT                  // tabloid
+    };
+
+  integer idx = (0xe0 & *push_button);
+  idx /= (1 << 5);              // right-shifting is not portable
+
+  if (0 <= idx && idx < integer (sizeof (size) / sizeof (*size)))
+    return size[idx];
+
+  BOOST_THROW_EXCEPTION
+    (std::out_of_range ("push-button media size"));
+}
+
 hardware_status::result::result (const quad& part, const quad& what)
   : part_(part)
   , what_(what)
@@ -58,6 +206,8 @@ hardware_status::result::operator== (const hardware_status::result& rhs) const
   return (   part_ == rhs.part_
           && what_ == rhs.what_);
 }
+
+const integer hardware_status::push_button_mask = 0xf3;
 
 template class
 decoding::basic_grammar_status< decoding::default_iterator_type >;

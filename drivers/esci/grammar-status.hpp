@@ -1,5 +1,5 @@
 //  grammar-status.hpp -- component rule declarations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -27,6 +27,8 @@
 #include <boost/optional.hpp>
 #include <boost/spirit/include/qi_rule.hpp>
 
+#include <utsushi/media.hpp>
+
 #include "code-token.hpp"
 #include "grammar-formats.hpp"
 
@@ -45,6 +47,26 @@ struct hardware_status
   bool operator== (const hardware_status& rhs) const;
 
   void clear ();
+
+  //! Tells whether the size detection process has completed
+  bool size_detected (const quad& part) const;
+
+  //! Returns the media size detected by a \a part , if any
+  /*! In case no media size was detected by the \a part, a size with
+   *  zero width and height is returned.  Calling this function when
+   *  the device indicated that it was still trying to determine the
+   *  size results in a std::out_of_range exception.
+   *
+   *  \bug Should throw a more suitably named exception
+   */
+  media size (const quad& part) const;
+
+  //! \name Push Button Status Queries
+  //! @{
+  integer event () const;
+  bool is_duplex () const;
+  quad media_size () const;
+  //! @}
 
   /*! Detected medium size and error conditions include information on
    *  the part of the device to which the result applies as well as
@@ -70,6 +92,9 @@ struct hardware_status
    */
   boost::optional< integer > focus;
   boost::optional< integer > push_button;
+
+  //! Push button value bits that have meaning attached to them
+  static const integer push_button_mask;
 };
 
 namespace decoding {

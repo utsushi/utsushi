@@ -64,7 +64,11 @@ namespace test {
  *  of the test case so they are easily told apart.
  *
  *  \note The Boost.Test framework's message for entering a test case
- *        still uses the \e unmodified test case name.
+ *        still uses the \e unmodified test case name.  At \c message
+ *        level verbosity the act of renaming is logged for clarity.
+ *  \note As renaming can only take place after a test case has been
+ *        entered the renamed name cannot be used when selecting the
+ *        tests to be run.
  */
 inline
 void
@@ -84,6 +88,8 @@ change_test_case_name (const std::string& s)
                         is_invalid_identifier_char, underscore);
 
   tc.p_name.set (name);
+
+  BOOST_TEST_MESSAGE ("Renaming test case to \"" << name << "\"");
 }
 
 //! Prefix \a s to the Boost.Test provided test case name
@@ -106,9 +112,11 @@ prefix_test_case_name (const std::string& s)
   std::replace_copy_if (s.begin (), s.end (), std::back_inserter (name),
                         is_invalid_identifier_char, underscore);
   name += underscore;
-  name += tc.p_name.get ()
-;
+  name += tc.p_name.get ();
+
   tc.p_name.set (name);
+
+  BOOST_TEST_MESSAGE ("Renaming test case to \"" << name << "\"");
 }
 
 //! Append \a s to the Boost.Test provided test case name
@@ -134,6 +142,8 @@ suffix_test_case_name (const std::string& s)
                         is_invalid_identifier_char, underscore);
 
   tc.p_name.set (name);
+
+  BOOST_TEST_MESSAGE ("Renaming test case to \"" << name << "\"");
 }
 
 } // namespace test

@@ -1,5 +1,5 @@
 //  padding.hpp -- octet and scan line removal
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -99,6 +99,51 @@ protected:
    *  still need to be ignored.
    */
   context::size_type skip_;
+};
+
+class ibottom_padder
+  : public ifilter
+{
+public:
+  ibottom_padder (const quantity& height);
+
+  streamsize read (octet *data, streamsize n);
+  streamsize marker ();
+
+protected:
+  void handle_marker (traits::int_type c);
+
+  quantity height_;
+
+  context::size_type octets_left_;
+  bool insert_padding_;
+};
+
+//! Add scanlines at the bottom of an image
+/*! Adds white scanlines at the bottom until the image has a desired
+ *  height.  If height is less than the incoming image's height scan
+ *  lines will be removed.
+ *
+ *  \note The height is assumed to be in the same length units as the
+ *        resolution.
+ *  \bug  The height should be modifiable after construction.
+ *  \bug  The color should be configurable.
+ */
+class bottom_padder
+  : public ofilter
+{
+public:
+  bottom_padder (const quantity& height);
+
+  streamsize write (const octet *data, streamsize n);
+
+protected:
+  void boi (const context& ctx);
+  void eoi (const context& ctx);
+
+  quantity height_;
+
+  context::size_type octets_left_;
 };
 
 }       // namespace _flt_

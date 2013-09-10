@@ -1,5 +1,5 @@
 //  jpeg.hpp -- JPEG image format support
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -58,11 +58,12 @@ struct common
   struct jpeg_error_mgr jerr_;
 
   void error_exit (j_common_ptr cinfo) __attribute__((noreturn));
+  void output_message (j_common_ptr cinfo);
 
   static void add_buffer_size_(option::map::ptr om);
 };
 
-}      // namespace detail
+}       // namespace detail
 
 //!  Turn a sequence of image data into JPEG format
 class compressor
@@ -100,34 +101,18 @@ protected:
   friend struct callback;
 };
 
-//! Turn a sequence of JPEG data into raw image data
-class decompressor
-  : public ofilter
-  , protected detail::common
+namespace detail {
+
+struct decompressor
+  : common
 {
-public:
   decompressor ();
   ~decompressor ();
-
-  streamsize write (const octet *data, streamsize n);
-
-protected:
-  void bos (const context& ctx);
-  void boi (const context& ctx);
-  void eoi (const context& ctx);
-
-  struct jpeg_decompress_struct cinfo_;
-  struct jpeg_source_mgr        smgr_;
 
   void    init_source ();
   boolean fill_input_buffer ();
   void    skip_input_data (long num_bytes);
   void    term_source ();
-
-  bool header_done_;
-  bool decompressing_;
-
-  streamsize bytes_to_skip_;
 
   //! Try to reclaim unused work buffer space
   /*! Returns \c true if there is \e usable free space in the work
@@ -139,9 +124,58 @@ protected:
    */
   bool reclaim_space ();
 
+  bool read_header ();
+  bool start_decompressing (const context& ctx);
+
+  void    handle_bos (const option::map& om);
+  context handle_boi (const context& ctx);
+  void    handle_eoi ();
+
+  struct jpeg_decompress_struct cinfo_;
+  struct jpeg_source_mgr        smgr_;
+
+  bool header_done_;
+  bool decompressing_;
+  bool flushing_;
+
+  streamsize bytes_to_skip_;
+
   JSAMPROW *sample_rows_;
 
   friend struct callback;
+};
+
+}       // namespace detail
+
+class idecompressor
+  : public ifilter
+  , protected detail::decompressor
+{
+public:
+  idecompressor ();
+
+  streamsize read (octet *data, streamsize n);
+
+protected:
+  void handle_marker (traits::int_type c);
+
+  size_t lines_left_;
+};
+
+//! Turn a sequence of JPEG data into raw image data
+class decompressor
+  : public ofilter
+  , protected detail::decompressor
+{
+public:
+  decompressor ();
+
+  streamsize write (const octet *data, streamsize n);
+
+protected:
+  void bos (const context& ctx);
+  void boi (const context& ctx);
+  void eoi (const context& ctx);
 };
 
 }       // namespace jpeg

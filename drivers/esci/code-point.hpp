@@ -1,5 +1,5 @@
 //  code-point.hpp -- set used by the ESC/I protocols
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -87,6 +87,7 @@ namespace code_point {
   const byte PAREN_R = 0x29;
   const byte MINUS   = 0x2d;
   const byte PERIOD  = 0x2e;
+  const byte SLASH   = 0x2f;
 
   const byte DIGIT_0 = 0x30;
   const byte DIGIT_1 = 0x31;

@@ -1,5 +1,5 @@
 //  run-time.hpp -- information for a program
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -136,6 +136,9 @@ public:
 
   std::string
   data_file (scope s, const std::string& name) const;
+
+  std::string
+  conf_file (scope s, const std::string& name) const;
 
   class impl;
 };

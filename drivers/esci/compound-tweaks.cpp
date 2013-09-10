@@ -1,5 +1,5 @@
 //  compound-tweaks.cpp -- address model specific issues
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -38,6 +38,51 @@ static void
 erase (std::vector< quad >& v, const quad& token)
 {
   v.erase (remove (v.begin (), v.end (), token), v.end ());
+}
+
+DS_510::DS_510 (const connexion::ptr& cnx)
+  : compound_scanner (cnx)
+{
+  capabilities& caps (const_cast< capabilities& > (caps_));
+  parameters&   defs (const_cast< parameters& > (defs_));
+
+  capabilities& caps_flip (const_cast< capabilities& > (caps_flip_));
+  parameters&   defs_flip (const_cast< parameters& > (defs_flip_));
+
+  // Disable flip-side scan parameter support because driver support
+  // for it is not ready yet.  The protocol specification is missing
+  // information needed for implementation.
+
+  caps_flip = capabilities ();
+  defs_flip = parameters ();
+
+  // Both resolution settings need to be identical
+  caps.rss = boost::none;
+
+  // Assume people prefer color over B/W
+  defs.col = code_token::parameter::col::C024;
+
+  // Color correction parameters
+
+  vector< double, 3 >& exp
+    (const_cast< vector< double, 3 >& > (gamma_exponent_));
+
+  exp[0] = 1.013;
+  exp[1] = 0.992;
+  exp[2] = 0.995;
+
+  matrix< double, 3 >& mat
+    (const_cast< matrix< double, 3 >& > (profile_matrix_));
+
+  mat[0][0] =  0.9929;
+  mat[0][1] =  0.0066;
+  mat[0][2] =  0.0005;
+  mat[1][0] =  0.0016;
+  mat[1][1] =  1.0116;
+  mat[1][2] = -0.0132;
+  mat[2][0] =  0.0082;
+  mat[2][1] = -0.1479;
+  mat[2][2] =  1.1397;
 }
 
 DS_xxx00::DS_xxx00 (const connexion::ptr& cnx)

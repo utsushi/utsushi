@@ -300,10 +300,12 @@ class resetter
   : public value::visitor<>
 {
 public:
-  resetter (Gtk::Widget *w, sigc::connection& cnx, const option& opt)
+  resetter (Gtk::Widget *w, sigc::connection& cnx, const option& opt,
+            bool update_constraint = true)
     : widget_(w)
     , cnx_(cnx)
     , opt_(opt)
+    , update_constraint_(update_constraint)
   {}
 
   template< typename T >
@@ -315,6 +317,7 @@ protected:
   Gtk::Widget *widget_;
   sigc::connection& cnx_;
   const option& opt_;
+  bool update_constraint_;
 };
 
 template<>
@@ -326,29 +329,34 @@ resetter::operator() (const quantity& q) const
     {
       Gtk::SpinButton *spinner = static_cast< Gtk::SpinButton * > (widget_);
 
-      range rc = opt_.constraint< range > ();
-      spinner->set_range (rc.lower ().amount< double > (),
-                          rc.upper ().amount< double > ());
-      spinner->set_digits (q.is_integral () ? 0 : 2);
-      spinner->set_increments (q.is_integral () ?  1 : 0.1,
-                               q.is_integral () ? 10 : 1.0);
+      if (update_constraint_)
+        {
+          range rc = opt_.constraint< range > ();
+          spinner->set_range (rc.lower ().amount< double > (),
+                              rc.upper ().amount< double > ());
+          spinner->set_digits (q.is_integral () ? 0 : 2);
+          spinner->set_increments (q.is_integral () ?  1 : 0.1,
+                                   q.is_integral () ? 10 : 1.0);
+        }
       spinner->set_value (q.amount< double > ());
     }
   else if (dynamic_cast< store * > (opt_.constraint ().get ()))
     {
       Gtk::ComboBoxText *popup = static_cast< Gtk::ComboBoxText * > (widget_);
 
-      store sc = opt_.constraint< store > ();
-      store::const_iterator it;
-
-      popup->clear ();
-      for (it = sc.begin (); it != sc.end (); ++it)
+      if (update_constraint_)
         {
-          stringstream choice;
-          choice << value (*it);
-          popup->append_text (choice.str ());
-        }
+          store sc = opt_.constraint< store > ();
+          store::const_iterator it;
 
+          popup->clear ();
+          for (it = sc.begin (); it != sc.end (); ++it)
+            {
+              stringstream choice;
+              choice << value (*it);
+              popup->append_text (choice.str ());
+            }
+        }
       stringstream ss;
       ss << q;
       popup->set_active_text (ss.str ());
@@ -369,14 +377,17 @@ resetter::operator() (const string& s) const
     {
       Gtk::ComboBoxText *popup = static_cast< Gtk::ComboBoxText * > (widget_);
 
-      store sc = opt_.constraint< store > ();
-      store::const_iterator it;
-
-      popup->clear ();
-      for (it = sc.begin (); it != sc.end (); ++it)
+      if (update_constraint_)
         {
-          string choice = value (*it);
-          popup->append_text (_(choice));
+          store sc = opt_.constraint< store > ();
+          store::const_iterator it;
+
+          popup->clear ();
+          for (it = sc.begin (); it != sc.end (); ++it)
+            {
+              string choice = value (*it);
+              popup->append_text (_(choice));
+            }
         }
       popup->set_active_text (_(s));
     }
@@ -639,7 +650,7 @@ editor::set (const std::string& key, const value& v)
         (_("The selected combination of values is not supported."));
       message.run ();
 
-      resetter r (controls_[key], connects_[key], opt);
+      resetter r (controls_[key], connects_[key], opt, false);
       value (opt).apply (r);
     }
 
@@ -747,11 +758,8 @@ editor::update_appearance (keyed_list::value_type& v)
       if (editors_.end () != jt)
         jt->second->set_sensitive (manual);
 
-      if (!manual)
-        {
-          resetter r (controls_[k], connects_[k], opt);
-          value (opt).apply (r);
-        }
+      resetter r (controls_[k], connects_[k], opt);
+      value (opt).apply (r);
     }
 }
 

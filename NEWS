@@ -1,7 +1,31 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
-utsushi-0.1.0                                             (2013-03-04)
+utsushi-0.3.0                                             (2013-09-01)
+----------------------------------------------------------------------
+ * adds driver support for the DS-510
+ * adds an option to force an image height for devices unable to tell
+   in advance how tall each image will be
+ * adds JPEG decompression support to the SANE backend so that device
+   I/O can use the JPEG format for image data transfer
+ * fixes early out-of-media detection handling so that the last image
+   is processed completely
+ * fixes command-line interface option handling so it no longer tries
+   to set the default values
+ * fixes several constraint handling issues in the GUI
+
+----------------------------------------------------------------------
+utsushi-0.2.0                                             (2013-07-25)
+----------------------------------------------------------------------
+ ! never released to the general public
+ * supports automatic media size detection
+ * supports external plugins (such as the 'networkscan' plugin)
+ * adds feedback for time consuming operations to the GUI
+ * fixes a device selection issue with identically named devices
+ * fixes a JPEG compression issue triggering a program abort
+
+----------------------------------------------------------------------
+utsushi-0.1.0                                             (2013-03-11)
 ----------------------------------------------------------------------
  * supports scan area selection via well-known media sizes
  * automatically adjusts the selected media size to media position
@@ -17,7 +41,7 @@ utsushi-0.1.0                                             (2013-03-04)
  * fixes cancellation issues that led to incorrect error messages
 
 ----------------------------------------------------------------------
-utsushi-0.0.0                                             (2012-10-19)
+utsushi-0.0.0                                             (2012-11-02)
 ----------------------------------------------------------------------
  * initial release
  * contains a simple GUI scan dialog

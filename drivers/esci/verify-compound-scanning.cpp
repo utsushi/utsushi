@@ -1,5 +1,5 @@
 //  verify-compound-scanning.cpp -- scenario tests
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -165,6 +165,8 @@ BOOST_FIXTURE_TEST_CASE (adf_duplex_scan, controller)
   }
 }
 
+// \todo Test does not seem to account for arbitrary ordering of IMGA
+//       and IMGB replies
 BOOST_FIXTURE_TEST_CASE (adf_duplex_jpeg_scan, controller)
 {
   sleep (1);

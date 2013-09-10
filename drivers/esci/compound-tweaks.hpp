@@ -1,5 +1,5 @@
 //  compound-tweaks.hpp -- address model specific issues
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -43,6 +43,7 @@ namespace esci {
   }                                             \
   /**/
 
+DERIVED_COMPOUND_(compound_scanner, DS_510);
 DERIVED_COMPOUND_(compound_scanner, DS_xxx00);
 DERIVED_COMPOUND_(DS_xxx00, DS_x500);
 DERIVED_COMPOUND_(DS_xxx00, DS_x0000);

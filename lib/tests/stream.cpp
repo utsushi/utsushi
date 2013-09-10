@@ -1,5 +1,5 @@
 //  stream.cpp -- unit tests for the utsushi::stream API
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -38,8 +38,8 @@ struct null_fixture
   ostream ostr;
 
   null_fixture () {
-    istr.push (idevice::ptr (new null_idevice ()));
-    ostr.push (odevice::ptr (new null_odevice ()));
+    istr.push (make_shared< null_idevice > ());
+    ostr.push (make_shared< null_odevice > ());
   }
 };
 
@@ -72,8 +72,8 @@ struct raw_fixture
   raw_fixture ()
     : octet_count (40 * 8192), image_count (3)
   {
-    istr.push (idevice::ptr (new rawmem_idevice (octet_count, image_count)));
-    ostr.push (odevice::ptr (new null_odevice ()));
+    istr.push (make_shared< rawmem_idevice > (octet_count, image_count));
+    ostr.push (make_shared< null_odevice > ());
   }
 };
 
@@ -118,10 +118,10 @@ struct filter_fixture
   filter_fixture ()
     : octet_count (30 * 8192), image_count (2)
   {
-    istr.push (ifilter::ptr (new thru_ifilter));
-    istr.push (idevice::ptr (new rawmem_idevice (octet_count, image_count)));
-    ostr.push (ofilter::ptr (new thru_ofilter));
-    ostr.push (odevice::ptr (new null_odevice));
+    istr.push (make_shared< thru_ifilter > ());
+    istr.push (make_shared< rawmem_idevice > (octet_count, image_count));
+    ostr.push (make_shared< thru_ofilter > ());
+    ostr.push (make_shared< null_odevice > ());
   }
 };
 

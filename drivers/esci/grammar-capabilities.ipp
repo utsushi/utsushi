@@ -1,5 +1,5 @@
 //  grammar-capabilities.ipp -- component rule definitions
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -80,6 +80,7 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
      ^ (token_(FCS) > caps_fcs_rule_)
      ^ (token_(FLC) > token_(value::LIST) > +caps_flc_token_)
      ^ (token_(FLA) > (this->positive_range_ | this->positive_list_))
+     ^ (token_(QIT) > token_(value::LIST) > +caps_qit_token_)
      )
     > qi::eoi
     ;
@@ -275,6 +276,14 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
     > token_
     ;
 
+  caps_qit_token_ %=
+    &(  token_(qit::NONE)
+      | token_(qit::ON  )
+      | token_(qit::OFF )
+      )
+    > token_
+    ;
+
   ESCI_GRAMMAR_TRACE_NODE (capability_rule_);
 
   ESCI_GRAMMAR_TRACE_NODE (caps_adf_rule_);
@@ -303,6 +312,7 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
   ESCI_GRAMMAR_TRACE_NODE (caps_sfl_token_);
   ESCI_GRAMMAR_TRACE_NODE (caps_mrr_token_);
   ESCI_GRAMMAR_TRACE_NODE (caps_flc_token_);
+  ESCI_GRAMMAR_TRACE_NODE (caps_qit_token_);
 }
 
 }       // namespace decoding
@@ -352,7 +362,8 @@ BOOST_FUSION_ADAPT_STRUCT
  (boost::optional< ESCI_NS::capabilities::constraint >, crp)
  (boost::optional< ESCI_NS::capabilities::focus_control>, fcs)
  (boost::optional< std::vector< ESCI_NS::quad > >, flc)
- (boost::optional< ESCI_NS::capabilities::constraint >, fla))
+ (boost::optional< ESCI_NS::capabilities::constraint >, fla)
+ (boost::optional< std::vector< ESCI_NS::quad > >, qit))
 
 #undef ESCI_NS
 

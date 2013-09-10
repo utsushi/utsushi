@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -39,42 +39,48 @@ SANE_VERSION = $(SANE_MAJOR):$(SANE_MINOR):$(SANE_REVISION)
 
 exec_sane_backenddir = $(pkglibdir)/sane
 
-exec_sane_backend_LTLIBRARIES = libsane-utsushi.la
-libsane_utsushi_la_SOURCES  = backend.cpp
-libsane_utsushi_la_SOURCES += backend.hpp
-libsane_utsushi_la_SOURCES += version.hpp
-libsane_utsushi_la_SOURCES += guard.hpp
-libsane_utsushi_la_SOURCES += handle.cpp
-libsane_utsushi_la_SOURCES += handle.hpp
-libsane_utsushi_la_SOURCES += device.cpp
-libsane_utsushi_la_SOURCES += device.hpp
-libsane_utsushi_la_SOURCES += value.cpp
-libsane_utsushi_la_SOURCES += value.hpp
-libsane_utsushi_la_SOURCES += log.hpp
-libsane_utsushi_la_LDFLAGS  = -export-dynamic
-libsane_utsushi_la_LDFLAGS += -export-symbols sane-$(BACKEND_NAME)-api.sym
-libsane_utsushi_la_LDFLAGS += -version-number $(SANE_VERSION)
-libsane_utsushi_la_LDFLAGS += -weak libsane
-libsane_utsushi_la_LIBADD   = ../lib/libutsushi.la
+exec_sane_backend_LTLIBRARIES = libsane-$(BACKEND_NAME).la
+libsane___BACKEND_NAME__la_SOURCES  = backend.cpp
+libsane___BACKEND_NAME__la_SOURCES += backend.hpp
+libsane___BACKEND_NAME__la_SOURCES += version.hpp
+libsane___BACKEND_NAME__la_SOURCES += guard.hpp
+libsane___BACKEND_NAME__la_SOURCES += handle.cpp
+libsane___BACKEND_NAME__la_SOURCES += handle.hpp
+libsane___BACKEND_NAME__la_SOURCES += device.cpp
+libsane___BACKEND_NAME__la_SOURCES += device.hpp
+libsane___BACKEND_NAME__la_SOURCES += value.cpp
+libsane___BACKEND_NAME__la_SOURCES += value.hpp
+libsane___BACKEND_NAME__la_SOURCES += log.hpp
+libsane___BACKEND_NAME__la_SOURCES += sane-api.sym
+libsane___BACKEND_NAME__la_LDFLAGS  = -export-dynamic
+libsane___BACKEND_NAME__la_LDFLAGS += -export-symbols $(srcdir)/sane-api.sym
+libsane___BACKEND_NAME__la_LDFLAGS += -version-number $(SANE_VERSION)
+libsane___BACKEND_NAME__la_LDFLAGS += -weak libsane
+libsane___BACKEND_NAME__la_LIBADD   = ../lib/libutsushi.la
 ##  FIXME: drop when filters have been turned into proper plugins
-libsane_utsushi_la_LIBADD  += ../filters/libflt-all.la
+libsane___BACKEND_NAME__la_LIBADD  += ../filters/libflt-all.la
 ##  FIXME: drop when connexions have been turned into proper plugins
-libsane_utsushi_la_LIBADD  += ../connexions/libcnx-usb.la
+libsane___BACKEND_NAME__la_LIBADD  += ../connexions/libcnx-usb.la
 
 AM_CPPFLAGS += -DBACKEND_NAME=$(BACKEND_NAME)
 AM_CPPFLAGS += -DSANE_MAJOR=$(SANE_MAJOR)
 AM_CPPFLAGS += -DSANE_MINOR=$(SANE_MINOR)
 
-libsane-$(BACKEND_NAME).la: sane-$(BACKEND_NAME)-api.sym
-sane-$(BACKEND_NAME)-api.sym: $(srcdir)/backend.hpp
+BUILT_SOURCES = $(srcdir)/sane-api.sym
+
+sane-api.sym: $(srcdir)/backend.hpp
 	$(AWK) '/^#define sane_/{ print $$2 }' $< \
+	    | sed '/_$$/d' \
 	    | sed -n 'p; s/sane_/sane_$(BACKEND_NAME)_/p' > $@
 
-CLEANFILES = sane-$(BACKEND_NAME)-api.sym
+CLEANFILES = sane-api.sym
 
 ##  Minimal sanity checks on the distributed backend.
 
-SANE_BACKEND_SANITY_CHECKS  = check-soname
+SANE_BACKEND_SANITY_CHECKS  =
+if with_shared_enabled
+SANE_BACKEND_SANITY_CHECKS += check-soname
+endif
 
 check-local: $(SANE_BACKEND_SANITY_CHECKS)
 
@@ -92,9 +98,10 @@ check-soname: libsane-$(BACKEND_NAME).la
 	                /^soname_spec=/p; \
 	                /^libname_spec=/p; \
 	                /^library_names_spec=/p'`; \
+	test -f libsane-$(BACKEND_NAME).la || exit 5; \
 	eval `sed -n '/^library_names=/p' libsane-$(BACKEND_NAME).la`; \
 	sofile=$$objdir/`echo $$library_names | $(AWK) '{print $$1}'`; \
-	test -f $$sofile || exit 0; \
+	test -f $$sofile || exit 4; \
 	shared_ext="$$shrext_cmds"; \
 	case $(host) in \
 	    *cygwin* | mingw* | *cegcc*)  major=-$(SANE_MAJOR);; \
@@ -111,7 +118,7 @@ check-soname: libsane-$(BACKEND_NAME).la
 	esac; \
 	if test "$$soname" != "$$soname_expect"; then \
 	    echo "$@: $$sofile: $$soname_expect != $$soname"; \
-	    exit 1; \
+	    exit 3; \
 	fi;
 
 ##  Distributed patches for ltmain.sh that try to make sure we meet
@@ -196,11 +203,11 @@ uninstall-hook-exec:
 	done
 
 ##  If the build system uses dll.d, we prefer that and just drop a
-##  file name after the package there with the backend name in it.
+##  file named after the backend there with the backend name in it.
 ##  Otherwise, we edit dll.conf and add or uncomment the backend.
 ##  When uninstalling, we reverse these actions but note that the
 ##  backend is not removed from dll.conf (because we cannot check
-##  whether we added it or not).
+##  whether we added it or not).  It is commented out, though.
 
 install-data-hook:
 	@$(NORMAL_INSTALL)
@@ -211,18 +218,19 @@ install-data-hook:
 	fi
 	if test -d "$(SANE_SYSCONFDIR)/dll.d"; then \
 	  dirname="$(DESTDIR)$(SANE_SYSCONFDIR)/dll.d"; \
-	  file=$$dirname/$(PACKAGE_TARNAME); \
+	  file=$$dirname/$(BACKEND_NAME); \
 	  test -d $$dirname || $(MKDIR_P) $$dirname; \
-	  echo "#  $(PACKAGE_TARNAME) -- dll.conf snippet" > $$file; \
+	  echo "#  $(BACKEND_NAME) -- dll.conf snippet" > $$file; \
 	  echo "" >> $$file; \
 	  echo "$(BACKEND_NAME)" >> $$file; \
 	else \
 	  dirname="$(DESTDIR)$(SANE_SYSCONFDIR)"; \
 	  file=$$dirname/dll.conf; \
 	  if test -f $$file; then \
-	    if test -n "`$(GREP) '^#[ \t]*$(BACKEND_NAME)' $$file`"; then \
-	      sed -i 's,^#\([ \t]*$(BACKEND_NAME)\),\1,' $$file; \
-	    else \
+	    if test -n "`$(GREP) '^[ \t]*#[ \t#]*$(BACKEND_NAME)' $$file`"; \
+	    then \
+	      sed -i 's,^[ \t]*#[ \t#]*\($(BACKEND_NAME)\),\1,' $$file; \
+	    elif test -z "`$(GREP) $(BACKEND_NAME) $$file`"; then\
 	      echo $(BACKEND_NAME) >> $$file; \
 	    fi; \
 	  else \
@@ -239,13 +247,13 @@ uninstall-hook-data:
 	  exit 1; \
 	fi
 	-if test -d "$(SANE_SYSCONFDIR)/dll.d"; then \
-	  rm -f "$(DESTDIR)$(SANE_SYSCONFDIR)/dll.d/$(PACKAGE_TARNAME)"; \
+	  rm -f "$(DESTDIR)$(SANE_SYSCONFDIR)/dll.d/$(BACKEND_NAME)"; \
 	else \
 	  dirname="$(DESTDIR)$(SANE_SYSCONFDIR)"; \
 	  file=$$dirname/dll.conf; \
 	  if test -f $$file; then \
 	    if test -n "`$(GREP) '^[ \t]*$(BACKEND_NAME)' $$file`"; then \
-	      sed -i 's,^\([ \t]*$(BACKEND_NAME)\),#\1,' $$file; \
+	      sed -i 's,^[ \t]*\($(BACKEND_NAME)\),#\1,' $$file; \
 	    fi; \
 	  else \
 	    echo $(ECHO_N) "WARNING: $$file not found,"; \

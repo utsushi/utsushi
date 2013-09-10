@@ -1,5 +1,5 @@
 //  compound.cpp -- protocol variant command base class implementation
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -104,9 +104,17 @@ compound_base::operator>> (connexion& cnx)
 
       hook_[reply_.code] ();
     }
-  while (!is_ready_() && delay_elapsed_());
+  while (!is_ready_() && delay_elapsed ());
 
   request_.code = quad ();
+}
+
+bool
+compound_base::delay_elapsed () const
+{
+  struct timespec t = { 0, 50000000 /* ns */ };
+
+  return 0 == nanosleep (&t, 0);
 }
 
 const streamsize compound_base::req_len_ = 12;
@@ -571,14 +579,6 @@ compound_base::is_ready_() const
   return !(status_.nrd
            && (nrd::BUSY == *status_.nrd
                || (nrd::WUP == *status_.nrd && reply::MECH != reply_.code)));
-}
-
-bool
-compound_base::delay_elapsed_() const
-{
-  struct timespec t = { 0, 50000000 /* ns */ };
-
-  return 0 == nanosleep (&t, 0);
 }
 
 }       // namespace esci

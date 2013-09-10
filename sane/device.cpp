@@ -1,5 +1,5 @@
 //  device.cpp -- OO wrapper for SANE_Device instances
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -41,11 +41,11 @@ device::init ()
   type   = type_.c_str ();
 }
 
-device::device (const scanner::id& id)
-  : name_(id.udi ())
-  , vendor_(id.vendor ())
-  , model_(id.model ())
-  , type_(id.type ())
+device::device (const scanner::info& info)
+  : name_(info.udi ())
+  , vendor_(info.vendor ())
+  , model_(info.model ())
+  , type_(info.type ())
 {
   init ();
 }

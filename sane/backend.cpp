@@ -35,7 +35,9 @@
 
 #include <algorithm>
 #include <csignal>
+#include <cstdio>
 #include <cstdlib>
+#include <locale>
 #include <new>
 #include <set>
 #include <stdexcept>
@@ -60,6 +62,9 @@
 
 using namespace utsushi;
 using boost::format;
+
+//! Communicates backend constructor check results to sane_init()
+static bool backend_is_usable = true;
 
 //! Tracks the devices currently in use by the application
 /*! The pointer's value also serves as a flag to track the backend's
@@ -338,12 +343,10 @@ extern "C" {
 SANE_Status
 sane_init (SANE_Int *version_code, SANE_Auth_Callback authorize)
 {
+  return_value_unless (backend_is_usable, failure_status_);
+
   cxx_exception_aspect_header (sane_init)
     {
-      const char *argv[] = { "SANE Backend" };
-
-      run_time (1, argv);
-
       //! \todo  Add bit flipping support to log::category
       // log::matching |= log::SANE_BACKEND;
 
@@ -422,9 +425,6 @@ sane_exit (void)
 
       //! \todo  Add bit flipping support to log::category
       // log::matching &= ~log::SANE_BACKEND;
-
-      delete run_time::impl::instance_;
-      run_time::impl::instance_ = 0;
     }
   cxx_exception_aspect_footer ();
 
@@ -462,7 +462,7 @@ sane_get_devices (const SANE_Device ***device_list, SANE_Bool local_only)
 
           for (; mon.end () != it; ++it)
             {
-              if (!it->has_driver ())             continue;
+              if (!it->is_driver_set ())          continue;
               if (local_only && !it->is_local ()) continue;
 
               sane::device::pool->push_back (sane::device (*it));
@@ -531,7 +531,7 @@ sane_open (SANE_String_Const device_name, SANE_Handle *handle)
       if (!udi.empty ())
         {
           it = mon.find (udi);
-          if (it != mon.end () && !it->has_driver ())
+          if (it != mon.end () && !it->is_driver_set ())
             {
               log::alert ("%1%: device found but has no driver") % fn_name;
               return SANE_STATUS_UNSUPPORTED;
@@ -541,7 +541,7 @@ sane_open (SANE_String_Const device_name, SANE_Handle *handle)
         {
           log::trace ("%1%: looking for a device with driver") % fn_name;
           it = std::find_if (mon.begin (), mon.end (),
-                             boost::bind (&scanner::id::has_driver, _1));
+                             boost::bind (&scanner::info::is_driver_set, _1));
         }
 
       if (it == mon.end ())
@@ -971,5 +971,77 @@ sane_get_select_fd (SANE_Handle handle, SANE_Int *fdp)
 }
 
 /*! @} */
+
+/*  Hooks into the dynamic loading API that allow for initialization
+ *  before the backend's sane_init() and cleanup after the backend's
+ *  sane_exit().  The hooks are backend specific and \em not part of
+ *  the SANE API.
+ */
+static void
+API_ENTRY (BACKEND_NAME, ctor) (void) __attribute__((constructor));
+static void
+API_ENTRY (BACKEND_NAME, dtor) (void) __attribute__((destructor));
+
+//! Performs usability checks at first time backend loading
+/*! This is a hook into the library loading mechanism that carries out
+ *  whatever is necessary to make sure that the backend will be really
+ *  usable at run-time.
+ *
+ *  The main inspiration for this approach comes from an issue with an
+ *  upstream OpenOffice.org (3.2.1) package that shipped with its own
+ *  copy of the standard C++ library.  That library did not appear to
+ *  have any localization support activated and caused loading of the
+ *  backend to throw an exception \em before sane_init().  The locale
+ *  used at that time was \c en_US.UTF-8, i.e. a regular Linux locale
+ *  specification, with the en-US OpenOffice.org package.
+ */
+static void
+API_ENTRY (BACKEND_NAME, ctor) (void)
+{
+  try
+    {
+      std::locale ("");
+    }
+  catch (const std::runtime_error& e)
+    {
+      fprintf (stderr, "%s\n", ::gettext (
+"The current locale settings are not supported by the standard C++"
+" library used by this application.  This is most likely caused by a"
+" misconfigured locale but may also be due to use of a C++ library"
+" without localization support.  You can work around this issue by"
+" starting the application in a \"C\" locale, but you really should"
+" check your locale configuration and the locale support of the C++"
+" library used by the application."
+                                          ));
+      backend_is_usable = false;
+    }
+
+  try
+    {
+      const char *argv[] = { "SANE Backend" };
+
+      run_time (1, argv);
+    }
+  catch (const std::exception& e)
+    {
+      fprintf (stderr, "%s\n", ::gettext (e.what ()));
+      backend_is_usable = false;
+    }
+  catch (...)
+    {
+      fprintf (stderr, "%s\n", ::gettext ("library initialization failed"));
+      backend_is_usable = false;
+    }
+}
+
+//! Undoes the effects of the backend constructor
+static void
+API_ENTRY (BACKEND_NAME, dtor) (void)
+{
+  delete run_time::impl::instance_;
+  run_time::impl::instance_ = 0;
+
+  backend_is_usable = true;
+}
 
 }       // extern "C"

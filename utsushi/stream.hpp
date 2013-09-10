@@ -1,5 +1,5 @@
 //  stream.hpp -- interface declarations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -120,9 +120,10 @@ private:
   template< typename device_ptr >
   void push (io_ptr io, device_ptr device)
   {
-    ibuffer::ptr buf (io_bottom_
-                      ? new ibuffer (device->buffer_size ())
-                      : NULL);
+    ibuffer::ptr buf;
+
+    if (io_bottom_) buf = make_shared< ibuffer > (device->buffer_size ());
+
     attach (io, device, buf, buf);
   }
 };
@@ -157,9 +158,10 @@ private:
   template< typename device_ptr >
   void push (io_ptr io, device_ptr device)
   {
-    obuffer::ptr buf (io_bottom_
-                      ? new obuffer (device->buffer_size ())
-                      : NULL);
+    obuffer::ptr buf;
+
+    if (io_bottom_) buf = make_shared< obuffer > (device->buffer_size ());
+
     attach (io, device, buf, buf);
   }
 };

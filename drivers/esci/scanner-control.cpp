@@ -1,5 +1,5 @@
 //  scanner-control.cpp -- make the device do your bidding
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -138,7 +138,7 @@ scanner_control::operator++ ()
     }
   while (acquiring_
          && (0 == reply_.size && !status_.pen && !status_.pst)
-         && delay_elapsed_());
+         && delay_elapsed ());
 
   return img_dat_;
 }
@@ -240,6 +240,7 @@ scanner_control::set_parameters_hook_()
     {
       //! \todo Clear caches?
       log::error ("failed setting parameters (%1%)") % str (*status_.par);
+      //! \todo How do we communicate this to the caller?  Throw invalid_argument?
       return;
     }
 

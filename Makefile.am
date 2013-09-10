@@ -52,13 +52,15 @@ EXTRA_DIST += upstream/tools/vc-list-files
 ACLOCAL_AMFLAGS = -I upstream/aclocal
 
 ##  Make sure that we exercise building of the distributed sources to
-##  their maximum extent.
+##  their maximum extent without requiring any special privileges.
 
 DISTCHECK_CONFIGURE_FLAGS  = --with-included-ltdl
 DISTCHECK_CONFIGURE_FLAGS += --with-gtkmm
 DISTCHECK_CONFIGURE_FLAGS += --with-sane
 DISTCHECK_CONFIGURE_FLAGS += --with-jpeg
 DISTCHECK_CONFIGURE_FLAGS += --with-tiff
+DISTCHECK_CONFIGURE_FLAGS += --disable-sane-config
+DISTCHECK_CONFIGURE_FLAGS += --disable-udev-config
 DISTCHECK_CONFIGURE_FLAGS += --enable-test-reports
 DISTCHECK_CONFIGURE_FLAGS += --enable-code-coverage
 

@@ -241,6 +241,21 @@ preview::on_refresh ()
   }
   catch (const std::out_of_range&){}
 
+  toggle match_height = true;
+  quantity height = -1.0;
+  try
+    {
+      match_height = value ((*control_)["match-height"]);
+      height  = value ((*control_)["br-y"]);
+      height -= value ((*control_)["tl-y"]);
+    }
+  catch (const std::out_of_range&)
+    {
+      match_height = false;
+      height = -1.0;
+    }
+  if (match_height) match_height = (height > 0);
+
   try
     {
       std::string transfer_format;
@@ -250,11 +265,27 @@ preview::on_refresh ()
         transfer_format = std::string (transfer);
       } catch (const std::out_of_range&){}
 
-      ostream_ = ostream::ptr (new ostream);
+      ostream_ = make_shared< ostream > ();
       /**/ if ("RAW" == transfer_format)
         {
-          ostream_->push (ofilter::ptr (new (padding)));
-          ostream_->push (ofilter::ptr (new (pnm)));
+          ostream_->push (make_shared< padding > ());
+          if (match_height)
+            ostream_->push (make_shared< bottom_padder > (height));
+          ostream_->push (make_shared< pnm > ());
+        }
+      else if ("JPEG" == transfer_format)
+        {
+          if (match_height)
+            {
+              ostream_->push (make_shared< jpeg::decompressor > ());
+              ostream_->push (make_shared< bottom_padder > (height));
+              jpeg::compressor::ptr jpeg = make_shared< jpeg::compressor > ();
+              try {
+                (*jpeg->options ())["quality"]
+                  = value ((*control_)["jpeg-quality"]);
+              } catch (const std::out_of_range&){}
+              ostream_->push (ofilter::ptr (jpeg));
+            }
         }
       else
         {
@@ -263,6 +294,8 @@ preview::on_refresh ()
            *        supported formats to confirm and take action
            *        if it doesn't.
            */
+          if (match_height)
+            log::alert ("height matching support not implemented");
         }
       ostream_->push (odevice::ptr (odevice_));
 

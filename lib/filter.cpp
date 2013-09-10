@@ -1,5 +1,5 @@
 //  filter.cpp -- interface declarations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -29,7 +29,19 @@ namespace utsushi {
 streamsize
 ifilter::marker ()
 {
-  return io_->marker ();
+  streamsize rv = io_->marker ();
+
+  if (traits::is_marker (rv))
+    handle_marker (rv);
+
+  return rv;
+}
+
+void
+ifilter::handle_marker (traits::int_type c)
+{
+  if (traits::boi () == c) ctx_ = io_->get_context ();
+  if (traits::eoi () == c) ctx_ = io_->get_context ();
 }
 
 void

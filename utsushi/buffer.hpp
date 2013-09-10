@@ -1,5 +1,5 @@
 //  buffer.hpp -- image data for speedy I/O transfers
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -80,6 +80,8 @@ protected:
 
   //!  Returns and resets the cached sequence marker
   traits::int_type sequence_marker ();
+
+  bool check_marker_;
 };
 
 //!  Collect outgoing octets in temporary storage to improve performance

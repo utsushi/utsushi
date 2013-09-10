@@ -36,7 +36,7 @@
 #include "value.hpp"
 
 using namespace utsushi;
-using namespace boost;
+namespace mpl = boost::mpl;
 using boost::mpl::_;
 using boost::bind;
 using boost::ref;

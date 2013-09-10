@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 ##  Copyright (C) 2009  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
@@ -26,7 +26,7 @@
 SUBDIRS  = .
 SUBDIRS += tests
 
-AM_CPPFLAGS += -DFUSION_MAX_VECTOR_SIZE=21
+AM_CPPFLAGS += -DFUSION_MAX_VECTOR_SIZE=22
 AM_CPPFLAGS += -DESCI_GRAMMAR_TRACE=1
 AM_LDFLAGS  += $(BOOST_LDFLAGS)
 

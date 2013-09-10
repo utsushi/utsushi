@@ -1,5 +1,5 @@
 //  compound.hpp -- protocol variant command base and templates
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -98,6 +98,9 @@ public:
    *  starts \e after the reply data block has been received.
    */
   void operator>> (connexion& cnx);
+
+  //! \todo Change to independent utility function taking an interval
+  bool delay_elapsed () const;
 
 protected:
   bool pedantic_;               //!< Checking of replies or not
@@ -261,7 +264,6 @@ protected:
   send_signature_(connexion& cnx, const byte cmd[2]);
 
   bool is_ready_() const;
-  bool delay_elapsed_() const;
 };
 
 template< byte b1, byte b2 >

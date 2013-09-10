@@ -1,5 +1,5 @@
 //  monitor.cpp -- available scanner devices
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -23,17 +23,32 @@
 #endif
 
 #if HAVE_LIBUDEV
+extern "C" {                    // needed until libudev-150
 #include <libudev.h>
+}
 #include <list>
 #endif
 #if HAVE_LIBHAL
 #include <libhal.h>
 #endif
 
+#include <cstdlib>
+
+#include <boost/assert.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
+#include <boost/regex.hpp>
+
 #include "utsushi/log.hpp"
 #include "utsushi/monitor.hpp"
+#include "utsushi/run-time.hpp"
 
 namespace utsushi {
+
+using boost::filesystem::exists;
+using boost::regex;
+using boost::regex_match;
+using boost::smatch;
 
 class monitor::impl
 {
@@ -85,31 +100,141 @@ monitor::max_size () const
 }
 
 monitor::const_iterator
-monitor::find (const scanner::id& id) const
+monitor::find (const scanner::info& info) const
 {
-  return impl::instance_->devices_.find (id);
+  return impl::instance_->devices_.find (info);
 }
 
 monitor::size_type
-monitor::count (const scanner::id& id) const
+monitor::count (const scanner::info& info) const
 {
-  return impl::instance_->devices_.count (id);
+  return impl::instance_->devices_.count (info);
+}
+
+monitor::container_type
+monitor::read (std::istream& istr)
+{
+  container_type rv;
+
+  const std::string key ("[[:alpha:]][[:alnum:]]*"
+                         "(\\.[[:alpha:]][[:alnum:]]*)*");
+
+  const regex section ("[[:blank:]]*"
+                       "[[](" + key + ")[]]"
+                       "[[:blank:]]*");
+
+  const regex key_val ("[[:blank:]]*"
+                       "(" + key + ")"
+                       "[[:blank:]]*"
+                       "="
+                       "[[:blank:]]*"
+                       "(.+)\\b"
+                       "[[:blank:]]*");
+
+  std::string common_prefix;
+  std::map< std::string, std::string > kv;
+
+  std::string line;
+  size_t line_no (0);
+
+  while (getline (istr, line))
+    {
+      ++line_no;
+
+      if (line.empty ()
+          || '#' == line[0]
+          || ';' == line[0]
+          || regex_match (line, regex ("[[:blank:]]*")))
+        continue;
+
+      smatch m;
+      if (regex_match (line, m, section))
+        {
+          common_prefix = m[1];
+          continue;
+        }
+      if (regex_match (line, m, key_val))
+        {
+          std::string key (common_prefix);
+          if (!key.empty ()) key += ".";
+          key += m[1];
+
+          // Keep "uninteresting" keys out of kv
+          if (0 != key.find ("devices.")) continue;
+
+          if (!kv.insert (make_pair (key, m[3])).second)
+            {
+              log::error ("duplicate key:%1%:%2%") % line_no % line;
+            }
+
+          continue;
+        }
+
+      log::error ("parse error:%1%:%2%") % line_no % line;
+    }
+
+  // first collect the udi attribute prefixes
+
+  const regex attr_key ("(" + key + ")\\.([[:alpha:]][[:alnum:]]*)");
+
+  std::map< std::string, std::string >::const_iterator it;
+  std::set< std::string > dev;
+
+  for (it = kv.begin (); kv.end () != it; ++it)
+    {
+      smatch m;
+      if (regex_match (it->first, m, attr_key))
+        {
+          if (m[3] == "udi") dev.insert (m[1]);
+        }
+      else
+        {
+          log::error ("internal error:%1%:%2%") % it->first % it->second;
+        }
+    }
+
+  // for each udi attribute prefix insert a new scanner::info instance
+  // with supported configured attributes set
+
+  std::set< std::string >::const_iterator jt;
+  for (jt = dev.begin (); dev.end () != jt; ++jt)
+    {
+      scanner::info info (kv[ *jt + ".udi"]);
+
+      it = kv.find (*jt + ".name");
+      if (kv.end () != it) info.name (it->second);
+
+      it = kv.find (*jt + ".model");
+      if (kv.end () != it) info.model (it->second);
+
+      it = kv.find (*jt + ".vendor");
+      if (kv.end () != it) info.vendor (it->second);
+
+      rv.insert (info);
+    }
+
+  return rv;
 }
 
 static void
-add_sane_udev (std::set<scanner::id>& ids, const char *key,
+add_sane_udev (std::set<scanner::info>& devices, const char *key,
                const char *val);
 static void
-add_sane_hal  (std::set<scanner::id>& ids, const char *cap);
+add_sane_hal  (std::set<scanner::info>& devices, const char *cap);
+
+static void
+add_conf_file  (std::set<scanner::info>& devices);
 
 monitor::impl::impl ()
 {
+  add_conf_file (devices_);
+
   //  Pick up on any scanner devices that are tagged courtesy of the
   //  SANE project.  These functions assume that tags are set on the
   //  USB device rather than on the USB interface that corresponds to
   //  the scanner function of the device.  The implementations use a
   //  number of heuristics to divine the scanner's interface and use
-  //  that when creating a scanner::id.
+  //  that when creating a scanner::info object.
 
   add_sane_udev (devices_, "libsane_matched", "yes");
   add_sane_hal  (devices_, "scanner");
@@ -118,7 +243,7 @@ monitor::impl::impl ()
 #if (!HAVE_LIBUDEV)
 
 static void
-add_sane_udev (std::set<scanner::id>& ids, const char *key,
+add_sane_udev (std::set<scanner::info>& devices, const char *key,
                const char *val)
 {}
 
@@ -178,7 +303,7 @@ udev_device_get_children (struct udev *ctx, struct udev_device *dev)
      \todo  Beef up error checking/handling.
  */
 static void
-add_sane_udev (std::set<scanner::id>& ids, const char *key,
+add_sane_udev (std::set<scanner::info>& devices, const char *key,
                const char *val)
 {
   using std::string;
@@ -234,11 +359,14 @@ add_sane_udev (std::set<scanner::id>& ids, const char *key,
                       const char *drv =
                         udev_device_get_property_value (dev, "utsushi_driver");
 
-                      ids.insert (scanner::id (mdl ? mdl : "<MODEL>",
-                                               vnd ? vnd : "<VENDOR>",
-                                               udev_device_get_syspath (*it),
-                                               "usb",
-                                               drv ? drv : ""));
+                      std::string cnx ("usb");
+                      scanner::info info (cnx + "::"
+                                          + udev_device_get_syspath (*it));
+                      if (mdl) info.model (mdl);
+                      if (vnd) info.vendor (vnd);
+                      if (drv) info.driver (drv);
+
+                      devices.insert (info);
                     }
                   udev_device_unref (*it);
                 }
@@ -261,7 +389,7 @@ add_sane_udev (std::set<scanner::id>& ids, const char *key,
 #if (!HAVE_LIBHAL)
 
 static void
-add_sane_hal (std::set<scanner::id>& ids, const char *cap)
+add_sane_hal (std::set<scanner::info>& devices, const char *cap)
 {}
 
 #else  /* HAVE_LIBHAL */
@@ -278,7 +406,7 @@ add_sane_hal (std::set<scanner::id>& ids, const char *cap)
      \todo  Beef up error checking/handling.
  */
 static void
-add_sane_hal (std::set<scanner::id>& ids, const char *cap)
+add_sane_hal (std::set<scanner::info>& devices, const char *cap)
 {
   log::alert ("HAL based scanner detection has been disabled.\n"
               "Contact the developers if support is needed.");
@@ -360,9 +488,12 @@ add_sane_hal (std::set<scanner::id>& ids, const char *cap)
                           char *path = libhal_device_get_property_string
                             (ctx, iface_udi[j], "linux.sysfs_path", &err);
 
-                          ids.insert (scanner::id (mdl ? mdl : "<MODEL>",
-                                                   vnd ? vnd : "<VENDOR>",
-                                                   path, "usb"));
+                          std::string cnx ("usb");
+                          scanner::info info (cnx + "::" + path);
+                          if (mdl) info.model (mdl);
+                          if (vnd) info.vendor (vnd);
+
+                          devices.insert (info);
                         }
                     }
                   libhal_free_string_array (iface_udi);
@@ -383,5 +514,39 @@ add_sane_hal (std::set<scanner::id>& ids, const char *cap)
 }
 
 #endif  /* HAVE_LIBHAL */
+
+
+//! Picks up scanner devices from configuration files
+/*! This function reads configuration files and merges scanner::info
+ *  objects to the list of \a devices.  The file format is inspired
+ *  by the informal Windows INI file format.
+ *
+ *  \sa http://en.wikipedia.org/wiki/INI_file
+ *
+ *  \todo  Read other files that the system wide configuration
+ */
+static void
+add_conf_file (monitor::container_type& devices)
+{
+  run_time rt;
+  std::string name (rt.conf_file (run_time::sys, PKGCONFFILE));
+  std::ifstream ifs (name.c_str ());
+
+  if (!ifs.is_open ())
+    {
+      if (exists (name))
+        {
+          log::error ("cannot open file: %1%") % name;
+        }
+      else
+        {
+          log::alert ("no such file: %1%") % name;
+        }
+      return;
+    }
+
+  monitor::container_type rv = monitor::read (ifs);
+  devices.insert (rv.begin (), rv.end ());
+}
 
 }       // namespace utsushi

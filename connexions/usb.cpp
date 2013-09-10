@@ -61,9 +61,9 @@ extern "C" {
     if (!dev) return connexion::ptr ();
 
 #if HAVE_LIBUSB
-    return connexion::ptr (new usb (dev));
+    return make_shared< usb > (dev);
 #elif HAVE_LIBUSB_LEGACY
-    return connexion::ptr (new usb_legacy (dev));
+    return make_shared< usb_legacy > (dev);
 #else
     log::alert ("USB support disabled at compile time");
     return connexion::ptr ();

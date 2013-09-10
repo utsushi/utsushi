@@ -1,5 +1,5 @@
 //  memory.hpp -- based input devices
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -41,6 +41,11 @@ typedef boost::filesystem::basic_filebuf<octet> file;
  *   This class is well-suited for tests that only care about the fact
  *   there is image data.  It only does the absolute minimal amount of
  *   work needed to mimick the real thing.
+ *
+ *   \warning This device does \e not initialize image data.  As such
+ *            it may trigger spurious warnings and/or errors when used
+ *            with memory debugging tools such as \c valgrind.
+ *            If that is problematic, use setmem_idevice instead.
  */
 class rawmem_idevice : public idevice
 {

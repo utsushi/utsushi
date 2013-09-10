@@ -1,5 +1,5 @@
 //  chooser.cpp -- for scanner device selection and maintenance actions
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -24,7 +24,17 @@
 
 #include <algorithm>
 
+#include <boost/throw_exception.hpp>
+
+#include <gdkmm/cursor.h>
+#include <gdkmm/general.h>
+
+#include <gtkmm/main.h>
+
 #include <utsushi/connexion.hpp>
+#include <utsushi/format.hpp>
+#include <utsushi/log.hpp>
+#include <utsushi/i18n.hpp>
 #include <utsushi/monitor.hpp>
 
 #include "chooser.hpp"
@@ -40,13 +50,9 @@ chooser::chooser (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
 
   // FIXME list devices w/o driver but prevent their selection
   while (mon.end () != it) {
-    if (it->has_driver ())
+    if (it->is_driver_set ())
       {
-        if (it->is_configured ()) {
-          custom_.insert (*it);
-        } else {
-          system_.insert (*it);
-        }
+        system_.insert (*it);
       }
     ++it;
   }
@@ -55,10 +61,33 @@ chooser::chooser (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
                  sigc::mem_fun (*this, &chooser::insert_custom));
   std::for_each (system_.begin (), system_.end (),
                  sigc::mem_fun (*this, &chooser::insert_system));
+
+  // FIXME: MESSAGE items should not be selectable
+  /**/ if (0 == custom_.size () + system_.size ())
+    {
+      Gtk::TreeRow row = *(model_->prepend ());
+
+      row[cols_->type] = MESSAGE;
+      row[cols_->name] = _("No devices found");
+    }
+  else if (2 <= custom_.size () + system_.size ())
+    {
+      Gtk::TreeRow row = *(model_->prepend ());
+
+      row[cols_->type] = MESSAGE;
+      row[cols_->name] = _("Select a device");
+    }
+
   insert_actions (builder, "chooser-actions");
   insert_separators ();
 
   show_all ();
+
+  // Postpone device creation until the GUI has had a chance to show
+  // itself.  This allows for feedback to the user during long waits
+  // in the device creation process.
+
+  Gtk::Main::signal_run ().connect (sigc::mem_fun (this, &chooser::on_run));
 }
 
 sigc::signal<void, scanner::ptr>
@@ -68,45 +97,142 @@ chooser::signal_device_changed ()
 }
 
 void
-chooser::on_system (const std::string& name)
+chooser::on_run ()
 {
-  create_device (system_, name);
+  set_active (0);
+  cache_ = get_active ();
 }
 
 void
-chooser::on_custom (const std::string& name)
+chooser::on_changed ()
 {
-  create_device (custom_, name);
+  if (inhibit_callback_) return;
+
+  const std::string& udi = get_active ()->get_value (cols_->udi);
+  type_id type = get_active ()->get_value (cols_->type);
+
+  if (cache_ && udi == cache_->get_value (cols_->udi)) return;
+
+  /**/ if (ACTION  == type) dropdown::on_changed ();
+  else if (CUSTOM  == type) on_custom (udi);
+  else if (SYSTEM  == type) on_system (udi);
+  else if (MESSAGE == type)
+    {
+      inhibit_callback_ = true;
+      if (cache_) set_active (cache_);
+      inhibit_callback_ = false;
+    }
+  else
+    {
+      // FIXME log unsupported type error
+    }
 }
 
 void
-chooser::create_device (const std::set<scanner::id>& devices,
-                        const std::string& name)
+chooser::on_system (const std::string& udi)
 {
-  std::set<scanner::id>::const_iterator it = devices.begin ();
-  while (devices.end () != it && name != it->name ()) {
+  create_device (system_, udi);
+}
+
+void
+chooser::on_custom (const std::string& udi)
+{
+  create_device (custom_, udi);
+}
+
+void
+chooser::create_device (const std::set<scanner::info>& devices,
+                        const std::string& udi)
+{
+  std::set<scanner::info>::const_iterator it = devices.begin ();
+  while (devices.end () != it && udi != it->udi ()) {
     ++it;
   }
   if (devices.end () != it) {
-    connexion::ptr cnx (connexion::create (it->iftype (), it->path ()));
-    signal_device_changed_.emit (scanner::create (cnx, *it));
+
+    Glib::RefPtr< Gdk::Window > window = get_window ();
+
+    if (window)
+      {
+        window->set_cursor (Gdk::Cursor (Gdk::WATCH));
+        Gdk::flush ();
+      }
+
+    scanner::ptr ptr;
+    std::string  why;
+    try
+      {
+        // FIXME This is a bit clunky but both calls may be time
+        //       consuming and cannot be put in a separate thread if
+        //       the connexion and/or the scanner objects are run via
+        //       process separation.  The child process would exit at
+        //       the end of the thread.
+
+        while (Gtk::Main::events_pending ())
+          Gtk::Main::iteration ();
+
+        connexion::ptr cnx (connexion::create (it->connexion (),
+                                               it->path ()));
+
+        while (Gtk::Main::events_pending ())
+          Gtk::Main::iteration ();
+
+        ptr = scanner::create (cnx, *it);
+      }
+    catch (const std::exception& e)
+      {
+        why = e.what ();
+      }
+    catch (...)
+      {
+        // FIXME set a why we failed to create a device
+      }
+
+    if (window)
+      {
+        window->set_cursor ();
+      }
+
+    if (ptr)
+      {
+        cache_ = get_active ();
+        set_tooltip_text (it->udi ());
+        signal_device_changed_.emit (ptr);
+      }
+    else
+      {
+        const std::string& name = get_active ()->get_value (cols_->name);
+        const std::string& udi  = get_active ()->get_value (cols_->udi);
+
+        inhibit_callback_ = true;
+        if (cache_) set_active (cache_);
+        inhibit_callback_ = false;
+
+        BOOST_THROW_EXCEPTION
+          (std::runtime_error
+           ((format (_("Cannot access %1%\n(%2%)\n%3%"))
+             % name
+             % udi
+             % why
+             ).str ()));
+      }
   }
 }
 
 void
-chooser::insert_device (type_id type, const scanner::id& device)
+chooser::insert_device (type_id type, const scanner::info& device)
 {
-  insert (type, device.name (), device.text ());
+  insert (type, device.name (), device.text (), device.udi ());
 }
 
 void
-chooser::insert_custom (const scanner::id& device)
+chooser::insert_custom (const scanner::info& device)
 {
   insert_device (CUSTOM, device);
 }
 
 void
-chooser::insert_system (const scanner::id& device)
+chooser::insert_system (const scanner::info& device)
 {
   insert_device (SYSTEM, device);
 }

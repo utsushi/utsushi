@@ -1,5 +1,5 @@
 //  memory.hpp -- wrapper for managed memory pointers
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -44,6 +44,7 @@
 
 #else   /* emulate C++11 */
 
+#include <boost/make_shared.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/weak_ptr.hpp>
 #define NAMESPACE boost
@@ -52,6 +53,7 @@
 
 namespace utsushi {
 
+using NAMESPACE::make_shared;
 using NAMESPACE::shared_ptr;
 using NAMESPACE::weak_ptr;
 

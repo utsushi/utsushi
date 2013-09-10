@@ -1,5 +1,5 @@
 //  scanner.cpp -- API implementation for an ESC/I driver
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -67,23 +67,28 @@ libdrv_esci_LTX_scanner_factory (connexion::ptr cnx)
 
       log::brief ("detected a '%1%'") % info.product_name ();
 
-      /**/ if (   info.product_name () == "DS-5500"
+      /**/ if (   info.product_name () == "DS-510"
+               )
+        {
+          sp = esci::scanner::ptr (new DS_510 (cnx));
+        }
+      else if (   info.product_name () == "DS-5500"
                || info.product_name () == "DS-6500"
                || info.product_name () == "DS-7500"
               )
         {
-          sp = esci::scanner::ptr (new DS_x500 (cnx));
+          sp = make_shared< DS_x500 > (cnx);
         }
       else if (   info.product_name () == "DS-50000"
                || info.product_name () == "DS-60000"
                || info.product_name () == "DS-70000"
               )
         {
-          sp = esci::scanner::ptr (new DS_x0000 (cnx));
+          sp = make_shared< DS_x0000 > (cnx);
         }
       else
         {
-          sp = esci::scanner::ptr (new compound_scanner (cnx));
+          sp = make_shared< compound_scanner > (cnx);
         }
     }
   catch (const invalid_command& e)
@@ -106,12 +111,12 @@ libdrv_esci_LTX_scanner_factory (connexion::ptr cnx)
           *cnx << ESC_I;
           if (ESC_I.supports_extended_commands ())
             {
-              sp = esci::scanner::ptr (new extended_scanner (cnx));
+              sp = make_shared< extended_scanner > (cnx);
             }
 #ifdef HAVE_STANDARD_SCANNER
           else
             {
-              sp = esci::scanner::ptr (new standard_scanner (cnx));
+              sp = make_shared< standard_scanner > (cnx);
             }
 #endif
         }

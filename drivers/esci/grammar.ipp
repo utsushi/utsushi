@@ -1,5 +1,5 @@
 //  grammar.ipp -- rule definitions for the ESC/I "compound" protocol
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -167,6 +167,7 @@ basic_grammar< Iterator >::basic_grammar ()
       | token_(err::LTF )
       | token_(err::LOCK)
       | token_(err::DFED)
+      | token_(err::DTCL)
       )
     > token_
     ;

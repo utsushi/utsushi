@@ -1,5 +1,5 @@
 //  dropdown.hpp -- menu with three sections
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -42,11 +42,13 @@ protected:
     CUSTOM,
     SYSTEM,
     ACTION,
+    MESSAGE,
   } type_id;
 
   void insert (type_id type,
                const std::string& name,
-               const std::string& text = std::string ());
+               const std::string& text = std::string (),
+               const std::string& udi  = std::string ());
 
   template <typename iterT>
   void insert (type_id type, iterT first, iterT last)
@@ -70,23 +72,27 @@ private:
   bool is_separator (const Glib::RefPtr<Gtk::TreeModel>& model,
                      const Gtk::TreeModel::iterator& it);
 
+protected:
   Glib::RefPtr<Gtk::ListStore> model_;
   Gtk::TreeModel::iterator     cache_;
 
   bool          inhibit_callback_;
   Glib::ustring cache_name_;
 
+  // FIXME UDI does not belong here, that's a chooser responsibility
   struct column_record : public Gtk::TreeModel::ColumnRecord
   {
     Gtk::TreeModelColumn<type_id>       type;
     Gtk::TreeModelColumn<Glib::ustring> name;
     Gtk::TreeModelColumn<Glib::ustring> text;
+    Gtk::TreeModelColumn<Glib::ustring> udi;
 
     column_record ()
     {
       add (type);
       add (name);
       add (text);
+      add (udi);
     }
   };
 

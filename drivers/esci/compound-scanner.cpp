@@ -193,26 +193,27 @@ patch_jpeg_image_size_(deque< data_buffer >& q)
       byte *head = it->data ();
       byte *tail = head + it->size ();
 
-      while (head != tail)
+      while (offset < patch_size
+             && head != tail)
         {
           if (0 <= offset)      // looking at baseline DCT payload
             {
               if (2 < offset)   // looking at image size
                 {
-                  *head = patch[offset];
+                  traits::assign (*head, patch[offset]);
                 }
               ++offset;
             }
 
-          if (0xff == state)
+          if (traits::eq (0xff, state))
             {
-              if (0xc0 == *head)
+              if (traits::eq (0xc0, *head))
                 {
                   offset = 0;   // found baseline DCT
                 }
             }
 
-          state = *head;
+          traits::assign (state, *head);
           ++head;
         }
       if (it->pen) break;
@@ -366,7 +367,9 @@ compound_scanner::configure ()
         add_options ()
           ("transfer-format", cp,
            attributes (level::standard),
-           N_("Transfer Format")
+           N_("Transfer Format"),
+           N_("Selecting a compressed format such as JPEG normally"
+              " results in faster device side processing.")
            )
           ;
       }
@@ -494,6 +497,22 @@ compound_scanner::configure ()
             ;
         }
     }
+  // \todo The driver should not provide this option as it does not do
+  //       anything with it.  Any actions that need to be taken should
+  //       be taken by the application.  However, the application does
+  //       need a way to figure out whether it makes sense to present
+  //       the functionality to the user.  That should really be based
+  //       on some kind of driver capability query.
+  if (use_final_image_size_(parm_))
+    {
+      add_options ()
+        ("match-height", toggle (true),
+         attributes (tag::enhancement),
+         N_("Match Height"),
+         N_("This may slow down application/driver side processing.")
+         )
+        ;
+    }
   /*! \todo Remove this ugly hack.  It is only here to allow scan-cli
    *        to process all the options that might possibly be given on
    *        the command-line.  Its option parser only does a single
@@ -529,6 +548,13 @@ compound_scanner::is_consecutive () const
   return (parm_.adf || parm_flip_.adf);
 }
 
+static
+bool
+at_image_start (const std::deque< data_buffer >& q)
+{
+  return (!q.empty () && q.front ().pst);
+}
+
 bool
 compound_scanner::obtain_media ()
 {
@@ -538,29 +564,31 @@ compound_scanner::obtain_media ()
   if (acquire_.is_duplexing ())
     streaming_flip_side_image_ = (1 == image_count_ % 2);
 
-  fill_buffer_();
+  deque< data_buffer >& q (streaming_flip_side_image_ ? rear_ : face_);
 
-  return !acquire_.media_out ();
+  while (!cancelled_ && !media_out () && !at_image_start (q))
+    {
+      queue_image_data_();
+    }
+
+  return (!cancelled_ && !media_out () && at_image_start (q));
 }
 
 bool
 compound_scanner::set_up_image ()
 {
-  using namespace code_token::parameter;
+  fill_data_queue_();           // until width and height are known
 
   if (cancelled_) return false;
 
   ctx_ = context (pixel_width (), pixel_height (), pixel_type ());
   ctx_.resolution (*parm_.rsm, *parm_.rss);
 
-  if (!(fmt::RAW == parm_.fmt || parm_.is_bilevel ()))
-    {
-      ctx_.content_type ("image/jpeg");
-    }
+  ctx_.content_type (transfer_content_type_(parm_));
 
   if (buffer_.pst
       && 0 != buffer_.pst->padding
-      && !(fmt::RAW == parm_.fmt || parm_.is_bilevel ()))
+      && compressed_transfer_(parm_))
     {
       log::alert ("ignoring %1% byte padding")
         % buffer_.pst->padding;
@@ -594,7 +622,7 @@ compound_scanner::sgetn (octet *data, streamsize n)
 
   if (offset_ == buffer_.size ())
     {
-      fill_buffer_();
+      fill_data_queue_();
       if (cancelled_) return traits::eof ();
     }
 
@@ -619,6 +647,15 @@ compound_scanner::set_up_initialize ()
 
   image_count_ = 0;
   cancelled_ = false;
+  media_out_ = false;
+
+  if (val_.count ("scan-area")
+      && value ("Automatic") == val_["scan-area"])
+    {
+      media size = probe_media_size_(val_["doc-source"]);
+      update_scan_area_(size, val_);
+      option::map::finalize (val_);
+    }
 }
 
 bool
@@ -892,9 +929,22 @@ compound_scanner::set_up_image_mode ()
       % fmt
       ;
 
-  if (parm_.is_bilevel ()) parm_.fmt = fmt::RAW;
+  // Because val_ contains the actual value, we have to make sure we
+  // send a token that the firmware understands.  The firmware takes
+  // some liberty with the interpretation of said token and may very
+  // well return data in a different format.
 
-  if (fmt::JPG == parm_.fmt)
+  if (caps_.fmt
+      && !caps_.fmt->empty ())
+    {
+      if (!std::count (caps_.fmt->begin (), caps_.fmt->end (),
+                       parm_.fmt))
+        {
+          parm_.fmt = caps_.fmt->front ();
+        }
+    }
+
+  if (fmt::JPG == transfer_format_(parm_))
     {
       if (val_.count ("jpeg-quality"))
         {
@@ -974,36 +1024,35 @@ compound_scanner::set_up_scan_area ()
             log::error ("unknown border-fill value: %1%, ignoring value")
               % s
               ;
+
+          std::vector< integer > border (4);
+
+          if (value ("None") != val_["border-fill"])
+            {
+              if (val_.count ("border-left"))
+                {
+                  quantity q = val_["border-left"];
+                  border[0] = (100 * q).amount< integer > ();
+                }
+              if (val_.count ("border-right"))
+                {
+                  quantity q = val_["border-right"];
+                  border[1] = (100 * q).amount< integer > ();
+                }
+              if (val_.count ("border-top"))
+                {
+                  quantity q = val_["border-top"];
+                  border[2] = (100 * q).amount< integer > ();
+                }
+              if (val_.count ("border-bottom"))
+                {
+                  quantity q = val_["border-bottom"];
+                  border[3] = (100 * q).amount< integer > ();
+                }
+            }
+
+          parm_.fla = border;
         }
-
-      std::vector< integer > border (4);
-
-      if (val_.count ("border-fill")
-          && value ("None") != val_["border-fill"])
-        {
-          if (val_.count ("border-left"))
-            {
-              quantity q = val_["border-left"];
-              border[0] = (100 * q).amount< integer > ();
-            }
-          if (val_.count ("border-right"))
-            {
-              quantity q = val_["border-right"];
-              border[1] = (100 * q).amount< integer > ();
-            }
-          if (val_.count ("border-top"))
-            {
-              quantity q = val_["border-top"];
-              border[2] = (100 * q).amount< integer > ();
-            }
-          if (val_.count ("border-bottom"))
-            {
-              quantity q = val_["border-bottom"];
-              border[3] = (100 * q).amount< integer > ();
-            }
-        }
-
-      parm_.fla = border;
     }
 }
 
@@ -1052,52 +1101,98 @@ compound_scanner::set_up_transfer_size ()
   parm_.bsz = bsz.amount< integer > ();
 }
 
+boost::optional< quad >
+compound_scanner::transfer_format_(const parameters& p) const
+{
+  using namespace code_token::parameter;
+
+  return (!p.is_bilevel ()
+          ? p.fmt
+          : fmt::RAW);
+}
+
+bool
+compound_scanner::compressed_transfer_(const parameters& p) const
+{
+  using namespace code_token::parameter;
+
+  return fmt::JPG == transfer_format_(p);
+}
+
+std::string
+compound_scanner::transfer_content_type_(const parameters& p) const
+{
+  using namespace code_token::parameter;
+
+  std::string rv = context().content_type();
+
+  if (fmt::JPG == transfer_format_(p))
+    {
+      rv = "image/jpeg";
+    }
+
+  return rv;
+}
+
 void
-compound_scanner::fill_buffer_()
+compound_scanner::queue_image_data_()
+{
+  bool do_cancel = cancel_requested ();
+
+  if (do_cancel) acquire_.cancel ();
+
+  data_buffer buf = ++acquire_;
+
+  cancelled_ = (buf.empty()
+                && (do_cancel || buf.is_cancel_requested ()));
+  if (cancelled_) cancel ();            // notify idevice::read()
+
+  if (buf.is_flip_side ())
+    rear_.push_back (buf);
+  else
+    face_.push_back (buf);
+
+  if (acquire_.fatal_error ())
+    BOOST_THROW_EXCEPTION
+      (system_error
+       (token_to_error_code (acquire_.fatal_error ()->what),
+        create_message (acquire_.fatal_error ()->part,
+                        acquire_.fatal_error ()->what)));
+}
+
+void
+compound_scanner::fill_data_queue_()
 {
   const parameters&     p (streaming_flip_side_image_ ? parm_flip_ : parm_);
   deque< data_buffer >& q (streaming_flip_side_image_ ? rear_ : face_);
 
-  while (!enough_image_data_(p, q))
+  while (!cancelled_ && !enough_image_data_(p, q))
     {
-      bool do_cancel = cancel_requested ();
-
-      if (do_cancel) acquire_.cancel ();
-
-      data_buffer buf = ++acquire_;
-
-      cancelled_ = (buf.empty()
-                    && (do_cancel || buf.is_cancel_requested ()));
-      if (cancelled_) cancel ();        // notify idevice::read()
-
-      if (buf.is_flip_side ())
-        rear_.push_back (buf);
-      else
-        face_.push_back (buf);
-
-      if (acquire_.fatal_error ())
-        BOOST_THROW_EXCEPTION
-          (system_error
-           (token_to_error_code (acquire_.fatal_error ()->what),
-            create_message (acquire_.fatal_error ()->part,
-                            acquire_.fatal_error ()->what)));
+      queue_image_data_();
     }
 
   if (q.front ().pst && use_final_image_size_(p))
     {
-      patch_image_size_(q, p.fmt);
+      patch_image_size_(q, transfer_format_(p));
     }
 
   buffer_ = q.front ();
   q.pop_front ();
 
-  offset_ = 0;
+  offset_    = 0;
+  media_out_ = buffer_.media_out ();
+}
+
+bool
+compound_scanner::media_out () const
+{
+  return (media_out_ || acquire_.media_out ());
 }
 
 bool
 compound_scanner::use_final_image_size_(const parameters& parm) const
 {
-  return false;
+  return info_.truncates_at_media_end;
 }
 
 bool
@@ -1106,9 +1201,96 @@ compound_scanner::enough_image_data_(const parameters& parm,
 {
   if (q.empty ()) return false;
 
+  // Handle status feedback with a priority higher than PEN.  A PST
+  // status should fall through.  A queue with only PST data may or
+  // may not be sufficient.
+
+  if (q.back ().err) return true;
+  if (q.back ().nrd)
+    {
+      log::trace ("unexpected not-ready status while acquiring");
+      return true;
+    }
+
   return (use_final_image_size_(parm)
           ?  q.back ().pen
           : !q.empty ());
+}
+
+/*! \todo Make repeat_count configurable
+ *  \todo Make delay time interval configurable
+ */
+media
+compound_scanner::probe_media_size_(const string& doc_source)
+{
+  using namespace code_token::status;
+
+  quad src = quad();
+  media size = media (length (), length ());
+
+  if (doc_source == "Flatbed")  src = psz::FB;
+  else if (doc_source == "ADF") src = psz::ADF;
+
+  if (src)
+    {
+      int repeat_count = 5;
+      do
+        {
+          *cnx_ << acquire_.get (stat_);
+        }
+      while (!stat_.size_detected (src)
+             && acquire_.delay_elapsed ()
+             && --repeat_count);
+
+      if (stat_.size_detected (src))
+        {
+          size = stat_.size (src);
+        }
+      else
+        {
+          log::error
+            ("unable to determine media size in allotted time");
+        }
+    }
+  else
+    {
+      log::error
+        ("document size detection not enabled for current document"
+         " source");
+    }
+
+  return size;
+}
+
+void
+compound_scanner::update_scan_area_(const media& size, value::map& vm) const
+{
+  if (size.width () > 0 && size.height () > 0)
+    {
+      quantity tl_x (0.0);
+      quantity tl_y (0.0);
+      quantity br_x = size.width ();
+      quantity br_y = size.height ();
+
+      align_document (vm["doc-source"],
+                      tl_x, tl_y, br_x, br_y);
+
+      vm["tl-x"] = tl_x;
+      vm["tl-y"] = tl_y;
+      vm["br-x"] = br_x;
+      vm["br-y"] = br_y;
+    }
+  else
+    {
+      log::brief ("using default scan-area");
+      // This relies on default values being set to lower() values for
+      // tl-x and tl-y and upper() values for br-x and br-y.
+      // Note that alignment is irrelevant for the maximum size.
+      vm["tl-x"] = constraints_["tl-x"]->default_value ();
+      vm["tl-y"] = constraints_["tl-y"]->default_value ();
+      vm["br-x"] = constraints_["br-x"]->default_value ();
+      vm["br-y"] = constraints_["br-y"]->default_value ();
+    }
 }
 
 //! \todo Don't use non-standard map::at() accessor
@@ -1164,6 +1346,11 @@ compound_scanner::finalize (const value::map& vm)
     }
 
   {
+    // Users should be shown the actual transfer-format value, *not*
+    // whatever token is sent to the firmware.  That means that the
+    // values_ and constraints_ as well as the internal copy of the
+    // values_ in val_ need to support that.
+
     string type = final_vm["image-type"];
 
     if (   type == "Color (1 bit)"
@@ -1196,33 +1383,21 @@ compound_scanner::finalize (const value::map& vm)
   string scan_area = final_vm["scan-area"];
   if (scan_area != "Manual")
     {
-      if (scan_area == "Maximum")
+      media size = media (length (), length ());
+
+      /**/ if (scan_area == "Maximum")
         {
-          // This relies on default values being set to lower() values
-          // for tl-x and tl-y and upper() values for br-x and br-y.
-          // Note that alignment is irrelevant for the maximum size.
-          final_vm["tl-x"] = constraints_["tl-x"]->default_value ();
-          final_vm["tl-y"] = constraints_["tl-y"]->default_value ();
-          final_vm["br-x"] = constraints_["br-x"]->default_value ();
-          final_vm["br-y"] = constraints_["br-y"]->default_value ();
+          size = media (length (), length ());
+        }
+      else if (scan_area == "Automatic")
+        {
+          size = probe_media_size_(final_vm["doc-source"]);
         }
       else                      // well-known media size
         {
-          media size = media::lookup (scan_area);
-
-          quantity tl_x (0.0);
-          quantity tl_y (0.0);
-          quantity br_x = size.width ();
-          quantity br_y = size.height ();
-
-          align_document (final_vm["doc-source"],
-                          tl_x, tl_y, br_x, br_y);
-
-          final_vm["tl-x"] = tl_x;
-          final_vm["tl-y"] = tl_y;
-          final_vm["br-x"] = br_x;
-          final_vm["br-y"] = br_y;
+          size = media::lookup (scan_area);
         }
+      update_scan_area_(size, final_vm);
     }
 
   {                             // minimal scan area check
@@ -1250,18 +1425,14 @@ compound_scanner::finalize (const value::map& vm)
   // sane_get_parameters() experience.
 
   val_ = final_vm;
+  set_up_image_mode ();
   set_up_resolution ();
   set_up_scan_area ();
-  set_up_image_mode ();
 
   using namespace code_token::parameter;
 
   ctx_ = context (pixel_width (), pixel_height (), pixel_type ());
-
-  if (!(fmt::RAW == parm_.fmt || parm_.is_bilevel ()))
-    {
-      ctx_.content_type ("image/jpeg");
-    }
+  ctx_.content_type (transfer_content_type_(parm_));
 }
 
 //! \todo clarify intent of AMIN and AMAX info_ fields
@@ -1398,12 +1569,14 @@ compound_scanner::add_scan_area_options (option::map& opts,
 
   std::list< std::string > areas = media::within (double (area[0]) / 100,
                                                   double (area[1]) / 100);
+  areas.push_back (N_("Manual"));
+  areas.push_back (N_("Maximum"));
+  if (src.supports_size_detection ())
+    areas.push_back (("Automatic"));
 
   opts.add_options ()
     ("scan-area", (from< utsushi::store > ()
                    -> alternatives (areas.begin (), areas.end ())
-                   -> alternative (N_("Manual"))
-                   -> alternative (N_("Maximum"))
                    -> default_value ("Manual")),
      attributes (tag::general)(level::standard),
      N_("Scan Area")

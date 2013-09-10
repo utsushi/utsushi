@@ -1,5 +1,5 @@
 //  buffer.cpp -- image data for speedy I/O transfers
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -29,6 +29,7 @@ namespace utsushi {
 ibuffer::ibuffer (streamsize buffer_size)
   : base (buffer_size)
   , seq_(traits::not_marker (0))
+  , check_marker_(false)
 {
   buffer_size_ = buffer_size;
   setg (buffer_, buffer_ + buffer_size_, buffer_ + buffer_size_);
@@ -46,8 +47,12 @@ ibuffer::read (octet *data, streamsize n)
 streamsize
 ibuffer::marker ()
 {
-  return ((traits::eof () == sgetc ())
-          ? sequence_marker () : traits::not_marker (0));
+  check_marker_ = true;
+  streamsize rv = ((traits::eof () == sgetc ())
+                   ? sequence_marker () : traits::not_marker (0));
+  check_marker_ = false;
+
+  return rv;
 }
 
 ibuffer::base::int_type
@@ -55,7 +60,9 @@ ibuffer::underflow ()
 {
   if (traits::is_marker (seq_)) return traits::eof ();
 
-  streamsize rv = io_->read (buffer_, buffer_size_);
+  streamsize rv = (check_marker_
+                   ? io_->marker ()
+                   : io_->read (buffer_, buffer_size_));
 
   if (traits::is_marker (rv)) {
     seq_ = rv;
@@ -64,6 +71,12 @@ ibuffer::underflow ()
   }
 
   setg (buffer_, buffer_, buffer_ + rv);
+
+  if (egptr () == gptr ()) {
+    seq_ = rv;
+    return traits::eof ();
+  }
+
   return traits::to_int_type (*gptr ());
 }
 

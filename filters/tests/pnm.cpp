@@ -1,5 +1,5 @@
 //  pnm.cpp -- unit tests for the PNM filter implementation
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -49,9 +49,9 @@ BOOST_FIXTURE_TEST_CASE (triple_image, fixture)
   istream istr;
   ostream ostr;
 
-  istr.push (idevice::ptr (new rawmem_idevice (ctx, 3)));
-  ostr.push (ofilter::ptr (new pnm));
-  ostr.push (odevice::ptr (new file_odevice (name_)));
+  istr.push (make_shared< rawmem_idevice > (ctx, 3));
+  ostr.push (make_shared< pnm > ());
+  ostr.push (make_shared< file_odevice > (name_));
 
   istr | ostr;
 
