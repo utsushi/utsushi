@@ -54,13 +54,13 @@ pdf_utr_LDADD    += $(LIBMAGIC_LIBS)
 endif
 endif
 
-EXTRA_DIST  =
-EXTRA_DIST += data/A4-300-x-300.jpg
-EXTRA_DIST += data/A4-300-x-max.jpg
-EXTRA_DIST += data/A4-max-x-300.jpg
-EXTRA_DIST += data/A4-max-x-max.jpg
-
 endif # enable_boost_unit_test_framework
+
+EXTRA_DIST  =
+## EXTRA_DIST += data/A4-300-x-300.jpg
+## EXTRA_DIST += data/A4-300-x-max.jpg
+## EXTRA_DIST += data/A4-max-x-300.jpg
+## EXTRA_DIST += data/A4-max-x-max.jpg
 
 CLEANFILES  =
 
