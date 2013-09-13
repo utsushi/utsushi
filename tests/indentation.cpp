@@ -61,11 +61,11 @@ test_indentation_conformance (const fs::path& p)
 
   command_line indent ("uncrustify -c " + config.string ()
                        + " -f " + p.string ()
-                       + " -l CPP | diff -u "
+                       + " -l CPP | diff -q "
                        + p.string () + " -");
   if (EXIT_SUCCESS != indent.execute ())
     {
-      BOOST_WARN_MESSAGE (false, p.string () << " is not conformant\n");
+      BOOST_WARN_MESSAGE (false, p.string () << " is not conformant");
       BOOST_TEST_MESSAGE (indent.out ().rdbuf ());
     }
 }
