@@ -1,4 +1,5 @@
 //  scan-cli.cpp -- command-line interface based scan utility
+//  Copyright (C) 2013  Olaf Meeuwissen
 //  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
@@ -37,7 +38,6 @@
 #include <vector>
 
 #include <boost/any.hpp>
-#include <boost/bind.hpp>
 #include <boost/program_options.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -134,37 +134,27 @@ scanner::ptr
 create (const std::string& udi, bool debug)
 {
   monitor mon;
-  monitor::const_iterator it;
-
-  if (!udi.empty ())
-    {
-      it = mon.find (udi);
-      if (it != mon.end () && !it->is_driver_set ())
-        {
-          BOOST_THROW_EXCEPTION
-            (runtime_error (_("device found but has no driver")));
-        }
-    }
-  else
-    {
-      it = std::find_if (mon.begin (), mon.end (),
-                         boost::bind (&scanner::info::is_driver_set, _1));
-    }
+  monitor::const_iterator it (mon.find (udi));
 
   if (it == mon.end ())
     {
-      std::string msg;
-
       if (!udi.empty ())
         {
-          format fmt (_("cannot find '%1%'"));
-          msg = (fmt % udi).str ();
+          BOOST_THROW_EXCEPTION
+            (runtime_error ((format (_("%1%: not found")) % udi).str ()));
         }
       else
         {
-          msg = _("no devices available");
+          BOOST_THROW_EXCEPTION
+            (runtime_error (_("no usable devices available")));
         }
-      BOOST_THROW_EXCEPTION (runtime_error (msg));
+    }
+
+  if (!it->is_driver_set ())
+    {
+      BOOST_THROW_EXCEPTION
+        (runtime_error ((format (_("%1%: found but has no driver"))
+                         % udi).str ()));
     }
 
   connexion::ptr cnx (connexion::create (it->connexion (), it->path ()));
@@ -469,16 +459,26 @@ main (int argc, char *argv[])
           udi.clear ();
         }
 
+      if (udi.empty ())
+        {
+          monitor mon;
+          udi = mon.default_device ();
+        }
+
       if (rt.count ("help"))
         {
           std::cout << "\n"
                     << cmd_opts
                     << "\n";
 
-          monitor mon;
-
-          if (udi.empty () && mon.empty ())
+          if (udi.empty ())
             return EXIT_SUCCESS;
+        }
+
+      if (udi.empty ())
+        {
+          std::cerr << _("no usable devices available");
+          return EXIT_FAILURE;
         }
 
       scanner::ptr device (create (udi, cmd_vm.count ("debug")));

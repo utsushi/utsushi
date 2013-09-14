@@ -1,4 +1,5 @@
 //  monitor.cpp -- available scanner devices
+//  Copyright (C) 2013  Olaf Meeuwissen
 //  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
@@ -35,6 +36,7 @@ extern "C" {                    // needed until libudev-150
 #include <cstdlib>
 
 #include <boost/assert.hpp>
+#include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/regex.hpp>
@@ -67,6 +69,18 @@ monitor::monitor ()
   if (!impl::instance_) {
     impl::instance_ = new monitor::impl ();
   }
+}
+
+std::string
+monitor::default_device () const
+{
+  const_iterator it =
+    std::find_if (begin (), end (),
+                  boost::bind (&scanner::info::is_driver_set, _1));
+
+  if (it != end ()) return it->udi ();
+
+  return std::string ();
 }
 
 monitor::const_iterator
