@@ -94,7 +94,7 @@ libdrv_esci_LTX_scanner_factory (connexion::ptr cnx)
   catch (const invalid_command& e)
     {
       log::brief
-        ("does not appear to be an ESC/I-2 device (%2%)")
+        ("does not appear to be an ESC/I-2 device (%1%)")
         % e.what ();
     }
   catch (const unknown_reply&)
@@ -123,7 +123,7 @@ libdrv_esci_LTX_scanner_factory (connexion::ptr cnx)
       catch (const invalid_command& e)
         {
           log::brief
-            ("does not appear to be an ESC/I device (%2%)")
+            ("does not appear to be an ESC/I device (%1%)")
             % e.what ();
         }
       catch (const unknown_reply&)
