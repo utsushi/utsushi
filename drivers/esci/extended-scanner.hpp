@@ -1,4 +1,5 @@
 //  extended-scanner.hpp -- devices that handle extended commands
+//  Copyright (C) 2013  Olaf Meeuwissen
 //  Copyright (C) 2012  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
@@ -24,11 +25,10 @@
 #include <utsushi/connexion.hpp>
 #include <utsushi/octet.hpp>
 
-#include "bounding-box.hpp"
 #include "chunk.hpp"
 #include "get-extended-identity.hpp"
+#include "get-scan-parameters.hpp"
 #include "get-scanner-status.hpp"
-#include "point.hpp"
 #include "scanner.hpp"
 #include "set-scan-parameters.hpp"
 #include "start-extended-scan.hpp"
@@ -46,31 +46,45 @@ public:
 
   void configure ();
 
-  virtual bool is_single_image () const;
+  bool is_single_image () const;
 
 protected:
-  bool set_up_sequence ();
   bool is_consecutive () const;
   bool obtain_media ();
   bool set_up_image ();
   void finish_image ();
   streamsize sgetn (octet *data, streamsize n);
 
-private:
-  get_extended_identity capability_;
-  get_scanner_status    dev_status_;
-  set_scan_parameters   parameters_;
-  start_extended_scan   acquire_;
+  void set_up_initialize ();
+  bool set_up_hardware ();
 
-  chunk  chunk_;
+  void set_up_color_matrices ();
+  void set_up_dithering ();
+  void set_up_doc_source ();
+  void set_up_gamma_tables ();
+  void set_up_image_mode ();
+  void set_up_mirroring ();
+  void set_up_resolution ();
+  void set_up_scan_area ();
+  void set_up_scan_count ();
+  void set_up_scan_speed ();
+  void set_up_sharpness ();
+  void set_up_threshold ();
+  void set_up_transfer_size ();
+
+private:
+  const get_extended_identity caps_;
+  const get_scan_parameters   defs_;
+
+  start_extended_scan acquire_;
+  get_scanner_status  stat_;
+
+  set_scan_parameters parm_;
+
+  chunk      chunk_;
   streamsize offset_;
 
-  source_value src_;
-  point<uint32_t> res_;
-  bounding_box<uint32_t> area_;
-  short color_mode_;
-  short bit_depth_;
-  uint8_t line_count_;
+  sig_atomic_t cancelled_;      //!< \todo Move to base class
 };
 
 }       // namespace driver

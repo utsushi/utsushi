@@ -1,6 +1,6 @@
 //  set-scan-parameters.hpp -- for the next scan
 //  Copyright (C) 2012  SEIKO EPSON CORPORATION
-//  Copyright (C) 2008  Olaf Meeuwissen
+//  Copyright (C) 2008, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -24,6 +24,7 @@
 #ifndef drivers_esci_set_scan_parameters_hpp_
 #define drivers_esci_set_scan_parameters_hpp_
 
+#include "get-scan-parameters.hpp"
 #include "scan-parameters.hpp"
 #include "setter.hpp"
 
@@ -44,7 +45,7 @@ namespace _drv_ {
          \sa get_scan_parameters
      */
     class set_scan_parameters : public setter<FS,UPPER_W,64>
-                              , private scan_parameters
+                              , public scan_parameters
     {
     public:
       set_scan_parameters ();
@@ -52,6 +53,8 @@ namespace _drv_ {
 
       set_scan_parameters&
       operator= (const set_scan_parameters& s);
+      set_scan_parameters&
+      operator= (const get_scan_parameters& s);
 
       using scan_parameters::getter_API;
 

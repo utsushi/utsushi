@@ -1,6 +1,6 @@
 //  set-scan-parameters.cpp -- for the next scan
 //  Copyright (C) 2012  SEIKO EPSON CORPORATION
-//  Copyright (C) 2008  Olaf Meeuwissen
+//  Copyright (C) 2008, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -24,6 +24,8 @@
 #ifdef HAVE_CONFIG_H
 #include <config.h>
 #endif
+
+#include <boost/static_assert.hpp>
 
 #include "set-scan-parameters.hpp"
 
@@ -49,6 +51,17 @@ namespace _drv_ {
           rep_ = s.rep_;
           traits::copy (dat_, s.dat_, sizeof (dat_) / sizeof (*dat_));
         }
+      return *this;
+    }
+
+    set_scan_parameters&
+    set_scan_parameters::operator= (const get_scan_parameters& s)
+    {
+      BOOST_STATIC_ASSERT ((   sizeof (dat_)   / sizeof (*dat_)
+                            == sizeof (s.blk_) / sizeof (*s.blk_)));
+
+      rep_ = 0;
+      traits::copy (dat_, s.blk_, sizeof (dat_) / sizeof (*dat_));
       return *this;
     }
 
