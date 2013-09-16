@@ -1,4 +1,5 @@
 //  editor.cpp -- scanning dialog's option value editor
+//  Copyright (C) 2013  Olaf Meeuwissen
 //  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
@@ -750,16 +751,20 @@ editor::update_appearance (keyed_list::value_type& v)
   if (coordinates.count (k))    // have device/scan-area as well as
                                 // device/doc-source dependency
     {
-      string v = value ((*opts_)["device/scan-area"]);
-      bool manual = (string ("Manual") == untranslate ("device/scan-area", v));
+      if (opts_->count ("device/scan-area"))
+        {
+          string v = value ((*opts_)["device/scan-area"]);
+          bool manual =
+            (string ("Manual") == untranslate ("device/scan-area", v));
 
-      keyed_list::iterator jt = editors_.begin ();
-      while (editors_.end () != jt && k != jt->first) ++jt;
-      if (editors_.end () != jt)
-        jt->second->set_sensitive (manual);
+          keyed_list::iterator jt = editors_.begin ();
+          while (editors_.end () != jt && k != jt->first) ++jt;
+          if (editors_.end () != jt)
+            jt->second->set_sensitive (manual);
 
-      resetter r (controls_[k], connects_[k], opt);
-      value (opt).apply (r);
+          resetter r (controls_[k], connects_[k], opt);
+          value (opt).apply (r);
+        }
     }
 }
 
