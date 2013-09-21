@@ -260,7 +260,10 @@ extended_scanner::set_up_image ()
   // need to recompute the scan area when FS_F_.media_value() returns
   // non-zero values and the user has activated auto-scan-area
 
-  *cnx_ << parm_;
+  if (!set_up_hardware ())
+    {
+      return false;
+    }
 
   ctx_ = context (parm_.scan_area ().width (), parm_.scan_area ().height (),
                   (PIXEL_RGB == parm_.color_mode () ? 3 : 1),
@@ -339,7 +342,22 @@ extended_scanner::set_up_initialize ()
 bool
 extended_scanner::set_up_hardware ()
 {
-  *cnx_ << parm_;
+  try
+    {
+      *cnx_ << parm_;
+      if (read_back_)
+        {
+          get_scan_parameters parm;
+          *cnx_ << parm;
+          if (parm != parm_)
+            log::alert ("scan parameters may not be set as requested");
+        }
+    }
+  catch (const invalid_parameter& e)
+    {
+      log::alert (e.what ());
+      return false;
+    }
   return true;
 }
 

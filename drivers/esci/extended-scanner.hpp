@@ -80,6 +80,7 @@ private:
   get_scanner_status  stat_;
 
   set_scan_parameters parm_;
+  bool read_back_;              //!< \todo Move to base class
 
   chunk      chunk_;
   streamsize offset_;

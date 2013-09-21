@@ -1,6 +1,6 @@
 //  scan-parameters.cpp -- settings for the next scan
 //  Copyright (C) 2012  SEIKO EPSON CORPORATION
-//  Copyright (C) 2008  Olaf Meeuwissen
+//  Copyright (C) 2008, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -32,6 +32,13 @@ namespace utsushi {
 namespace _drv_ {
   namespace esci
   {
+    bool
+    scan_parameters::operator== (const scan_parameters& rhs) const
+    {
+      return 0 == traits::compare (mem_, rhs.mem_,
+                                   sizeof (mem_) / sizeof (*mem_));
+    }
+
     scan_parameters::scan_parameters (const byte mem[64])
       : mem_(mem)
     {}
