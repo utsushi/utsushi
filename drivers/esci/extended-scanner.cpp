@@ -378,6 +378,8 @@ extended_scanner::set_up_dithering ()
 void
 extended_scanner::set_up_doc_source ()
 {
+  if (!val_.count ("doc-source")) return;
+
   bool do_duplex = false;
   source_value src = NO_SOURCE;
 
@@ -434,6 +436,8 @@ extended_scanner::set_up_gamma_tables ()
 void
 extended_scanner::set_up_image_mode ()
 {
+  if (!val_.count ("image-type")) return;
+
   const string& mode = val_["image-type"];
   parm_.color_mode (mode == "Color (8 bit)"
                     ? PIXEL_RGB
@@ -492,6 +496,8 @@ extended_scanner::set_up_scan_count ()
 void
 extended_scanner::set_up_scan_speed ()
 {
+  if (!val_.count ("speed")) return;
+
   toggle speed = val_["speed"];
   parm_.scan_mode (speed ? HI_SPEED : NORMAL_SPEED);
 }
@@ -509,6 +515,8 @@ extended_scanner::set_up_threshold ()
 void
 extended_scanner::set_up_transfer_size ()
 {
+  if (!val_.count ("line-count")) return;
+
   quantity lc = val_["line-count"];
   parm_.line_count (lc.amount< uint8_t > ());
 
