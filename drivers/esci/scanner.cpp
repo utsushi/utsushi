@@ -1,4 +1,5 @@
 //  scanner.cpp -- API implementation for an ESC/I driver
+//  Copyright (C) 2013  Olaf Meeuwissen
 //  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
@@ -133,7 +134,10 @@ libdrv_esci_LTX_scanner_factory (connexion::ptr cnx)
       if (!sp) log::error ("not supported");
     }
 
-  sp->configure ();
+  if (sp)
+    {
+      sp->configure ();
+    }
   return sp;
 }
 
