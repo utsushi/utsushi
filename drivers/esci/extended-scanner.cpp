@@ -71,7 +71,7 @@ extended_scanner::configure ()
                       -> lower (int_cast (caps_.min_resolution ()))
                       -> upper (int_cast (caps_.max_resolution ()))
                       -> default_value
-                      (quantity (int_cast (caps_.min_resolution ())))
+                      (quantity (int_cast (defs_.resolution ().x ())))
                       ),
        attributes (tag::general)(level::standard),
        N_("Resolution")
@@ -79,18 +79,25 @@ extended_scanner::configure ()
   }
   {
     // bbox = (caps_.scan_area () / caps_.base_resolution ());
-    point<quantity> tl (1. * caps_.scan_area ().top_left (). x (),
-                        1. * caps_.scan_area ().top_left (). y ());
-    point<quantity> br (1. * caps_.scan_area ().bottom_right (). x (),
-                        1. * caps_.scan_area ().bottom_right (). y ());
-    bounding_box<quantity> bbox (tl / (1. * caps_.base_resolution ()),
-                                 br / (1. * caps_.base_resolution ()));
+    point<quantity> bbox_tl (1. * caps_.scan_area ().top_left ().x (),
+                             1. * caps_.scan_area ().top_left ().y ());
+    point<quantity> bbox_br (1. * caps_.scan_area ().bottom_right ().x (),
+                             1. * caps_.scan_area ().bottom_right ().y ());
+    bounding_box<quantity> bbox (bbox_tl / (1. * caps_.base_resolution ()),
+                                 bbox_br / (1. * caps_.base_resolution ()));
+    // area = (defs_.scan_area () / defs_.resolution ());
+    point<quantity> area_tl (1. * defs_.scan_area ().top_left ().x (),
+                             1. * defs_.scan_area ().top_left ().y ());
+    point<quantity> area_br (1. * defs_.scan_area ().bottom_right ().x (),
+                             1. * defs_.scan_area ().bottom_right ().y ());
+    bounding_box<quantity> area (area_tl / (1. * defs_.resolution ().x ()),
+                                 area_br / (1. * defs_.resolution ().y ()));
 
     add_options ()
       ("tl-x", (from< range > ()
                 -> offset (bbox.offset ().x ())
                 -> extent (bbox.width ())
-                -> default_value (bbox.top_left ().x ())
+                -> default_value (area.top_left ().x ())
                 ),
        attributes (tag::geometry)(level::standard),
        N_("Top Left X")
@@ -98,7 +105,7 @@ extended_scanner::configure ()
       ("br-x", (from< range > ()
                 -> offset (bbox.offset ().x ())
                 -> extent (bbox.width ())
-                -> default_value (bbox.bottom_right ().x ())
+                -> default_value (area.bottom_right ().x ())
                 ),
        attributes (tag::geometry)(level::standard),
        N_("Bottom Right X")
@@ -106,7 +113,7 @@ extended_scanner::configure ()
       ("tl-y", (from< range > ()
                 -> offset (bbox.offset ().y ())
                 -> extent (bbox.height ())
-                -> default_value (bbox.top_left ().y ())
+                -> default_value (area.top_left ().y ())
                 ),
        attributes (tag::geometry)(level::standard),
        N_("Top Left Y")
@@ -114,7 +121,7 @@ extended_scanner::configure ()
       ("br-y", (from< range > ()
                 -> offset (bbox.offset ().y ())
                 -> extent (bbox.height ())
-                -> default_value (bbox.bottom_right ().y ())
+                -> default_value (area.bottom_right ().y ())
                 ),
        attributes (tag::geometry)(level::standard),
        N_("Bottom Right Y")
@@ -130,14 +137,14 @@ extended_scanner::configure ()
        attributes (tag::general)(level::standard),
        N_("Image Type")
        )
-      ("speed", toggle (false),
+      ("speed", toggle (HI_SPEED == defs_.scan_mode ()),
        attributes (),
        N_("Speed")
        )
       ("line-count", (from< range > ()
                       -> lower (0)
                       -> upper (255)
-                      -> default_value (1)),
+                      -> default_value (defs_.line_count ())),
        attributes (),
        N_("Line Count"),
        N_("Specify how many scan lines to move from the device to the "
