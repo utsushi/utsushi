@@ -23,6 +23,8 @@
 #include <config.h>
 #endif
 
+#include <boost/assign/list_inserter.hpp>
+#include <boost/bimap.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -36,11 +38,108 @@
 #include "extended-scanner.hpp"
 #include "get-identity.hpp"
 #include "set-color-matrix.hpp"
+#include "set-dither-pattern.hpp"
 #include "set-gamma-table.hpp"
+
+#define nullptr 0
 
 namespace utsushi {
 namespace _drv_ {
 namespace esci {
+
+namespace {
+
+  typedef boost::bimap< byte, std::string > dictionary;
+
+  store *
+  store_from (dictionary *dict)
+  {
+    store *rv = new store;
+
+    for (dictionary::right_const_iterator it = dict->right.begin ();
+         it != dict->right.end (); ++it)
+      rv->alternative (it->first);
+
+    return rv;
+  }
+
+  dictionary *film_type = nullptr;
+
+  store * film_types ()
+  {
+    if (!film_type)
+      {
+        film_type = new dictionary;
+        boost::assign::insert (film_type->left)
+          (POSITIVE_FILM, N_("Positive Film"))
+          (NEGATIVE_FILM, N_("Negative Film"))
+          ;
+      }
+    return store_from (film_type);
+  }
+
+  dictionary *gamma_correction = nullptr;
+
+  store * gamma_corrections ()
+  {
+    if (!gamma_correction)
+      {
+        gamma_correction = new dictionary;
+        boost::assign::insert (gamma_correction->left)
+          (BI_LEVEL_CRT     , N_("Bi-level CRT"))
+          (MULTI_LEVEL_CRT  , N_("Multi-level CRT"))
+          (HI_DENSITY_PRINT , N_("High Density Print"))
+          (LO_DENSITY_PRINT , N_("Low Density Print"))
+          (HI_CONTRAST_PRINT, N_("High Contrast Print"))
+          (CUSTOM_GAMMA_A   , N_("Linear"))       // arbitrary coefficient
+        //(CUSTOM_GAMMA_B   , N_("User Defined")) // arbitrary LUT
+          ;
+      }
+    return store_from (gamma_correction);
+  }
+
+  dictionary *color_correction = nullptr;
+  store * color_corrections ()
+  {
+    if (!color_correction)
+      {
+        color_correction = new dictionary;
+        boost::assign::insert (color_correction->left)
+          (UNIT_MATRIX       , N_("None"))
+        //(USER_DEFINED      , N_("User Defined"))
+          (DOT_MATRIX_PRINTER, N_("Dot Matrix Printer"))
+          (THERMAL_PRINTER   , N_("Thermal Printer"))
+          (INKJET_PRINTER    , N_("Inkjet Printer"))
+          (CRT_DISPLAY       , N_("CRT Display"))
+          ;
+      }
+    return store_from (color_correction);
+  }
+
+  dictionary *dither_pattern = nullptr;
+  store * dither_patterns ()
+  {
+    if (!dither_pattern)
+      {
+        dither_pattern = new dictionary;
+        boost::assign::insert (dither_pattern->left)
+          (BI_LEVEL       , N_("Bi-level"))
+          (TEXT_ENHANCED  , N_("Text Enhanced"))
+          (HARD_TONE      , N_("Hard Tone"))
+          (SOFT_TONE      , N_("Soft Tone"))
+          (NET_SCREEN     , N_("Net Screen"))
+          (BAYER_4_4      , N_("Bayer 4x4"))
+          (SPIRAL_4_4     , N_("Spiral 4x4"))
+          (NET_SCREEN_4_4 , N_("Net Screen 4x4"))
+          (NET_SCREEN_8_4 , N_("Net Screen 8x4"))
+        //(CUSTOM_DITHER_A, N_("Value"))
+        //(CUSTOM_DITHER_B, N_("Table"))
+          ;
+      }
+    return store_from (dither_pattern);
+  }
+
+}       // namespace
 
 inline static
 quantity::integer_type
@@ -142,8 +241,8 @@ extended_scanner::configure ()
        N_("Speed")
        )
       ("line-count", (from< range > ()
-                      -> lower (0)
-                      -> upper (255)
+                      -> lower (std::numeric_limits< uint8_t >::min ())
+                      -> upper (std::numeric_limits< uint8_t >::max ())
                       -> default_value (defs_.line_count ())),
        attributes (),
        N_("Line Count"),
@@ -184,13 +283,94 @@ extended_scanner::configure ()
           {
             s.alternative (N_("TPU"));
           }
+
+        add_options ()
+          ("film-type",
+           (film_types ()
+            -> default_value (film_type
+                              -> left.at (defs_.film_type ()))),
+           attributes (tag::enhancement)(level::standard),
+           N_("Film Type")
+           );
       }
+
     add_options ()
       ("doc-source", (from< store > (s)
                       -> default_value (s.front ())
                       ),
        attributes (tag::general)(level::standard),
        N_("Document Source")
+       );
+  }
+  {
+    add_options ()
+      ("gamma-correction",
+       (gamma_corrections ()
+        -> default_value (gamma_correction
+                          -> left.at (defs_.gamma_correction ()))),
+       attributes (tag::enhancement),
+       N_("Gamma Correction")
+       )
+      ("color-correction",
+       (color_corrections ()
+        -> default_value (color_correction
+                          -> left.at (defs_.color_correction ()))),
+       attributes (tag::enhancement),
+       N_("Color Correction")
+       );
+  }
+  {
+    add_options ()
+      ("auto-area-segmentation", toggle (defs_.auto_area_segmentation ()),
+       attributes (tag::enhancement)(level::standard),
+       N_("Auto Area Segmentation"),
+       N_("Threshold text regions and apply half-toning to photo/image"
+          " areas.")
+       )
+      ("threshold", (from< range > ()
+                     -> lower (std::numeric_limits< uint8_t >::min ())
+                     -> upper (std::numeric_limits< uint8_t >::max ())
+                     -> default_value (defs_.threshold ())
+                     ),
+       attributes (tag::enhancement)(level::standard),
+       N_("Threshold")
+       )
+      ("dither-pattern",
+       (dither_patterns ()
+        -> default_value (dither_pattern
+                          -> left.at (defs_.halftone_processing ()))),
+       attributes (tag::enhancement),
+       N_("Dither Pattern")
+       );
+  }
+  {
+    add_options ()
+      ("sharpness", (from < range > ()
+                     -> lower (int8_t (SMOOTHER))
+                     -> upper (int8_t (SHARPER))
+                     -> default_value (defs_.sharpness ())
+                     ),
+       attributes (tag::enhancement)(level::standard),
+       N_("Sharpness"),
+       N_("Emphasize the edges in an image more by choosing a larger value,"
+          " less by selecting a smaller value.")
+       )
+      ("brightness", (from< range > ()
+                      -> lower (int8_t (DARKEST))
+                      -> upper (int8_t (LIGHTEST))
+                      -> default_value (defs_.brightness ())
+                      ),
+       attributes (tag::enhancement)(level::standard),
+       N_("Brightness"),
+       N_("Make images look lighter with a larger value or darker with a"
+          " smaller value.")
+       );
+  }
+  {
+    add_options ()
+      ("mirror", toggle (defs_.mirroring ()),
+       attributes (tag::enhancement)(level::standard),
+       N_("Mirror")
        );
   }
 
@@ -369,9 +549,33 @@ extended_scanner::set_up_hardware ()
 }
 
 void
+extended_scanner::set_up_auto_area_segmentation ()
+{
+  if (!val_.count ("auto-area-segmentation")) return;
+
+  toggle t = val_["auto-area-segmentation"];
+  parm_.auto_area_segmentation (t);
+}
+
+void
+extended_scanner::set_up_brightness ()
+{
+  if (!val_.count ("brightness")) return;
+
+  quantity q = val_["brightness"];
+  parm_.brightness (q.amount< int8_t > ());
+}
+
+void
 extended_scanner::set_up_color_matrices ()
 {
-  parm_.color_correction (USER_DEFINED);
+  if (!val_.count ("color-correction")) return;
+
+  const string& s = val_["color-correction"];
+  byte value = color_correction->right.at (s);
+  parm_.color_correction (value);
+
+  if (USER_DEFINED != value) return;
 
   set_color_matrix cm;
   *cnx_ << cm ();
@@ -380,6 +584,18 @@ extended_scanner::set_up_color_matrices ()
 void
 extended_scanner::set_up_dithering ()
 {
+  if (!val_.count ("dither-pattern")) return;
+
+  const string& s = val_["dither-pattern"];
+  byte value = dither_pattern->right.at (s);
+  parm_.halftone_processing (value);
+
+  if (!(CUSTOM_DITHER_A == value || CUSTOM_DITHER_B == value)) return;
+
+  set_dither_pattern pattern;
+  *cnx_ << pattern (CUSTOM_DITHER_A == value
+                    ? set_dither_pattern::CUSTOM_A
+                    : set_dither_pattern::CUSTOM_B);
 }
 
 void
@@ -420,10 +636,20 @@ extended_scanner::set_up_doc_source ()
   else if (TPU1 == src)
     {
       parm_.option_unit (TPU_AREA_1);
+      if (val_.count ("film-type"))
+        {
+          const string& s = val_["film-type"];
+          parm_.film_type (film_type->right.at (s));
+        }
     }
   else if (TPU2 == src)
     {
       parm_.option_unit (TPU_AREA_2);
+      if (val_.count ("film-type"))
+        {
+          const string& s = val_["film-type"];
+          parm_.film_type (film_type->right.at (s));
+        }
     }
   else
     {
@@ -434,7 +660,13 @@ extended_scanner::set_up_doc_source ()
 void
 extended_scanner::set_up_gamma_tables ()
 {
-  parm_.gamma_correction (CUSTOM_GAMMA_B);
+  if (!val_.count ("gamma-correction")) return;
+
+  const string& s = val_["gamma-correction"];
+  byte value = gamma_correction->right.at (s);
+  parm_.gamma_correction (value);
+
+  if (!(CUSTOM_GAMMA_A == value || CUSTOM_GAMMA_B == value)) return;
 
   set_gamma_table lut;
   *cnx_ << lut ();
@@ -456,6 +688,10 @@ extended_scanner::set_up_image_mode ()
 void
 extended_scanner::set_up_mirroring ()
 {
+  if (!val_.count ("mirror")) return;
+
+  toggle t = val_["mirror"];
+  parm_.mirroring (t);
 }
 
 void
@@ -512,11 +748,19 @@ extended_scanner::set_up_scan_speed ()
 void
 extended_scanner::set_up_sharpness ()
 {
+  if (!val_.count ("sharpness")) return;
+
+  quantity q = val_["sharpness"];
+  parm_.sharpness (q.amount< int8_t > ());
 }
 
 void
 extended_scanner::set_up_threshold ()
 {
+  if (!val_.count ("threshold")) return;
+
+  quantity q = val_["threshold"];
+  parm_.threshold (q.amount< uint8_t > ());
 }
 
 void

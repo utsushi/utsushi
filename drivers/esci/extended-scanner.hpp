@@ -58,6 +58,8 @@ protected:
   void set_up_initialize ();
   bool set_up_hardware ();
 
+  void set_up_auto_area_segmentation ();
+  void set_up_brightness ();
   void set_up_color_matrices ();
   void set_up_dithering ();
   void set_up_doc_source ();
