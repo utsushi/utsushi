@@ -222,16 +222,16 @@ init_test_runner ()
 
   std::list< file_spec > args;
   boost::assign::push_back (args)
-    // // single image scan sequence tests
-    // (srcdir / "data/A4-max-x-max.jpg", 2550, 3513)
-    // (srcdir / "data/A4-max-x-300.jpg", 2550,  300)
-    // (srcdir / "data/A4-300-x-max.jpg",  300, 3489)
-    // (srcdir / "data/A4-300-x-300.jpg",  300,  300)
-    // // multi image scan sequence tests
-    // (srcdir / "data/A4-max-x-max.jpg", 2550, 3513, 2)
-    // (srcdir / "data/A4-max-x-300.jpg", 2550,  300, 3)
-    // (srcdir / "data/A4-300-x-max.jpg",  300, 3489, 4)
-    // (srcdir / "data/A4-300-x-300.jpg",  300,  300, 5)
+    // single image scan sequence tests
+    (srcdir / "data/A4-max-x-max.jpg", 2550, 3513)
+    (srcdir / "data/A4-max-x-300.jpg", 2550,  300)
+    (srcdir / "data/A4-300-x-max.jpg",  300, 3489)
+    (srcdir / "data/A4-300-x-300.jpg",  300,  300)
+    // multi image scan sequence tests
+    (srcdir / "data/A4-max-x-max.jpg", 2550, 3513, 2)
+    (srcdir / "data/A4-max-x-300.jpg", 2550,  300, 3)
+    (srcdir / "data/A4-300-x-max.jpg",  300, 3489, 4)
+    (srcdir / "data/A4-300-x-300.jpg",  300,  300, 5)
     ;
 
   but::framework::master_test_suite ()
