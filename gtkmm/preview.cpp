@@ -38,6 +38,7 @@
 #include "../filters/jpeg.hpp"
 #include "../filters/padding.hpp"
 #include "../filters/pnm.hpp"
+#include "../filters/threshold.hpp"
 
 namespace utsushi {
 namespace gtkmm {
@@ -258,41 +259,59 @@ preview::on_refresh ()
 
   try
     {
-      std::string transfer_format;
+      const std::string xfer_raw = "image/x-raster";
+      const std::string xfer_jpg = "image/jpeg";
+      std::string xfer_fmt = idevice_->get_context ().content_type ();
 
-      try {                 //! \todo get rid of silly type conversion
-        string transfer = value ((*control_)["transfer-format"]);
-        transfer_format = std::string (transfer);
-      } catch (const std::out_of_range&){}
+      bool bilevel = ((*control_)["image-type"] == "Gray (1 bit)");
+      ofilter::ptr threshold (make_shared< threshold > ());
+      try
+        {
+          (*threshold->options ())["threshold"]
+            = value ((*control_)["threshold"]);
+        }
+      catch (std::out_of_range&)
+        {
+          log::error ("Falling back to default threshold value");
+        }
+
+      ofilter::ptr jpeg_compress (make_shared< jpeg::compressor > ());
+      try
+        {
+          (*jpeg_compress->options ())["quality"]
+            = value ((*control_)["jpeg-quality"]);
+        }
+      catch (const std::out_of_range&)
+        {
+          log::error ("Falling back to default JPEG compression quality");
+        }
 
       ostream_ = make_shared< ostream > ();
-      /**/ if ("RAW" == transfer_format)
+      /**/ if (xfer_raw == xfer_fmt)
         {
           ostream_->push (make_shared< padding > ());
           if (match_height)
             ostream_->push (make_shared< bottom_padder > (height));
           ostream_->push (make_shared< pnm > ());
         }
-      else if ("JPEG" == transfer_format)
+      else if (xfer_jpg == xfer_fmt)
         {
-          if (match_height)
+          if (match_height || bilevel)
             {
               ostream_->push (make_shared< jpeg::decompressor > ());
+            }
+          if (bilevel) ostream_->push (threshold);
+          if (match_height)
+            {
               ostream_->push (make_shared< bottom_padder > (height));
-              jpeg::compressor::ptr jpeg = make_shared< jpeg::compressor > ();
-              try {
-                (*jpeg->options ())["quality"]
-                  = value ((*control_)["jpeg-quality"]);
-              } catch (const std::out_of_range&){}
-              ostream_->push (ofilter::ptr (jpeg));
+              if (!bilevel) ostream_->push (jpeg_compress);
             }
         }
       else
         {
           /*! \todo We're blindly assuming Gdk::PixbufLoader can
-           *        handle transfer_format.  We should check the
-           *        supported formats to confirm and take action
-           *        if it doesn't.
+           *        handle image_fmt.  We should check the supported
+           *        formats to confirm and take action if it doesn't.
            */
           if (match_height)
             log::alert ("height matching support not implemented");

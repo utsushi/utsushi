@@ -698,6 +698,9 @@ compound_scanner::set_up_hardware ()
 
   *cnx_ << acquire_.start ();
 
+  if (parm_.bsz)
+    buffer_size_ = *parm_.bsz;
+
   return true;
 }
 
@@ -917,6 +920,18 @@ compound_scanner::set_up_image_mode ()
               ("unknown dropout value: %1%, ignoring value")
               % dropout
               ;
+        }
+    }
+
+  if (val_.count ("speed"))
+    {
+      toggle t = val_["speed"];
+      if (t)
+        {
+          /**/ if (col::M001 == parm_.col) parm_.col = col::M008;
+          else if (col::R001 == parm_.col) parm_.col = col::R008;
+          else if (col::G001 == parm_.col) parm_.col = col::G008;
+          else if (col::B001 == parm_.col) parm_.col = col::B008;
         }
     }
 
@@ -1352,12 +1367,17 @@ compound_scanner::finalize (const value::map& vm)
     // values_ in val_ need to support that.
 
     string type = final_vm["image-type"];
+    toggle t = false;
 
-    if (   type == "Color (1 bit)"
-        || type == "Gray (1 bit)"
-        || type == "Red (1 bit)"
-        || type == "Blue (1 bit)"
-        || type == "Green (1 bit)")
+    if (final_vm.count ("speed"))
+      t = final_vm["speed"];
+
+    if (!t &&
+        (   type == "Color (1 bit)"
+         || type == "Gray (1 bit)"
+         || type == "Red (1 bit)"
+         || type == "Blue (1 bit)"
+         || type == "Green (1 bit)"))
       {
         if ((*constraints_["transfer-format"]) (string ("RAW"))
             != value (string ("RAW")))
@@ -1844,7 +1864,11 @@ compound_scanner::pixel_type () const
     case col::G001:
     case col::B001:
       {
-        return context::MONO;
+        toggle speed = false;
+        if (val_.count ("speed"))
+          speed = val_.at ("speed");
+
+        return (speed ? context::GRAY8 : context::MONO);
       }
     case col::M008:
     case col::G008:

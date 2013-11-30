@@ -250,6 +250,30 @@ decorator<idevice>::get_context () const
   return instance_->get_context ();
 }
 
+bool
+decorator<idevice>::is_single_image () const
+{
+  return instance_->is_single_image ();
+}
+
+connection
+decorator<idevice>::connect_marker (const marker_signal_type::slot_type& slot) const
+{
+  return instance_->connect_marker (slot);
+}
+
+connection
+decorator<idevice>::connect_update (const update_signal_type::slot_type& slot) const
+{
+  return instance_->connect_update (slot);
+}
+
+option::map::ptr
+decorator<idevice>::options ()
+{
+  return instance_->options ();
+}
+
 decorator<odevice>::decorator (ptr instance)
   : instance_(instance)
 {}

@@ -1,5 +1,5 @@
 #  POTFILES.in -- list of files containing translatable strings
-#  Copyright (C) 2012  SEIKO EPSON CORPORATION
+#  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 #
 #  License: GPL-3.0+
 #  Author : AVASYS CORPORATION
@@ -29,11 +29,13 @@
 connexions/usb.cpp
 drivers/esci/code-token.hpp
 drivers/esci/compound-scanner.cpp
+drivers/esci/compound-tweaks.cpp
 drivers/esci/compound.cpp
 drivers/esci/exception.hpp
 drivers/esci/extended-scanner.cpp
 drivers/esci/grammar-capabilities.cpp
 drivers/esci/verify.cpp
+filters/image-skip.cpp
 filters/jpeg.cpp
 filters/lut.cpp
 filters/padding.cpp

@@ -29,6 +29,8 @@ extern "C" {                    // needed until sane-backends-1.0.14
 #include <string>
 #include <vector>
 
+#include <boost/operators.hpp>
+
 #include <utsushi/scanner.hpp>
 #include <utsushi/stream.hpp>
 
@@ -105,13 +107,26 @@ protected:
 
 private:
   void add_option (utsushi::option& visitor);
-  void update_option (const utsushi::key& k);
+
+  //! Update SANE options to reflect latest state
+  /*! Whereas the Utsushi API allows for options to appear and disappear
+   *  at will, the SANE API dictates a fixed number of option descriptor
+   *  objects.  Here we cater to the possibility of disappearing and/or
+   *  reappearing Utsushi options as well as any state changes they may
+   *  have undergone.
+   *
+   *  The \a info argument is not modified unless an option has changed
+   *  in one way or another.
+   */
+  void update_options (SANE_Word *info);
+  void update_capabilities (SANE_Word *info);
 
   utsushi::option::map opt_;
 
   //! Add a key dictionary to SANE_Option_Descriptor objects
   struct option_descriptor
     : SANE_Option_Descriptor
+    , private boost::equality_comparable< option_descriptor >
   {
     utsushi::key orig_key;
     std::string  sane_key;
@@ -120,6 +135,8 @@ private:
 
     option_descriptor () {}
     option_descriptor (const utsushi::option& visitor);
+
+    bool operator== (const option_descriptor& rhs) const;
   };
 
   void add_group (const utsushi::key& key,
@@ -127,18 +144,6 @@ private:
                   const utsushi::string& text = utsushi::string ());
 
   std::vector< option_descriptor > sod_;
-
-  //! Update SANE option capabilities to reflect state
-  /*! Whereas the Utsushi API allows for options to appear and disappear
-   *  at will, the SANE API dictates a fixed number of option descriptor
-   *  objects.  Here we cater to the possibility of disappearing and/or
-   *  reappearing Utsushi options as well as any state changes they may
-   *  have undergone.
-   *
-   *  The optional \a info argument is not modified unless capabilities
-   *  have changed.
-   */
-  void update_capabilities (SANE_Word *info);
 
   friend struct match_key;
 };

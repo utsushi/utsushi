@@ -43,7 +43,7 @@ using std::invalid_argument;
 using std::runtime_error;
 using boost::filesystem::path;
 
-typedef scanner::ptr (*scanner_factory) (connexion::ptr);
+typedef void (*scanner_factory) (scanner::ptr&, connexion::ptr);
 
 scanner_factory
 get_scanner_factory (const lt_dlhandle& handle)
@@ -135,7 +135,9 @@ scanner::create (connexion::ptr cnx, const scanner::info& info)
 
   if (!factory) BOOST_THROW_EXCEPTION (runtime_error (error));
 
-  return factory (cnx);
+  scanner::ptr rv;
+  factory (rv, cnx);
+  return rv;
 }
 
 

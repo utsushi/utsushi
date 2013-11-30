@@ -41,9 +41,12 @@
 #include <utsushi/run-time.hpp>
 
 #include "../filters/g3fax.hpp"
+#include "../filters/image-skip.hpp"
+#include "../filters/jpeg.hpp"
 #include "../filters/padding.hpp"
 #include "../filters/pdf.hpp"
 #include "../filters/pnm.hpp"
+#include "../filters/threshold.hpp"
 #include "../outputs/tiff.hpp"
 
 #include "chooser.hpp"
@@ -59,8 +62,7 @@ using std::logic_error;
 using std::runtime_error;
 
 dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
-  : base (ptr), opts_ (new option::map), app_opts_ (new option::map),
-    jpeg_()
+  : base (ptr), opts_ (new option::map), app_opts_ (new option::map)
 {
   Glib::RefPtr<Glib::Object> obj = builder->get_object ("uimanager");
   ui_manager_ = Glib::RefPtr<Gtk::UIManager>::cast_dynamic (obj);
@@ -285,25 +287,38 @@ dialog::on_scan (void)
         return;
       }
 
-    try
-      {
-        (*jpeg_.options ())["quality"]
-          = value ((*opts_)["device/jpeg-quality"]);
-      }
-    catch (const std::out_of_range&)
-      {}
-
     // Configure the filter chain
 
     using namespace _flt_;
 
     ostream::ptr ostr = make_shared< ostream > ();
 
-    std::string xfer_fmt;
-    {                      //! \todo get rid of silly type conversion
-      string xfer = value ((*opts_)["device/transfer-format"]);
-      xfer_fmt = std::string (xfer);
-    }
+    const std::string xfer_raw = "image/x-raster";
+    const std::string xfer_jpg = "image/jpeg";
+    std::string xfer_fmt = idevice_->get_context ().content_type ();
+
+    bool bilevel = ((*opts_)["device/image-type"] == "Gray (1 bit)");
+    ofilter::ptr threshold (make_shared< threshold > ());
+    try
+      {
+        (*threshold->options ())["threshold"]
+          = value ((*opts_)["device/threshold"]);
+      }
+    catch (const std::out_of_range&)
+      {
+        log::error ("Falling back to default threshold value");
+      }
+
+    ofilter::ptr jpeg_compress (make_shared< jpeg::compressor > ());
+    try
+      {
+        (*jpeg_compress->options ())["quality"]
+          = value ((*opts_)["device/jpeg-quality"]);
+      }
+    catch (const std::out_of_range&)
+      {
+        log::error ("Falling back to default JPEG compression quality");
+      }
 
     toggle match_height = true;
     quantity height = -1.0;
@@ -320,8 +335,27 @@ dialog::on_scan (void)
       }
     if (match_height) match_height = (height > 0);
 
-    /**/ if ("RAW"  == xfer_fmt) {}
-    else if ("JPEG" == xfer_fmt) {}
+    toggle skip_blank = !bilevel; // \todo fix filter limitation
+    quantity skip_thresh = -1.0;
+    ofilter::ptr blank_skip (make_shared< image_skip > ());
+    try
+      {
+        (*blank_skip->options ())["blank-threshold"]
+          = value ((*opts_)["blank-skip/blank-threshold"]);
+        skip_thresh = value ((*blank_skip->options ())["blank-threshold"]);
+      }
+    catch (const std::out_of_range&)
+      {
+        skip_blank = false;
+        log::error ("Disabling blank skip functionality");
+      }
+    // Don't even try skipping of completely white images.  We are
+    // extremely unlikely to encounter any of those.
+    skip_blank = (skip_blank
+                  && (quantity (0.) < skip_thresh));
+
+    /**/ if (xfer_raw == xfer_fmt) {}
+    else if (xfer_jpg == xfer_fmt) {}
     else
       {
         log::alert
@@ -330,10 +364,13 @@ dialog::on_scan (void)
 
     /**/ if ("PNM"  == fmt)
       {
-        /**/ if ("RAW" == xfer_fmt)
+        /**/ if (xfer_raw == xfer_fmt)
           ostr->push (make_shared< padding > ());
-        else if ("JPEG" == xfer_fmt)
-          ostr->push (make_shared< jpeg::decompressor> ());
+        else if (xfer_jpg == xfer_fmt)
+          {
+            ostr->push (make_shared< jpeg::decompressor> ());
+            if (bilevel) ostr->push (threshold);
+          }
         else
           BOOST_THROW_EXCEPTION
             (runtime_error
@@ -341,31 +378,35 @@ dialog::on_scan (void)
                % xfer_fmt
                % fmt)
               .str ()));
+        if (skip_blank) ostr->push (blank_skip);
         if (match_height)
           ostr->push (make_shared< bottom_padder > (height));
         ostr->push (make_shared< pnm > ());
       }
     else if ("JPEG" == fmt)
       {
-        if ((*opts_)["device/image-type"] == "Gray (1 bit)")
+        if (bilevel)
           BOOST_THROW_EXCEPTION
             (logic_error
              (_("JPEG does not support bi-level imagery")));
 
-        /**/ if ("RAW" == xfer_fmt)
+        /**/ if (xfer_raw == xfer_fmt)
           {
             ostr->push (make_shared< padding > ());
+            if (skip_blank) ostr->push (blank_skip);
             if (match_height)
               ostr->push (make_shared< bottom_padder > (height));
-            ostr->push (ofilter::ptr (&jpeg_, null_deleter ()));
+            ostr->push (jpeg_compress);
           }
-        else if ("JPEG" == xfer_fmt)
+        else if (xfer_jpg == xfer_fmt)
           {
-            if (match_height)
+            if (match_height || skip_blank)
               {
                 ostr->push (make_shared< jpeg::decompressor > ());
-                ostr->push (make_shared< bottom_padder > (height));
-                ostr->push (ofilter::ptr (&jpeg_, null_deleter ()));
+                if (skip_blank) ostr->push (blank_skip);
+                if (match_height) ostr->push (make_shared< bottom_padder >
+                                              (height));
+                ostr->push (jpeg_compress);
               }
           }
         else
@@ -380,28 +421,41 @@ dialog::on_scan (void)
       }
     else if ("PDF" == fmt)
       {
-        /**/ if ("RAW" == xfer_fmt)
+        /**/ if (xfer_raw == xfer_fmt)
           {
             ostr->push (make_shared< padding > ());
+            if (skip_blank) ostr->push (blank_skip);
             if (match_height)
               ostr->push (make_shared< bottom_padder > (height));
 
-            if ((*opts_)["device/image-type"] == "Gray (1 bit)")
+            if (bilevel)
               {
                 ostr->push (make_shared< g3fax > ());
               }
             else
               {
-                ostr->push (ofilter::ptr (&jpeg_, null_deleter ()));
+                ostr->push (jpeg_compress);
               }
           }
-        else if ("JPEG" == xfer_fmt)
+        else if (xfer_jpg == xfer_fmt)
           {
-            if (match_height)
+            if (match_height || bilevel)
               {
                 ostr->push (make_shared< jpeg::decompressor > ());
+                if (skip_blank) ostr->push (blank_skip);
+              }
+            if (match_height)
+              {
                 ostr->push (make_shared< bottom_padder > (height));
-                ostr->push (ofilter::ptr (&jpeg_, null_deleter ()));
+              }
+            if (bilevel)
+              {
+                ostr->push (threshold);
+                ostr->push (make_shared< g3fax > ());
+              }
+            else
+              {
+                ostr->push (jpeg_compress);
               }
           }
         else
@@ -417,10 +471,13 @@ dialog::on_scan (void)
       }
     else if ("TIFF" == fmt)
       {
-        /**/ if ("RAW" == xfer_fmt)
+        /**/ if (xfer_raw == xfer_fmt)
           ostr->push (make_shared< padding > ());
-        else if ("JPEG" == xfer_fmt)
-          ostr->push (make_shared< jpeg::decompressor > ());
+        else if (xfer_jpg == xfer_fmt)
+          {
+            ostr->push (make_shared< jpeg::decompressor > ());
+            if (bilevel) ostr->push (threshold);
+          }
         else
           BOOST_THROW_EXCEPTION
             (runtime_error
@@ -428,6 +485,7 @@ dialog::on_scan (void)
                % xfer_fmt
                % fmt)
               .str ()));
+        if (skip_blank) ostr->push (blank_skip);
         if (match_height)
           ostr->push (make_shared< bottom_padder > (height));
       }
@@ -533,6 +591,9 @@ dialog::on_device_changed (utsushi::idevice::ptr idev)
   opts_.reset (new option::map);
   opts_->add_option_map () ("application", app_opts_);
   opts_->add_option_map () ("device", idevice_->options ());
+  _flt_::image_skip skip;
+  opts_->add_option_map () ("blank-skip", skip.options ());
+
   signal_options_changed_.emit (opts_);
 
   pump_ = make_shared< pump > (idev);

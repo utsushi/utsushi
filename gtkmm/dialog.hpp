@@ -29,8 +29,6 @@
 
 #include <utsushi/device.hpp>
 
-#include "../filters/jpeg.hpp"
-
 #include "pump.hpp"
 
 namespace utsushi {
@@ -55,8 +53,6 @@ class dialog : public Gtk::Dialog
 
   option::map::ptr opts_;
   option::map::ptr app_opts_;
-
-  _flt_::jpeg::compressor jpeg_;
 
 public:
   dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder);

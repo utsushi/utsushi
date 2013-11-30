@@ -1,5 +1,5 @@
 //  threshold.cpp -- apply a threshold to 8-bit grayscale data
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -84,7 +84,8 @@ threshold::boi (const context& ctx)
       (invalid_argument ("Invalid number of components!"));
   }
 
-  ctx_ = context (ctx.width (), ctx.height (), 1, 1);
+  ctx_ = ctx;
+  ctx_.depth (1);
 }
 
 void
@@ -126,6 +127,98 @@ threshold::filter (const octet *in_data,
   }
 
   return lines*ppl;
+}
+
+ithreshold::ithreshold ()
+  : line_(context::unknown_size)
+{
+  option_->add_options ()
+    ("threshold", (from< range > ()
+                   -> lower (0)
+                   -> upper (255)
+                   -> default_value (128)
+                   ),
+     attributes (tag::enhancement),
+     N_("Threshold")
+     );
+}
+
+void
+ithreshold::handle_marker (traits::int_type c)
+{
+  /**/ if (traits::bos () == c)
+    {
+      quantity q = value ((*option_)["threshold"]);
+      threshold_ = q.amount< uint8_t > ();
+    }
+  else if (traits::boi () == c)
+    {
+      context ctx (io_->get_context ());
+
+      if (8 != ctx.depth ()) {
+        BOOST_THROW_EXCEPTION
+          (invalid_argument ("8-bits per channel required!"));
+      }
+
+      if (1 != ctx.comps ()) {
+        BOOST_THROW_EXCEPTION
+          (invalid_argument ("Invalid number of components!"));
+      }
+
+      ctx_ = ctx;
+      ctx_.depth (1);
+
+      line_ = ctx.octets_per_line ();
+    }
+  else if (traits::eoi () == c)
+    {
+      line_ = context::unknown_size;
+    }
+}
+
+streamsize
+ithreshold::read (octet *data, streamsize n)
+{
+  BOOST_ASSERT (0 != line_);
+  BOOST_ASSERT (n >= line_);
+
+  if (context::unknown_size == line_)
+    {
+      n = 0;
+    }
+  else                          // read full-lines only
+    {
+      n /= line_;
+      n *= line_;
+    }
+  streamsize rv = io_->read (data, n);
+
+  if (traits::is_marker (rv))
+    {
+      handle_marker (rv);
+      return rv;
+    }
+
+  octet *ip = data;
+  octet *op = data;
+  for (streamsize i = 0; i < n / line_; ++i)
+    {
+      for (streamsize j = 0; j < line_; ++j)
+        {
+          streamsize mask = (1 << (7 - j % 8));
+
+          if (uint8_t (*ip) < threshold_)
+            *op &= ~mask;
+          else
+            *op |=  mask;
+
+          ++ip;
+
+          if (7 == j % 8) ++op;
+        }
+      if (0 != line_ % 8) ++op;
+    }
+  return (rv / line_) * ctx_.octets_per_line ();
 }
 
 }       // namespace _flt_

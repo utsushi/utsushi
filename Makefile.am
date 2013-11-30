@@ -100,6 +100,7 @@ test_headers += utsushi/test/memory.hpp
 test_headers += utsushi/test/null.hpp
 
 wrapper_headers  = utsushi/cstdint.hpp
+wrapper_headers += utsushi/condition-variable.hpp
 wrapper_headers += utsushi/format.hpp
 wrapper_headers += utsushi/memory.hpp
 wrapper_headers += utsushi/mutex.hpp

@@ -1,5 +1,5 @@
 //  pump.hpp -- move image octets from a source to a sink
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -21,14 +21,11 @@
 #ifndef utsushi_pump_hpp_
 #define utsushi_pump_hpp_
 
-#include <csignal>
-
 #include "device.hpp"
 #include "log.hpp"
 #include "option.hpp"
 #include "signal.hpp"
 #include "stream.hpp"
-#include "thread.hpp"
 
 namespace utsushi {
 
@@ -53,22 +50,9 @@ public:
 
   connection connect (const notify_signal_type::slot_type& slot) const;
 
-protected:
-  void start_(output::ptr optr);
-  void acquire_();
-  void require_(input::ptr iptr);
-  void require_(output::ptr optr);
-
-  input::ptr  iptr_;
-  output::ptr optr_;
-
-  //! \todo Replace with query on iptr_?
-  sig_atomic_t is_cancelling_;
-  sig_atomic_t is_pumping_;
-
-  thread *thread_;
-
-  mutable notify_signal_type signal_notify_;
+private:
+  class impl;
+  impl *pimpl_;
 };
 
 }       // namespace utsushi

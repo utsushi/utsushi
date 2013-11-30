@@ -1,5 +1,5 @@
 //  pump.cpp -- move image octets from a source to a sink
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -22,21 +22,59 @@
 #include <config.h>
 #endif
 
+#include <csignal>
+#include <deque>
+#include <new>
 #include <stdexcept>
 
 #include <boost/throw_exception.hpp>
 
+#include "utsushi/condition-variable.hpp"
 #include "utsushi/i18n.hpp"
 #include "utsushi/log.hpp"
+#include "utsushi/memory.hpp"
+#include "utsushi/mutex.hpp"
 #include "utsushi/pump.hpp"
+#include "utsushi/thread.hpp"
+
+#define nullptr 0
 
 namespace utsushi {
 
 using std::invalid_argument;
 
-static const key ASYNC ("acquire-async");
+class bucket
+{
+public:
+  octet *data_;
+  union {
+    streamsize size_;
+    streamsize mark_;
+  };
+  context ctx_;
 
-static void
+  bucket (streamsize size)
+    : data_(new octet[size])
+    , size_(size)
+  {}
+
+  bucket (const context& ctx, streamsize marker)
+    : data_(nullptr)
+    , mark_(marker)
+    , ctx_(ctx)
+  {}
+
+  ~bucket ()
+  {
+    delete [] data_;
+  }
+};
+
+namespace {
+
+const key ASYNC ("acquire-async");
+
+void
 init_(option::map::ptr& option_)
 {
   option_->add_options ()
@@ -54,76 +92,104 @@ init_(option::map::ptr& option_)
      );
 }
 
-pump::pump (idevice::ptr idev)
-  : iptr_(idev)
+void
+require_(input::ptr iptr)
+{
+  if (iptr) return;
+
+  BOOST_THROW_EXCEPTION (invalid_argument (_("no image data source")));
+}
+
+void
+require_(output::ptr optr)
+{
+  if (optr) return;
+
+  BOOST_THROW_EXCEPTION (invalid_argument (_("no output destination")));
+}
+
+}       // namespace
+
+class pump::impl
+{
+public:
+  impl (input::ptr iptr);
+  ~impl ();
+
+  void start (input::ptr iptr, output::ptr optr, toggle);
+  void start (output::ptr optr, toggle);
+
+  void cancel ();
+
+  streamsize acquire_and_process (input::ptr iptr, output::ptr optr);
+
+  streamsize acquire_data (input::ptr iptr);
+  streamsize process_data (output::ptr optr);
+
+  streamsize acquire_image (input::ptr iptr);
+  shared_ptr< bucket > process_image (output::ptr optr);
+
+  shared_ptr< bucket > make_bucket (streamsize size);
+
+  shared_ptr< bucket > pop ();
+  void push (shared_ptr< bucket > bp);
+
+  void mark (traits::int_type c, const context& ctx);
+
+  input::ptr  iptr_;
+
+  //! \todo Replace with query on iptr_?
+  sig_atomic_t is_cancelling_;
+  sig_atomic_t is_pumping_;
+
+  thread *acquire_;
+  thread *process_;
+
+  volatile sig_atomic_t have_bucket_;
+
+  std::deque< shared_ptr< bucket > > brigade_;
+  mutex brigade_mutex_;
+  condition_variable not_empty_;
+
+  notify_signal_type signal_notify_;
+
+private:
+  impl (const impl&);
+  impl& operator= (const impl&);
+};
+
+pump::impl::impl (input::ptr iptr)
+  : iptr_(iptr)
   , is_cancelling_(false)
   , is_pumping_(false)
-  , thread_(0)
+  , acquire_(nullptr)
+  , process_(nullptr)
+  , have_bucket_(0)
 {
-  require_(iptr_);
-  init_(option_);
+  require_(iptr);
 }
 
-pump::pump (istream::ptr istr)
-  : iptr_(istr)
-  , is_cancelling_(false)
-  , is_pumping_(false)
-  , thread_(0)
+pump::impl::~impl ()
 {
-  require_(iptr_);
-  init_(option_);
-}
-
-pump::~pump ()
-{
-  if (thread_)
+  if (acquire_)
     {
-      if (is_pumping_)
-        cancel ();
-      thread_->join ();
+      acquire_->join ();
     }
-  delete thread_;
-}
+  delete acquire_;
 
-void
-pump::start (odevice::ptr odev)
-{
-  require_(odev);
-  start_(odev);
-}
-
-void
-pump::start (ostream::ptr ostr)
-{
-  require_(ostr);
-  start_(ostr);
-}
-
-void
-pump::cancel ()
-{
-  iptr_->cancel ();
-  is_cancelling_ = true;
-}
-
-connection
-pump::connect (const notify_signal_type::slot_type& slot) const
-{
-  return signal_notify_.connect (slot);
-}
-
-void
-pump::start_(output::ptr optr)
-{
-  toggle acquire_asynchronously = value ((*option_)[ASYNC]);
-
-  if (!acquire_asynchronously)
+  if (process_)
     {
-      log::trace ("acquiring image data synchronously");
-      optr_ = optr;
-      acquire_();
-      return;
+      process_->join ();
     }
+  delete process_;
+}
+
+void
+pump::impl::start (input::ptr iptr, output::ptr optr,
+                   toggle acquire_asynchronously)
+{
+  require_(iptr);
+  require_(optr);
 
   if (!is_cancelling_ && is_pumping_)
     {
@@ -134,46 +200,286 @@ pump::start_(output::ptr optr)
   if (is_cancelling_)
     {
       log::brief ("waiting for cancellation to complete");
-      if (thread_) thread_->join ();
+      if (acquire_) acquire_->join ();
       is_cancelling_ = false;
     }
 
-  optr_ = optr;
-  delete thread_;
+  if (process_) process_->join ();
 
-  thread_ = new thread (&pump::acquire_, this);
+  delete acquire_; acquire_ = nullptr;
+  delete process_; process_ = nullptr;
+  brigade_.clear ();
+  have_bucket_ = 0;
+
+  iptr_ = iptr;
+
+  if (!acquire_asynchronously)
+    {
+      log::trace ("acquiring image data synchronously");
+      acquire_and_process (iptr, optr);
+      return;
+    }
+
+  // Note that starting order of threads is undefined.
+
+  acquire_ = new thread (&impl::acquire_data, this, iptr);
+  process_ = new thread (&impl::process_data, this, optr);
 }
 
 void
-pump::acquire_()
+pump::impl::start (output::ptr optr, toggle acquire_asynchronously)
+{
+  start (iptr_, optr, acquire_asynchronously);
+}
+
+void
+pump::impl::cancel ()
+{
+  if (!iptr_) return;
+
+  iptr_->cancel ();
+  is_cancelling_ = true;
+}
+
+streamsize
+pump::impl::acquire_and_process (input::ptr iptr, output::ptr optr)
+{
+  streamsize rv = traits::eof ();
+  try
+    {
+      is_pumping_ = true;
+      rv = *iptr | *optr;
+    }
+  catch (const std::exception& e)
+    {
+      optr->mark (traits::eof (), context ());
+      signal_notify_(log::ALERT, e.what ());
+    }
+  catch (...)
+    {
+      optr->mark (traits::eof (), context ());
+      signal_notify_(log::ALERT,
+                     "unknown exception during acquisition and processing");
+    }
+  is_pumping_ = false;
+  return rv;
+}
+
+streamsize                      // read part of operator|
+pump::impl::acquire_data (input::ptr iptr)
 {
   try
     {
       is_pumping_ = true;
-      *iptr_ | *optr_;
+      streamsize rv = iptr->marker ();
+      if (traits::bos () != rv) return rv;
+
+      mark (traits::bos (), iptr->get_context ());
+      while (   traits::eos () != rv
+             && traits::eof () != rv)
+        {
+          rv = acquire_image (iptr);
+        }
+      mark (rv, iptr->get_context ());
+      is_pumping_ = false;
+      return rv;
     }
-  catch (std::runtime_error& e)
+  catch (const std::exception& e)
     {
-      optr_->mark (traits::eof (), context ());
+      mark (traits::eof (), context ());
       signal_notify_(log::ALERT, e.what ());
     }
+  catch (...)
+    {
+      mark (traits::eof (), context ());
+      signal_notify_(log::ALERT, "unknown exception during acquisition");
+    }
   is_pumping_ = false;
+  return traits::eof ();
+}
+
+streamsize                      // write part of operator|
+pump::impl::process_data (output::ptr optr)
+{
+  try
+    {
+      shared_ptr< bucket > bp = pop ();
+      if (traits::bos () != bp->mark_) return bp->mark_;
+
+      optr->mark (traits::bos (), bp->ctx_);
+      while (   traits::eos () != bp->mark_
+             && traits::eof () != bp->mark_)
+        {
+          bp = process_image (optr);
+        }
+      optr->mark (bp->mark_, bp->ctx_);
+      return bp->mark_;
+    }
+  catch (const std::exception& e)
+    {
+      optr->mark (traits::eof (), context ());
+      signal_notify_(log::ALERT, e.what ());
+    }
+  catch (...)
+    {
+      optr->mark (traits::eof (), context ());
+      signal_notify_(log::ALERT, "unknown exception during processing");
+    }
+  return traits::eof ();
+}
+
+streamsize                      // read part of operator>>
+pump::impl::acquire_image (input::ptr iptr)
+{
+  streamsize n = iptr->marker ();
+  if (traits::boi () != n) return n;
+
+  const streamsize buffer_size = iptr->buffer_size ();
+  shared_ptr< bucket > bp;
+
+  mark (traits::boi (), iptr->get_context ());
+
+  bp = make_bucket (buffer_size);
+  n = iptr->read (bp->data_, bp->size_);
+  while (   traits::eoi () != n
+         && traits::eof () != n)
+    {
+      bp->size_ = n;
+      push (bp);
+      bp = make_bucket (buffer_size);
+      n = iptr->read (bp->data_, bp->size_);
+    }
+  mark (n, iptr->get_context ());
+  return n;
+}
+
+shared_ptr< bucket >            // write part of operator>>
+pump::impl::process_image (output::ptr optr)
+{
+  shared_ptr< bucket > bp = pop ();
+  if (traits::boi () != bp->mark_) return bp;
+
+  optr->mark (traits::boi (), bp->ctx_);
+  bp = pop ();
+  while (   traits::eoi () != bp->mark_
+         && traits::eof () != bp->mark_)
+    {
+      const octet *p = bp->data_;
+      streamsize m;
+
+      while (0 < bp->size_) {
+        m          = optr->write (p, bp->size_);
+        p         += m;
+        bp->size_ -= m;
+      }
+      bp = pop ();
+    }
+  optr->mark (bp->mark_, bp->ctx_);
+  return bp;
+}
+
+shared_ptr< bucket >
+pump::impl::make_bucket (streamsize size)
+{
+  shared_ptr< bucket > rv;
+
+  try
+    {
+      rv = make_shared< bucket > (size);
+    }
+  catch (const std::bad_alloc&)
+    {}
+
+  while (have_bucket_ && !rv)
+    {
+      this_thread::yield ();
+      try
+        {
+          rv = make_shared< bucket > (size);
+        }
+      catch (const std::bad_alloc&)
+        {}
+    }
+  if (!rv) throw std::bad_alloc ();
+
+  return rv;
+}
+
+shared_ptr< bucket >
+pump::impl::pop ()
+{
+  shared_ptr< bucket > bp;
+
+  {
+    unique_lock< mutex > lock (brigade_mutex_);
+
+    while (!have_bucket_)
+      not_empty_.wait (lock);
+
+    bp = brigade_.front ();
+    brigade_.pop_front ();
+  }
+  --have_bucket_;
+
+  return bp;
 }
 
 void
-pump::require_(input::ptr iptr)
+pump::impl::push (shared_ptr< bucket > bp)
 {
-  if (iptr) return;
-
-  BOOST_THROW_EXCEPTION (invalid_argument (_("no image data source")));
+  {
+    lock_guard< mutex > lock (brigade_mutex_);
+    brigade_.push_back (bp);
+  }
+  ++have_bucket_;
+  not_empty_.notify_one ();
 }
 
 void
-pump::require_(output::ptr optr)
+pump::impl::mark (traits::int_type c, const context& ctx)
 {
-  if (optr) return;
+  push (make_shared< bucket > (ctx, c));
+}
 
-  BOOST_THROW_EXCEPTION (invalid_argument (_("no output destination")));
+pump::pump (idevice::ptr idev)
+  : pimpl_(new impl (idev))
+{
+  init_(option_);
+}
+
+pump::pump (istream::ptr istr)
+  : pimpl_(new impl (istr))
+{
+  init_(option_);
+}
+
+pump::~pump ()
+{
+  delete pimpl_;
+}
+
+void
+pump::start (odevice::ptr odev)
+{
+  pimpl_->start (odev, value ((*option_)[ASYNC]));
+}
+
+void
+pump::start (ostream::ptr ostr)
+{
+  pimpl_->start (ostr, value ((*option_)[ASYNC]));
+}
+
+void
+pump::cancel ()
+{
+  pimpl_->cancel ();
+}
+
+connection
+pump::connect (const notify_signal_type::slot_type& slot) const
+{
+  return pimpl_->signal_notify_.connect (slot);
 }
 
 }       // namespace utsushi

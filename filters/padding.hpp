@@ -40,8 +40,6 @@ public:
   //! Produces as much unpadded image data as possible
   streamsize read (octet *data, streamsize n);
 
-  streamsize marker ();
-
 protected:
   void handle_marker (traits::int_type c);
 

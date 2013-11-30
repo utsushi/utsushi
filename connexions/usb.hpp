@@ -1,5 +1,5 @@
 //  usb.hpp -- shuttle messages between software and USB device
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //  Copyright (C) 2011  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -40,8 +40,9 @@
 namespace utsushi {
 
 extern "C" {
-  connexion::ptr libcnx_usb_LTX_factory (const std::string& type,
-                                         const std::string& path);
+  void libcnx_usb_LTX_factory (connexion::ptr& cnx,
+                               const std::string& type,
+                               const std::string& path);
 }
 
 namespace _cnx_ {

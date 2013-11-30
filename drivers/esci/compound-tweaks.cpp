@@ -27,6 +27,8 @@
 
 #include <boost/none.hpp>
 
+#include <utsushi/i18n.hpp>
+
 #include "code-token.hpp"
 #include "compound-tweaks.hpp"
 
@@ -62,6 +64,10 @@ DS_510::DS_510 (const connexion::ptr& cnx)
   // Assume people prefer color over B/W
   defs.col = code_token::parameter::col::C024;
 
+  // Boost USB I/O throughput
+  defs.bsz = 256 * 1024;
+  caps.bsz = capabilities::range (1, *defs.bsz);
+
   // Color correction parameters
 
   vector< double, 3 >& exp
@@ -83,6 +89,19 @@ DS_510::DS_510 (const connexion::ptr& cnx)
   mat[2][0] =  0.0082;
   mat[2][1] = -0.1479;
   mat[2][2] =  1.1397;
+}
+
+void
+DS_510::configure ()
+{
+  compound_scanner::configure ();
+
+  add_options ()
+    ("speed", toggle (true),
+     attributes (),
+     N_("Speed"),
+     N_("Optimize image acquisition for speed")
+     );
 }
 
 DS_xxx00::DS_xxx00 (const connexion::ptr& cnx)

@@ -48,6 +48,7 @@
 #include <utsushi/log.hpp>
 #include <utsushi/monitor.hpp>
 #include <utsushi/option.hpp>
+#include <utsushi/pump.hpp>
 #include <utsushi/run-time.hpp>
 #include <utsushi/scanner.hpp>
 #include <utsushi/stream.hpp>
@@ -55,10 +56,12 @@
 
 #include "../connexions/hexdump.hpp"
 #include "../filters/g3fax.hpp"
+#include "../filters/image-skip.hpp"
 #include "../filters/jpeg.hpp"
 #include "../filters/padding.hpp"
 #include "../filters/pdf.hpp"
 #include "../filters/pnm.hpp"
+#include "../filters/threshold.hpp"
 #include "../outputs/tiff.hpp"
 
 namespace po = boost::program_options;
@@ -70,12 +73,13 @@ using std::invalid_argument;
 using std::logic_error;
 using std::runtime_error;
 
-static sig_atomic_t do_cancel = false;
+#define nullptr 0
+static pump *pptr (nullptr);
 
 static void
 request_cancellation (int sig)
 {
-  do_cancel = true;
+  if (pptr) pptr->cancel ();
 }
 
 //! Wrap signal registration platform dependencies
@@ -366,26 +370,15 @@ struct unrecognize
   }
 };
 
-class cancellable_idevice
-  : public decorator< idevice >
+static int status = EXIT_SUCCESS;
+
+void
+on_notify (log::priority level, std::string message)
 {
-public:
-  cancellable_idevice (idevice::ptr instance)
-    : decorator< idevice > (instance)
-  {}
+  std::cerr << message << '\n';
 
-  streamsize
-  read (octet *data, streamsize n)
-  {
-    if (do_cancel)
-      {
-        instance_->cancel ();
-        do_cancel = false;
-      }
-
-    return instance_->read (data, n);
-  }
-};
+  if (log::ERROR >= level) status = EXIT_FAILURE;
+}
 
 int
 main (int argc, char *argv[])
@@ -483,7 +476,7 @@ main (int argc, char *argv[])
 
       scanner::ptr device (create (udi, cmd_vm.count ("debug")));
 
-      // Self-documenting device options
+      // Self-documenting device and add-on options
 
       po::variables_map dev_vm;
       po::options_description dev_opts (_("Device options"));
@@ -491,9 +484,17 @@ main (int argc, char *argv[])
                      device->options ()->end (),
                      visit (dev_opts));
 
+      po::variables_map add_vm;
+      po::options_description add_opts (_("Add-on options"));
+      ofilter::ptr blank_skip = make_shared< _flt_::image_skip > ();
+      std::for_each (blank_skip->options ()->begin (),
+                     blank_skip->options ()->end (),
+                     visit (add_opts));
+
       if (rt.count ("help"))
         {
           std::cout << dev_opts
+                    << add_opts
                     << "\n"
                     <<
             // FIXME: use word-wrapping instead of hard-coded newlines
@@ -510,9 +511,17 @@ main (int argc, char *argv[])
 
       po::parsed_options dev (po::command_line_parser (dev_argv)
                               .options (dev_opts)
+                              .allow_unregistered ()
                               .run ());
 
       dev_argv = po::collect_unrecognized (dev.options,
+                                           po::include_positional);
+
+      po::parsed_options add (po::command_line_parser (dev_argv)
+                              .options (add_opts)
+                              .run ());
+
+      dev_argv = po::collect_unrecognized (add.options,
                                            po::include_positional);
 
       if (uri.empty () && !dev_argv.empty ())
@@ -525,6 +534,12 @@ main (int argc, char *argv[])
 
       std::for_each (dev_vm.begin (), dev_vm.end (),
                      assign (device->options ()));
+
+      po::store (add, add_vm);
+      po::notify (add_vm);
+
+      std::for_each (add_vm.begin (), add_vm.end (),
+                     assign (blank_skip->options ()));
 
       // Infer desired image format from file extension
 
@@ -548,11 +563,32 @@ main (int argc, char *argv[])
       option::map& om (*device->options ());
       ostream::ptr ostr = make_shared< ostream > ();
 
-      std::string xfer_fmt;
-      {                         //! \todo get rid of silly type conversion
-        string xfer = value (om["transfer-format"]);
-        xfer_fmt = std::string (xfer);
-      }
+      const std::string xfer_raw = "image/x-raster";
+      const std::string xfer_jpg = "image/jpeg";
+      std::string xfer_fmt = device->get_context ().content_type ();
+
+      bool bilevel = (om["image-type"] == "Gray (1 bit)");
+      ofilter::ptr threshold (make_shared< threshold > ());
+      try
+        {
+          (*threshold->options ())["threshold"]
+            = value (om["threshold"]);
+        }
+      catch (const std::out_of_range&)
+        {
+          log::error ("Falling back to default threshold value");
+        }
+
+      ofilter::ptr jpeg_compress (make_shared< jpeg::compressor > ());
+      try
+        {
+          (*jpeg_compress->options ())["quality"]
+            = value ((om)["jpeg-quality"]);
+        }
+      catch (const std::out_of_range&)
+        {
+          log::error ("Falling back to default JPEG compression quality");
+        }
 
       toggle match_height = true;
       quantity height = -1.0;
@@ -569,8 +605,11 @@ main (int argc, char *argv[])
         }
       if (match_height) match_height = (height > 0);
 
-      /**/ if ("RAW"  == xfer_fmt) {}
-      else if ("JPEG" == xfer_fmt) {}
+      toggle skip_blank = (add_vm.count ("blank-threshold")
+                           && !bilevel); // \todo fix filter limitation
+
+      /**/ if (xfer_raw == xfer_fmt) {}
+      else if (xfer_jpg == xfer_fmt) {}
       else
         {
           log::alert
@@ -579,10 +618,14 @@ main (int argc, char *argv[])
 
       /**/ if ("PNM" == fmt)
         {
-          /**/ if ("RAW"  == xfer_fmt)
+          /**/ if (xfer_raw == xfer_fmt)
             ostr->push (make_shared< padding > ());
-          else if ("JPEG" == xfer_fmt)
-            ostr->push (make_shared< jpeg::decompressor > ());
+          else if (xfer_jpg == xfer_fmt)
+            {
+              ostr->push (make_shared< jpeg::decompressor > ());
+              if (skip_blank) ostr->push (blank_skip);
+              if (bilevel) ostr->push (threshold);
+            }
           else
             BOOST_THROW_EXCEPTION
               (runtime_error
@@ -590,47 +633,35 @@ main (int argc, char *argv[])
                  % xfer_fmt
                  % fmt)
                 .str ()));
+          if (skip_blank) ostr->push (blank_skip);
           if (match_height)
             ostr->push (make_shared< bottom_padder > (height));
           ostr->push (make_shared< pnm > ());
         }
       else if ("JPEG" == fmt)
         {
-          if (om["image-type"] == "Gray (1 bit)")
+          if (bilevel)
             BOOST_THROW_EXCEPTION
               (logic_error
                (_("JPEG does not support bi-level imagery")));
 
-          /**/ if ("RAW" == xfer_fmt)
+          /**/ if (xfer_raw == xfer_fmt)
             {
-                ostr->push (make_shared< padding > ());
+              ostr->push (make_shared< padding > ());
+              if (skip_blank) ostr->push (blank_skip);
               if (match_height)
                 ostr->push (make_shared< bottom_padder > (height));
-              jpeg::compressor::ptr jpeg = make_shared< jpeg::compressor > ();
-              try
-                {
-                  (*jpeg->options ())["quality"]
-                    = value (om["jpeg-quality"]);
-                }
-              catch (const std::out_of_range&)
-                {}
-              ostr->push (ofilter::ptr (jpeg));
+              ostr->push (jpeg_compress);
             }
-          else if ("JPEG" == xfer_fmt)
+          else if (xfer_jpg == xfer_fmt)
             {
-              if (match_height)
+              if (match_height || skip_blank)
                 {
                   ostr->push (make_shared< jpeg::decompressor > ());
-                  ostr->push (make_shared< bottom_padder > (height));
-                  jpeg::compressor::ptr jpeg = make_shared< jpeg::compressor > ();
-                  try
-                    {
-                      (*jpeg->options ())["quality"]
-                        = value (om["jpeg-quality"]);
-                    }
-                  catch (const std::out_of_range&)
-                    {}
-                  ostr->push (ofilter::ptr (jpeg));
+                  if (skip_blank)   ostr->push (blank_skip);
+                  if (match_height) ostr->push (make_shared< bottom_padder >
+                                                (height));
+                  ostr->push (jpeg_compress);
                 }
             }
           else
@@ -645,45 +676,41 @@ main (int argc, char *argv[])
         }
       else if ("PDF" == fmt)
         {
-          /**/ if ("RAW" == xfer_fmt)
+          /**/ if (xfer_raw == xfer_fmt)
             {
               ostr->push (make_shared< padding > ());
+              if (skip_blank) ostr->push (blank_skip);
               if (match_height)
                 ostr->push (make_shared< bottom_padder > (height));
 
-              if (om["image-type"] == "Gray (1 bit)")
+              if (bilevel)
                 {
                   ostr->push (make_shared< g3fax > ());
                 }
               else
                 {
-                  jpeg::compressor::ptr jpeg
-                    = make_shared< jpeg::compressor > ();
-                  try
-                    {
-                      (*jpeg->options ())["quality"]
-                        = value (om["jpeg-quality"]);
-                    }
-                  catch (const std::out_of_range&)
-                    {}
-                  ostr->push (ofilter::ptr (jpeg));
+                  ostr->push (jpeg_compress);
                 }
             }
-          else if ("JPEG" == xfer_fmt)
+          else if (xfer_jpg == xfer_fmt)
             {
-              if (match_height)
+              if (match_height || bilevel)
                 {
                   ostr->push (make_shared< jpeg::decompressor > ());
+                  if (skip_blank) ostr->push (blank_skip);
+                }
+              if (match_height)
+                {
                   ostr->push (make_shared< bottom_padder > (height));
-                  jpeg::compressor::ptr jpeg = make_shared< jpeg::compressor > ();
-                  try
-                    {
-                      (*jpeg->options ())["quality"]
-                        = value (om["jpeg-quality"]);
-                    }
-                  catch (const std::out_of_range&)
-                    {}
-                  ostr->push (ofilter::ptr (jpeg));
+                }
+              if (bilevel)
+                {
+                  ostr->push (threshold);
+                  ostr->push (make_shared< g3fax > ());
+                }
+              else
+                {
+                  ostr->push (jpeg_compress);
                 }
             }
           else
@@ -699,10 +726,13 @@ main (int argc, char *argv[])
         }
       else if ("TIFF" == fmt)
         {
-          /**/ if ("RAW" == xfer_fmt)
+          /**/ if (xfer_raw == xfer_fmt)
             ostr->push (make_shared< padding > ());
-          else if ("JPEG" == xfer_fmt)
-            ostr->push (make_shared< jpeg::decompressor > ());
+          else if (xfer_jpg == xfer_fmt)
+             {
+               ostr->push (make_shared< jpeg::decompressor > ());
+               if (bilevel) ostr->push (threshold);
+             }
           else
             BOOST_THROW_EXCEPTION
               (runtime_error
@@ -710,6 +740,7 @@ main (int argc, char *argv[])
                  % xfer_fmt
                  % fmt)
                 .str ()));
+          if (skip_blank) ostr->push (blank_skip);
           if (match_height)
             ostr->push (make_shared< bottom_padder > (height));
         }
@@ -746,19 +777,14 @@ main (int argc, char *argv[])
           ostr->push (make_shared< file_odevice > (gen));
         }
 
-      idevice::ptr cancellable_device
-        = make_shared< cancellable_idevice > (device);
-
-      istream istr;
-      istr.push (cancellable_device);
+      pump p (device);
+      pptr = &p;                // for use in request_cancellation
 
       set_signal (SIGTERM, request_cancellation);
       set_signal (SIGINT , request_cancellation);
 
-      streamsize rv = istr | *ostr;
-
-      if (traits::eof () == rv)
-        log::alert ("acquisition was cancelled");
+      p.connect (on_notify);
+      p.start (ostr);
     }
   catch (std::exception& e)
     {
@@ -770,5 +796,5 @@ main (int argc, char *argv[])
       return EXIT_FAILURE;
     }
 
-  exit (EXIT_SUCCESS);
+  exit (status);
 }

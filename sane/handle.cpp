@@ -36,8 +36,10 @@
 #include <utsushi/stream.hpp>
 #include <utsushi/i18n.hpp>
 
+#include "../filters/image-skip.hpp"
 #include "../filters/jpeg.hpp"
 #include "../filters/padding.hpp"
+#include "../filters/threshold.hpp"
 
 #include "handle.hpp"
 #include "log.hpp"
@@ -45,6 +47,8 @@
 
 using std::exception;
 using std::runtime_error;
+using utsushi::_flt_::ithreshold;
+using utsushi::_flt_::iimage_skip;
 
 namespace sane {
 
@@ -143,7 +147,7 @@ namespace unit
 using std::logic_error;
 using namespace utsushi;
 
-#define null_ptr 0
+#define nullptr 0
 
 handle::handle(const scanner::info& info)
   : name_(info.name () + " (" + info.udi () + ")")
@@ -158,6 +162,11 @@ handle::handle(const scanner::info& info)
     ;
   opt_.add_option_map ()
     (option_prefix, idev_->options ())
+    ;
+
+  iimage_skip flt;
+  opt_.add_option_map ()
+    ("software", flt.options ())
     ;
 
   sod_.reserve (opt_.size ());
@@ -246,7 +255,7 @@ handle::handle(const scanner::info& info)
           source = current;
         }
     }
-  update_capabilities (null_ptr);
+  update_capabilities (nullptr);
 }
 
 static void
@@ -353,39 +362,6 @@ handle::get (SANE_Int index, void *value) const
   return status;
 }
 
-void
-handle::update_capabilities (SANE_Word *info)
-{
-  std::vector< option_descriptor >::iterator it = sod_.begin ();
-
-  ++it;                         // do not modify name::num_options
-
-  for (; it != sod_.end (); ++it)
-    {
-      SANE_Int cap = it->cap;
-
-      if (!opt_.count (it->orig_key))
-        {
-          it->cap |= SANE_CAP_INACTIVE;
-        }
-      else                      // check Utsushi option attributes
-        {
-          option opt (opt_[it->orig_key]);
-
-          if (opt.is_active ())
-            {
-              it->cap &= ~SANE_CAP_INACTIVE;
-            }
-          if (opt.is_read_only ())
-            {
-              it->cap &= ~(  SANE_CAP_HARD_SELECT
-                           | SANE_CAP_SOFT_SELECT);
-            }
-        }
-
-      if (info && cap != it->cap) *info |= SANE_INFO_RELOAD_OPTIONS;
-    }
-}
 
 SANE_Status
 handle::set (SANE_Int index, void *value, SANE_Word *info)
@@ -410,36 +386,7 @@ handle::set (SANE_Int index, void *value, SANE_Word *info)
     {
       opt_[k] = v;
 
-      // FIXME handling of info is not SANE spec compliant
-
-      if (option_prefix / "image-type" == k)
-        {
-          update_option (option_prefix / "transfer-format");
-
-          if (info) *info |= SANE_INFO_RELOAD_OPTIONS;
-        }
-      if (option_prefix / "doc-source" == k)
-        {
-          update_option (option_prefix / "duplex");
-          update_option (option_prefix / "scan-area");
-          update_option (option_prefix / "tl-x");
-          update_option (option_prefix / "tl-y");
-          update_option (option_prefix / "br-x");
-          update_option (option_prefix / "br-y");
-
-          if (info) *info |= SANE_INFO_RELOAD_OPTIONS;
-        }
-      if (option_prefix / "scan-area" == k)
-        {
-          update_option (option_prefix / "tl-x");
-          update_option (option_prefix / "tl-y");
-          update_option (option_prefix / "br-x");
-          update_option (option_prefix / "br-y");
-
-          if (info) *info |= SANE_INFO_RELOAD_OPTIONS;
-        }
-
-      update_capabilities (info);
+      update_options (info);
 
       if (info)
         {
@@ -648,6 +595,17 @@ handle::marker ()
     {
       istream::ptr istr = make_shared< istream > ();
 
+      bool bilevel = (opt_[option_prefix / "image-type"] == "Gray (1 bit)");
+      quantity thr;
+      try
+        {
+          thr = value (opt_[option_prefix / "threshold"]);
+        }
+      catch (const std::out_of_range&)
+        {
+          thr = 128;
+        }
+
       toggle match_height = true;
       quantity height = -1.0;
       try
@@ -666,18 +624,44 @@ handle::marker ()
       if (match_height)
         istr->push (make_shared< _flt_::ibottom_padder > (height));
 
-      std::string xfer_fmt ("RAW");
+      bool skip_blank = !bilevel; // \todo fix filter limitation
+      quantity skip_thr = -1.0;
+      ifilter::ptr blank_skip (make_shared< iimage_skip > ());
       try
         {
-          string xfer = value (opt_[option_prefix / "transfer-format"]);
-          xfer_fmt = std::string (xfer);
+          skip_thr = value (opt_["software/blank-threshold"]);
+          (*blank_skip->options ())["blank-threshold"] = skip_thr;
         }
-      catch (const std::out_of_range&) {}
+      catch (const std::out_of_range&)
+        {
+          skip_blank = false;
+        }
+      if (skip_blank) skip_blank = (skip_thr > 0);
 
-      /**/ if ("RAW"  == xfer_fmt)
+      if (skip_blank)
+        istr->push (ifilter::ptr (blank_skip));
+
+      const std::string xfer_raw = "image/x-raster";
+      const std::string xfer_jpg = "image/jpeg";
+      std::string xfer_fmt = idev_->get_context ().content_type ();
+
+      /**/ if (xfer_raw == xfer_fmt)
         istr->push (make_shared< _flt_::ipadding > ());
-      else if ("JPEG" == xfer_fmt)
-        istr->push (make_shared< _flt_::jpeg::idecompressor > ());
+      else if (xfer_jpg == xfer_fmt)
+        {
+          if (bilevel)
+            {
+              ithreshold::ptr thresh = make_shared< ithreshold > ();
+              try
+                {
+                  (*thresh->options ())["threshold"] = thr;
+                }
+              catch (const std::out_of_range&)
+                {}
+              istr->push (ifilter::ptr (thresh));
+            }
+          istr->push (make_shared< _flt_::jpeg::idecompressor > ());
+        }
       else
         {
           log::alert
@@ -743,6 +727,63 @@ handle::add_option (option& visitor)
     }
 }
 
+void
+handle::update_options (SANE_Word *info)
+{
+  std::vector< option_descriptor >::iterator it = sod_.begin ();
+
+  ++it;                         // do not modify name::num_options
+
+  for (; it != sod_.end (); ++it)
+    {
+      if (opt_.count (it->orig_key))
+        {
+          option_descriptor od (opt_[it->orig_key]);
+
+          if (*it != od)
+            {
+              *it = od;
+              if (info) *info |= SANE_INFO_RELOAD_OPTIONS;
+            }
+        }
+    }
+  update_capabilities (info);
+}
+
+void
+handle::update_capabilities (SANE_Word *info)
+{
+  std::vector< option_descriptor >::iterator it = sod_.begin ();
+
+  ++it;                         // do not modify name::num_options
+
+  for (; it != sod_.end (); ++it)
+    {
+      SANE_Int cap = it->cap;
+
+      if (!opt_.count (it->orig_key))
+        {
+          it->cap |= SANE_CAP_INACTIVE;
+        }
+      else                      // check Utsushi option attributes
+        {
+          option opt (opt_[it->orig_key]);
+
+          if (opt.is_active ())
+            {
+              it->cap &= ~SANE_CAP_INACTIVE;
+            }
+          if (opt.is_read_only ())
+            {
+              it->cap &= ~(  SANE_CAP_HARD_SELECT
+                           | SANE_CAP_SOFT_SELECT);
+            }
+        }
+
+      if (info && cap != it->cap) *info |= SANE_INFO_RELOAD_OPTIONS;
+    }
+}
+
 struct match_key
 {
   const utsushi::key& k_;
@@ -756,21 +797,6 @@ struct match_key
     return k_ == od.orig_key;
   }
 };
-
-void
-handle::update_option (const utsushi::key& k)
-{
-  if (!opt_.count (k)) return;          // no matching Utsushi option
-
-  std::vector< option_descriptor >::iterator it;
-
-  it = find_if (sod_.begin (), sod_.end (),
-                match_key (k));
-
-  if (sod_.end () == it) return;        // no matching SANE option
-
-  *it = option_descriptor (opt_[k]);
-}
 
 //! Converts an utsushi::key into a valid SANE option descriptor name
 /*! Any utsushi::key characters that are not allowed are converted to
@@ -859,7 +885,7 @@ handle::option_descriptor::option_descriptor (const option& visitor)
   cap = SANE_CAP_SOFT_DETECT | SANE_CAP_SOFT_SELECT;
 
   constraint_type  = SANE_CONSTRAINT_NONE;
-  constraint.range = null_ptr;
+  constraint.range = nullptr;
 
   if (!name::is_well_known (sane_key))
     {
@@ -968,6 +994,83 @@ handle::option_descriptor::option_descriptor (const option& visitor)
       // somewhat limit the possibilities but never cause a violation;
       // setting can be added safely.
     }
+}
+
+bool
+handle::option_descriptor::operator== (const handle::option_descriptor& rhs)
+  const
+{
+  bool rv (   orig_key == rhs.orig_key
+           && sane_key == rhs.sane_key
+           && name_    == rhs.name_
+           && desc_    == rhs.desc_);
+
+  // Compare the SANE_Option_Descriptor base "class" part
+
+  rv &= (  (!name  && !rhs.name )       // both NULL
+         || (name  &&  rhs.name  && (0 == strcmp (name , rhs.name ))));
+  rv &= (  (!title && !rhs.title)
+         || (title &&  rhs.title && (0 == strcmp (title, rhs.title))));
+  rv &= (  (!desc  && !rhs.desc )
+         || (desc  &&  rhs.desc  && (0 == strcmp (desc , rhs.desc ))));
+
+  rv &= (type == rhs.type);
+  rv &= (unit == rhs.unit);
+  rv &= (size == rhs.size);
+  rv &= (cap  == rhs.cap );
+
+  if (rv && constraint_type == rhs.constraint_type)
+    {
+      /**/ if (constraint_type == SANE_CONSTRAINT_NONE)
+        {
+          // nothing to do
+        }
+      else if (constraint_type == SANE_CONSTRAINT_RANGE)
+        {
+          const SANE_Range *lhs_ = constraint.range;
+          const SANE_Range *rhs_ = rhs.constraint.range;
+
+          rv &= (   lhs_->min   == rhs_->min
+                 && lhs_->max   == rhs_->max
+                 && lhs_->quant == rhs_->quant);
+        }
+      else if (constraint_type == SANE_CONSTRAINT_WORD_LIST)
+        {
+          const SANE_Word *lhs_ = constraint.word_list;
+          const SANE_Word *rhs_ = rhs.constraint.word_list;
+
+          SANE_Int n = *lhs_;
+          do
+            {
+              rv &= (*lhs_ == *rhs_);
+              ++lhs_;
+              ++rhs_;
+            }
+          while (rv && --n >= 0);
+        }
+      else if (constraint_type == SANE_CONSTRAINT_STRING_LIST)
+        {
+          const SANE_String_Const *lhs_ = constraint.string_list;
+          const SANE_String_Const *rhs_ = rhs.constraint.string_list;
+
+          rv &= (lhs_ && rhs_);
+          while (rv && *lhs_ && *rhs_)
+            {
+              rv &= (0 == strcmp (*lhs_, *rhs_));
+              ++lhs_;
+              ++rhs_;
+            }
+          rv &= (!lhs_ && !rhs_);       // both NULL for equality
+        }
+      else
+        {
+          BOOST_THROW_EXCEPTION
+            (runtime_error
+             ("SANE API: list constraint value type not supported"));
+        }
+    }
+
+  return rv;
 }
 
 void
