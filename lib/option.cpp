@@ -36,7 +36,7 @@
 using std::logic_error;
 using std::out_of_range;
 
-#define null_ptr 0
+#define nullptr 0
 
 namespace utsushi {
 
@@ -129,7 +129,7 @@ option::option (option::map& owner, const utsushi::key& k)
 }
 
 option::map::map ()
-  : parent_(null_ptr)
+  : parent_(nullptr)
   , name_space_()
 {}
 

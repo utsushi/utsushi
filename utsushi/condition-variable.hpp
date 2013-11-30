@@ -1,5 +1,5 @@
-//  mutex.hpp -- wrapper for synchronization with concurrent programming
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  condition-variable.hpp -- wrapper for concurrency synchronization
+//  Copyright (C) 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -18,45 +18,42 @@
 //  You ought to have received a copy of the GNU General Public License
 //  along with this package.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef utsushi_mutex_hpp_
-#define utsushi_mutex_hpp_
+#ifndef utsushi_condition_variable_hpp_
+#define utsushi_condition_variable_hpp_
 
 /*! \file
  *  \brief Inject standard compliant synchronization support
  *
- *  C++ acquired a \c std::mutex and mutex related classes as well as
- *  locking concepts with C++11 [1].  Compiler and standard library
- *  implementations may need some time to catch up with these
- *  developments.  Boost.Thread is supposed to be standards compliant
- *  enough for our (current) needs so we can use that if the target
- *  platform is not yet up to snuff.  All the same, we do not want to
- *  worry about whether we are using the \c std or a \c boost class
- *  anywhere in the \c utsushi namespace.  This header file lets us.
+ *  C++ acquired a \c std::condition_variable classes with C++11 [1].
+ *  Compiler and standard library implementations may need some time
+ *  to catch up with these developments.  Boost.Thread is supposed to
+ *  be standards compliant enough for our (current) needs so we can
+ *  use that if the target platform is not yet up to snuff.  All the
+ *  same, we do not want to worry about whether we are using the \c
+ *  std or a \c boost class anywhere in the \c utsushi namespace.
+ *  This header file lets us.
  *
  *  -# http://wikipedia.org/wiki/C++11
  */
 
 #if __cplusplus >= 201103L
 
-#include <mutex>
+#include <condition_variable>
 #define NAMESPACE std
 
 #else   /* emulate C++11 */
 
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/locks.hpp>
+#include <boost/thread/condition_variable.hpp>
 #define NAMESPACE boost
 
 #endif
 
 namespace utsushi {
 
-using NAMESPACE::mutex;
-using NAMESPACE::lock_guard;
-using NAMESPACE::unique_lock;
+using NAMESPACE::condition_variable;
 
 }       // namespace utsushi
 
 #undef NAMESPACE
 
-#endif  /* utsushi_mutex_hpp_ */
+#endif  /* utsushi_condition_variable_hpp_ */

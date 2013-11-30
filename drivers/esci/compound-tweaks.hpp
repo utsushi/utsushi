@@ -34,19 +34,22 @@ namespace utsushi {
 namespace _drv_ {
 namespace esci {
 
-#define DERIVED_COMPOUND_(base,derived)         \
+#define DERIVED_COMPOUND_(base,derived,api)     \
   class derived                                 \
     : public base                               \
   {                                             \
   public:                                       \
     derived (const connexion::ptr& cnx);        \
+    api                                         \
   }                                             \
   /**/
 
-DERIVED_COMPOUND_(compound_scanner, DS_510);
-DERIVED_COMPOUND_(compound_scanner, DS_xxx00);
-DERIVED_COMPOUND_(DS_xxx00, DS_x500);
-DERIVED_COMPOUND_(DS_xxx00, DS_x0000);
+DERIVED_COMPOUND_(compound_scanner, DS_510,
+                  void configure ();
+);
+DERIVED_COMPOUND_(compound_scanner, DS_xxx00,);
+DERIVED_COMPOUND_(DS_xxx00, DS_x500,);
+DERIVED_COMPOUND_(DS_xxx00, DS_x0000,);
 
 }       // namespace esci
 }       // namespace _drv_

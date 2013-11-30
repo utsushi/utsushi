@@ -24,6 +24,9 @@
 
 #include "utsushi/device-info.hpp"
 
+#if HAVE_LIBUDEV
+#include "udev.hpp"
+#endif
 #if HAVE_LIBHAL
 #include "hal.hpp"
 #endif
@@ -35,6 +38,9 @@ device_info::create (const std::string& interface, const std::string& path)
 {
   device_info::ptr rv;
 
+#if HAVE_LIBUDEV
+  if (!rv) rv = make_shared< udev_::device > (interface, path);
+#endif
 #if HAVE_LIBHAL
   if (!rv) rv = make_shared< HAL::device > (interface, path);
 #endif

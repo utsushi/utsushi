@@ -78,16 +78,6 @@ ipadding::read (octet *data, streamsize n)
   return rv;
 }
 
-streamsize
-ipadding::marker ()
-{
-  streamsize rv = io_->marker ();
-
-  if (traits::is_marker (rv)) handle_marker (rv);
-
-  return rv;
-}
-
 void
 ipadding::handle_marker (traits::int_type c)
 {

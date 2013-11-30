@@ -1,5 +1,5 @@
 //  pump.cpp -- move image data from a source to a sink
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -48,17 +48,15 @@ pump::pump (istream::ptr istr)
 void
 pump::start (odevice::ptr odev)
 {
-  require_(odev);
-  connect_< output > (out, odev);
-  start_(odev);
+  if (odev) connect_< output > (out, odev);
+  utsushi::pump::start (odev);
 }
 
 void
 pump::start (ostream::ptr ostr)
 {
-  require_(ostr);
-  connect_< output > (out, ostr->get_device ());
-  start_(ostr);
+  if (ostr) connect_< output > (out, ostr->get_device ());
+  utsushi::pump::start (ostr);
 }
 
 pump::marker_signal_type

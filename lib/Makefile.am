@@ -87,6 +87,11 @@ if have_libtiff
 libutsushi_la_LIBADD  += $(LIBTIFF_LIBS)
 endif
 
+if have_libudev
+libutsushi_la_SOURCES += udev.cpp
+libutsushi_la_SOURCES += udev.hpp
+endif
+
 AM_CPPFLAGS += $(LTDLINCL)
 ## FIXME: These *DIR defines should be removed.  The run-time should
 ## get all these locations from a configuration file so stuff can be

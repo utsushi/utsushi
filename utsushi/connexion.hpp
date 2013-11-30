@@ -121,6 +121,8 @@ public:
   virtual void send (const octet *message, streamsize size);
   virtual void recv (      octet *message, streamsize size);
 
+  virtual option::map::ptr options ();
+
 protected:
   typedef decorator base_;
 

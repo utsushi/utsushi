@@ -31,6 +31,7 @@
 namespace utsushi {
 
 #define DEFAULT_CONTENT_TYPE "image/x-raster"
+#define BAD_PIXEL_TYPE std::logic_error ("unsupported pixel type")
 
 context::context (const size_type& width, const size_type& height,
                   const _pxl_type_& pixel_type)
@@ -112,6 +113,24 @@ context::size_type
 context::width () const
 {
   return width_;
+}
+
+context::size_type
+context::depth () const
+{
+  switch (pixel_type_)
+    {
+    case MONO:
+      return 1;
+    case GRAY8:
+    case RGB8:
+      return 8;
+    case GRAY16:
+    case RGB16:
+      return 16;
+    default:
+      BOOST_THROW_EXCEPTION (BAD_PIXEL_TYPE);
+    }
 }
 
 context::size_type
@@ -223,6 +242,26 @@ context::width (const size_type& pixels, const size_type& padding)
 }
 
 void
+context::depth (const size_type& bits)
+{
+  /**/ if (1 == comps ())
+    {
+      /**/ if ( 1 == bits) pixel_type_ = MONO;
+      else if ( 8 == bits) pixel_type_ = GRAY8;
+      else if (16 == bits) pixel_type_ = GRAY16;
+      else BOOST_THROW_EXCEPTION (BAD_PIXEL_TYPE);
+    }
+  else if (3 == comps ())
+    {
+      /**/ if ( 8 == bits) pixel_type_ = RGB8;
+      else if (16 == bits) pixel_type_ = RGB16;
+      else BOOST_THROW_EXCEPTION (BAD_PIXEL_TYPE);
+    }
+  else
+    BOOST_THROW_EXCEPTION (BAD_PIXEL_TYPE);
+}
+
+void
 context::resolution (const size_type& res)
 {
   resolution (res, res);
@@ -234,8 +273,6 @@ context::resolution (const size_type& x_res, const size_type& y_res)
   x_resolution_ = x_res;
   y_resolution_ = y_res;
 }
-
-#define BAD_PIXEL_TYPE std::logic_error ("unsupported pixel type")
 
 context::size_type
 context::octets_per_pixel_() const
@@ -270,6 +307,8 @@ context::context (const size_type& width, const size_type& height,
   , width_(width)
   , h_padding_(0)
   , w_padding_(0)
+  , x_resolution_(0)
+  , y_resolution_(0)
   , octets_seen_(0)
 {
   if (3 == comps) {
@@ -298,24 +337,6 @@ context::comps () const
     case RGB8:
     case RGB16:
       return 3;
-    default:
-      BOOST_THROW_EXCEPTION (BAD_PIXEL_TYPE);
-    }
-}
-
-short
-context::depth () const
-{
-  switch (pixel_type_)
-    {
-    case MONO:
-      return 1;
-    case GRAY8:
-    case RGB8:
-      return 8;
-    case GRAY16:
-    case RGB16:
-      return 16;
     default:
       BOOST_THROW_EXCEPTION (BAD_PIXEL_TYPE);
     }

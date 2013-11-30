@@ -39,7 +39,7 @@
 
 #include "jpeg.hpp"
 
-#define null_ptr 0
+#define nullptr 0
 
 using std::bad_alloc;
 using std::min;
@@ -157,7 +157,7 @@ struct callback
 };
 
 common::common ()
-  : jbuf_(null_ptr)
+  : jbuf_(nullptr)
   , jbuf_size_(0)
 {
   jpeg_std_error (&jerr_);
@@ -235,7 +235,7 @@ common::add_buffer_size_(option::map::ptr om_)
 
 compressor::compressor ()
   : quality_(75)                // buried in libjpeg.txt somewhere
-  , cache_(null_ptr)
+  , cache_(nullptr)
   , cache_size_(0)
   , cache_fill_(0)
 {
@@ -495,7 +495,7 @@ decompressor::decompressor ()
   , decompressing_(false)
   , flushing_(false)
   , bytes_to_skip_(0)
-  , sample_rows_(null_ptr)
+  , sample_rows_(nullptr)
 {
   // Set up minimally useful information for our error handler before
   // creating a decompressor.
@@ -691,7 +691,7 @@ decompressor::handle_eoi ()
   for (int i = 0; i < cinfo_.rec_outbuf_height; ++i)
     delete [] sample_rows_[i];
   delete [] sample_rows_;
-  sample_rows_ = null_ptr;
+  sample_rows_ = nullptr;
 
   if (cinfo_.output_scanline < cinfo_.output_height)
     {

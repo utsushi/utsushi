@@ -1,5 +1,5 @@
 //  threshold.hpp -- apply a threshold to 8-bit grayscale data
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -22,6 +22,7 @@
 #ifndef filters_threshold_hpp_
 #define filters_threshold_hpp_
 
+#include <utsushi/cstdint.hpp>
 #include <utsushi/filter.hpp>
 
 namespace utsushi {
@@ -52,6 +53,21 @@ protected:
 
   static void
   set_bit (octet *data, streamsize bit_index, bool is_below);
+};
+
+class ithreshold
+  : public ifilter
+{
+public:
+  ithreshold ();
+
+  streamsize read (octet *data, streamsize n);
+
+protected:
+  void handle_marker (traits::int_type c);
+
+  uint8_t threshold_;
+  streamsize line_;
 };
 
 }       // namespace _flt_

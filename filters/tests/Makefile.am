@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -29,6 +29,7 @@ check_PROGRAMS  =
 check_PROGRAMS += pnm.utr
 check_PROGRAMS += lut.utr
 check_PROGRAMS += threshold.utr
+check_PROGRAMS += image-skip.utr
 
 LDADD  = ../libflt-all.la
 LDADD += ../../lib/libutsushi.la $(LIBUTSUSHI_LIBS)

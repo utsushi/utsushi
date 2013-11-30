@@ -33,7 +33,7 @@
 
 #include <map>
 
-#define null_ptr 0
+#define nullptr 0
 
 namespace utsushi {
 
@@ -43,7 +43,7 @@ namespace {
   const length mm     = inches / 25.4;
 
   typedef std::map< std::string, media > dictionary;
-  dictionary *dict = null_ptr;
+  dictionary *dict = nullptr;
 
   /*! \todo Initialize from a user customizable data file with support
    *        for application predefined sizes.  The user should not

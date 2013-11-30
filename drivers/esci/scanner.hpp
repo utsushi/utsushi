@@ -1,6 +1,6 @@
 //  scanner.hpp -- API implementation for an ESC/I driver
+//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //  Copyright (C) 2013  Olaf Meeuwissen
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -43,11 +43,10 @@ extern "C" {
    *  After instantiating the object, it will be configured so that
    *  its options will be available at the point of return.
    *
-   *  When unable to instantiate a suitable scanner object, a default
-   *  scanner::ptr is returned.  Such objects evaluate to \c false in
-   *  Boolean contexts.
+   *  When unable to instantiate a suitable scanner object, the \a rv
+   *  return value is not modified.
    */
-  scanner::ptr libdrv_esci_LTX_scanner_factory (connexion::ptr cnx);
+  void libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx);
 }
 
 namespace _drv_ {

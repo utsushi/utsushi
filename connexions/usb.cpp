@@ -53,20 +53,20 @@ libusb_error_name (int err)
 
 extern "C" {
 
-  connexion::ptr
-  libcnx_usb_LTX_factory (const std::string& iftype, const std::string& path)
+  void
+  libcnx_usb_LTX_factory (connexion::ptr& cnx,
+                          const std::string& iftype, const std::string& path)
   {
     device_info::ptr dev = device_info::create (iftype, path);
 
-    if (!dev) return connexion::ptr ();
+    if (!dev) return;
 
 #if HAVE_LIBUSB
-    return make_shared< usb > (dev);
+    cnx = make_shared< usb > (dev);
 #elif HAVE_LIBUSB_LEGACY
-    return make_shared< usb_legacy > (dev);
+    cnx = make_shared< usb_legacy > (dev);
 #else
     log::alert ("USB support disabled at compile time");
-    return connexion::ptr ();
 #endif
   }
 }

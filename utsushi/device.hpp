@@ -284,6 +284,12 @@ public:
   streamsize buffer_size () const;
   void buffer_size (streamsize size);
   context get_context () const;
+  bool is_single_image () const;
+
+  connection connect_marker (const marker_signal_type::slot_type&) const;
+  connection connect_update (const update_signal_type::slot_type&) const;
+
+  option::map::ptr options ();
 
 protected:
   ptr instance_;

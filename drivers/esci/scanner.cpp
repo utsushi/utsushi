@@ -41,8 +41,8 @@ namespace utsushi {
 
 extern "C" {
 
-scanner::ptr
-libdrv_esci_LTX_scanner_factory (connexion::ptr cnx)
+void
+libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
 {
   using namespace _drv_;
 
@@ -55,7 +55,7 @@ libdrv_esci_LTX_scanner_factory (connexion::ptr cnx)
       log::fatal
         ("expected an established connexion");
 
-      return sp;
+      return;
     }
 
   try
@@ -137,8 +137,8 @@ libdrv_esci_LTX_scanner_factory (connexion::ptr cnx)
   if (sp)
     {
       sp->configure ();
+      rv = sp;
     }
-  return sp;
 }
 
 } // extern "C"

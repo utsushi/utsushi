@@ -67,7 +67,7 @@ namespace utsushi
         // create a USB connexion will need to link with a suitable
         // USB plugin.
 
-        cnx = libcnx_usb_LTX_factory (type, path);
+        libcnx_usb_LTX_factory (cnx, type, path);
       }
     else
       {
@@ -658,6 +658,12 @@ void
 decorator<connexion>::recv (octet *message, streamsize size)
 {
   instance_->recv (message, size);
+}
+
+option::map::ptr
+decorator<connexion>::options ()
+{
+  return instance_->options ();
 }
 
 } // namespace utsushi

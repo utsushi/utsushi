@@ -1,6 +1,15 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.4.0                                             (2013-11-21)
+----------------------------------------------------------------------
+ * increases image acquisition performance
+ * adds an option to suppress blank images from the output
+ * lowers the maximum transfer size for the DS-510
+ * fixes device "hangs" when cancelling acquisition with the CLI
+ * fixes a use-after-delete memory issue in the SANE backend
+
+----------------------------------------------------------------------
 utsushi-0.3.0                                             (2013-09-01)
 ----------------------------------------------------------------------
  * adds driver support for the DS-510

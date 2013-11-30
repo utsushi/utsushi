@@ -75,6 +75,8 @@ public:
   size_type height () const;
   //! Image width in pixels
   size_type width () const;
+  //! Image depth in bits
+  size_type depth () const;
 
   //! Image size in octets
   size_type scan_size () const;
@@ -102,6 +104,7 @@ public:
 
   void height (const size_type& pixels, const size_type& padding = 0);
   void width (const size_type& pixels, const size_type& padding = 0);
+  void depth (const size_type& bits);
   void resolution (const size_type& res);
   void resolution (const size_type& x_res, const size_type& y_res);
 
@@ -132,7 +135,6 @@ public:
            const short& depth      );
 
   short     comps  () const;
-  short     depth  () const;
 };
 
 }       // namespace utsushi
