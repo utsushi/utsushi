@@ -1,5 +1,5 @@
 //  preview.cpp -- display/control images before final acquisition
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -242,20 +242,24 @@ preview::on_refresh ()
   }
   catch (const std::out_of_range&){}
 
-  toggle match_height = true;
+  toggle force_extent = true;
+  quantity width  = -1.0;
   quantity height = -1.0;
   try
     {
-      match_height = value ((*control_)["match-height"]);
+      force_extent = value ((*control_)["force-extent"]);
+      width   = value ((*control_)["br-x"]);
+      width  -= value ((*control_)["tl-x"]);
       height  = value ((*control_)["br-y"]);
       height -= value ((*control_)["tl-y"]);
     }
   catch (const std::out_of_range&)
     {
-      match_height = false;
+      force_extent = false;
+      width  = -1.0;
       height = -1.0;
     }
-  if (match_height) match_height = (height > 0);
+  if (force_extent) force_extent = (width > 0 || height > 0);
 
   try
     {
@@ -290,20 +294,20 @@ preview::on_refresh ()
       /**/ if (xfer_raw == xfer_fmt)
         {
           ostream_->push (make_shared< padding > ());
-          if (match_height)
-            ostream_->push (make_shared< bottom_padder > (height));
+          if (force_extent)
+            ostream_->push (make_shared< bottom_padder > (width, height));
           ostream_->push (make_shared< pnm > ());
         }
       else if (xfer_jpg == xfer_fmt)
         {
-          if (match_height || bilevel)
+          if (force_extent || bilevel)
             {
               ostream_->push (make_shared< jpeg::decompressor > ());
             }
           if (bilevel) ostream_->push (threshold);
-          if (match_height)
+          if (force_extent)
             {
-              ostream_->push (make_shared< bottom_padder > (height));
+              ostream_->push (make_shared< bottom_padder > (width, height));
               if (!bilevel) ostream_->push (jpeg_compress);
             }
         }
@@ -313,8 +317,8 @@ preview::on_refresh ()
            *        handle image_fmt.  We should check the supported
            *        formats to confirm and take action if it doesn't.
            */
-          if (match_height)
-            log::alert ("height matching support not implemented");
+          if (force_extent)
+            log::alert ("extent forcing support not implemented");
         }
       ostream_->push (odevice::ptr (odevice_));
 

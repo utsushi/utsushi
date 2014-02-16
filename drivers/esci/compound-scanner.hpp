@@ -1,5 +1,5 @@
 //  compound-scanner.hpp -- devices that handle compound commands
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -24,6 +24,7 @@
 #include <deque>
 
 #include <utsushi/connexion.hpp>
+#include <utsushi/constraint.hpp>
 #include <utsushi/context.hpp>
 
 #include "buffer.hpp"
@@ -158,6 +159,11 @@ protected:
 
   const quantity min_width_;
   const quantity min_height_;
+
+  // Preferred resolution constraints for when software emulation is
+  // available
+  const constraint::ptr res_x_;
+  const constraint::ptr res_y_;
   //! @}
 
   scanner_control acquire_;

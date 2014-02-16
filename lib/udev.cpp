@@ -1,5 +1,5 @@
 //  udev.cpp -- OO wrapper around bits and pieces of the libudev API
-//  Copyright (C) 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -154,7 +154,7 @@ std::string
 device::usb_serial () const
 {
   std::string s;
-  get_property_(dev_, "ID_SERIAL", s);
+  get_property_(dev_, "ID_SERIAL_SHORT", s);
   return s;
 }
 

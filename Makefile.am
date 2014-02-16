@@ -57,6 +57,7 @@ ACLOCAL_AMFLAGS = -I upstream/aclocal
 DISTCHECK_CONFIGURE_FLAGS  = --with-included-ltdl
 DISTCHECK_CONFIGURE_FLAGS += --with-gtkmm
 DISTCHECK_CONFIGURE_FLAGS += --with-sane
+DISTCHECK_CONFIGURE_FLAGS += --with-magick
 DISTCHECK_CONFIGURE_FLAGS += --with-jpeg
 DISTCHECK_CONFIGURE_FLAGS += --with-tiff
 DISTCHECK_CONFIGURE_FLAGS += --disable-sane-config

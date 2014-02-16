@@ -1,5 +1,5 @@
 //  grammar-status.cpp -- component instantiations
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -111,10 +111,11 @@ void check_bits (const integer& push_button)
 bool
 hardware_status::operator== (const hardware_status& rhs) const
 {
-  return (   medium      == rhs.medium
-          && error       == rhs.error
-          && focus       == rhs.focus
-          && push_button == rhs.push_button);
+  return (   medium          == rhs.medium
+          && error           == rhs.error
+          && focus           == rhs.focus
+          && push_button     == rhs.push_button
+          && separation_mode == rhs.separation_mode);
 }
 
 void

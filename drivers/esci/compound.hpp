@@ -1,5 +1,5 @@
 //  compound.hpp -- protocol variant command base and templates
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -173,7 +173,9 @@ protected:
    *  \todo Signal not-ready status if any
    *  \todo Decide whether the above should be done as part of this
    *        function or rather after operator>>() has returned from
-   *        recv_data_block_().
+   *        recv_data_block_().  Note that a data block, if any, \c
+   *        has to be received, even in case of errors (other than
+   *        I/O errors).
    */
   void decode_reply_block_();
 

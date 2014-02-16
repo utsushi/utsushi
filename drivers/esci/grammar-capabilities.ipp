@@ -1,5 +1,5 @@
 //  grammar-capabilities.ipp -- component rule definitions
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -86,19 +86,26 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
     ;
 
   caps_adf_rule_ %=
-    qi::skip (token_(ADF)) [ +caps_adf_token_ ]
+    qi::skip (token_(ADF))
+    [   *(caps_adf_token_)
+      ^  (token_(adf::RSMS) > (this->positive_range_ | this->positive_list_))
+      ]
     ;
 
   caps_tpu_rule_ %=
     qi::skip (token_(TPU))
-    [    (token_(tpu::ARE1) > +caps_tpu_area_token_)
+    [   *(caps_tpu_token_)
+      ^  (token_(tpu::RSMS) > (this->positive_range_ | this->positive_list_))
+      ^  (token_(tpu::ARE1) > +caps_tpu_area_token_)
       ^  (token_(tpu::ARE2) > +caps_tpu_area_token_)
-      ^ +(caps_tpu_token_)
       ]
     ;
 
   caps_fb_rule_ %=
-    qi::skip (token_(FB )) [ +caps_fb_token_ ]
+    qi::skip (token_(FB ))
+    [   *(caps_fb_token_)
+      ^  (token_(fb::RSMS) > (this->positive_range_ | this->positive_list_))
+      ]
     ;
 
   caps_fcs_rule_ %=
@@ -147,6 +154,7 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
       | token_(adf::DFL1)
       | token_(adf::DFL2)
       | token_(adf::FAST)
+      | token_(adf::SLOW)
       | token_(adf::BGWH)
       | token_(adf::BGBK)
       | token_(adf::BGGY)
@@ -155,6 +163,8 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
       | token_(adf::CRP )
       | token_(adf::SKEW)
       | token_(adf::OVSN)
+      | token_(adf::CLEN)
+      | token_(adf::CALB)
       )
     > token_
     ;
@@ -162,6 +172,7 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
   caps_tpu_token_ %=
     &(  token_(tpu::MAGC)
       | token_(tpu::FAST)
+      | token_(tpu::SLOW)
       | token_(tpu::CRP )
       | token_(tpu::SKEW)
       | token_(tpu::OVSN)
@@ -180,6 +191,7 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
     &(  token_(fb::LMP1)
       | token_(fb::LMP2)
       | token_(fb::FAST)
+      | token_(fb::SLOW)
       | token_(fb::CRP )
       | token_(fb::SKEW)
       | token_(fb::OVSN)
@@ -277,7 +289,7 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
     ;
 
   caps_qit_token_ %=
-    &(  token_(qit::NONE)
+    &(  token_(qit::PREF)
       | token_(qit::ON  )
       | token_(qit::OFF )
       )
@@ -330,10 +342,16 @@ BOOST_FUSION_ADAPT_STRUCT
  )
 
 BOOST_FUSION_ADAPT_STRUCT
-(ESCI_NS::capabilities::tpu_control,
+(ESCI_NS::capabilities::document_source,
+ (boost::optional< std::vector< ESCI_NS::quad > >, flags)
+ (boost::optional< ESCI_NS::capabilities::constraint >, resolution))
+
+BOOST_FUSION_ADAPT_STRUCT
+(ESCI_NS::capabilities::tpu_source,
+ (boost::optional< std::vector< ESCI_NS::quad > >, flags)
+ (boost::optional< ESCI_NS::capabilities::constraint >, resolution)
  (boost::optional< std::vector< ESCI_NS::quad > >, area)
- (boost::optional< std::vector< ESCI_NS::quad > >, alternative_area)
- (boost::optional< std::vector< ESCI_NS::quad > >, other))
+ (boost::optional< std::vector< ESCI_NS::quad > >, alternative_area))
 
 BOOST_FUSION_ADAPT_STRUCT
 (ESCI_NS::capabilities::focus_control,
@@ -342,9 +360,9 @@ BOOST_FUSION_ADAPT_STRUCT
 
 BOOST_FUSION_ADAPT_STRUCT
 (ESCI_NS::capabilities,
- (boost::optional< std::vector< ESCI_NS::quad > >, adf)
- (boost::optional< ESCI_NS::capabilities::tpu_control >, tpu)
- (boost::optional< std::vector< ESCI_NS::quad > >, fb)
+ (boost::optional< ESCI_NS::capabilities::document_source >, adf)
+ (boost::optional< ESCI_NS::capabilities::tpu_source >, tpu)
+ (boost::optional< ESCI_NS::capabilities::document_source >, fb)
  (boost::optional< std::vector< ESCI_NS::quad > >, col)
  (boost::optional< std::vector< ESCI_NS::quad > >, fmt)
  (boost::optional< ESCI_NS::capabilities::range >, jpg)

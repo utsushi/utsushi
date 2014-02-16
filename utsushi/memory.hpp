@@ -1,5 +1,5 @@
 //  memory.hpp -- wrapper for managed memory pointers
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -53,6 +53,7 @@
 
 namespace utsushi {
 
+using NAMESPACE::dynamic_pointer_cast;
 using NAMESPACE::make_shared;
 using NAMESPACE::shared_ptr;
 using NAMESPACE::weak_ptr;

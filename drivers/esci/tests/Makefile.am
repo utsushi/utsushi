@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -26,10 +26,12 @@ TESTS_ENVIRONMENT =
 TESTS  = setter.utr
 TESTS += grammar-formats.utr
 TESTS += grammar.utr
+TESTS += grammar-mechanics.utr
 
 check_PROGRAMS  = setter.utr
 check_PROGRAMS += grammar-formats.utr
 check_PROGRAMS += grammar.utr
+check_PROGRAMS += grammar-mechanics.utr
 
 AM_CPPFLAGS += -DESCI_GRAMMAR_TRACE=1
 AM_LDFLAGS  += $(BOOST_LDFLAGS)
@@ -41,6 +43,7 @@ grammar_utr_LDADD           = $(LDADD) $(BOOST_FILESYSTEM_LIB)
 setter_utr_LDADD    = $(LDADD) ../../../connexions/libcnx-usb.la
 grammar_formats_utr_LDADD   += ../../../connexions/libcnx-usb.la
 grammar_utr_LDADD           += ../../../connexions/libcnx-usb.la
+grammar_mechanics_utr_LDADD  = $(LDADD) ../../../connexions/libcnx-usb.la
 
 endif
 

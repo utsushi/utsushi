@@ -1,5 +1,5 @@
 //  tools.hpp -- for unit test implementation
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -28,6 +28,7 @@
 
 #include <boost/test/framework.hpp>
 #include <boost/test/test_tools.hpp>
+#include <boost/test/unit_test.hpp>
 
 //! Consistency alternative for the official Boost.Test tool name
 /*! All of the Boost.Test tools for binary comparison use a two letter

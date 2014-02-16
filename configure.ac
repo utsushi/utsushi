@@ -1,5 +1,5 @@
 dnl  configure.ac -- an autoconf template for configure
-dnl  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+dnl  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 dnl
 dnl  License: GPL-3.0+
 dnl  Author : AVASYS CORPORATION
@@ -23,7 +23,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.61)
-AC_INIT([Utsushi], [0.4.0],
+AC_INIT([Utsushi], [0.5.0],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -90,6 +90,13 @@ AC_ARG_WITH(jpeg,
     [include JPEG image format related filters @<:@check@:>@]),
   [],
   [with_jpeg=check])
+
+AC_ARG_WITH(magick,
+  AS_HELP_STRING([--with-magick],
+    [include image processing with convert @<:@check@:>@.
+     Both GraphicsMagick and ImageMagick are supported.]),
+  [],
+  [with_magick=check])
 
 AC_ARG_WITH(tiff,
   AS_HELP_STRING([--with-tiff],
@@ -174,6 +181,10 @@ AC_DEFINE([HAVE_LIBUSB_LEGACY],
   [0], [define to 1 if libusb-0.1 is available])
 AC_DEFINE([HAVE_LT_DLADVISE],
   [0], [Define to 1 if your libltdl supports lt_dladvise_* API.])
+AC_DEFINE([HAVE_MAGICK],
+  [0], [Define to 1 if GraphicsMagick or ImageMagick is available])
+AC_DEFINE([MAGICK_CONVERT],
+  [], [Define to an appropriate command-line invocation for convert])
 
 dnl  checks for programs, modules and libraries
 
@@ -212,8 +223,7 @@ AM_CONDITIONAL([with_static_enabled], [test xyes = x$enable_static])
 
                                 dnl  cross-platform C++ extensions
 AS_IF([test xyes != x$with_included_boost],
-  [m4_pattern_forbid(AX_BOOST_BASE)
-   AX_BOOST_BASE([1.46],
+  [AX_BOOST_BASE([1.46],
      [AX_BOOST_SYSTEM
       AX_BOOST_FILESYSTEM
       AX_BOOST_IOSTREAMS
@@ -330,6 +340,20 @@ AS_IF([test xyes != "x$with_legacy_usb"],
   ])
 AM_CONDITIONAL([have_libusb], [test x != "x$LIBUSB_LIBS"])
 AM_CONDITIONAL([have_libusb_legacy], [test x != "x$LIBUSB_LEGACY_LIBS"])
+
+AS_IF([test xno != "x$with_magick"],
+  [AC_CHECK_PROGS([MAGICK_CONVERT], [gm convert])
+   AS_IF([test x != x$MAGICK_CONVERT],
+     [AC_DEFINE([HAVE_MAGICK], [1])
+      AS_IF([test xgm = x$MAGICK_CONVERT],
+        [MAGICK_CONVERT="gm convert"])
+      AC_DEFINE_UNQUOTED([MAGICK_CONVERT], ["$MAGICK_CONVERT"])
+     ],
+     [AS_IF([test xcheck != "x$with_magick"],
+        [AC_MSG_ERROR([magick required but not found])])
+     ])
+  ])
+AM_CONDITIONAL([have_magick], [test x != "x$MAGICK_CONVERT"])
 
 AS_IF([test xno != "x$with_gtkmm"],
   [PKG_CHECK_MODULES([LIBGTKMM], [gtkmm-2.4 > 2.12],

@@ -1,5 +1,5 @@
 //  option.cpp -- configurable settings in recursive property maps
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -108,15 +108,22 @@ option::is_at (const level::symbol& level) const
 }
 
 bool
+option::is_emulated () const
+{
+  return owner_.descriptors_[key_]->is_emulated ();
+}
+
+bool
 option::is_active () const
 {
-  return true;
+  return owner_.descriptors_[key_]->is_active ();
 }
 
 bool
 option::is_read_only () const
 {
-  return owner_.constraints_[key_]->is_singular ();
+  return (owner_.constraints_[key_]->is_singular ()
+          || owner_.descriptors_[key_]->is_read_only ());
 }
 
 option::option (option::map& owner, const utsushi::key& k)

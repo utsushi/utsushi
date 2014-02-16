@@ -76,6 +76,8 @@ public:
 quantity operator+ (const quantity& q);
 quantity operator- (const quantity& q);
 
+quantity abs (const quantity& q);
+
 template< typename T >
 T quantity::amount () const
 {

@@ -1,7 +1,7 @@
 
   Utsushi - Next Generation Image Acquisition
 
-  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 
 
   SUMMARY
@@ -34,7 +34,7 @@ USING THE SOFTWARE
   menu system.  If so, you can probably start up the GUI from there.
 
   In case you want to automate your image acquisition task, you can
-  use a non-interactive utility for that.  Use the --no-interface
+  use a non-interactive utility for that.  Use the '--no-interface'
   option to prevent the automatic UI selection.
 
   For brief help information, use
@@ -59,6 +59,9 @@ USING THE SOFTWARE
     At present, the following EPSON devices are supported:
 
       - DS-510
+      - DS-560
+      - DS-760
+      - DS-860
       - DS-5500
       - DS-6500
       - DS-7500
@@ -80,12 +83,13 @@ BUILDING/INSTALLING FROM SOURCE
     --with-included-boost
     --with-legacy-usb
     --with-jpeg
+    --with-magick
     --with-sane
     --with-tiff
 
   See the output of `./configure --help` for a complete list and more
   information.  To save time compiling the sources, you can use one of
-  the --disable-static and --disable-shared options.
+  the '--disable-static' and '--disable-shared' options.
 
   After you have `./configure`d the build to taste, all you need to do
   is just:

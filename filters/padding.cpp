@@ -1,5 +1,5 @@
 //  padding.cpp -- octet and scan line removal
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -155,10 +155,17 @@ padding::write (const octet *data, streamsize n)
       octets += w_padding_;
     }
 
-  skip_ = n - octets;
+  if (scan_line_count_ < ctx_.scan_height ())
+    {
+      skip_ = n - octets;
 
-  if (0 < skip_)                // write partial scanline
-    io_->write (data + octets, skip_);
+      if (0 < skip_)            // write partial scanline
+        io_->write (data + octets, skip_);
+    }
+  else                          // skip anything beyond last scanline
+    {
+      skip_ = 0;
+    }
 
   return n;
 }
@@ -226,8 +233,10 @@ padding::eoi (const context& ctx)
     }
 }
 
-ibottom_padder::ibottom_padder (const quantity& height)
-  : height_(height)
+ibottom_padder::ibottom_padder (const quantity& width,
+                                const quantity& height)
+  : width_(width)
+  , height_(height)
   , octets_left_(0)
   , insert_padding_(false)
 {}
@@ -293,6 +302,10 @@ ibottom_padder::handle_marker (traits::int_type c)
       if (!ctx.is_raster_image ())
         BOOST_THROW_EXCEPTION (e);
 
+      streamsize pixels = width_.amount< double > () * ctx.x_resolution ();
+      if (pixels != ctx_.width ())
+        log::error ("width padding not supported yet");
+
       streamsize lines = height_.amount< double > () * ctx.y_resolution ();
 
       ctx_ = ctx;
@@ -307,8 +320,9 @@ ibottom_padder::handle_marker (traits::int_type c)
   last_marker_ = c;
 }
 
-bottom_padder::bottom_padder (const quantity& height)
-  : height_(height)
+bottom_padder::bottom_padder (const quantity& width, const quantity& height)
+  : width_(width)
+  , height_(height)
 {}
 
 streamsize
@@ -331,6 +345,10 @@ bottom_padder::boi (const context& ctx)
 
   if (!ctx.is_raster_image ())
     BOOST_THROW_EXCEPTION (e);
+
+  streamsize pixels = width_.amount< double > () * ctx.x_resolution ();
+  if (pixels != ctx_.width ())
+    log::error ("width padding not supported yet");
 
   streamsize lines = height_.amount< double > () * ctx.y_resolution ();
 

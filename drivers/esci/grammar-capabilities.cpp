@@ -1,5 +1,5 @@
 //  grammar-capabilities.cpp -- component instantiations
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -134,12 +134,15 @@ capabilities::operator== (const capabilities& rhs) const
           && cmx == rhs.cmx
           && sfl == rhs.sfl
           && mrr == rhs.mrr
+          && bsz == rhs.bsz
+          && pag == rhs.pag
           && rsm == rhs.rsm
           && rss == rhs.rss
           && crp == rhs.crp
           && fcs == rhs.fcs
           && flc == rhs.flc
-          && fla == rhs.fla);
+          && fla == rhs.fla
+          && qit == rhs.qit);
 }
 
 void
@@ -163,12 +166,15 @@ capabilities::operator bool () const
           || cmx
           || sfl
           || mrr
+          || bsz
+          || pag
           || rsm
           || rss
           || crp
           || fcs
           || flc
-          || fla);
+          || fla
+          || qit);
 }
 
 bool
@@ -177,8 +183,10 @@ capabilities::has_duplex () const
   using namespace code_token::capability;
 
   return (adf
-          && adf->end () != std::find (adf->begin (), adf->end (),
-                                       adf::DPLX));
+          && adf->flags
+          && adf->flags->end () != std::find (adf->flags->begin (),
+                                              adf->flags->end (),
+                                              adf::DPLX));
 }
 
 utsushi::constraint::ptr
@@ -288,10 +296,10 @@ capabilities::double_feed () const
   using namespace code_token::capability::adf;
   using utsushi::constraint;
 
-  if (!adf) return constraint::ptr ();
+  if (!adf || !adf->flags) return constraint::ptr ();
 
-  bool dfl1 (std::count (adf->begin (), adf->end (), DFL1));
-  bool dfl2 (std::count (adf->begin (), adf->end (), DFL2));
+  bool dfl1 (std::count (adf->flags->begin (), adf->flags->end (), DFL1));
+  bool dfl2 (std::count (adf->flags->begin (), adf->flags->end (), DFL2));
 
   if (dfl1 && dfl2)
     {
@@ -618,11 +626,18 @@ capabilities::range::operator== (const capabilities::range& rhs) const
 }
 
 bool
-capabilities::tpu_control::operator== (const capabilities::tpu_control& rhs) const
+capabilities::document_source::operator== (const capabilities::document_source& rhs) const
 {
-  return (   area             == rhs.area
-          && alternative_area == rhs.alternative_area
-          && other            == rhs.other);
+  return (   flags      == rhs.flags
+          && resolution == rhs.resolution);
+}
+
+bool
+capabilities::tpu_source::operator== (const capabilities::tpu_source& rhs) const
+{
+  return (   document_source::operator== (rhs)
+          && area             == rhs.area
+          && alternative_area == rhs.alternative_area);
 }
 
 capabilities::focus_control::focus_control ()

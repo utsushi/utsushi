@@ -1,5 +1,5 @@
 //  grammar-status.ipp -- component rule definitions
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -59,6 +59,7 @@ basic_grammar_status< Iterator >::basic_grammar_status ()
      ^ (token_(ERR) > stat_err_rule_)
      ^ (token_(FCS) > stat_fcs_rule_)
      ^ (token_(PB ) > this->decimal_)
+     ^ (token_(SEP) > stat_sep_rule_)
      )
     > qi::eoi
     ;
@@ -76,6 +77,13 @@ basic_grammar_status< Iterator >::basic_grammar_status ()
   stat_fcs_rule_ %=
       (token_(fcs::INVD) > qi::attr (esci_non_int))
     | (token_(fcs::VALD) > this->decimal_)
+    ;
+
+  stat_sep_rule_ %=
+    &(  token_(sep::ON)
+      | token_(sep::OFF)
+      )
+    > token_
     ;
 
   stat_psz_part_token_ %=
@@ -135,6 +143,7 @@ basic_grammar_status< Iterator >::basic_grammar_status ()
       | token_(err::LOCK)
       | token_(err::DFED)
       | token_(err::DTCL)
+      | token_(err::BTLO)
       )
     > token_
     ;
@@ -144,6 +153,7 @@ basic_grammar_status< Iterator >::basic_grammar_status ()
   ESCI_GRAMMAR_TRACE_NODE (stat_psz_rule_);
   ESCI_GRAMMAR_TRACE_NODE (stat_err_rule_);
   ESCI_GRAMMAR_TRACE_NODE (stat_fcs_rule_);
+  ESCI_GRAMMAR_TRACE_NODE (stat_sep_rule_);
 
   ESCI_GRAMMAR_TRACE_NODE (stat_psz_part_token_);
   ESCI_GRAMMAR_TRACE_NODE (stat_psz_size_token_);
@@ -169,7 +179,8 @@ BOOST_FUSION_ADAPT_STRUCT
  (boost::optional< ESCI_NS::hardware_status::result >, medium)
  (boost::optional< ESCI_NS::hardware_status::result >, error)
  (boost::optional< ESCI_NS::integer >, focus)
- (boost::optional< ESCI_NS::integer >, push_button))
+ (boost::optional< ESCI_NS::integer >, push_button)
+ (boost::optional< ESCI_NS::quad >, separation_mode))
 
 #undef ESCI_NS
 

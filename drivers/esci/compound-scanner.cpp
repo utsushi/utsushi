@@ -1,5 +1,5 @@
 //  compound-scanner.cpp -- devices that handle compound commands
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -37,6 +37,7 @@
 #include <utsushi/i18n.hpp>
 #include <utsushi/media.hpp>
 #include <utsushi/range.hpp>
+#include <utsushi/store.hpp>
 
 #include "compound-scanner.hpp"
 
@@ -274,6 +275,51 @@ patch_image_size_(deque< data_buffer >& q,
   return true;
 }
 
+static quantity
+nearest_(const quantity& q, const constraint::ptr cp)
+{
+  /**/ if (dynamic_cast< range * > (cp.get ()))
+    {
+      range *rp = dynamic_cast< range * > (cp.get ());
+
+      /**/ if (q < rp->lower ()) return rp->lower ();
+      else if (q > rp->upper ()) return rp->upper ();
+      else return q;
+    }
+  else if (dynamic_cast< store * > (cp.get ()))
+    {
+      store *sp = dynamic_cast< store * > (cp.get ());
+
+      store::const_iterator it = sp->begin ();
+      store::const_iterator rv = sp->begin ();
+      quantity diff;
+
+      while (sp->end () != it)
+        {
+          if (sp->begin () == it)
+            {
+              diff = abs (q - *it);
+              rv   = it;
+            }
+          else
+            {
+              quantity d = abs (q - *it);
+              if (d < diff)
+                {
+                  diff = d;
+                  rv = it;
+                }
+            }
+          ++it;
+        }
+      if (sp->end () != sp->begin ()) return *rv;
+    }
+
+  log::error ("no nearest value found, returning as is");
+
+  return q;
+}
+
 compound_scanner::compound_scanner (const connexion::ptr& cnx)
   : scanner (cnx)
   , info_()                     // initialize reference data
@@ -309,6 +355,21 @@ compound_scanner::compound_scanner (const connexion::ptr& cnx)
       capabilities& caps (const_cast< capabilities& > (caps_));
 
       caps.pag = capabilities::range (esci_dec_min, esci_dec_max);
+    }
+
+  // Disable flip-side scan parameter support because driver support
+  // for it is not ready yet.  The protocol specification is missing
+  // information needed for implementation.
+
+  if (caps_flip_)
+    {
+      log::error ("disabling flip-side scan parameter support");
+
+      capabilities& caps_flip (const_cast< capabilities& > (caps_flip_));
+      parameters&   defs_flip (const_cast< parameters& > (defs_flip_));
+
+      caps_flip = capabilities ();
+      defs_flip = parameters ();
     }
 }
 
@@ -506,10 +567,16 @@ compound_scanner::configure ()
   if (use_final_image_size_(parm_))
     {
       add_options ()
-        ("match-height", toggle (true),
+        ("force-extent", toggle (true),
          attributes (tag::enhancement),
-         N_("Match Height"),
-         N_("This may slow down application/driver side processing.")
+         N_("Force Extent"),
+         N_("Force the image size to equal the user selected size."
+            "  Scanners may trim the image data to the detected size of"
+            " the document.  This may result in images that are not all"
+            " exactly the same size.  This option makes sure all image"
+            " sizes match the selected area.\n"
+            "Note that this option may slow down application/driver side"
+            " processing.")
          )
         ;
     }
@@ -697,6 +764,13 @@ compound_scanner::set_up_hardware ()
     }
 
   *cnx_ << acquire_.start ();
+
+  if (acquire_.fatal_error ())
+    BOOST_THROW_EXCEPTION
+      (system_error
+       (token_to_error_code (acquire_.fatal_error ()->what),
+        create_message (acquire_.fatal_error ()->part,
+                        acquire_.fatal_error ()->what)));
 
   if (parm_.bsz)
     buffer_size_ = *parm_.bsz;
@@ -1437,6 +1511,249 @@ compound_scanner::finalize (const value::map& vm)
            % min_width_ % min_height_).str ()));
   }
 
+  {                             // finalize resolution options
+    boost::optional< toggle > resample;
+    boost::optional< toggle > sw_bound;
+    boost::optional< toggle > bound;
+    {
+      if (final_vm.count ("enable-resampling"))
+        {
+          toggle t = final_vm["enable-resampling"];
+          resample = t;
+        }
+      if (final_vm.count ("sw-resolution-bind"))
+        {
+          toggle t = final_vm["sw-resolution-bind"];
+          sw_bound = t;
+        }
+      if (final_vm.count ("resolution-bind"))
+        {
+          toggle t = final_vm["resolution-bind"];
+          bound = t;
+        }
+      if (resample && sw_bound && bound)
+        {
+          if (*resample)
+            {
+              *bound = *sw_bound;
+              final_vm["resolution-bind"] = *bound;
+            }
+          else
+            {
+              *sw_bound = *bound;
+              final_vm["sw-resolution-bind"] = *sw_bound;
+            }
+        }
+    }
+
+    BOOST_ASSERT (!bound || !sw_bound || (*bound == *sw_bound));
+
+    if (!bound)
+      {
+        // Both may be absent but if one exists, the other does not.
+        if (final_vm.count ("resolution-x"))
+          {
+            descriptors_["resolution-x"]->read_only (false);
+            descriptors_["resolution-y"]->read_only (false);
+            descriptors_["resolution-x"]->active (true);
+            descriptors_["resolution-y"]->active (true);
+          }
+        if (final_vm.count ("resolution"))
+          {
+            descriptors_["resolution"]->read_only (false);
+            descriptors_["resolution"]->active (true);
+          }
+      }
+    else
+      {
+        descriptors_["resolution-x"]->read_only (*bound);
+        descriptors_["resolution-y"]->read_only (*bound);
+
+        descriptors_["resolution-bind"]->active (true);
+        descriptors_["resolution-x"]   ->active (true);
+        descriptors_["resolution-y"]   ->active (true);
+        descriptors_["resolution"]     ->active (*bound);
+
+        // We bind the resolutions after we handle the resampling
+        // implications.  If resampling, the selected resolutions
+        // will have an impact on any resolutions we need to send
+        // to the device.
+      }
+
+    if (resample)
+      {
+        if (!sw_bound)
+          {
+            // Both may be absent but if one exists, the other does not.
+            if (final_vm.count ("sw-resolution-x"))
+              {
+                descriptors_["sw-resolution-x"]->read_only (false);
+                descriptors_["sw-resolution-y"]->read_only (false);
+                descriptors_["sw-resolution-x"]->active (*resample);
+                descriptors_["sw-resolution-y"]->active (*resample);
+              }
+            if (final_vm.count ("sw-resolution"))
+              {
+                descriptors_["sw-resolution"]->read_only (false);
+                descriptors_["sw-resolution"]->active (*resample);
+              }
+          }
+        else
+          {
+            descriptors_["sw-resolution-x"]->read_only (*sw_bound);
+            descriptors_["sw-resolution-y"]->read_only (*sw_bound);
+
+            descriptors_["sw-resolution-bind"]->active (*resample);
+            descriptors_["sw-resolution-x"]   ->active (*resample);
+            descriptors_["sw-resolution-y"]   ->active (*resample);
+            descriptors_["sw-resolution"]     ->active (*resample
+                                                        && *sw_bound);
+
+            if (*sw_bound)
+              {
+                final_vm["sw-resolution-x"] = final_vm["sw-resolution"];
+                final_vm["sw-resolution-y"] = final_vm["sw-resolution"];
+              }
+            else
+              {
+                final_vm["sw-resolution"]
+                  = nearest_(final_vm["sw-resolution-x"],
+                             constraints_["sw-resolution"]);
+              }
+          }
+
+        if (!bound)
+          {
+            if (final_vm.count ("resolution-x"))
+              {
+                descriptors_["resolution-x"]->active (!*resample);
+                descriptors_["resolution-y"]->active (!*resample);
+              }
+            if (final_vm.count ("resolution"))
+              {
+                descriptors_["resolution"]->active (!*resample);
+              }
+          }
+        else
+          {
+            descriptors_["resolution-bind"]->active (!*resample);
+            descriptors_["resolution-x"]   ->active (!*resample);
+            descriptors_["resolution-y"]   ->active (!*resample);
+            descriptors_["resolution"]     ->active (!*resample && *bound);
+          }
+
+        if (*resample)          // update device resolutions
+          {
+            if (final_vm.count ("resolution-x"))
+              {
+                quantity q;
+
+                if (final_vm.count ("sw-resolution"))   // fallback
+                  {
+                    q = final_vm["sw-resolution"];
+                  }
+
+                if (final_vm.count ("sw-resolution-x"))
+                  {
+                    q = final_vm["sw-resolution-x"];
+                  }
+
+                BOOST_ASSERT (quantity () != q);
+
+                final_vm["resolution-x"]
+                  = nearest_(q, constraints_["resolution-x"]);
+
+                if (final_vm.count ("sw-resolution-y"))
+                  {
+                    q = final_vm["sw-resolution-y"];
+                  }
+
+                final_vm["resolution-y"]
+                  = nearest_(q, constraints_["resolution-y"]);
+              }
+
+            if (final_vm.count ("resolution"))
+              {
+                quantity q;
+
+                if (final_vm.count ("sw-resolution-x")) // fallback
+                  {
+                    q = std::max< quantity > (final_vm["sw-resolution-x"],
+                                              final_vm["sw-resolution-y"]);
+                  }
+
+                if (final_vm.count ("sw-resolution"))
+                  {
+                    q = final_vm["sw-resolution"];
+                  }
+
+                BOOST_ASSERT (quantity () != q);
+
+                final_vm["resolution"]
+                  = nearest_(q, constraints_["resolution"]);
+              }
+          }
+      }
+
+    if (bound)
+      {
+        if (*bound)
+          {
+            final_vm["resolution-x"] = final_vm["resolution"];
+            final_vm["resolution-y"] = final_vm["resolution"];
+          }
+        else
+          {
+            final_vm["resolution"] = nearest_(final_vm["resolution-x"],
+                                              constraints_["resolution"]);
+          }
+      }
+
+    if (resample)
+      {
+        if (!*resample)         // follow device resolutions
+          {
+            if (final_vm.count ("sw-resolution-x"))
+              {
+                if (final_vm.count ("resolution-x"))
+                  {
+                    final_vm["sw-resolution-x"]
+                      = nearest_(final_vm["resolution-x"],
+                                 constraints_["sw-resolution-x"]);
+                    final_vm["sw-resolution-y"]
+                      = nearest_(final_vm["resolution-y"],
+                                 constraints_["sw-resolution-y"]);
+                  }
+                else
+                  {
+                    final_vm["sw-resolution-x"]
+                      = nearest_(final_vm["resolution"],
+                                 constraints_["sw-resolution-x"]);
+                    final_vm["sw-resolution-y"]
+                      = nearest_(final_vm["resolution"],
+                                 constraints_["sw-resolution-y"]);
+                  }
+              }
+
+            if (final_vm.count ("sw-resolution"))
+              {
+                if (final_vm.count ("resolution"))
+                  {
+                    final_vm["sw-resolution"]
+                      = nearest_(final_vm["resolution"],
+                                 constraints_["sw-resolution"]);
+                  }
+                else
+                  {
+                    final_vm["sw-resolution"]
+                      = nearest_(final_vm["resolution-x"],
+                                 constraints_["sw-resolution"]);
+                  }
+              }
+          }
+      }
+  }
+
   option::map::finalize (final_vm);
   relink ();
 
@@ -1461,7 +1778,7 @@ compound_scanner::configure_adf_options ()
 {
   if (!info_.adf) return;
 
-  add_doc_source_options (adf_, *info_.adf, caps_.adf, caps_);
+  add_doc_source_options (adf_, *info_.adf, caps_.adf->flags, caps_);
 
   if (caps_.has_duplex ())
     {
@@ -1506,7 +1823,7 @@ compound_scanner::configure_flatbed_options ()
 {
   if (!info_.flatbed) return;
 
-  add_doc_source_options (flatbed_, *info_.flatbed, caps_.fb, caps_);
+  add_doc_source_options (flatbed_, *info_.flatbed, caps_.fb->flags, caps_);
 }
 
 //! \todo add alternative area option (needs own scan-area constraint)
@@ -1517,7 +1834,7 @@ compound_scanner::configure_tpu_options ()
 
   source_capabilities src_caps;
   add_doc_source_options (tpu_, *info_.tpu,
-                          caps_.tpu ? caps_.tpu->other : src_caps,
+                          caps_.tpu ? caps_.tpu->flags : src_caps,
                           caps_);
 
   if (info_.flatbed) flatbed_.share_values (tpu_);
@@ -1537,12 +1854,60 @@ compound_scanner::add_doc_source_options (option::map& opts,
   add_overscan_option (opts, src_caps);
 }
 
+constraint::ptr
+intersection_of_(const constraint::ptr& cp_x, const constraint::ptr& cp_y)
+{
+  constraint::ptr rv;
+
+  /**/ if (dynamic_pointer_cast< store > (cp_x) && cp_y)
+    {
+      store::ptr sp_x = dynamic_pointer_cast< store > (cp_x);
+      store::ptr sp = make_shared< store > ();
+      store::const_iterator it = sp_x->begin ();
+
+      while (sp_x->end () != it)
+        {
+          if (*it == (*cp_y) (*it))
+            sp->alternative (*it);
+          ++it;
+        }
+      if (0 < sp->size ()) rv = sp;
+    }
+  else if (dynamic_pointer_cast< store > (cp_y))
+    {
+      return intersection_of_(cp_y, cp_x);
+    }
+  else if (   dynamic_pointer_cast< range > (cp_x)
+           && dynamic_pointer_cast< range > (cp_y))
+    {
+      range::ptr rp_x = dynamic_pointer_cast< range > (cp_x);
+      range::ptr rp_y = dynamic_pointer_cast< range > (cp_y);
+      range::ptr rp = make_shared< range > ();
+
+      quantity lo = std::max (rp_x->lower (), rp_y->lower ());
+      quantity hi = std::min (rp_x->upper (), rp_y->upper ());
+
+      if (lo <= hi)
+        {
+          rp->lower (lo)->upper (hi);
+          rv = rp;
+        }
+    }
+
+  if (rv)                       // try to preserve one of the defaults
+    {
+      /**/ if (cp_x->default_value () == (*rv) (cp_x->default_value ()))
+        rv->default_value (cp_x->default_value ());
+      else if (cp_y->default_value () == (*rv) (cp_y->default_value ()))
+        rv->default_value (cp_y->default_value ());
+    }
+  return rv;
+}
+
 void
 compound_scanner::add_resolution_options (option::map& opts,
                                           const information::source& src) const
 {
-  if (!caps_.rsm) return;
-
   using namespace code_token::capability;
 
   integer max = src.resolution;
@@ -1552,27 +1917,131 @@ compound_scanner::add_resolution_options (option::map& opts,
 
   constraint::ptr cp_x (caps_.resolutions (RSM, defs_.rsm, max));
   constraint::ptr cp_y (caps_.resolutions (RSS, defs_.rss, max));
+  constraint::ptr cp (intersection_of_(cp_x, cp_y));
 
-  if (!cp_x) return;
-  if (!cp_y)                    // coupled resolutions
+  if (cp)                       // both cp_x and cp_y exist too
     {
       opts.add_options ()
-        ("resolution", cp_x,
+        ("resolution-bind", toggle (true),
+         attributes (tag::general),
+         N_("Bind X and Y resolutions")
+         )
+        ("resolution", cp,
          attributes (tag::general)(level::standard),
          N_("Resolution")
-         );
-    }
-  else
-    {
-      opts.add_options ()
+         )
         ("resolution-x", cp_x,
          attributes (tag::general),
-         N_("Resolution X")
+         N_("X Resolution")
          )
         ("resolution-y", cp_y,
          attributes (tag::general),
-         N_("Resolution Y")
-         );
+         N_("Y Resolution")
+         )
+        ;
+    }
+  else
+    {
+      if (cp_x && cp_y)
+        {
+          opts.add_options ()
+            ("resolution-x", cp_x,
+             attributes (tag::general)(level::standard),
+             N_("X Resolution")
+             )
+            ("resolution-y", cp_y,
+             attributes (tag::general)(level::standard),
+             N_("Y Resolution")
+             )
+            ;
+        }
+      else
+        {
+          cp = (cp_x ? cp_x : cp_y);
+          if (cp)
+            {
+              opts.add_options ()
+                ("resolution", cp,
+                 attributes (tag::general)(level::standard),
+                 N_("Resolution")
+                 )
+                ;
+            }
+          else
+            {
+              log::brief ("no hardware resolution options");
+            }
+        }
+    }
+
+  if (!res_x_ && !res_y_) return;
+
+  // repeat the above for software-emulated resolution options
+
+  opts.add_options ()
+    ("enable-resampling", toggle (true),
+     attributes (tag::general),
+     N_("Enable Resampling"),
+     N_("This option provides the user with a wider range of supported"
+        " resolutions.  Resolutions not supported by the hardware will"
+        " be achieved through image processing methods.")
+     );
+
+  cp = intersection_of_(res_x_, res_y_);
+
+  if (cp)
+    {
+      opts.add_options ()
+        ("sw-resolution-bind", toggle (true),
+         attributes (tag::general),
+         N_("Bind X and Y resolutions")
+         )
+        ("sw-resolution", cp,
+         attributes (tag::general)(level::standard).emulate (true),
+         N_("Resolution")
+         )
+        ("sw-resolution-x", res_x_,
+         attributes (tag::general).emulate (true),
+         N_("X Resolution")
+         )
+        ("sw-resolution-y", res_y_,
+         attributes (tag::general).emulate (true),
+         N_("Y Resolution")
+         )
+        ;
+    }
+  else
+    {
+      if (res_x_ && res_y_)
+        {
+          opts.add_options ()
+            ("sw-resolution-x", res_x_,
+             attributes (tag::general)(level::standard).emulate (true),
+             N_("X Resolution")
+             )
+            ("sw-resolution-y", res_y_,
+             attributes (tag::general)(level::standard).emulate (true),
+             N_("Y Resolution")
+             )
+            ;
+        }
+      else
+        {
+          cp = (res_x_ ? res_x_ : res_y_);
+          if (cp)
+            {
+              opts.add_options ()
+                ("sw-resolution", cp,
+                 attributes (tag::general)(level::standard).emulate (true),
+                 N_("Resolution")
+                 )
+                ;
+            }
+          else
+            {
+              log::brief ("no software resolution options");
+            }
+        }
     }
 }
 
@@ -1904,11 +2373,13 @@ compound_scanner::pixel_type () const
 static system_error::error_code
 token_to_error_code (const quad& what)
 {
-  using namespace code_token::status;
+  using namespace code_token::reply::info;
 
   /**/ if (err::OPN  == what) return system_error::cover_open;
   else if (err::PE   == what) return system_error::media_out;
   else if (err::PJ   == what) return system_error::media_jam;
+  else if (err::AUTH == what) return system_error::permission_denied;
+  else if (err::PERM == what) return system_error::permission_denied;
 
   return system_error::unknown_error;
 }
@@ -1918,10 +2389,18 @@ static std::string create_adf_message (const quad& what);
 static std::string create_fb_message (const quad& what);
 static std::string create_tpu_message (const quad& what);
 
-// A message for when all else fails
+// A message for when all else fails or when differentiating by part
+// doesn't seem to make sense
 static std::string
 fallback_message (const quad& part, const quad& what)
 {
+  using namespace code_token::reply::info;
+
+  if (err::AUTH == what || err::PERM == what)
+    return _("Authentication is required.\n"
+             "Unfortunately, this version of the driver does not support "
+             "authentication yet.");
+
   return (format (_("Unknown device error: %1%/%2%"))
           % str (part) % str (what)).str ();
 }
@@ -1944,6 +2423,10 @@ create_message (const quad& part, const quad& what)
   BOOST_STATIC_ASSERT ((err::LTF  == info::err::LTF ));
   BOOST_STATIC_ASSERT ((err::LOCK == info::err::LOCK));
   BOOST_STATIC_ASSERT ((err::DFED == info::err::DFED));
+  BOOST_STATIC_ASSERT ((err::DTCL == info::err::DTCL));
+  // status::err does not have err::AUTH
+  // status::err does not have err::PERM
+  BOOST_STATIC_ASSERT ((err::BTLO == info::err::BTLO));
 
   if (err::ADF == part) return create_adf_message (what);
   if (err::FB  == part) return create_fb_message (what);
@@ -1959,7 +2442,7 @@ create_message (const quad& part, const quad& what)
 static std::string
 create_adf_message (const quad& what)
 {
-  using namespace code_token::status;
+  using namespace code_token::reply::info;
 
   if (err::OPN  == what)
     return _("Please close the ADF cover and try again.");
@@ -1982,7 +2465,7 @@ create_adf_message (const quad& what)
 static std::string
 create_fb_message (const quad& what)
 {
-  using namespace code_token::status;
+  using namespace code_token::reply::info;
 
   if (err::ERR  == what)
     return _("A fatal error has occurred");
@@ -1993,7 +2476,7 @@ create_fb_message (const quad& what)
 static std::string
 create_tpu_message (const quad& what)
 {
-  using namespace code_token::status;
+  using namespace code_token::reply::info;
 
   return fallback_message (err::TPU, what);
 }

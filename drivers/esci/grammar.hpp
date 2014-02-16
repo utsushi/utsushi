@@ -1,5 +1,5 @@
 //  grammar.hpp -- rule declarations for the ESC/I "compound" protocol
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -86,6 +86,7 @@ struct status
    *  \sa scanner_control::fatal_error()
    */
   bool fatal_error () const;
+  bool is_busy () const;
   bool is_cancel_requested () const;
   bool is_flip_side () const;
   bool is_in_use () const;

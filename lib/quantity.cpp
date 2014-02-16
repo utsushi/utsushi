@@ -223,4 +223,10 @@ operator- (const quantity& q)
   return rv *= -1;
 }
 
+quantity
+abs (const quantity& q)
+{
+  return (q < quantity () ? -q : q);
+}
+
 }       // namespace utsushi

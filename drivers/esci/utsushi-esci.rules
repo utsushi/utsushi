@@ -1,5 +1,5 @@
 #  utsushi-esci.rules -- bring up supported devices as scanners
-#  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+#  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 #
 #  License: GPL-3.0+
 #  Author : AVASYS CORPORATION
@@ -30,6 +30,10 @@ ATTRS{idProduct}=="0145", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="0146", ENV{utsushi_driver}="esci"
 #  DS-510
 ATTRS{idProduct}=="014c", ENV{utsushi_driver}="esci"
+#  DS-560
+ATTRS{idProduct}=="0150", ENV{utsushi_driver}="esci"
+#  DS-760, DS-860
+ATTRS{idProduct}=="014d", ENV{utsushi_driver}="esci"
 
 #  Give scanner users read/write permissions on the device.
 ENV{utsushi_driver}=="esci", MODE="0666", OWNER="root", GROUP="root"

@@ -1,5 +1,5 @@
 //  dialog.cpp -- to acquire image data
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -43,6 +43,7 @@
 #include "../filters/g3fax.hpp"
 #include "../filters/image-skip.hpp"
 #include "../filters/jpeg.hpp"
+#include "../filters/magick.hpp"
 #include "../filters/padding.hpp"
 #include "../filters/pdf.hpp"
 #include "../filters/pnm.hpp"
@@ -320,20 +321,58 @@ dialog::on_scan (void)
         log::error ("Falling back to default JPEG compression quality");
       }
 
-    toggle match_height = true;
+    toggle force_extent = true;
+    quantity width  = -1.0;
     quantity height = -1.0;
     try
       {
-        match_height = value ((*opts_)["device/match-height"]);
+        force_extent = value ((*opts_)["device/force-extent"]);
+        width   = value ((*opts_)["device/br-x"]);
+        width  -= value ((*opts_)["device/tl-x"]);
         height  = value ((*opts_)["device/br-y"]);
         height -= value ((*opts_)["device/tl-y"]);
       }
     catch (const std::out_of_range&)
       {
-        match_height = false;
+        force_extent = false;
+        width  = -1.0;
         height = -1.0;
       }
-    if (match_height) match_height = (height > 0);
+    if (force_extent) force_extent = (width > 0 || height > 0);
+
+    toggle resample = false;
+    if (opts_->count ("enable-resampling"))
+      resample = value ((*opts_)["enable-resampling"]);
+
+    ofilter::ptr magick;
+    if (resample)
+      {
+        magick = make_shared< _flt_::magick > ();
+
+        toggle bound = true;
+        quantity res_x  = -1.0;
+        quantity res_y  = -1.0;
+
+        if (opts_->count ("sw-resolution-x"))
+          {
+            res_x = value ((*opts_)["sw-resolution-x"]);
+            res_y = value ((*opts_)["sw-resolution-y"]);
+          }
+        if (opts_->count ("sw-resolution-bind"))
+          bound = value ((*opts_)["sw-resolution-bind"]);
+
+        if (bound)
+          {
+            res_x = value ((*opts_)["sw-resolution"]);
+            res_y = value ((*opts_)["sw-resolution"]);
+          }
+
+        (*magick->options ())["resolution-x"] = res_x;
+        (*magick->options ())["resolution-y"] = res_y;
+        (*magick->options ())["force-extent"] = force_extent;
+        (*magick->options ())["width"]  = width;
+        (*magick->options ())["height"] = height;
+      }
 
     toggle skip_blank = !bilevel; // \todo fix filter limitation
     quantity skip_thresh = -1.0;
@@ -367,10 +406,7 @@ dialog::on_scan (void)
         /**/ if (xfer_raw == xfer_fmt)
           ostr->push (make_shared< padding > ());
         else if (xfer_jpg == xfer_fmt)
-          {
-            ostr->push (make_shared< jpeg::decompressor> ());
-            if (bilevel) ostr->push (threshold);
-          }
+          ostr->push (make_shared< jpeg::decompressor> ());
         else
           BOOST_THROW_EXCEPTION
             (runtime_error
@@ -379,8 +415,12 @@ dialog::on_scan (void)
                % fmt)
               .str ()));
         if (skip_blank) ostr->push (blank_skip);
-        if (match_height)
-          ostr->push (make_shared< bottom_padder > (height));
+        if (magick)
+          ostr->push (magick);
+        else if (force_extent)
+          ostr->push (make_shared< bottom_padder > (width, height));
+        if (xfer_jpg == xfer_fmt && bilevel)
+          ostr->push (threshold);
         ostr->push (make_shared< pnm > ());
       }
     else if ("JPEG" == fmt)
@@ -394,18 +434,24 @@ dialog::on_scan (void)
           {
             ostr->push (make_shared< padding > ());
             if (skip_blank) ostr->push (blank_skip);
-            if (match_height)
-              ostr->push (make_shared< bottom_padder > (height));
+            if (magick)
+              ostr->push (magick);
+            else if (force_extent)
+              ostr->push (make_shared< bottom_padder > (width, height));
             ostr->push (jpeg_compress);
           }
         else if (xfer_jpg == xfer_fmt)
           {
-            if (match_height || skip_blank)
+            if (magick || force_extent || skip_blank)
               {
                 ostr->push (make_shared< jpeg::decompressor > ());
-                if (skip_blank) ostr->push (blank_skip);
-                if (match_height) ostr->push (make_shared< bottom_padder >
-                                              (height));
+                if (skip_blank)
+                  ostr->push (blank_skip);
+                if (magick)
+                  ostr->push (magick);
+                else if (force_extent)
+                  ostr->push (make_shared< bottom_padder >
+                              (width, height));
                 ostr->push (jpeg_compress);
               }
           }
@@ -425,8 +471,10 @@ dialog::on_scan (void)
           {
             ostr->push (make_shared< padding > ());
             if (skip_blank) ostr->push (blank_skip);
-            if (match_height)
-              ostr->push (make_shared< bottom_padder > (height));
+            if (magick)
+              ostr->push (magick);
+            else if (force_extent)
+              ostr->push (make_shared< bottom_padder > (width, height));
 
             if (bilevel)
               {
@@ -439,23 +487,24 @@ dialog::on_scan (void)
           }
         else if (xfer_jpg == xfer_fmt)
           {
-            if (match_height || bilevel)
+            if (magick || force_extent || skip_blank || bilevel)
               {
                 ostr->push (make_shared< jpeg::decompressor > ());
                 if (skip_blank) ostr->push (blank_skip);
-              }
-            if (match_height)
-              {
-                ostr->push (make_shared< bottom_padder > (height));
-              }
-            if (bilevel)
-              {
-                ostr->push (threshold);
-                ostr->push (make_shared< g3fax > ());
-              }
-            else
-              {
-                ostr->push (jpeg_compress);
+                if (magick)
+                  ostr->push (magick);
+                else if (force_extent)
+                  ostr->push (make_shared< bottom_padder > (width, height));
+
+                if (bilevel)
+                  {
+                    ostr->push (threshold);
+                    ostr->push (make_shared< g3fax > ());
+                  }
+                else
+                  {
+                    ostr->push (jpeg_compress);
+                  }
               }
           }
         else
@@ -476,7 +525,6 @@ dialog::on_scan (void)
         else if (xfer_jpg == xfer_fmt)
           {
             ostr->push (make_shared< jpeg::decompressor > ());
-            if (bilevel) ostr->push (threshold);
           }
         else
           BOOST_THROW_EXCEPTION
@@ -486,8 +534,12 @@ dialog::on_scan (void)
                % fmt)
               .str ()));
         if (skip_blank) ostr->push (blank_skip);
-        if (match_height)
-          ostr->push (make_shared< bottom_padder > (height));
+        if (magick)
+          ostr->push (magick);
+        else if (force_extent)
+          ostr->push (make_shared< bottom_padder > (width, height));
+        if (xfer_jpg == xfer_fmt && bilevel)
+          ostr->push (threshold);
       }
     else
         {

@@ -1,5 +1,5 @@
 //  buffer.cpp -- image data for speedy I/O transfers
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -23,6 +23,7 @@
 #endif
 
 #include "utsushi/buffer.hpp"
+#include "utsushi/log.hpp"
 
 namespace utsushi {
 
@@ -90,8 +91,11 @@ ibuffer::sequence_marker ()
 
 obuffer::obuffer (streamsize buffer_size)
   : base (buffer_size)
+  , max_size_(buffer_size)
+  , min_size_(buffer_size)
 {
-  setp (buffer_, buffer_ + buffer_size_ - 1);
+  buffer_size_ = buffer_size;
+  setp (buffer_, buffer_ + buffer_size_);
 }
 
 streamsize
@@ -105,7 +109,8 @@ obuffer::mark (traits::int_type c, const context& ctx)
 {
   if (traits::is_marker (c)) {
     if (traits::eoi() == c || traits::eos() == c) {
-      sync ();
+      if (0 > sync ())
+        log::error ("obuffer::sync: didn't sync all octets");
     }
     io_->mark (c, ctx);
   }
@@ -114,14 +119,40 @@ obuffer::mark (traits::int_type c, const context& ctx)
 obuffer::base::int_type
 obuffer:: overflow (base::int_type c)
 {
+  streamsize rv = io_->write (buffer_, pptr () - buffer_);
+  traits::move (buffer_, buffer_ + rv, pptr () - buffer_ - rv);
+  pbump (-rv);
+
+  if (0 == rv)                  // grow internal buffer_
+    {
+      streamsize used = pptr () - buffer_;
+
+      if (buffer_size_ < max_size_)
+        {
+          buffer_size_ = std::min (buffer_size_ + default_buffer_size,
+                                   max_size_);
+        }
+      else
+        {
+          octet *p = new octet[buffer_size_ + default_buffer_size];
+
+          buffer_size_ += default_buffer_size;
+          max_size_     = buffer_size_;
+
+          traits::copy (p, buffer_, used);
+
+          delete [] buffer_;
+          buffer_ = p;
+        }
+
+      setp (buffer_, buffer_ + buffer_size_);
+      pbump (used);
+    }
+
   if (!traits::is_marker (c)) {
     *pptr () = c;
     pbump (1);
   }
-
-  streamsize rv = io_->write (buffer_, pptr () - buffer_);
-  traits::move (buffer_, buffer_ + rv, pptr () - buffer_ - rv);
-  setp (pptr () - rv, buffer_ + buffer_size_ - 1);
 
   return traits::not_eof (c);
 }
@@ -138,12 +169,20 @@ obuffer::sync ()
   do
     {
       rv = io_->write (pptr () - n, n);
+      if (0 == rv) log::trace ("obuffer::sync: cannot write to output");
       n -= rv;
     }
-  while (0 < rv && 0 < n);
+  while (0 < n);
 
   traits::move (buffer_, pptr () - n, n);
-  setp (buffer_ + n, buffer_ + buffer_size_ - 1);
+  pbump (buffer_ - pptr () + n);
+
+  if (min_size_ < max_size_)
+    {
+      buffer_size_ = std::max (min_size_, n);
+      setp (buffer_, buffer_ + buffer_size_);
+      pbump (n);
+    }
 
   return (0 == n ? 0 : -1);
 }

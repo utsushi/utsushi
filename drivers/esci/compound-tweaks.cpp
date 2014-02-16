@@ -1,5 +1,5 @@
 //  compound-tweaks.cpp -- address model specific issues
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -28,6 +28,7 @@
 #include <boost/none.hpp>
 
 #include <utsushi/i18n.hpp>
+#include <utsushi/range.hpp>
 
 #include "code-token.hpp"
 #include "compound-tweaks.hpp"
@@ -42,30 +43,38 @@ erase (std::vector< quad >& v, const quad& token)
   v.erase (remove (v.begin (), v.end (), token), v.end ());
 }
 
-DS_510::DS_510 (const connexion::ptr& cnx)
+DS_510_560::DS_510_560 (const connexion::ptr& cnx)
   : compound_scanner (cnx)
 {
   capabilities& caps (const_cast< capabilities& > (caps_));
   parameters&   defs (const_cast< parameters& > (defs_));
 
-  capabilities& caps_flip (const_cast< capabilities& > (caps_flip_));
-  parameters&   defs_flip (const_cast< parameters& > (defs_flip_));
-
-  // Disable flip-side scan parameter support because driver support
-  // for it is not ready yet.  The protocol specification is missing
-  // information needed for implementation.
-
-  caps_flip = capabilities ();
-  defs_flip = parameters ();
-
   // Both resolution settings need to be identical
   caps.rss = boost::none;
 
-  // Assume people prefer color over B/W
+  if (HAVE_MAGICK)              /* enable resampling */
+    {
+      constraint::ptr res_x (from< range > ()
+                             -> bounds (50, 600)
+                             -> default_value (*defs.rsm));
+      const_cast< constraint::ptr& > (res_x_) = res_x;
+
+      if (caps.rss)
+        {
+          constraint::ptr res_y (from< range > ()
+                                 -> bounds (50, 600)
+                                 -> default_value (*defs.rss));
+          const_cast< constraint::ptr& > (res_y_) = res_y;
+        }
+    }
+
+  // Assume people prefer brighter colors over B/W
   defs.col = code_token::parameter::col::C024;
+  defs.gmm = code_token::parameter::gmm::UG18;
 
   // Boost USB I/O throughput
   defs.bsz = 256 * 1024;
+  if (info_.product_name () == "DS-560") defs.bsz = 1024 * 1024;
   caps.bsz = capabilities::range (1, *defs.bsz);
 
   // Color correction parameters
@@ -92,7 +101,7 @@ DS_510::DS_510 (const connexion::ptr& cnx)
 }
 
 void
-DS_510::configure ()
+DS_510_560::configure ()
 {
   compound_scanner::configure ();
 
@@ -102,6 +111,34 @@ DS_510::configure ()
      N_("Speed"),
      N_("Optimize image acquisition for speed")
      );
+
+  // FIXME disable workaround for #1094
+  descriptors_["speed"]->active (false);
+  descriptors_["speed"]->read_only (true);
+
+  // FIXME disable workaround for limitations mentioned in #1098
+  descriptors_["enable-resampling"]->active (false);
+  descriptors_["enable-resampling"]->read_only (true);
+}
+
+DS_760_860::DS_760_860 (const connexion::ptr& cnx)
+  : compound_scanner (cnx)
+{
+  capabilities& caps (const_cast< capabilities& > (caps_));
+  parameters&   defs (const_cast< parameters& > (defs_));
+
+  // Both resolution settings need to be identical
+  caps.rss = boost::none;
+
+  // Fix up incorrect JPEG quality range
+  caps.jpg = capabilities::range (1, 100);
+
+  // Assume people prefer brighter colors over B/W
+  defs.col = code_token::parameter::col::C024;
+  defs.gmm = code_token::parameter::gmm::UG18;
+
+  // Boost USB I/O throughput
+  defs.bsz = 1024 * 1024;
 }
 
 DS_xxx00::DS_xxx00 (const connexion::ptr& cnx)
@@ -111,23 +148,12 @@ DS_xxx00::DS_xxx00 (const connexion::ptr& cnx)
   capabilities& caps (const_cast< capabilities& > (caps_));
   parameters&   defs (const_cast< parameters& > (defs_));
 
-  capabilities& caps_flip (const_cast< capabilities& > (caps_flip_));
-  parameters&   defs_flip (const_cast< parameters& > (defs_flip_));
-
-  // Disable flip-side scan parameter support because driver support
-  // for it is not ready yet.  The protocol specification is missing
-  // information needed for implementation.
-  // Flip-side scan parameter support for these models was only added
-  // after their initial launch.
-
-  caps_flip = capabilities ();
-  defs_flip = parameters ();
-
   // Both resolution settings need to be identical
   caps.rss = boost::none;
 
-  // Assume people prefer color over B/W
+  // Assume people prefer brighter colors over B/W
   defs.col = code_token::parameter::col::C024;
+  defs.gmm = code_token::parameter::gmm::UG18;
 
   // Device only ever uses 256 kib for the image data buffer size,
   // never mind what you set (#659).
@@ -140,9 +166,9 @@ DS_xxx00::DS_xxx00 (const connexion::ptr& cnx)
   if (info.flatbed) info.flatbed->overscan.clear ();
   if (info.tpu    ) info.tpu    ->overscan.clear ();
   using namespace code_token::capability;
-  if (caps.adf) erase (*caps.adf, adf::OVSN);
-  if (caps.fb ) erase (*caps.fb , fb ::OVSN);
-  if (caps.tpu && caps.tpu->other) erase (*caps.tpu->other, tpu::OVSN);
+  if (caps.adf && caps.adf->flags) erase (*caps.adf->flags, adf::OVSN);
+  if (caps.fb  && caps.fb ->flags) erase (*caps.fb ->flags, fb ::OVSN);
+  if (caps.tpu && caps.tpu->flags) erase (*caps.tpu->flags, tpu::OVSN);
 
   read_back_ = false;
 }

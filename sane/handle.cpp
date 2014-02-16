@@ -1,5 +1,5 @@
 //  handle.cpp -- for a SANE scanner object
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -23,14 +23,18 @@
 #endif
 
 #include <cstring>
+#include <deque>
 #include <stdexcept>
 #include <typeinfo>
 
 #include <boost/assign/list_of.hpp>
 #include <boost/bind.hpp>
 #include <boost/foreach.hpp>
+#include <boost/optional.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <utsushi/condition-variable.hpp>
+#include <utsushi/mutex.hpp>
 #include <utsushi/range.hpp>
 #include <utsushi/store.hpp>
 #include <utsushi/stream.hpp>
@@ -38,6 +42,7 @@
 
 #include "../filters/image-skip.hpp"
 #include "../filters/jpeg.hpp"
+#include "../filters/magick.hpp"
 #include "../filters/padding.hpp"
 #include "../filters/threshold.hpp"
 
@@ -47,8 +52,10 @@
 
 using std::exception;
 using std::runtime_error;
-using utsushi::_flt_::ithreshold;
-using utsushi::_flt_::iimage_skip;
+using utsushi::_flt_::bottom_padder;
+using utsushi::_flt_::threshold;
+using utsushi::_flt_::image_skip;
+using utsushi::_flt_::magick;
 
 namespace sane {
 
@@ -137,6 +144,12 @@ namespace xlate
   static const mapping doc_source ("doc-source", name::source);
   static const mapping image_type ("image-type", name::mode);
 
+  static const mapping sw_resolution   ("sw-resolution"  , name::resolution);
+  static const mapping sw_resolution_x ("sw-resolution-x", name::x_resolution);
+  static const mapping sw_resolution_y ("sw-resolution-y", name::y_resolution);
+  static const mapping sw_resolution_bind ("sw-resolution-bind",
+                                           "resolution-bind");
+  static const mapping resolution_bind ("resolution-bind", "resolution-bind");
 }       // namespace xlate
 
 namespace unit
@@ -149,9 +162,323 @@ using namespace utsushi;
 
 #define nullptr 0
 
+class bucket                    // fixme: copies code in lib/pump.cpp
+{
+public:
+  typedef shared_ptr< bucket > ptr;
+
+  octet *data_;
+  union {
+    streamsize size_;
+    streamsize mark_;
+  };
+  context ctx_;
+
+  bucket (streamsize size)
+    : data_(new octet[size])
+    , size_(size)
+  {}
+
+  bucket (const context& ctx, streamsize marker)
+    : data_(nullptr)
+    , mark_(marker)
+    , ctx_(ctx)
+  {}
+
+  ~bucket ()
+  {
+    delete [] data_;
+  }
+};
+
+class iocache
+  : public idevice
+  , public odevice
+{
+public:
+  typedef shared_ptr< iocache > ptr;
+
+  iocache ()
+    : have_bucket_(0)
+  {}
+
+  streamsize write (const octet *data, streamsize n)
+  {
+    if (!data || 0 >= n) return 0;
+
+    bucket::ptr bp (make_bucket (n));
+    traits::copy (bp->data_, data, n);
+    {
+      lock_guard< mutex > lock (mutex_);
+      brigade_.push_back (bp);
+    }
+    ++have_bucket_;
+    not_empty_.notify_one ();
+
+    return bp->size_;
+  }
+
+  void mark (traits::int_type c, const context& ctx)
+  {
+    bucket::ptr bp (make_bucket (ctx, c));
+    {
+      lock_guard< mutex > lock (mutex_);
+      brigade_.push_back (bp);
+    }
+    ++have_bucket_;
+    not_empty_.notify_one ();
+
+    odevice::last_marker_ = bp->mark_;
+    odevice::ctx_         = bp->ctx_;
+  }
+
+protected:
+
+  streamsize sgetn (octet *data, streamsize n)
+  {
+    BOOST_ASSERT (traits::boi () == idevice::last_marker_);
+
+    bucket::ptr bp (front ());
+
+    if (traits::is_marker (bp->mark_))
+      {
+        BOOST_ASSERT (   traits::eoi () == bp->mark_
+                      || traits::eof () == bp->mark_);
+        pop_front ();
+
+        return (traits::eoi () == bp->mark_ ? 0 : -1);
+      }
+
+    if (!data || 0 >= n)
+      return traits::not_marker (0);
+
+    streamsize rv = std::min (n, bp->size_);
+    traits::copy (data, bp->data_, rv);
+    if (rv == bp->size_)
+      {
+        pop_front ();
+      }
+    else
+      {
+        traits::move (bp->data_, bp->data_ + rv, bp->size_ - rv);
+        bp->size_ -= rv;
+      }
+    return rv;
+  }
+
+  bool is_consecutive () const
+  {
+    BOOST_ASSERT (traits::eoi () == idevice::last_marker_);
+
+    bucket::ptr bp (front ());
+
+    BOOST_ASSERT (   traits::boi () == bp->mark_
+                  || traits::eos () == bp->mark_
+                  || traits::eof () == bp->mark_);
+
+    if (traits::boi () != bp->mark_)
+      const_cast< iocache * > (this)->pop_front ();
+
+    return (traits::boi () == bp->mark_);
+  }
+
+  bool obtain_media ()
+  {
+    BOOST_ASSERT (   traits::eoi () == idevice::last_marker_
+                  || traits::eos () == idevice::last_marker_
+                  || traits::eof () == idevice::last_marker_);
+
+    bucket::ptr bp (front ());
+
+    if (traits::eoi () == idevice::last_marker_)
+      {
+        BOOST_ASSERT (   traits::eos () == bp->mark_
+                      || traits::eof () == bp->mark_
+                      || traits::boi () == bp->mark_);
+
+        if (traits::boi () != bp->mark_) pop_front ();
+
+        return (traits::boi () == bp->mark_);
+      }
+    else
+      {
+        BOOST_ASSERT (   traits::eos () == bp->mark_
+                      || traits::eof () == bp->mark_
+                      || traits::bos () == bp->mark_);
+
+        pop_front ();
+
+        return (traits::bos () == bp->mark_);
+      }
+  }
+
+  bool set_up_image ()
+  {
+    BOOST_ASSERT (   traits::eoi () == idevice::last_marker_
+                  || traits::bos () == idevice::last_marker_);
+
+    bucket::ptr bp (front ());
+
+    BOOST_ASSERT (   traits::boi () == bp->mark_
+                  || traits::eos () == bp->mark_
+                  || traits::eof () == bp->mark_);
+
+    pop_front ();
+
+    return (traits::boi () == bp->mark_);
+  }
+
+  bool set_up_sequence ()
+  {
+    BOOST_ASSERT (   traits::eos () == idevice::last_marker_
+                  || traits::eof () == idevice::last_marker_);
+
+    bucket::ptr bp (front ());
+
+    BOOST_ASSERT (   traits::bos () == bp->mark_
+                  || traits::eof () == bp->mark_);
+
+    if (traits::bos () != bp->mark_) pop_front ();
+
+    return (traits::bos () == bp->mark_);
+  }
+
+  bucket::ptr front () const
+  {
+    {
+      unique_lock< mutex > lock (mutex_);
+
+      while (!have_bucket_)
+        not_empty_.wait (lock);
+    }
+    return brigade_.front ();
+  }
+
+  void pop_front ()
+  {
+    bucket::ptr bp (front ());
+    {
+      lock_guard< mutex > lock (mutex_);
+      brigade_.pop_front ();
+    }
+    --have_bucket_;
+
+    if (traits::is_marker (bp->mark_))
+      {
+        idevice::last_marker_ = bp->mark_;
+        idevice::ctx_         = bp->ctx_;
+      }
+
+    if (traits::eof () == bp->mark_ && oops_)
+      {
+        runtime_error e = *oops_;
+        oops_ = boost::none;
+        BOOST_THROW_EXCEPTION (e);
+      }
+  }
+
+  bucket::ptr nothrow_make_shared_bucket (streamsize size)
+  {
+    bucket::ptr bp;
+
+    try
+      {
+        bp = make_shared< bucket > (size);
+      }
+    catch (const std::bad_alloc&)
+      {
+      }
+
+    return bp;
+  }
+
+  bucket::ptr nothrow_make_shared_bucket (const context& ctx,
+                                          streamsize marker)
+  {
+    bucket::ptr bp;
+
+    try
+      {
+        bp = make_shared< bucket > (ctx, marker);
+      }
+    catch (const std::bad_alloc&)
+      {
+      }
+
+    return bp;
+  }
+
+  bucket::ptr make_bucket (streamsize size)
+  {
+    bucket::ptr bp (nothrow_make_shared_bucket (size));
+
+    while (have_bucket_ && !bp)
+      {
+        this_thread::yield ();
+        bp = nothrow_make_shared_bucket (size);
+      }
+    if (!bp) throw std::bad_alloc ();
+
+    return bp;
+  }
+
+  bucket::ptr make_bucket (const context& ctx, streamsize marker)
+  {
+    bucket::ptr bp (nothrow_make_shared_bucket (ctx, marker));
+
+    while (have_bucket_ && !bp)
+      {
+        this_thread::yield ();
+        bp = nothrow_make_shared_bucket (ctx, marker);
+      }
+    if (!bp) throw std::bad_alloc ();
+
+    return bp;
+  }
+
+  volatile sig_atomic_t have_bucket_;
+
+  std::deque< bucket::ptr > brigade_;
+  mutable mutex mutex_;
+  mutable condition_variable not_empty_;
+
+  boost::optional< runtime_error > oops_;
+
+public:
+  void on_notify (utsushi::log::priority level, const std::string& message)
+  {
+    utsushi::log::message (level, utsushi::log::SANE_BACKEND, message);
+
+    switch (level)
+      {
+      case utsushi::log::FATAL: break;
+      case utsushi::log::ALERT: break;
+      case utsushi::log::ERROR: break;
+      default:
+        return;                 // not an error -> do not terminate
+      }
+
+    // The scan sequence has been terminated.  Mark this on our
+    // odevice end so that subsequent access on the idevice end
+    // will be able to rethrow the exception.
+
+    oops_ = runtime_error (message);
+    mark (traits::eof (), odevice::ctx_);
+  }
+};
+
+void
+on_notify (iocache::ptr p, utsushi::log::priority level,
+           const std::string& message)
+{
+  if (p) p->on_notify (level, message);
+}
+
 handle::handle(const scanner::info& info)
   : name_(info.name () + " (" + info.udi () + ")")
-  , idev_(scanner::create (connexion::create (info.connexion (), info.path ()), info))
+  , idev_(scanner::create (connexion::create (info.connexion (),
+                                              info.path ()), info))
+  , pump_(make_shared< pump > (idev_))
   , last_marker_(traits::eos ())
   , work_in_progress_(false)
   , cancel_requested_(work_in_progress_)
@@ -164,7 +491,7 @@ handle::handle(const scanner::info& info)
     (option_prefix, idev_->options ())
     ;
 
-  iimage_skip flt;
+  image_skip flt;
   opt_.add_option_map ()
     ("software", flt.options ())
     ;
@@ -193,6 +520,18 @@ handle::handle(const scanner::info& info)
       option::map::iterator om_it (opt_.begin ());
       for (; opt_.end () != om_it; ++om_it)
         {
+          // FIXME skip software resolutions for a more intuitive UI
+          //       We make up for this in update_options().
+          using namespace xlate;
+          /**/ if (option_prefix / sw_resolution.first   == om_it->key ())
+            seen.insert (om_it->key ());
+          else if (option_prefix / sw_resolution_x.first == om_it->key ())
+            seen.insert (om_it->key ());
+          else if (option_prefix / sw_resolution_y.first == om_it->key ())
+            seen.insert (om_it->key ());
+          else if (option_prefix / sw_resolution_bind.first == om_it->key ())
+            seen.insert (om_it->key ());
+
           if (!seen.count (om_it->key ())
               && om_it->tags ().count (*it))
             {
@@ -255,7 +594,7 @@ handle::handle(const scanner::info& info)
           source = current;
         }
     }
-  update_capabilities (nullptr);
+  update_options (nullptr);
 }
 
 static void
@@ -582,8 +921,7 @@ handle::cancel ()
 void
 handle::end_scan_sequence ()
 {
-  idev_->cancel ();
-  istr_.reset ();
+  pump_->cancel ();
 }
 
 streamsize
@@ -593,75 +931,14 @@ handle::marker ()
            || traits::eos () == last_marker_
            || traits::eof () == last_marker_)
     {
-      istream::ptr istr = make_shared< istream > ();
-
-      bool bilevel = (opt_[option_prefix / "image-type"] == "Gray (1 bit)");
-      quantity thr;
-      try
-        {
-          thr = value (opt_[option_prefix / "threshold"]);
-        }
-      catch (const std::out_of_range&)
-        {
-          thr = 128;
-        }
-
-      toggle match_height = true;
-      quantity height = -1.0;
-      try
-        {
-          match_height = value (opt_[option_prefix / "match-height"]);
-          height  = value (opt_[option_prefix / "br-y"]);
-          height -= value (opt_[option_prefix / "tl-y"]);
-        }
-      catch (const std::out_of_range&)
-        {
-          match_height = false;
-          height = -1.0;
-        }
-      if (match_height) match_height = (height > 0);
-
-      if (match_height)
-        istr->push (make_shared< _flt_::ibottom_padder > (height));
-
-      bool skip_blank = !bilevel; // \todo fix filter limitation
-      quantity skip_thr = -1.0;
-      ifilter::ptr blank_skip (make_shared< iimage_skip > ());
-      try
-        {
-          skip_thr = value (opt_["software/blank-threshold"]);
-          (*blank_skip->options ())["blank-threshold"] = skip_thr;
-        }
-      catch (const std::out_of_range&)
-        {
-          skip_blank = false;
-        }
-      if (skip_blank) skip_blank = (skip_thr > 0);
-
-      if (skip_blank)
-        istr->push (ifilter::ptr (blank_skip));
+      pump_->cancel ();         // prevent deadlock
 
       const std::string xfer_raw = "image/x-raster";
       const std::string xfer_jpg = "image/jpeg";
       std::string xfer_fmt = idev_->get_context ().content_type ();
 
-      /**/ if (xfer_raw == xfer_fmt)
-        istr->push (make_shared< _flt_::ipadding > ());
-      else if (xfer_jpg == xfer_fmt)
-        {
-          if (bilevel)
-            {
-              ithreshold::ptr thresh = make_shared< ithreshold > ();
-              try
-                {
-                  (*thresh->options ())["threshold"] = thr;
-                }
-              catch (const std::out_of_range&)
-                {}
-              istr->push (ifilter::ptr (thresh));
-            }
-          istr->push (make_shared< _flt_::jpeg::idecompressor > ());
-        }
+      /**/ if (xfer_raw == xfer_fmt) {}
+      else if (xfer_jpg == xfer_fmt) {}
       else
         {
           log::alert
@@ -671,9 +948,120 @@ handle::marker ()
           return last_marker_;
         }
 
-      istr->push (idev_);
+      ostream::ptr ostr  = make_shared< ostream > ();
+
+      bool bilevel = (opt_[option_prefix / "image-type"] == "Gray (1 bit)");
+      ofilter::ptr threshold (make_shared< threshold > ());
+      try
+        {
+          (*threshold->options ())["threshold"]
+            = value (opt_[option_prefix / "threshold"]);
+        }
+      catch (const std::out_of_range&)
+        {
+          log::error ("Falling back to default threshold value");
+        }
+
+      toggle force_extent = true;
+      quantity width  = -1.0;
+      quantity height = -1.0;
+      try
+        {
+          force_extent = value (opt_[option_prefix / "force-extent"]);
+          width   = value (opt_[option_prefix / "br-x"]);
+          width  -= value (opt_[option_prefix / "tl-x"]);
+          height  = value (opt_[option_prefix / "br-y"]);
+          height -= value (opt_[option_prefix / "tl-y"]);
+        }
+      catch (const std::out_of_range&)
+        {
+          force_extent = false;
+          width  = -1.0;
+          height = -1.0;
+        }
+      if (force_extent) force_extent = (width > 0 || height > 0);
+
+      toggle resample = false;
+      if (opt_.count (option_prefix / "enable-resampling"))
+        resample = value (opt_[option_prefix / "enable-resampling"]);
+
+      ofilter::ptr magick;
+      if (resample)
+        {
+          magick = make_shared< _flt_::magick > ();
+
+          toggle bound = true;
+          quantity res_x  = -1.0;
+          quantity res_y  = -1.0;
+
+          if (opt_.count (option_prefix / "sw-resolution-x"))
+            {
+              res_x = value (opt_[option_prefix / "sw-resolution-x"]);
+              res_y = value (opt_[option_prefix / "sw-resolution-y"]);
+            }
+          if (opt_.count (option_prefix / "sw-resolution-bind"))
+            bound = value (opt_[option_prefix / "sw-resolution-bind"]);
+
+          if (bound)
+            {
+              res_x = value (opt_[option_prefix / "sw-resolution"]);
+              res_y = value (opt_[option_prefix / "sw-resolution"]);
+            }
+
+          (*magick->options ())["resolution-x"] = res_x;
+          (*magick->options ())["resolution-y"] = res_y;
+          (*magick->options ())["force-extent"] = force_extent;
+          (*magick->options ())["width"]  = width;
+          (*magick->options ())["height"] = height;
+        }
+
+      toggle skip_blank = !bilevel; // \todo fix filter limitation
+      quantity skip_thresh = -1.0;
+      ofilter::ptr blank_skip (make_shared< image_skip > ());
+      try
+        {
+          (*blank_skip->options ())["blank-threshold"]
+            = value (opt_["software/blank-threshold"]);
+          skip_thresh = value ((*blank_skip->options ())["blank-threshold"]);
+        }
+      catch (const std::out_of_range&)
+        {
+          skip_blank = false;
+          log::error ("Disabling blank skip functionality");
+        }
+      // Don't even try skipping of completely white images.  We are
+      // extremely unlikely to encounter any of those.
+      skip_blank = (skip_blank
+                    && (quantity (0.) < skip_thresh));
+
+      /**/ if (xfer_raw == xfer_fmt)
+        ostr->push (make_shared< _flt_::padding > ());
+      else if (xfer_jpg == xfer_fmt)
+        ostr->push (make_shared< _flt_::jpeg::decompressor > ());
+      else
+        {
+          BOOST_THROW_EXCEPTION
+            (logic_error
+             ((format ("unsupported transfer format: '%1%'") % xfer_fmt)
+              .str ()));
+        }
+      if (skip_blank) ostr->push (blank_skip);
+      if (magick)
+        ostr->push (magick);
+      else if (force_extent)
+        ostr->push (make_shared< bottom_padder > (width, height));
+      if (xfer_jpg == xfer_fmt && bilevel)
+        ostr->push (threshold);
+
+      iocache::ptr cache = make_shared< iocache > ();
+      ostr->push (odevice::ptr (cache));
+      istream::ptr istr = make_shared< istream > ();
+      istr->push (idevice::ptr (cache));
       istr_ = istr;
       iptr_ = istr_;
+
+      pump_->connect (boost::bind (on_notify, cache, _1, _2));
+      pump_->start (ostr);
     }
 
   streamsize rv = traits::eof ();
@@ -683,6 +1071,8 @@ handle::marker ()
       try
         {
           rv = istr->marker ();
+          if (traits::eof () == rv)
+            rv = istr->marker ();
         }
       catch (const exception& e)
         {
@@ -730,6 +1120,38 @@ handle::add_option (option& visitor)
 void
 handle::update_options (SANE_Word *info)
 {
+  if (opt_.count (option_prefix / "enable-resampling"))
+    {
+      toggle t = value (opt_[option_prefix / "enable-resampling"]);
+
+      std::vector< option_descriptor >::iterator it = sod_.begin ();
+      for (; it != sod_.end (); ++it)
+        {
+          using namespace xlate;
+
+          mapping sw_res;
+          /**/ if (sw_resolution.second == it->sane_key)
+            sw_res = (t ? sw_resolution : resolution);
+          else if (sw_resolution_x.second == it->sane_key)
+            sw_res = (t ? sw_resolution_x : resolution_x);
+          else if (sw_resolution_y.second == it->sane_key)
+            sw_res = (t ? sw_resolution_y : resolution_y);
+          else if ("resolution-bind" == it->sane_key)
+            sw_res = (t ? sw_resolution_bind : resolution_bind);
+          else
+            continue;           // nothing to do
+
+          utsushi::key k (option_prefix / sw_res.first);
+
+          if (opt_.count (k))
+            {
+              *it = option_descriptor (opt_[k]);
+              if (info) *info |= SANE_INFO_RELOAD_OPTIONS;
+              if (info) *info |= SANE_INFO_RELOAD_PARAMS;
+            }
+        }
+    }
+
   std::vector< option_descriptor >::iterator it = sod_.begin ();
 
   ++it;                         // do not modify name::num_options
@@ -827,6 +1249,12 @@ sanitize_(const utsushi::key& k)
     (xlate::resolution_y)
     (xlate::doc_source)
     (xlate::image_type)
+    // Software emulated resolutions
+    (xlate::sw_resolution)
+    (xlate::sw_resolution_x)
+    (xlate::sw_resolution_y)
+    (xlate::resolution_bind)
+    (xlate::sw_resolution_bind)
     ;
 
   BOOST_FOREACH (xlate::mapping entry, well_known)

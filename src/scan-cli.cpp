@@ -1,5 +1,5 @@
 //  scan-cli.cpp -- command-line interface based scan utility
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -38,6 +38,7 @@
 
 #include <boost/any.hpp>
 #include <boost/bind.hpp>
+#include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -61,6 +62,7 @@
 #include "../filters/padding.hpp"
 #include "../filters/pdf.hpp"
 #include "../filters/pnm.hpp"
+#include "../filters/magick.hpp"
 #include "../filters/threshold.hpp"
 #include "../outputs/tiff.hpp"
 
@@ -189,9 +191,11 @@ class option_visitor
   : public value::visitor<>
 {
 public:
-  option_visitor (po::options_description& desc, const option& opt)
+  option_visitor (po::options_description& desc, const option& opt,
+                  boost::optional< toggle > resampling = boost::none)
     : desc_(desc)
     , opt_(opt)
+    , resampling_(resampling)
   {}
 
   template< typename T >
@@ -200,6 +204,7 @@ public:
 protected:
   po::options_description& desc_;
   const option& opt_;
+  boost::optional< toggle > resampling_;
 };
 
 template< typename T >
@@ -208,6 +213,13 @@ option_visitor::operator() (const T& t) const
 {
   std::string documentation;
   std::string description;
+  std::string key (opt_.key ());
+
+  if (resampling_ && *resampling_)
+    {
+      if (key.substr (0,10) == "resolution") return;
+      if (key.substr (0, 3) == "sw-") key.erase (0, 3);
+    }
 
   if (opt_.text ())             // only translate non-empty strings
     description = _(opt_.text ());
@@ -233,7 +245,7 @@ option_visitor::operator() (const T& t) const
     }
 
   desc_.add_options ()
-    (opt_.key ().c_str (), po::value< T > ()->default_value (t),
+    (key.c_str (), po::value< T > ()->default_value (t),
      documentation.c_str ());
 }
 
@@ -242,11 +254,17 @@ void
 option_visitor::operator() (const toggle& t) const
 {
   std::string description;
+  std::string key (opt_.key ());
+
+  if (resampling_ && *resampling_)
+    {
+      if (key.substr (0,10) == "resolution") return;
+      if (key.substr (0, 3) == "sw-") key.erase (0, 3);
+    }
 
   if (opt_.text ())             // only translate non-empty strings
     description = _(opt_.text ());
 
-  std::string key (opt_.key ());
   if (t) key.insert (0, "no-");
 
   desc_.add_options ()
@@ -265,8 +283,10 @@ option_visitor::operator() (const toggle& t) const
 class visit
 {
 public:
-  visit (po::options_description& desc)
+  visit (po::options_description& desc,
+         boost::optional< toggle > resampling = boost::none)
     : desc_(desc)
+    , resampling_(resampling)
   {}
 
   void operator() (const option& opt) const
@@ -274,13 +294,14 @@ public:
     if (opt.is_read_only ()) return;
 
     value val (opt);
-    option_visitor v (desc_, opt);
+    option_visitor v (desc_, opt, resampling_);
 
     val.apply (v);
   }
 
 protected:
   po::options_description& desc_;
+  boost::optional< toggle > resampling_;
 };
 
 //! Collect command-line arguments so they can be assigned all at once
@@ -299,6 +320,21 @@ public:
 
   ~assign ()
   {
+    if (opts_->count ("enable-resampling"))
+      {
+        toggle t = value ((*opts_)["enable-resampling"]);
+        if (vm_.count ("enable-resampling"))
+          t = vm_["enable-resampling"];
+
+        if (t)
+          {
+            replace ("resolution");
+            replace ("resolution-x");
+            replace ("resolution-y");
+            replace ("resolution-bind");
+          }
+      }
+
     opts_->assign (vm_);
   }
 
@@ -338,6 +374,16 @@ public:
   }
 
 protected:
+  void replace (const std::string& k)
+  {
+    value::map::iterator it (vm_.find (k));
+
+    if (vm_.end () == it) return;
+
+    vm_["sw-" + k] = it->second;
+    vm_.erase (it);
+  }
+
   option::map::ptr opts_;
   value::map vm_;
 };
@@ -480,9 +526,15 @@ main (int argc, char *argv[])
 
       po::variables_map dev_vm;
       po::options_description dev_opts (_("Device options"));
+      boost::optional< toggle > resampling;
+      if (device->options ()->count ("enable-resampling"))
+        {
+          toggle t = value ((*device->options ())["enable-resampling"]);
+          resampling = t;
+        }
       std::for_each (device->options ()->begin (),
                      device->options ()->end (),
-                     visit (dev_opts));
+                     visit (dev_opts, resampling));
 
       po::variables_map add_vm;
       po::options_description add_opts (_("Add-on options"));
@@ -590,23 +642,74 @@ main (int argc, char *argv[])
           log::error ("Falling back to default JPEG compression quality");
         }
 
-      toggle match_height = true;
+      toggle force_extent = true;
+      quantity width  = -1.0;
       quantity height = -1.0;
       try
         {
-          match_height = value (om["match-height"]);
+          force_extent = value (om["force-extent"]);
+          width   = value (om["br-x"]);
+          width  -= value (om["tl-x"]);
           height  = value (om["br-y"]);
           height -= value (om["tl-y"]);
         }
       catch (const std::out_of_range&)
         {
-          match_height = false;
+          force_extent = false;
+          width  = -1.0;
           height = -1.0;
         }
-      if (match_height) match_height = (height > 0);
+      if (force_extent) force_extent = (width > 0 || height > 0);
 
-      toggle skip_blank = (add_vm.count ("blank-threshold")
-                           && !bilevel); // \todo fix filter limitation
+      toggle resample = false;
+      if (om.count ("enable-resampling"))
+        resample = value (om["enable-resampling"]);
+
+      ofilter::ptr magick;
+      if (resample)
+        {
+          magick = make_shared< _flt_::magick > ();
+
+          toggle bound = true;
+          quantity res_x  = -1.0;
+          quantity res_y  = -1.0;
+
+          if (om.count ("sw-resolution-x"))
+            {
+              res_x = value (om["sw-resolution-x"]);
+              res_y = value (om["sw-resolution-y"]);
+            }
+          if (om.count ("sw-resolution-bind"))
+            bound = value (om["sw-resolution-bind"]);
+
+          if (bound)
+            {
+              res_x = value (om["sw-resolution"]);
+              res_y = value (om["sw-resolution"]);
+            }
+
+          (*magick->options ())["resolution-x"] = res_x;
+          (*magick->options ())["resolution-y"] = res_y;
+          (*magick->options ())["force-extent"] = force_extent;
+          (*magick->options ())["width"]  = width;
+          (*magick->options ())["height"] = height;
+        }
+
+      toggle skip_blank = !bilevel; // \todo fix filter limitation
+      quantity skip_thresh = -1.0;
+      try
+        {
+          skip_thresh = value ((*blank_skip->options ())["blank-threshold"]);
+        }
+      catch (const std::out_of_range&)
+        {
+          skip_blank = false;
+          log::error ("Disabling blank skip functionality");
+        }
+      // Don't even try skipping of completely white images.  We are
+      // extremely unlikely to encounter any of those.
+      skip_blank = (skip_blank
+                    && (quantity (0.) < skip_thresh));
 
       /**/ if (xfer_raw == xfer_fmt) {}
       else if (xfer_jpg == xfer_fmt) {}
@@ -621,11 +724,7 @@ main (int argc, char *argv[])
           /**/ if (xfer_raw == xfer_fmt)
             ostr->push (make_shared< padding > ());
           else if (xfer_jpg == xfer_fmt)
-            {
-              ostr->push (make_shared< jpeg::decompressor > ());
-              if (skip_blank) ostr->push (blank_skip);
-              if (bilevel) ostr->push (threshold);
-            }
+            ostr->push (make_shared< jpeg::decompressor > ());
           else
             BOOST_THROW_EXCEPTION
               (runtime_error
@@ -634,8 +733,12 @@ main (int argc, char *argv[])
                  % fmt)
                 .str ()));
           if (skip_blank) ostr->push (blank_skip);
-          if (match_height)
-            ostr->push (make_shared< bottom_padder > (height));
+          if (magick)
+            ostr->push (magick);
+          else if (force_extent)
+            ostr->push (make_shared< bottom_padder > (width, height));
+          if (xfer_jpg == xfer_fmt && bilevel)
+            ostr->push (threshold);
           ostr->push (make_shared< pnm > ());
         }
       else if ("JPEG" == fmt)
@@ -649,18 +752,24 @@ main (int argc, char *argv[])
             {
               ostr->push (make_shared< padding > ());
               if (skip_blank) ostr->push (blank_skip);
-              if (match_height)
-                ostr->push (make_shared< bottom_padder > (height));
+              if (magick)
+                ostr->push (magick);
+              else if (force_extent)
+                ostr->push (make_shared< bottom_padder > (width, height));
               ostr->push (jpeg_compress);
             }
           else if (xfer_jpg == xfer_fmt)
             {
-              if (match_height || skip_blank)
+              if (magick || force_extent || skip_blank)
                 {
                   ostr->push (make_shared< jpeg::decompressor > ());
-                  if (skip_blank)   ostr->push (blank_skip);
-                  if (match_height) ostr->push (make_shared< bottom_padder >
-                                                (height));
+                  if (skip_blank)
+                    ostr->push (blank_skip);
+                  if (magick)
+                    ostr->push (magick);
+                  else if (force_extent)
+                    ostr->push (make_shared< bottom_padder >
+                                (width, height));
                   ostr->push (jpeg_compress);
                 }
             }
@@ -680,8 +789,10 @@ main (int argc, char *argv[])
             {
               ostr->push (make_shared< padding > ());
               if (skip_blank) ostr->push (blank_skip);
-              if (match_height)
-                ostr->push (make_shared< bottom_padder > (height));
+              if (magick)
+                ostr->push (magick);
+              else if (force_extent)
+                ostr->push (make_shared< bottom_padder > (width, height));
 
               if (bilevel)
                 {
@@ -694,23 +805,24 @@ main (int argc, char *argv[])
             }
           else if (xfer_jpg == xfer_fmt)
             {
-              if (match_height || bilevel)
+              if (magick || force_extent || skip_blank || bilevel)
                 {
                   ostr->push (make_shared< jpeg::decompressor > ());
                   if (skip_blank) ostr->push (blank_skip);
-                }
-              if (match_height)
-                {
-                  ostr->push (make_shared< bottom_padder > (height));
-                }
-              if (bilevel)
-                {
-                  ostr->push (threshold);
-                  ostr->push (make_shared< g3fax > ());
-                }
-              else
-                {
-                  ostr->push (jpeg_compress);
+                  if (magick)
+                    ostr->push (magick);
+                  else if (force_extent)
+                    ostr->push (make_shared< bottom_padder > (width, height));
+
+                  if (bilevel)
+                    {
+                      ostr->push (threshold);
+                      ostr->push (make_shared< g3fax > ());
+                    }
+                  else
+                    {
+                      ostr->push (jpeg_compress);
+                    }
                 }
             }
           else
@@ -729,10 +841,7 @@ main (int argc, char *argv[])
           /**/ if (xfer_raw == xfer_fmt)
             ostr->push (make_shared< padding > ());
           else if (xfer_jpg == xfer_fmt)
-             {
-               ostr->push (make_shared< jpeg::decompressor > ());
-               if (bilevel) ostr->push (threshold);
-             }
+            ostr->push (make_shared< jpeg::decompressor > ());
           else
             BOOST_THROW_EXCEPTION
               (runtime_error
@@ -741,8 +850,12 @@ main (int argc, char *argv[])
                  % fmt)
                 .str ()));
           if (skip_blank) ostr->push (blank_skip);
-          if (match_height)
-            ostr->push (make_shared< bottom_padder > (height));
+          if (magick)
+            ostr->push (magick);
+          else if (force_extent)
+            ostr->push (make_shared< bottom_padder > (width, height));
+          if (xfer_jpg == xfer_fmt && bilevel)
+            ostr->push (threshold);
         }
       else
         {

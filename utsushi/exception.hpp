@@ -1,5 +1,5 @@
 //  exception.hpp -- extensions to the std::exception hierarchy
-//  Copyright (C) 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -41,6 +41,7 @@ public:
     cover_open,
     media_out,
     media_jam,
+    permission_denied,
   };
 
   system_error (error_code ec, const std::string& message);

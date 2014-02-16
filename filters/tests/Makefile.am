@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -26,10 +26,16 @@ TESTS_ENVIRONMENT =
 TESTS = $(check_PROGRAMS)
 
 check_PROGRAMS  =
+check_PROGRAMS += padding.utr
 check_PROGRAMS += pnm.utr
 check_PROGRAMS += lut.utr
 check_PROGRAMS += threshold.utr
 check_PROGRAMS += image-skip.utr
+check_PROGRAMS += shell-pipe.utr
+
+#if have_magick
+check_PROGRAMS += magick.utr
+#endif
 
 LDADD  = ../libflt-all.la
 LDADD += ../../lib/libutsushi.la $(LIBUTSUSHI_LIBS)

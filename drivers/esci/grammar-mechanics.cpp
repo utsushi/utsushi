@@ -1,5 +1,5 @@
 //  grammar-mechanics.cpp -- component instantiations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -32,12 +32,40 @@ namespace utsushi {
 namespace _drv_ {
 namespace esci {
 
+namespace fcs = code_token::mechanic::fcs;
+
+hardware_request::hardware_request ()
+  : ini (false)
+{}
+
 bool
 hardware_request::operator== (const hardware_request& rhs) const
 {
-  return (   part  == rhs.part
-          && what  == rhs.what
-          && value == rhs.value);
+  return (   adf == rhs.adf
+          && fcs == rhs.fcs
+          && ini == rhs.ini);
+}
+
+void
+hardware_request::clear ()
+{
+  *this = hardware_request ();
+}
+
+hardware_request::focus::focus ()
+  : type (fcs::AUTO)
+{}
+
+hardware_request::focus::focus (const integer& pos)
+  : type (fcs::MANU)
+  , position (pos)
+{}
+
+bool
+hardware_request::focus::operator== (const hardware_request::focus& rhs) const
+{
+  return (   type     == rhs.type
+          && position == rhs.position);
 }
 
 template class

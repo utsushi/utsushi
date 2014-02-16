@@ -103,6 +103,9 @@ public:
   std::set< key > tags () const;
 
   bool is_at (const level::symbol& level) const;
+  bool is_active () const;
+  bool is_emulated () const;
+  bool is_read_only () const;
 
   //! Sets a short, yet descriptive name
   void name (const string& name);
@@ -114,12 +117,20 @@ public:
   descriptor& operator() (const tag::symbol& tag);
   descriptor& operator() (const level::symbol& level);
 
+  descriptor& active (bool toggle);
+  descriptor& emulate (bool toggle);
+  descriptor& read_only (bool toggle);
+
 private:
+  descriptor& toggle_(bool toggle, int flags);
+
   string name_;                 // translatable
   string text_;                 // translatable
 
   std::set< key > tags_;
   level::symbol level_;
+
+  int flags_;
 };
 
 typedef descriptor aggregator;

@@ -1,5 +1,5 @@
 //  compound.cpp -- protocol variant command base class implementation
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -112,7 +112,7 @@ compound_base::operator>> (connexion& cnx)
 bool
 compound_base::delay_elapsed () const
 {
-  struct timespec t = { 0, 50000000 /* ns */ };
+  struct timespec t = { 0, 100000000 /* ns */ };
 
   return 0 == nanosleep (&t, 0);
 }

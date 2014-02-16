@@ -1,5 +1,5 @@
 //  run-time.cpp -- information for a program
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -165,7 +165,7 @@ run_time::version (const std::string& legalese,
 {
   // This string should NOT be translated
   static const std::string default_legalese
-    ("Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION\n"
+    ("Copyright (C) 2012-2014  SEIKO EPSON CORPORATION\n"
      "License: GPL-3.0+");
 
   format fmt (!command ().empty ()

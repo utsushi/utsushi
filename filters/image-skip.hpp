@@ -1,5 +1,5 @@
 //  image-skip.hpp -- conditionally suppress images in the output
-//  Copyright (C) 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -66,6 +66,8 @@ protected:
   void bos (const context& ctx);
   void boi (const context& ctx);
   void eoi (const context& ctx);
+  void eos (const context& ctx);
+  void eof (const context& ctx);
 
 private:
   bool skip_();

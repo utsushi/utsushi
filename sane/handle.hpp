@@ -1,5 +1,5 @@
 //  handle.hpp -- for a SANE scanner object
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -31,6 +31,7 @@ extern "C" {                    // needed until sane-backends-1.0.14
 
 #include <boost/operators.hpp>
 
+#include <utsushi/pump.hpp>
 #include <utsushi/scanner.hpp>
 #include <utsushi/stream.hpp>
 
@@ -96,6 +97,7 @@ protected:
   std::string name_;
   utsushi::scanner::ptr idev_;
   utsushi::istream::ptr istr_;
+  utsushi::pump::ptr pump_;
 
   //! Manage istr_ resource safely in the face of concurrency
   utsushi::weak_ptr< utsushi::istream > iptr_;

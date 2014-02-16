@@ -157,8 +157,8 @@ case "$PKG_MGR" in
         pkg_list="$pkg_list libsane-dev"
         pkg_list="$pkg_list libtiff-dev"
         #  Needed for logo and icon format conversion
-        has rsvg-convert || pkg_list="$pkg_list librsvg2-bin"
-        has convert      || pkg_list="$pkg_list imagemagick"
+        has rsvg-convert      || pkg_list="$pkg_list librsvg2-bin"
+        has gm || has convert || pkg_list="$pkg_list graphicsmagick"
         pkg_list="$pkg_list ttf-dejima-mincho"
         #  Needed for documentation generation purposes
         has doxygen     || pkg_list="$pkg_list doxygen"

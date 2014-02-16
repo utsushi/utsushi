@@ -1,6 +1,15 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.5.0                                             (2014-02-05)
+----------------------------------------------------------------------
+ * adds driver support for the DS-560, DS-760 and DS-860
+ * adds software emulated resolutions for smoother control with DS-510
+   and DS-560 devices
+ * renames the '--match-height' option to '--force-extent'
+ * changes the default gamma setting for clearer images
+ 
+----------------------------------------------------------------------
 utsushi-0.4.0                                             (2013-11-21)
 ----------------------------------------------------------------------
  * increases image acquisition performance

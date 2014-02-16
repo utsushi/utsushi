@@ -1,5 +1,5 @@
 //  grammar-information.cpp -- component instantiations
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -33,23 +33,29 @@ namespace _drv_ {
 namespace esci {
 
 information::information ()
-  : have_push_button (false)
+  : has_push_button (false)
   , device_buffer_size ()
   , truncates_at_media_end (false)
+  , supports_authentication (false)
+  , supports_reinitialization (false)
 {}
 
 bool
 information::operator== (const information& rhs) const
 {
-  return (   adf                == rhs.adf
-          && tpu                == rhs.tpu
-          && flatbed            == rhs.flatbed
-          && max_image          == rhs.max_image
-          && have_push_button   == rhs.have_push_button
-          && product            == rhs.product
-          && version            == rhs.version
-          && device_buffer_size == rhs.device_buffer_size
-          && extension          == rhs.extension);
+  return (   adf                       == rhs.adf
+          && tpu                       == rhs.tpu
+          && flatbed                   == rhs.flatbed
+          && max_image                 == rhs.max_image
+          && has_push_button           == rhs.has_push_button
+          && product                   == rhs.product
+          && version                   == rhs.version
+          && device_buffer_size        == rhs.device_buffer_size
+          && extension                 == rhs.extension
+          && truncates_at_media_end    == rhs.truncates_at_media_end
+          && serial_number             == rhs.serial_number
+          && supports_authentication   == rhs.supports_authentication
+          && supports_reinitialization == rhs.supports_reinitialization);
 }
 
 void

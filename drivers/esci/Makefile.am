@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 ##  Copyright (C) 2009  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
@@ -181,6 +181,10 @@ endif # enable_boost_unit_test_framework
 
 ##  Data files for use by the verify utility
 
+EXTRA_DIST += data/DS-510.dat
+EXTRA_DIST += data/DS-560.dat
+EXTRA_DIST += data/DS-760.dat
+EXTRA_DIST += data/DS-860.dat
 EXTRA_DIST += data/DS-5500.dat
 EXTRA_DIST += data/DS-6500.dat
 EXTRA_DIST += data/DS-7500.dat
@@ -203,6 +207,9 @@ clone_dat = \
 	    -e 's,\([^\#]\)FB  ....,\1FB      ,' \
 	    -e 's,\([^\#]\)TPU ....,\1TPU     ,' \
 	    $< > $@
+
+$(srcdir)/data/DS-760.dat: $(srcdir)/data/DS-860.dat
+	$(clone_dat)
 
 $(srcdir)/data/DS-6500.dat: $(srcdir)/data/DS-7500.dat
 	$(clone_dat)

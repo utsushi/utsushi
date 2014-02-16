@@ -1,5 +1,5 @@
 //  usb.cpp -- shuttle messages between software and USB device
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //  Copyright (C) 2011  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -195,14 +195,6 @@ using std::runtime_error;
         return NULL;
       }
 
-    if (!serial_number_matches_(descriptor.iSerialNumber,
-                                device->usb_serial ()))
-      {
-        libusb_close (handle_);
-        handle_ = NULL;
-        return NULL;
-      }
-
     int current_cfg;
     err = libusb_get_configuration (handle_, &current_cfg);
     if (err)
@@ -277,27 +269,6 @@ using std::runtime_error;
     libusb_close (handle_);
     handle_ = NULL;
     return NULL;
-  }
-
-  bool
-  usb::serial_number_matches_(uint8_t index,
-                              const std::string& serial_number) const
-  {
-    if (!index || 0 == serial_number.size ()) return true;
-
-    char buf[serial_number.size () + 1];
-    buf[0] = '\0';
-
-    unsigned char *ubuf = reinterpret_cast<unsigned char *> (buf);
-
-    int length = libusb_get_string_descriptor_ascii
-      (handle_, index, ubuf, serial_number.size() + 1);
-    if (0 > length)             // it's really an error!
-      log::error ("%1%: get_string_descr: %2%")
-        % __func__
-        % libusb_error_name (length);
-
-    return (0 < length && buf == serial_number);
   }
 
   bool
