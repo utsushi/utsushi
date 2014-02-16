@@ -1,5 +1,5 @@
 //  grammar-information.ipp -- component rule definitions
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -70,6 +70,8 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
      ^ (token_(EXT) > token_(value::LIST) > +info_ext_token_)
      ^  qi::matches [ token_(DLS) ]
      ^ (token_(S_N) > this->bin_hex_data_)
+     ^  qi::matches [ token_(ATH) ]
+     ^  qi::matches [ token_(INI) ]
        )
     > qi::eoi
     ;
@@ -223,13 +225,15 @@ BOOST_FUSION_ADAPT_STRUCT
  (boost::optional< ESCI_NS::information::tpu_source >, tpu)
  (boost::optional< ESCI_NS::information::fb_source >, flatbed)
  (std::vector< ESCI_NS::integer >, max_image)
- (bool, have_push_button)
+ (bool, has_push_button)
  (std::vector< ESCI_NS::byte >, product)
  (std::vector< ESCI_NS::byte >, version)
  (ESCI_NS::integer, device_buffer_size)
  (std::vector< ESCI_NS::quad >, extension)
  (bool, truncates_at_media_end)
- (boost::optional< std::vector< ESCI_NS::byte > >, serial_number))
+ (boost::optional< std::vector< ESCI_NS::byte > >, serial_number)
+ (bool, supports_authentication)
+ (bool, supports_reinitialization))
 
 #undef ESCI_NS
 

@@ -1,5 +1,5 @@
 //  grammar-mechanics.hpp -- component rule declarations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -38,18 +38,27 @@ namespace esci {
 struct hardware_request
   : private boost::equality_comparable< hardware_request >
 {
-  hardware_request (const quad& part = quad (), const quad& what = quad (),
-                    integer value = esci_non_int)
-    : part (part)
-    , what (what)
-    , value (value)
-  {}
+  hardware_request ();
 
   bool operator== (const hardware_request& rhs) const;
 
-  quad part;
-  quad what;
-  integer value;
+  void clear ();
+
+  struct focus
+    : private boost::equality_comparable< focus >
+  {
+    focus ();
+    focus (const integer& pos);
+
+    bool operator== (const focus& rhs) const;
+
+    quad type;
+    boost::optional< integer > position;
+  };
+
+  boost::optional< quad > adf;
+  boost::optional< focus > fcs;
+  bool ini;
 };
 
 namespace encoding {
@@ -75,13 +84,6 @@ protected:
   typedef karma::rule< Iterator, quad () > token_rule_;
 
   karma::rule< Iterator, hardware_request () > hardware_control_rule_;
-
-  karma::symbols< quad, token_rule_ > mech_token_rule_;
-
-  //! Move media through the ADF unit
-  karma::rule< Iterator, hardware_request () > mech_adf_rule_;
-  //! Adjust the device's focus
-  karma::rule< Iterator, hardware_request () > mech_fcs_rule_;
 
   karma::symbols< quad, token_rule_ > mech_adf_token_;
   karma::symbols< quad, token_rule_ > mech_fcs_token_;

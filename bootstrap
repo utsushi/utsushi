@@ -1,7 +1,7 @@
 #! /bin/sh
 #  bootstrap -- clean checkouts to a point where `./configure` succeeds
+#  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 #  Copyright (C) 2013  Olaf Meeuwissen
-#  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 #
 #  License: GPL-3.0+
 #  Author : AVASYS CORPORATION
@@ -227,7 +227,7 @@ fi
 #  we can fall back to our included Boost sources.
 #  Older versions did not support the ACTION-IF-[NOT-]FOUND API.
 
-serial=`awk '/^#serial/{ if ($2>20) print $2 }' $macro_dir/ax_boost_base.m4`
+serial=`awk '/^#serial/{ if ($2>21) print $2 }' $macro_dir/ax_boost_base.m4`
 if test -n "$serial"; then
     cat <<EOF >&2
 It seems there is a new AX_BOOST_BASE macro version out there.  The
@@ -243,7 +243,7 @@ sed -i 's/\(-VERSION\]\))/\1, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])/' \
 sed -i '/"$succeeded" != "yes"/q' $macro_dir/ax_boost_base.m4
 sed -i '/"$succeeded" != "yes"/d' $macro_dir/ax_boost_base.m4
 cat <<EOF >> $macro_dir/ax_boost_base.m4
-    if test "\$succeeded" != "yes"; then
+    if test "\$succeeded" != "yes" ; then
         if test "\$_version" = "0" ; then
             AC_MSG_RESULT([no])
         else
@@ -258,6 +258,7 @@ cat <<EOF >> $macro_dir/ax_boost_base.m4
         # execute ACTION-IF-FOUND (if present):
         ifelse([\$2], , :, [\$2])
     fi
+
     CPPFLAGS="\$CPPFLAGS_SAVED"
     LDFLAGS="\$LDFLAGS_SAVED"
 fi

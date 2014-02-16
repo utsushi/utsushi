@@ -32,9 +32,9 @@ EXTRA_DIST += icon16.xpm
 logo.png: logo.svg
 	rsvg-convert -h 100 -f png $< > $@
 icon32.xpm: icon.svg
-	rsvg-convert -h 32 -f png $< | convert png:- $@
+	rsvg-convert -h 32 -f png $< | $(MAGICK_CONVERT) png:- $@
 icon16.xpm: icon.svg
-	rsvg-convert -h 16 -f png $< | convert png:- $@
+	rsvg-convert -h 16 -f png $< | $(MAGICK_CONVERT) png:- $@
 
 EXTRA_DIST += doxygen.conf
 EXTRA_DIST += layout.xml

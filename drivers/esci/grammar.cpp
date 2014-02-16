@@ -1,5 +1,5 @@
 //  grammar.cpp -- instantiations for the ESC/I "compound" protocol
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -65,6 +65,12 @@ status::fatal_error () const
 {
   return err && (err::PE != err->what
                  || (lft && 0 != *lft));
+}
+
+bool
+status::is_busy () const
+{
+  return nrd && nrd::BUSY == *nrd;
 }
 
 bool

@@ -42,6 +42,7 @@
 #include <utsushi/i18n.hpp>
 #include <utsushi/log.hpp>
 #include <utsushi/monitor.hpp>
+#include <utsushi/run-time.hpp>
 #include <utsushi/scanner.hpp>
 
 #include "../../connexions/hexdump.hpp"
@@ -255,6 +256,8 @@ main (int argc, char *argv[])
 {
   std::string devdata;
   std::string refspec;
+
+  run_time (argc, argv);
 
   // Command-line processing
 

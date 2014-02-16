@@ -1,5 +1,5 @@
 //  buffer.hpp -- image data for speedy I/O transfers
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -111,6 +111,11 @@ protected:
    *   writing its content to the object's %device.
    */
   int sync ();
+
+private:
+
+  streamsize max_size_;
+  streamsize min_size_;
 };
 
 }       // namespace utsushi

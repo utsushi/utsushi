@@ -1,5 +1,5 @@
 //  usb.hpp -- shuttle messages between software and USB device
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //  Copyright (C) 2011  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -63,8 +63,6 @@ namespace _cnx_ {
     libusb_device_handle * usable_match_(const device_info::ptr& device,
                                          libusb_device *dev);
     bool set_bulk_endpoints_(libusb_device *dev);
-    bool serial_number_matches_(uint8_t index,
-                                const std::string& serial_number) const;
 
     libusb_device_handle *handle_;
     int cfg_;

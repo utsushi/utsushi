@@ -1,5 +1,5 @@
-//  release-scanner.cpp -- restore general device access
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  magick.hpp -- touches applied to your image data
+//  Copyright (C) 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -18,31 +18,39 @@
 //  You ought to have received a copy of the GNU General Public License
 //  along with this package.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifdef HAVE_CONFIG_H
-#include <config.h>
-#endif
+#ifndef filters_magick_hpp_
+#define filters_magick_hpp_
 
-#include <boost/throw_exception.hpp>
+#include "shell-pipe.hpp"
 
-#include "exception.hpp"
-#include "release-scanner.hpp"
+#include <string>
 
 namespace utsushi {
-namespace _drv_ {
-  namespace esci
-  {
-    void
-    release_scanner::validate_reply (void) const
-    {
-      if (byte (0x80) == rep_)
-        return;
+namespace _flt_ {
 
-      if (NAK == rep_)
-        BOOST_THROW_EXCEPTION (invalid_command ());
+class magick
+  : public shell_pipe
+{
+public:
+  magick ();
 
-      BOOST_THROW_EXCEPTION (unknown_reply ());
-    }
+protected:
+  void bos (const context& ctx);
 
-  } // namespace esci
-} // namespace _drv_
-} // namespace utsushi
+  context estimate (const context& ctx) const;
+  context finalize (const context& ctx) const;
+
+  std::string arguments (const context& ctx);
+
+  double x_resolution_;
+  double y_resolution_;
+
+  bool force_extent_;
+  double width_;
+  double height_;
+};
+
+}       // namespace _flt_
+}       // namespace utsushi
+
+#endif  /* !defined (filters_magick_hpp_) */

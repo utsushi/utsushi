@@ -1,6 +1,6 @@
 //  backend.cpp -- implementation of the SANE utsushi backend
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //  Copyright (C) 2013  Olaf Meeuwissen
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //  Copyright (C) 2007  EPSON AVASYS CORPORATION
 //
 //  License: GPL-3.0+
@@ -239,6 +239,8 @@ exception_to_sane_status (const system_error& e)
   if (system_error::media_out  == e.code ()) return SANE_STATUS_NO_DOCS;
   if (system_error::media_jam  == e.code ()) return SANE_STATUS_JAMMED;
   if (system_error::cover_open == e.code ()) return SANE_STATUS_COVER_OPEN;
+  if (system_error::permission_denied == e.code ())
+    return SANE_STATUS_ACCESS_DENIED;
 
   return SANE_STATUS_IO_ERROR;
 }

@@ -1,5 +1,5 @@
 //  grammar-parameters.ipp -- component rule definitions
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -107,6 +107,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
       | token_(adf::DFL1)
       | token_(adf::DFL2)
       | token_(adf::FAST)
+      | token_(adf::SLOW)
       | token_(adf::BGWH)
       | token_(adf::BGBK)
       | token_(adf::BGGY)
@@ -126,6 +127,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
       | token_(tpu::IR  )
       | token_(tpu::MAGC)
       | token_(tpu::FAST)
+      | token_(tpu::SLOW)
       | token_(tpu::CRP )
       | token_(tpu::SKEW)
       | token_(tpu::OVSN)
@@ -137,6 +139,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     &(  token_(fb::LMP1)
       | token_(fb::LMP2)
       | token_(fb::FAST)
+      | token_(fb::SLOW)
       | token_(fb::CRP )
       | token_(fb::SKEW)
       | token_(fb::OVSN)
@@ -234,7 +237,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     ;
 
   parm_qit_token_ %=
-    &(  token_(qit::NONE)
+    &(  token_(qit::PREF)
       | token_(qit::ON  )
       | token_(qit::OFF )
       )
@@ -338,6 +341,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     SYMBOL_ENTRY (adf::DFL1)
     SYMBOL_ENTRY (adf::DFL2)
     SYMBOL_ENTRY (adf::FAST)
+    SYMBOL_ENTRY (adf::SLOW)
     SYMBOL_ENTRY (adf::BGWH)
     SYMBOL_ENTRY (adf::BGBK)
     SYMBOL_ENTRY (adf::BGGY)
@@ -355,6 +359,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     SYMBOL_ENTRY (tpu::IR  )
     SYMBOL_ENTRY (tpu::MAGC)
     SYMBOL_ENTRY (tpu::FAST)
+    SYMBOL_ENTRY (tpu::SLOW)
     SYMBOL_ENTRY (tpu::CRP )
     SYMBOL_ENTRY (tpu::SKEW)
     SYMBOL_ENTRY (tpu::OVSN)
@@ -364,6 +369,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     SYMBOL_ENTRY (fb::LMP1)
     SYMBOL_ENTRY (fb::LMP2)
     SYMBOL_ENTRY (fb::FAST)
+    SYMBOL_ENTRY (fb::SLOW)
     SYMBOL_ENTRY (fb::CRP )
     SYMBOL_ENTRY (fb::SKEW)
     SYMBOL_ENTRY (fb::OVSN)
@@ -441,7 +447,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     ;
 
   parm_qit_token_.add
-    SYMBOL_ENTRY (qit::NONE)
+    SYMBOL_ENTRY (qit::PREF)
     SYMBOL_ENTRY (qit::ON  )
     SYMBOL_ENTRY (qit::OFF )
     ;

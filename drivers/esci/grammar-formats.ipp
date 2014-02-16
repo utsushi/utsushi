@@ -136,7 +136,7 @@ basic_grammar_formats< Iterator >::basic_grammar_formats ()
     ;
 
   bin_hex_padding_ %=
-    qi::repeat (3 - (ref (bin_hex_sz_) + 3) % 4) [ qi::byte_(0) ]
+    qi::repeat (3 - (ref (bin_hex_sz_) + 3) % 4) [ qi::byte_ ]
     ;
 
   bin_hex_payload_ %=

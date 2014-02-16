@@ -1,5 +1,5 @@
 //  grammar-parameters.cpp -- component instantiations
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -57,7 +57,8 @@ parameters::operator== (const parameters& rhs) const
           && crp == rhs.crp
           && acq == rhs.acq
           && flc == rhs.flc
-          && fla == rhs.fla);
+          && fla == rhs.fla
+          && qit == rhs.qit);
 }
 
 void

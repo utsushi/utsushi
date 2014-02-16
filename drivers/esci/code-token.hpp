@@ -1,5 +1,5 @@
 //  code-token.hpp -- set used by the ESC/I "compound" protocol variants
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -267,6 +267,9 @@ namespace reply {
       const quad LOCK = CODE_TOKEN (UPPER_L, UPPER_O, UPPER_C, UPPER_K);
       const quad DFED = CODE_TOKEN (UPPER_D, UPPER_F, UPPER_E, UPPER_D);
       const quad DTCL = CODE_TOKEN (UPPER_D, UPPER_T, UPPER_C, UPPER_L);
+      const quad AUTH = CODE_TOKEN (UPPER_A, UPPER_U, UPPER_T, UPPER_H);
+      const quad PERM = CODE_TOKEN (UPPER_P, UPPER_E, UPPER_R, UPPER_M);
+      const quad BTLO = CODE_TOKEN (UPPER_B, UPPER_T, UPPER_L, UPPER_O);
 
     }   // namespace err
 
@@ -274,8 +277,8 @@ namespace reply {
     namespace nrd {
 
       const quad RSVD = CODE_TOKEN (UPPER_R, UPPER_S, UPPER_V, UPPER_D);
-      const quad WUP  = CODE_TOKEN (UPPER_W, UPPER_U, UPPER_D, SPACE  );
       const quad BUSY = CODE_TOKEN (UPPER_B, UPPER_U, UPPER_S, UPPER_Y);
+      const quad WUP  = CODE_TOKEN (UPPER_W, UPPER_U, UPPER_D, SPACE  );
       const quad NONE = CODE_TOKEN (UPPER_N, UPPER_O, UPPER_N, UPPER_E);
 
     }   // namespace nrd
@@ -303,7 +306,8 @@ namespace reply {
      *  pixels.
      *
      *  Page end notification is included in the first reply \e after
-     *  the device has detected this condition.
+     *  the device has detected this condition.  It is never combined
+     *  with page start notification.
      *
      *  \note The use of "page" is unfortunate.  The bulk of the API
      *        documentation tries to stick to the term "media".
@@ -319,6 +323,11 @@ namespace reply {
      *  and changes as soon as the last chunk of image data has been
      *  sent to the driver.  This means that the earliest one can see
      *  such a change is in the reply of the \e next request.
+     *
+     *  The information is always combined with page end notification.
+     *  If a value of zero was set for the \c PAG parameter, it may be
+     *  included after the last image data has been acquired and will
+     *  always be zero.
      */
     namespace lft {}
 
@@ -416,6 +425,8 @@ namespace information {
   const quad EXT  = CODE_TOKEN (NUMBER , UPPER_E, UPPER_X, UPPER_T);
   const quad DLS  = CODE_TOKEN (NUMBER , UPPER_D, UPPER_L, UPPER_S);
   const quad S_N  = CODE_TOKEN (NUMBER , UPPER_S, SLASH  , UPPER_N);
+  const quad ATH  = CODE_TOKEN (NUMBER , UPPER_A, UPPER_T, UPPER_H);
+  const quad INI  = CODE_TOKEN (NUMBER , UPPER_I, UPPER_N, UPPER_I);
 
   //! Automatic document feeder features
   namespace adf {
@@ -548,6 +559,7 @@ namespace capability {
     const quad DFL1 = CODE_TOKEN (UPPER_D, UPPER_F, UPPER_L, DIGIT_1);
     const quad DFL2 = CODE_TOKEN (UPPER_D, UPPER_F, UPPER_L, DIGIT_2);
     const quad FAST = CODE_TOKEN (UPPER_F, UPPER_A, UPPER_S, UPPER_T);
+    const quad SLOW = CODE_TOKEN (UPPER_S, UPPER_L, UPPER_O, UPPER_W);
     const quad BGWH = CODE_TOKEN (UPPER_B, UPPER_G, UPPER_W, UPPER_H);
     const quad BGBK = CODE_TOKEN (UPPER_B, UPPER_G, UPPER_B, UPPER_K);
     const quad BGGY = CODE_TOKEN (UPPER_B, UPPER_G, UPPER_G, UPPER_Y);
@@ -556,6 +568,9 @@ namespace capability {
     const quad CRP  = CODE_TOKEN (UPPER_C, UPPER_R, UPPER_P, SPACE  );
     const quad SKEW = CODE_TOKEN (UPPER_S, UPPER_K, UPPER_E, UPPER_W);
     const quad OVSN = CODE_TOKEN (UPPER_O, UPPER_V, UPPER_S, UPPER_N);
+    const quad CLEN = CODE_TOKEN (UPPER_C, UPPER_L, UPPER_E, UPPER_N);
+    const quad CALB = CODE_TOKEN (UPPER_C, UPPER_A, UPPER_L, UPPER_B);
+    const quad RSMS = CODE_TOKEN (UPPER_R, UPPER_S, UPPER_M, UPPER_S);
 
   }   // namespace adf
 
@@ -568,9 +583,11 @@ namespace capability {
     const quad IR   = CODE_TOKEN (UPPER_I, UPPER_R, SPACE  , SPACE  );
     const quad MAGC = CODE_TOKEN (UPPER_M, UPPER_A, UPPER_G, UPPER_C);
     const quad FAST = CODE_TOKEN (UPPER_F, UPPER_A, UPPER_S, UPPER_T);
+    const quad SLOW = CODE_TOKEN (UPPER_S, UPPER_L, UPPER_O, UPPER_W);
     const quad CRP  = CODE_TOKEN (UPPER_C, UPPER_R, UPPER_P, SPACE  );
     const quad SKEW = CODE_TOKEN (UPPER_S, UPPER_K, UPPER_E, UPPER_W);
     const quad OVSN = CODE_TOKEN (UPPER_O, UPPER_V, UPPER_S, UPPER_N);
+    const quad RSMS = CODE_TOKEN (UPPER_R, UPPER_S, UPPER_M, UPPER_S);
 
   }   // namespace tpu
 
@@ -580,9 +597,11 @@ namespace capability {
     const quad LMP1 = CODE_TOKEN (UPPER_L, UPPER_M, UPPER_P, DIGIT_1);
     const quad LMP2 = CODE_TOKEN (UPPER_L, UPPER_M, UPPER_P, DIGIT_2);
     const quad FAST = CODE_TOKEN (UPPER_F, UPPER_A, UPPER_S, UPPER_T);
+    const quad SLOW = CODE_TOKEN (UPPER_S, UPPER_L, UPPER_O, UPPER_W);
     const quad CRP  = CODE_TOKEN (UPPER_C, UPPER_R, UPPER_P, SPACE  );
     const quad SKEW = CODE_TOKEN (UPPER_S, UPPER_K, UPPER_E, UPPER_W);
     const quad OVSN = CODE_TOKEN (UPPER_O, UPPER_V, UPPER_S, UPPER_N);
+    const quad RSMS = CODE_TOKEN (UPPER_R, UPPER_S, UPPER_M, UPPER_S);
 
   }   // namespace fb
 
@@ -750,7 +769,7 @@ namespace capability {
   //! Supported quiet mode settings
   namespace qit {
 
-    const quad NONE = CODE_TOKEN (UPPER_N, UPPER_O, UPPER_N, UPPER_E);
+    const quad PREF = CODE_TOKEN (UPPER_P, UPPER_R, UPPER_E, UPPER_F);
     const quad ON   = CODE_TOKEN (UPPER_O, UPPER_N, SPACE  , SPACE  );
     const quad OFF  = CODE_TOKEN (UPPER_O, UPPER_F, UPPER_F, SPACE  );
 
@@ -826,10 +845,11 @@ namespace parameter {
   //! Number of images one wants to acquire
   /*! A value of 0 will acquire images until all the originals have
    *  been processed.  For duplex scans, the value should be even,
-   *  indicating that it really refers to images and not "pages".
+   *  indicating that it really refers to images and not "pages", and
+   *  odd values should be incremented to the next even integer.  The
+   *  device will do so if the driver does not.
    *
-   *  The value is apparently not reset when all images have been
-   *  acquired or the scan was cancelled.
+   *  If not set by the driver, a value of zero will be used.
    */
   namespace pag {}
 
@@ -853,8 +873,8 @@ namespace parameter {
 
 //! Getting a device status update
 /*! The \c STAT request reports what media size was detected where as
- *  well as focus and push button status.  In addition, a copy(?) of
- *  the reply::info::err data appears to be included.
+ *  well as focus and push button and document separation mode status.
+ *  In addition, most of the reply::info::err data is included.
  */
 namespace status {
 
@@ -862,6 +882,7 @@ namespace status {
   const quad ERR  = CODE_TOKEN (NUMBER , UPPER_E, UPPER_R, UPPER_R);
   const quad FCS  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_C, UPPER_S);
   const quad PB   = CODE_TOKEN (NUMBER , UPPER_P, UPPER_B, SPACE  );
+  const quad SEP  = CODE_TOKEN (NUMBER , UPPER_S, UPPER_E, UPPER_P);
 
   //! Detected media sizes
   /*! The detectable media sizes expand on those from the media_value
@@ -913,7 +934,25 @@ namespace status {
   }   // namespace psz
 
   //! System error information
-  namespace err = reply::info::err;
+  namespace err {
+
+    // locations where trouble can occur
+    const quad ADF  = CODE_TOKEN (UPPER_A, UPPER_D, UPPER_F, SPACE  );
+    const quad TPU  = CODE_TOKEN (UPPER_T, UPPER_P, UPPER_U, SPACE  );
+    const quad FB   = CODE_TOKEN (UPPER_F, UPPER_B, SPACE  , SPACE  );
+
+    // kinds of trouble that may occur
+    const quad OPN  = CODE_TOKEN (UPPER_O, UPPER_P, UPPER_N, SPACE  );
+    const quad PJ   = CODE_TOKEN (UPPER_P, UPPER_J, SPACE  , SPACE  );
+    const quad PE   = CODE_TOKEN (UPPER_P, UPPER_E, SPACE  , SPACE  );
+    const quad ERR  = CODE_TOKEN (UPPER_E, UPPER_R, UPPER_R, SPACE  );
+    const quad LTF  = CODE_TOKEN (UPPER_L, UPPER_T, UPPER_F, SPACE  );
+    const quad LOCK = CODE_TOKEN (UPPER_L, UPPER_O, UPPER_C, UPPER_K);
+    const quad DFED = CODE_TOKEN (UPPER_D, UPPER_F, UPPER_E, UPPER_D);
+    const quad DTCL = CODE_TOKEN (UPPER_D, UPPER_T, UPPER_C, UPPER_L);
+    const quad BTLO = CODE_TOKEN (UPPER_B, UPPER_T, UPPER_L, UPPER_O);
+
+  }   // namespace err
 
   //! Focus state feedback
   /*! A \c INVD indicates that auto-focus is calibrating.  The \c VALD
@@ -928,7 +967,22 @@ namespace status {
   }   // namespace fcs
 
   //! Push button state feedback
+  /*! The push button state is returned via an integer that is to be
+   *  interpreted as a collection of bit fields, weird as that might
+   *  sound.  Accessor API is provided via hardware_status.
+   *
+   *  \sa hardware_status::event(), hardware_status::is_duplex() and
+   *      hardware_status::media_size()
+   */
   namespace pb {}
+
+  //! Document separation mode state feedback
+  namespace sep {
+
+    const quad ON   = CODE_TOKEN (UPPER_O, UPPER_N, SPACE  , SPACE  );
+    const quad OFF  = CODE_TOKEN (UPPER_O, UPPER_F, UPPER_F, SPACE  );
+
+  }   // namespace sep
 
 }     // namespace status
 
@@ -940,12 +994,15 @@ namespace mechanic {
 
   const quad ADF  = CODE_TOKEN (NUMBER , UPPER_A, UPPER_D, UPPER_F);
   const quad FCS  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_C, UPPER_S);
+  const quad INI  = CODE_TOKEN (NUMBER , UPPER_I, UPPER_N, UPPER_I);
 
   //! Automatic document feeder actions
   namespace adf {
 
     const quad LOAD = CODE_TOKEN (UPPER_L, UPPER_O, UPPER_A, UPPER_D);
     const quad EJCT = CODE_TOKEN (UPPER_E, UPPER_J, UPPER_C, UPPER_T);
+    const quad CLEN = CODE_TOKEN (UPPER_C, UPPER_L, UPPER_E, UPPER_N);
+    const quad CALB = CODE_TOKEN (UPPER_C, UPPER_A, UPPER_L, UPPER_B);
 
   }   // namespace adf
 

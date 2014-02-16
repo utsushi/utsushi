@@ -1,5 +1,5 @@
 //  scanner-control.cpp -- make the device do your bidding
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -37,6 +37,7 @@ scanner_control::scanner_control (bool pedantic)
   , cancelled_(false)
   , acquiring_face_(false)
   , acquiring_rear_(false)
+  , images_started_(0)
 {
   namespace reply = code_token::reply;
   using boost::bind;
@@ -280,9 +281,31 @@ scanner_control::mechanics (const quad& part, const quad& action,
   if (!acquiring_)
     {
       using namespace encoding;
+      using namespace code_token::mechanic;
 
       const streamsize max_size = 16;
-      hardware_request ctrl (part, action, value);
+      hardware_request ctrl;
+
+      /**/ if (ADF == part)
+        {
+          ctrl.adf = action;
+        }
+      else if (FCS == part)
+        {
+          if (fcs::AUTO == action)
+            ctrl.fcs = hardware_request::focus ();
+          else
+            ctrl.fcs = hardware_request::focus (value);
+        }
+      else if (INI == part)
+        {
+          ctrl.ini = true;
+        }
+      else
+        {
+          log::error ("unknown hardware request type: %1%") % str (part);
+          return *this;
+        }
 
       par_blk_.reserve (max_size);
       par_blk_.clear ();
@@ -308,7 +331,9 @@ scanner_control::fatal_error () const
 {
   if (status_.fatal_error ()
       || (status_.media_out ()
-          && (acquiring_image () || expecting_more_images ())))
+          && (acquiring_image ()
+              || expecting_more_images ()
+              || 0 == images_started_)))
     return status_.err;
 
   return boost::none;
@@ -319,7 +344,8 @@ scanner_control::media_out () const
 {
   return (status_.media_out ()
           && !acquiring_image ()
-          && !expecting_more_images ());
+          && !expecting_more_images ()
+          && 0 < images_started_);
 }
 
 bool
@@ -327,7 +353,8 @@ scanner_control::media_out (const quad& where) const
 {
   return (status_.media_out (where)
           && !acquiring_image ()
-          && !expecting_more_images ());
+          && !expecting_more_images ()
+          && 0 < images_started_);
 }
 
 bool
@@ -351,18 +378,18 @@ scanner_control::decode_reply_block_hook_() throw ()
 
   if (reply::TRDT == reply_.code)
     {
-      // Assume that all went well at this point.  We will be updating
-      // the information shortly based on the status codes we got back
-      // from the device.
-
-      log::brief ("starting acquisition of image(s)");
-
-      acquiring_ = true;
+      acquiring_ = !(status_.err
+                     || status_.is_in_use ()
+                     || status_.is_busy ());
       do_cancel_ = false;
       cancelled_ = false;
 
       acquiring_face_ = false;
       acquiring_rear_ = false;
+      images_started_ = 0;
+
+      if (acquiring_)
+        log::brief ("starting acquisition of image(s)");
     }
 
   // Update the acquisition flags based on those status codes that may
@@ -421,15 +448,18 @@ scanner_control::decode_reply_block_hook_() throw ()
     }
   if (status_.pst)
     {
+      ++images_started_;
       if (status_.is_flip_side ())
         {
-          log::brief ("starting acquisition of rear side image");
-          acquiring_rear_ = true;
+          acquiring_rear_ = acquiring_;
+          if (acquiring_rear_)
+            log::brief ("starting acquisition of rear side image");
         }
       else
         {
-          log::brief ("starting acquisition of face side image");
-          acquiring_face_ = true;
+          acquiring_face_ = acquiring_;
+          if (acquiring_face_)
+            log::brief ("starting acquisition of face side image");
         }
     }
   if (status_.err
@@ -439,6 +469,22 @@ scanner_control::decode_reply_block_hook_() throw ()
       acquiring_ = false;
       do_cancel_ = false;
       cancelled_ = (reply::CAN == reply_.code);
+
+      /**/ if (reply::FIN == reply_.code)
+        {
+          log::brief ("finished image acquisition");
+        }
+      else if (reply::CAN == reply_.code)
+        {
+          log::brief ("cancelled image acquisition");
+        }
+      else
+        {
+          log::brief ("terminated image acquisition: %1%/%2%")
+            % str (status_.err->part)
+            % str (status_.err->what)
+            ;
+        }
 
       // The acquiring_face_ and acquiring_rear_ flags should *not* be
       // modified here.  Both flags are used to determine whether a PE

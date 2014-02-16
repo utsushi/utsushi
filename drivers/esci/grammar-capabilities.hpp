@@ -1,5 +1,5 @@
 //  grammar-capabilities.hpp -- component rule declarations
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -82,14 +82,23 @@ struct capabilities
 
   typedef boost::variant< range, std::vector< integer > > constraint;
 
-  struct tpu_control
-    : private boost::equality_comparable< tpu_control >
+  struct document_source
+    : private boost::equality_comparable< document_source >
   {
-    bool operator== (const tpu_control& rhs) const;
+    bool operator== (const document_source& rhs) const;
+
+    boost::optional< std::vector< quad > > flags;
+    boost::optional< constraint > resolution;
+  };
+
+  struct tpu_source
+    : document_source
+    , private boost::equality_comparable< tpu_source >
+  {
+    bool operator== (const tpu_source& rhs) const;
 
     boost::optional< std::vector< quad > > area;
     boost::optional< std::vector< quad > > alternative_area;
-    boost::optional< std::vector< quad > > other;
   };
 
   struct focus_control
@@ -103,9 +112,9 @@ struct capabilities
     boost::optional< constraint > position;
   };
 
-  boost::optional< std::vector< quad > > adf;
-  boost::optional< tpu_control > tpu;
-  boost::optional< std::vector< quad > > fb;
+  boost::optional< document_source > adf;
+  boost::optional< tpu_source > tpu;
+  boost::optional< document_source > fb;
   boost::optional< std::vector< quad > > col;
   boost::optional< std::vector< quad > > fmt;
   boost::optional< range > jpg;
@@ -162,9 +171,9 @@ public:
 protected:
   qi::rule< Iterator, capabilities () > capability_rule_;
 
-  qi::rule< Iterator, std::vector< quad > () > caps_adf_rule_;
-  qi::rule< Iterator, capabilities::tpu_control () > caps_tpu_rule_;
-  qi::rule< Iterator, std::vector< quad > () > caps_fb_rule_;
+  qi::rule< Iterator, capabilities::document_source () > caps_adf_rule_;
+  qi::rule< Iterator, capabilities::tpu_source () > caps_tpu_rule_;
+  qi::rule< Iterator, capabilities::document_source () > caps_fb_rule_;
   qi::rule< Iterator, capabilities::focus_control () > caps_fcs_rule_;
 
   //! Codes a list of numbers

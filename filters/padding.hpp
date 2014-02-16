@@ -1,5 +1,5 @@
 //  padding.hpp -- octet and scan line removal
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -99,11 +99,12 @@ protected:
   context::size_type skip_;
 };
 
+//! \copydoc bottom_padder
 class ibottom_padder
   : public ifilter
 {
 public:
-  ibottom_padder (const quantity& height);
+  ibottom_padder (const quantity& width, const quantity& height);
 
   streamsize read (octet *data, streamsize n);
   streamsize marker ();
@@ -111,6 +112,7 @@ public:
 protected:
   void handle_marker (traits::int_type c);
 
+  quantity width_;
   quantity height_;
 
   context::size_type octets_left_;
@@ -126,12 +128,15 @@ protected:
  *        resolution.
  *  \bug  The height should be modifiable after construction.
  *  \bug  The color should be configurable.
+ *  \bug  There is no support for width padding
+ *
+ *  \todo Rename to match functionality
  */
 class bottom_padder
   : public ofilter
 {
 public:
-  bottom_padder (const quantity& height);
+  bottom_padder (const quantity& width, const quantity& height);
 
   streamsize write (const octet *data, streamsize n);
 
@@ -139,6 +144,7 @@ protected:
   void boi (const context& ctx);
   void eoi (const context& ctx);
 
+  quantity width_;
   quantity height_;
 
   context::size_type octets_left_;

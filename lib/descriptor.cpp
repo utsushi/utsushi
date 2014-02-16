@@ -25,6 +25,16 @@
 #include "utsushi/descriptor.hpp"
 #include "utsushi/i18n.hpp"
 
+namespace {
+
+  enum {
+    ACTIVE    = 1 << 0,
+    EMULATED  = 1 << 1,
+    READ_ONLY = 1 << 2,
+  };
+
+}       // namespace
+
 namespace utsushi {
 
 level::symbol::symbol (const key& key,
@@ -58,6 +68,7 @@ descriptor::descriptor (const string& name, const string& text)
   : name_(name)
   , text_(text)
   , level_(level::complete)
+  , flags_(ACTIVE)
 {}
 
 string
@@ -84,6 +95,24 @@ descriptor::is_at (const level::symbol& level) const
   return (level_ == level);
 }
 
+bool
+descriptor::is_active () const
+{
+  return ACTIVE & flags_;
+}
+
+bool
+descriptor::is_emulated () const
+{
+  return EMULATED & flags_;
+}
+
+bool
+descriptor::is_read_only () const
+{
+  return READ_ONLY & flags_;
+}
+
 void
 descriptor::name (const string& name)
 {
@@ -107,6 +136,34 @@ descriptor&
 descriptor::operator() (const level::symbol& level)
 {
   level_ = level;
+  return *this;
+}
+
+descriptor&
+descriptor::active (bool toggle)
+{
+  return toggle_(toggle, ACTIVE);
+}
+
+descriptor&
+descriptor::emulate (bool toggle)
+{
+  return toggle_(toggle, EMULATED);
+}
+
+descriptor&
+descriptor::read_only (bool toggle)
+{
+  return toggle_(toggle, READ_ONLY);
+}
+
+descriptor&
+descriptor::toggle_(bool toggle, int flags)
+{
+  if (toggle)
+    flags_ |=  flags;
+  else
+    flags_ &= ~flags;
   return *this;
 }
 

@@ -1,5 +1,5 @@
 //  scanner-control.hpp -- make the device do your bidding
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -87,7 +87,7 @@ public:
 
   //! \name Mechanical Controls
   //! @{
-  scanner_control& mechanics (const quad& part, const quad& action,
+  scanner_control& mechanics (const quad& part, const quad& action = quad (),
                               integer value = 0);
   //! @}
 
@@ -107,6 +107,7 @@ protected:
 
   bool acquiring_face_;         //!< Has face side acquisition started
   bool acquiring_rear_;         //!< Has rear side acquisition started
+  int  images_started_;
 
   data_buffer img_dat_;
 

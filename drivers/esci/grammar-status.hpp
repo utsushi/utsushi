@@ -1,5 +1,5 @@
 //  grammar-status.hpp -- component rule declarations
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -92,6 +92,7 @@ struct hardware_status
    */
   boost::optional< integer > focus;
   boost::optional< integer > push_button;
+  boost::optional< quad > separation_mode;
 
   //! Push button value bits that have meaning attached to them
   static const integer push_button_mask;
@@ -124,6 +125,7 @@ protected:
   qi::rule< Iterator, hardware_status::result () > stat_psz_rule_;
   qi::rule< Iterator, hardware_status::result () > stat_err_rule_;
   qi::rule< Iterator, integer () > stat_fcs_rule_;
+  qi::rule< Iterator, quad () > stat_sep_rule_;
 
   qi::rule< Iterator, quad () > stat_psz_part_token_;
   qi::rule< Iterator, quad () > stat_psz_size_token_;

@@ -1,5 +1,5 @@
 //  pump.cpp -- move image octets from a source to a sink
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -272,7 +272,11 @@ pump::impl::acquire_data (input::ptr iptr)
     {
       is_pumping_ = true;
       streamsize rv = iptr->marker ();
-      if (traits::bos () != rv) return rv;
+      if (traits::bos () != rv)
+        {
+          mark (traits::eof (), context ());
+          return rv;
+        }
 
       mark (traits::bos (), iptr->get_context ());
       while (   traits::eos () != rv
@@ -304,7 +308,11 @@ pump::impl::process_data (output::ptr optr)
   try
     {
       shared_ptr< bucket > bp = pop ();
-      if (traits::bos () != bp->mark_) return bp->mark_;
+      if (traits::bos () != bp->mark_)
+        {
+          optr->mark (traits::eof (), context ());
+          return bp->mark_;
+        }
 
       optr->mark (traits::bos (), bp->ctx_);
       while (   traits::eos () != bp->mark_

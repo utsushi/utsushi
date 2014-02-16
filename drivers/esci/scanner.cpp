@@ -1,6 +1,6 @@
 //  scanner.cpp -- API implementation for an ESC/I driver
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //  Copyright (C) 2013  Olaf Meeuwissen
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -69,9 +69,16 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
       log::brief ("detected a '%1%'") % info.product_name ();
 
       /**/ if (   info.product_name () == "DS-510"
+               || info.product_name () == "DS-560"
                )
         {
-          sp = esci::scanner::ptr (new DS_510 (cnx));
+          sp = make_shared< DS_510_560 > (cnx);
+        }
+      else if (   info.product_name () == "DS-760"
+               || info.product_name () == "DS-860"
+               )
+        {
+          sp = make_shared< DS_760_860 > (cnx);
         }
       else if (   info.product_name () == "DS-5500"
                || info.product_name () == "DS-6500"

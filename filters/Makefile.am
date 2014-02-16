@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -45,6 +45,8 @@ libflt_all_la_SOURCES  += padding.cpp
 libflt_all_la_SOURCES  += padding.hpp
 libflt_all_la_SOURCES  += pnm.cpp
 libflt_all_la_SOURCES  += pnm.hpp
+libflt_all_la_SOURCES  += shell-pipe.cpp
+libflt_all_la_SOURCES  += shell-pipe.hpp
 libflt_all_la_SOURCES  += threshold.cpp
 libflt_all_la_SOURCES  += threshold.hpp
 libflt_all_la_SOURCES  += $(pdf_filter)
@@ -54,6 +56,11 @@ libflt_all_la_CXXFLAGS += $(LIBJPEG_CFLAGS)
 libflt_all_la_LIBADD   += $(LIBJPEG_LIBS)
 libflt_all_la_SOURCES  += jpeg.cpp
 libflt_all_la_SOURCES  += jpeg.hpp
+endif
+
+if have_magick
+libflt_all_la_SOURCES  += magick.cpp
+libflt_all_la_SOURCES  += magick.hpp
 endif
 
 pdf_filter  =

@@ -1,5 +1,5 @@
 //  image-skip.cpp -- conditionally suppress images in the output
-//  Copyright (C) 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -69,17 +69,14 @@ image_skip::image_skip ()
     ;
 }
 
+// Our marker handlers decide when to call io_->mark() and produce any
+// image data.  We always use the most up-to-date context information.
+// That means that the end-of context replaces the begin-of one.
 void
 image_skip::mark (traits::int_type c, const context& ctx)
 {
   ctx_ = ctx;
-  output::mark (c, ctx_);
-  if (traits::eos () == c)
-    {
-      if (traits::eos () == last_marker_)
-        io_->mark (traits::bos (), ctx_);
-      io_->mark (c, ctx_);
-    }
+  output::mark (c, ctx_);       // calls our marker handlers
 }
 
 streamsize
@@ -161,6 +158,20 @@ image_skip::eoi (const context& ctx)
     {
       pool_.clear ();
     }
+}
+
+void
+image_skip::eos (const context& ctx)
+{
+  if (traits::eos () == last_marker_)
+    io_->mark (traits::bos (), ctx_);
+  io_->mark (traits::eos (), ctx);
+}
+
+void
+image_skip::eof (const context& ctx)
+{
+  io_->mark (traits::eof (), ctx);
 }
 
 bool

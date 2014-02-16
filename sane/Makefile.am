@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -146,8 +146,8 @@ ltmain.sh.diff: $(auxdir)/ltmain.sh.orig $(auxdir)/ltmain.sh
 	    eval `sed -n '/^VERSION=/{ p; q }' $<`; \
 	    > $@; \
 	    echo "#  `basename $@` -- SANE backend library soname handling fixes" >> $@; \
-	    echo "#  Copyright 2012 (C)  SEIKO EPSON CORPORATION" >> $@; \
-	    echo "#  Copyright 2007 (C)  EPSON AVASYS CORPORATION" >> $@;\
+	    echo "#  Copyright (C) 2012  SEIKO EPSON CORPORATION" >> $@; \
+	    echo "#  Copyright (C) 2007  EPSON AVASYS CORPORATION" >> $@;\
 	    echo "#" >> $@; \
 	    echo "#  License: GPLv2+ (same as ltmain.sh)" >> $@; \
 	    echo "#  Author : AVASYS CORPORATION" >> $@; \

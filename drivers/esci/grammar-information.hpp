@@ -1,5 +1,5 @@
 //  grammar-information.hpp -- component rule declarations
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -109,13 +109,15 @@ struct information
   boost::optional< tpu_source > tpu;
   boost::optional< fb_source > flatbed;
   std::vector< integer > max_image;
-  bool have_push_button;
+  bool has_push_button;
   std::vector< byte > product;
   std::vector< byte > version;
   integer device_buffer_size;
   std::vector< quad > extension;
   bool truncates_at_media_end;
   boost::optional< std::vector< byte > > serial_number;
+  bool supports_authentication;
+  bool supports_reinitialization;
 };
 
 namespace decoding {

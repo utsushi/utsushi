@@ -1,5 +1,5 @@
 //  option.hpp -- configurable settings in recursive property maps
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -75,7 +75,8 @@ public:
 
   //! Whether the option takes effect
   bool is_active () const;
-
+  //! Whether the software is responsible for achieving the effect
+  bool is_emulated () const;
   //! Whether the option's value can be changed
   bool is_read_only () const;
 

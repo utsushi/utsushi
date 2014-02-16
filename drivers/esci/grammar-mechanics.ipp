@@ -1,5 +1,5 @@
 //  grammar-mechanics.ipp -- component rule definitions
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -24,8 +24,13 @@
 //! \copydoc grammar.ipp
 
 //  encoding::basic_grammar_mechanics<T> implementation requirements
+#include <boost/spirit/include/karma_alternative.hpp>
+#include <boost/spirit/include/karma_and_predicate.hpp>
 #include <boost/spirit/include/karma_binary.hpp>
+#include <boost/spirit/include/karma_bool.hpp>
+#include <boost/spirit/include/karma_buffer.hpp>
 #include <boost/spirit/include/karma_char_.hpp>
+#include <boost/spirit/include/karma_optional.hpp>
 #include <boost/spirit/include/karma_sequence.hpp>
 
 //  *::basic_grammar_mechanics<T> implementation requirements
@@ -50,38 +55,29 @@ basic_grammar_mechanics< Iterator >::basic_grammar_mechanics ()
   using namespace code_token::mechanic;
 
   hardware_control_rule_ %=
-    mech_token_rule_
+       - karma::buffer [ token_(ADF) << mech_adf_token_ ]
+    << - karma::buffer [ token_(FCS) <<
+                         ( (mech_fcs_token_ << this->numeric_)
+                          | token_(fcs::AUTO)) ]
+    << - karma::buffer [ &karma::true_ << token_(INI) ]
     ;
 
-  mech_token_rule_.add
-    (ADF, mech_adf_rule_)
-    (FCS, mech_fcs_rule_)
-    ;
-
-  mech_adf_rule_ %=
-    token_(ADF)
-    << mech_adf_token_
-    ;
+#define SYMBOL_ENTRY(token) (token, token_(token))
 
   mech_adf_token_.add
-    (adf::LOAD, token_(adf::LOAD))
-    (adf::EJCT, token_(adf::EJCT))
-    ;
-
-  mech_fcs_rule_ %=
-    token_(FCS)
-    << mech_fcs_token_
+    SYMBOL_ENTRY (adf::LOAD)
+    SYMBOL_ENTRY (adf::EJCT)
+    SYMBOL_ENTRY (adf::CLEN)
+    SYMBOL_ENTRY (adf::CALB)
     ;
 
   mech_fcs_token_.add
-    (fcs::AUTO, token_(fcs::AUTO))
-    (fcs::MANU, token_(fcs::MANU) << this->numeric_)
+  //SYMBOL_ENTRY (fcs::AUTO)
+    SYMBOL_ENTRY (fcs::MANU)
     ;
+#undef SYMBOL_ENTRY
 
   ESCI_GRAMMAR_TRACE_NODE (hardware_control_rule_);
-
-  ESCI_GRAMMAR_TRACE_NODE (mech_adf_rule_);
-  ESCI_GRAMMAR_TRACE_NODE (mech_fcs_rule_);
 }
 
 }       // namespace encoding
@@ -93,10 +89,15 @@ basic_grammar_mechanics< Iterator >::basic_grammar_mechanics ()
 #define ESCI_NS utsushi::_drv_::esci
 
 BOOST_FUSION_ADAPT_STRUCT
+(ESCI_NS::hardware_request::focus,
+ (ESCI_NS::quad, type)
+ (boost::optional< ESCI_NS::integer >, position))
+
+BOOST_FUSION_ADAPT_STRUCT
 (ESCI_NS::hardware_request,
- (ESCI_NS::quad, part)
- (ESCI_NS::quad, what)
- (ESCI_NS::integer, value))
+ (boost::optional< ESCI_NS::quad >, adf)
+ (boost::optional< ESCI_NS::hardware_request::focus >, fcs)
+ (bool, ini))
 
 #undef ESCI_NS
 

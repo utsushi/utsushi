@@ -34,10 +34,10 @@ namespace _drv_ {
     void
     capture_scanner::validate_reply (void) const
     {
-      if (0x80 == rep_)
+      if (byte (0x80) == rep_)
         return;
 
-      if (0x40 == rep_)
+      if (byte (0x40) == rep_)
         BOOST_THROW_EXCEPTION (device_busy ());
 
       if (NAK == rep_)
