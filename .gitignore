@@ -83,6 +83,9 @@ Makefile.in
 /src/version
 
 #  Project specific stuff
+/drivers/esci/data/DS-60000.dat
+/drivers/esci/data/DS-6500.dat
+/drivers/esci/data/DS-760.dat
 /drivers/esci/verify
 /gtkmm/about.xml
 /lib/tag.cpp
