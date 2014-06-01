@@ -39,7 +39,6 @@
 
 #include <utsushi/connexion.hpp>
 #include <utsushi/format.hpp>
-#include <utsushi/i18n.hpp>
 #include <utsushi/log.hpp>
 #include <utsushi/monitor.hpp>
 #include <utsushi/run-time.hpp>
@@ -264,28 +263,28 @@ main (int argc, char *argv[])
   bpo::options_description cmd_opts ("Options");
   cmd_opts
     .add_options ()
-    ("help"   , _("display this help and exit"))
+    ("help"   , "display this help and exit")
     ("hexdump",
-     _("log device I/O in hexdump format\n"
-       "Data is sent to standard error and may be helpful when debugging"
-       " test failures."))
+     "log device I/O in hexdump format\n"
+     "Data is sent to standard error and may be helpful when debugging"
+     " test failures.")
     ("devdata", (bpo::value< std::string > (&devdata)
-                 -> implicit_value (devdata, _("filename"))),
-     _("dump binary device data\n"
-       "The dump is meant as a starting point for a known good reference"
-       " for device specific protocol default data.  Reference data will"
-       " be used to customize later protocol compliance testing.\n"
-       "If no explicit filename is given, data will be sent to standard"
-       " output and the program terminated once the dump is complete."))
+                 -> implicit_value (devdata, "filename")),
+     "dump binary device data\n"
+     "The dump is meant as a starting point for a known good reference"
+     " for device specific protocol default data.  Reference data will"
+     " be used to customize later protocol compliance testing.\n"
+     "If no explicit filename is given, data will be sent to standard"
+     " output and the program terminated once the dump is complete.")
     ("refspec", bpo::value< std::string > (&refspec),
-     _("use given file to obtain known good reference data\n"
-       "If --devdata is given with a filename, that file name will be"
-       " used.  If this option is not specified, the filename will be"
-       " inferred from the device's product or firmware name."))
+     "use given file to obtain known good reference data\n"
+     "If --devdata is given with a filename, that file name will be"
+     " used.  If this option is not specified, the filename will be"
+     " inferred from the device's product or firmware name.")
     ("no-test",
-     _("do not run any tests\n"
-       "This can be used, for example, to stop the --devdata option from"
-       " proceeding with the tests when a filename is given."))
+     "do not run any tests\n"
+     "This can be used, for example, to stop the --devdata option from"
+     " proceeding with the tests when a filename is given.")
     ;
 
   std::string udi;
@@ -294,8 +293,8 @@ main (int argc, char *argv[])
   pos_opts
     .add_options ()
     ("UDI", bpo::value< std::string > (&udi),
-     _("image acquistion device to use\n"
-       "Defaults to the first driver supported device found."))
+     "image acquistion device to use\n"
+     "Defaults to the first driver supported device found.")
     ;
   bpo::positional_options_description pos_args;
   pos_args.add ("UDI", 1);
@@ -316,13 +315,13 @@ main (int argc, char *argv[])
 
   if (verify::vm.count ("help"))
     {
-      std::cout << _("Usage: ")
+      std::cout << "Usage: "
                 << "verify [OPTIONS] [UDI]"
                 << "\n\n"
                 << cmd_opts
                 << "\n"
-                << _("Boost.Test options are supported as well.\n"
-                     "Unknown options are silently ignored.\n");
+                << "Boost.Test options are supported as well.\n"
+                   "Unknown options are silently ignored.\n";
       return EXIT_SUCCESS;
     }
 
@@ -336,7 +335,7 @@ main (int argc, char *argv[])
       it = mon.find (udi);
       if (it != mon.end () && "esci" != it->driver ())
         {
-          std::cerr << _("driver mismatch")
+          std::cerr << "driver mismatch"
                     << std::endl;
           return EXIT_FAILURE;
         }
@@ -366,12 +365,12 @@ main (int argc, char *argv[])
 
       if (!udi.empty ())
         {
-          format fmt (_("cannot find '%1%'"));
+          format fmt ("cannot find '%1%'");
           msg = (fmt % udi).str ();
         }
       else
         {
-          msg = _("no devices available");
+          msg = "no devices available";
         }
       std::cerr << "verify: " << msg
                 << std::endl;
@@ -398,7 +397,7 @@ main (int argc, char *argv[])
         }
       else
         {
-          std::cerr << "verify: " << _("unable to connect with device")
+          std::cerr << "verify: " << "unable to connect with device"
                     << std::endl;
           return EXIT_FAILURE;
         }
@@ -418,7 +417,7 @@ main (int argc, char *argv[])
         }
       else
         {
-          std::cerr << "verify: " << _("unable to connect with device")
+          std::cerr << "verify: " << "unable to connect with device"
                     << std::endl;
           return EXIT_FAILURE;
         }
@@ -431,7 +430,7 @@ main (int argc, char *argv[])
 
   if (!fs.is_open ())
     {
-      std::cerr << format (_("cannot open %1%")) % refspec
+      std::cerr << format ("cannot open %1%") % refspec
                 << std::endl;
       return EXIT_FAILURE;
     }

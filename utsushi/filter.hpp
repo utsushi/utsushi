@@ -1,5 +1,5 @@
 //  filter.hpp -- interface declarations
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -30,103 +30,47 @@
 namespace utsushi {
 
 //!  Modify an image data sequence
-template< typename IO >
-class filter
-  : public device< IO >
-{
-protected:
-  typedef shared_ptr< IO > io_ptr;
-
-public:
-  typedef shared_ptr< filter > ptr;
-
-  //!  Sets a filter's underlying I/O object
-  virtual void open (io_ptr io) { io_ = io; }
-
-protected:
-  io_ptr io_;
-};
-
-//!  Interface for image data producing filters
-class ifilter
-  : public filter< input >
-  , public input
-{
-public:
-  typedef shared_ptr< ifilter > ptr;
-
-  streamsize marker ();
-
-  using input::buffer_size;
-  virtual void buffer_size (streamsize size);
-
-protected:
-  virtual void handle_marker (traits::int_type c);
-};
-
 //!  Interface for image data consuming filters
-class ofilter
-  : public filter< output >
+class filter
+  : public device< output >
   , public output
 {
 public:
-  typedef shared_ptr< ofilter > ptr;
+  typedef shared_ptr< filter > ptr;
 
   void mark (traits::int_type c, const context& ctx);
 
+  //!  Sets a filter's underlying output object
+  virtual void open (output::ptr output);
+
   using output::buffer_size;
   virtual void buffer_size (streamsize size);
-};
-
-//!  Add responsibilities to an \c ifilter
-/*!  Meant as a convenient starting point for any ifilter decorator,
- *   this class implements the full \em public ifilter API by simply
- *   forwarding the API call to the decorated object.  This way, any
- *   subclass only needs to override those parts that require added
- *   responsibilities.
- */
-template<>
-class decorator< ifilter >
-  : public ifilter
-{
-public:
-  typedef shared_ptr< ifilter > ptr;
-
-  decorator (ptr instance);
-
-  streamsize read (octet *data, streamsize n);
-  streamsize marker ();
-
-  void open (io_ptr io);
-
-  streamsize buffer_size () const;
-  void buffer_size (streamsize size);
-  context get_context () const;
 
 protected:
-  ptr instance_;
+
+  output::ptr output_;
 };
 
-//!  Add responsibilities to an \c ofilter
-/*!  Meant as a convenient starting point for any ofilter decorator,
- *   this class implements the full \em public ofilter API by simply
+//!  Add responsibilities to a \c filter
+/*!  Meant as a convenient starting point for any filter decorator,
+ *   this class implements the full \em public filter API by simply
  *   forwarding the API call to the decorated object.  This way, any
  *   subclass only needs to override those parts that require added
  *   responsibilities.
  */
 template<>
-class decorator< ofilter >
-  : public ofilter
+class decorator< filter >
+  : public filter
 {
 public:
-  typedef shared_ptr< ofilter > ptr;
+  typedef shared_ptr< filter > ptr;
 
   decorator (ptr instance);
 
   streamsize write (const octet *data, streamsize n);
   void mark (traits::int_type c, const context& ctx);
 
-  void open (io_ptr io);
+  void open (output::ptr output);
 
   streamsize buffer_size () const;
   void buffer_size (streamsize size);

@@ -61,20 +61,20 @@ test_resample (const resample_argv& arg)
 
   context ctx (arg.i_res, arg.i_res, context::GRAY8);
   ctx.resolution (arg.i_res);
+  rawmem_idevice dev (ctx);
+  idevice& idev (dev);
 
-  ofilter::ptr flt = make_shared< magick > ();
+  filter::ptr flt = make_shared< magick > ();
   (*flt->options ())["resolution-x"] = quantity::integer_type (arg.o_res);
   (*flt->options ())["resolution-y"] = quantity::integer_type (arg.o_res);
 
-  istream istr;
-  ostream ostr;
+  stream str;
   fs::path output ("magick-resample.out");
 
-  istr.push (make_shared< rawmem_idevice > (ctx));
-  ostr.push (flt);
-  ostr.push (make_shared< file_odevice > (output));
+  str.push (flt);
+  str.push (make_shared< file_odevice > (output));
 
-  istr | ostr;
+  idev | str;
 
   ctx.width (arg.o_res);
   ctx.height (arg.o_res);
@@ -91,19 +91,20 @@ BOOST_AUTO_TEST_CASE (independent_resolutions)
   context ctx (200, 300, context::GRAY8);
   ctx.resolution (200, 300);
 
-  ofilter::ptr flt = make_shared< magick > ();
+  rawmem_idevice dev (ctx);
+  idevice& idev (dev);
+
+  filter::ptr flt = make_shared< magick > ();
   (*flt->options ())["resolution-x"] = quantity::integer_type (400);
   (*flt->options ())["resolution-y"] = quantity::integer_type (500);
 
-  istream istr;
-  ostream ostr;
+  stream str;
   fs::path output ("magick-independent-resolutions.out");
 
-  istr.push (make_shared< rawmem_idevice > (ctx));
-  ostr.push (flt);
-  ostr.push (make_shared< file_odevice > (output));
+  str.push (flt);
+  str.push (make_shared< file_odevice > (output));
 
-  istr | ostr;
+  idev | str;
 
   ctx.width (400);
   ctx.height (500);
@@ -120,22 +121,23 @@ BOOST_AUTO_TEST_CASE (force_extent)
   context ctx (200, 300, context::GRAY8);
   ctx.resolution (200, 300);
 
-  ofilter::ptr flt = make_shared< magick > ();
+  rawmem_idevice dev (ctx);
+  idevice& idev (dev);
+
+  filter::ptr flt = make_shared< magick > ();
   (*flt->options ())["resolution-x"] = quantity::integer_type (400);
   (*flt->options ())["resolution-y"] = quantity::integer_type (500);
   (*flt->options ())["force-extent"] = toggle (true);
   (*flt->options ())["width"]  = quantity::non_integer_type (500./400);
   (*flt->options ())["height"] = quantity::non_integer_type (600./500);
 
-  istream istr;
-  ostream ostr;
+  stream str;
   fs::path output ("magick-force-extent.out");
 
-  istr.push (make_shared< rawmem_idevice > (ctx));
-  ostr.push (flt);
-  ostr.push (make_shared< file_odevice > (output));
+  str.push (flt);
+  str.push (make_shared< file_odevice > (output));
 
-  istr | ostr;
+  idev | str;
 
   ctx.width (500);
   ctx.height (600);

@@ -1,5 +1,5 @@
 //  writer.hpp -- putting PDF objects in a file
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -75,7 +75,7 @@ public:
 
   ~writer ();
 
-  streamsize write (pdf::io_ptr& io);
+  streamsize write (pdf::output::ptr& output);
 
   /*! Writes a _pdf_::object to the file as an indirect object [p 63].
    *

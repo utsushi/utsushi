@@ -1,5 +1,5 @@
 //  scanner.cpp -- interface and support classes
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -139,7 +139,6 @@ scanner::create (connexion::ptr cnx, const scanner::info& info)
   factory (rv, cnx);
   return rv;
 }
-
 
 scanner::info::info (const std::string& udi)
   : udi_(udi)

@@ -1,5 +1,5 @@
 //  pdf.cpp -- PDF image format support
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -59,7 +59,7 @@ pdf::write (const octet * data, streamsize n)
   if (!data || 0 == n) return 0;
 
   _doc->write (data, n);
-  _doc->write (io_);
+  _doc->write (output_);
 
   return n;
 }
@@ -73,7 +73,7 @@ pdf::bos (const context& ctx)
   _pdf_::object::reset_object_numbers ();
 
   write_header ();
-  _doc->write (io_);
+  _doc->write (output_);
 }
 
 // FIXME image height may be unknown at this point
@@ -95,7 +95,7 @@ pdf::boi (const context& ctx)
   _pdf_v_sz = (72.0 * ctx_.height ()) / ctx_.y_resolution ();
 
   write_page_header ();
-  _doc->write (io_);
+  _doc->write (output_);
   ++_page;
 }
 
@@ -103,7 +103,7 @@ void
 pdf::eoi (const context& ctx)
 {
   write_page_trailer ();
-  _doc->write (io_);
+  _doc->write (output_);
   _rotate_180 = _match_direction && (_page % 2);
 }
 
@@ -113,7 +113,7 @@ pdf::eos (const context& ctx)
   if (_need_page_trailer)
     {
       write_page_trailer ();
-      _doc->write (io_);
+      _doc->write (output_);
     }
 }
 

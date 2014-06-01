@@ -1,5 +1,5 @@
-//  g3fax.cpp -- convert scanlines to G3 fascimile format
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  g3fax.cpp -- convert scanlines to G3 facsimile format
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -58,7 +58,7 @@ g3fax::write (const octet *data, streamsize n)
     if (partial_size_ == ctx_.octets_per_line ())
       {
         string g3_enc = transform (partial_line_.get (), ctx_.width ());
-        io_->write (g3_enc.data (), g3_enc.size ());
+        output_->write (g3_enc.data (), g3_enc.size ());
 
         ctx_.octets_seen () += ctx_.octets_per_line ();
       }
@@ -71,7 +71,7 @@ g3fax::write (const octet *data, streamsize n)
   while (octets + ctx_.octets_per_line () <= n)
     {
       string g3_enc = transform (data + octets, ctx_.width ());
-      io_->write (g3_enc.data (), g3_enc.size ());
+      output_->write (g3_enc.data (), g3_enc.size ());
 
       octets              += ctx_.octets_per_line ();
       ctx_.octets_seen () += ctx_.octets_per_line ();

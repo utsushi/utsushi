@@ -1,5 +1,5 @@
 //  connexion.cpp -- transport messages between software and device
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //  Copyright (C) 2011  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -42,6 +42,7 @@
 #include "utsushi/connexion.hpp"
 #include "utsushi/format.hpp"
 #include "utsushi/log.hpp"
+#include "utsushi/run-time.hpp"
 #include "utsushi/thread.hpp"
 #include "connexions/usb.hpp"
 
@@ -193,6 +194,8 @@ connexion::connexion (const std::string& type, const std::string& path)
   , socket_(-1)
   , id_(0)
 {
+  run_time rt;
+
   /*! \todo Work out search path logic.
    *
    *  By default, installed services ought to live in PKGLIBEXECDIR.
@@ -204,7 +207,7 @@ connexion::connexion (const std::string& type, const std::string& path)
    *  For now, we are not interested in supporting services all over
    *  the place yet would like to be able to run in place.
    */
-  if (!getenv ("srcdir"))       // installed version
+  if (!rt.running_in_place ())  // installed version
     {
       name_ = (fs::path (PKGLIBEXECDIR) / type).string ();
     }

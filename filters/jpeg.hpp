@@ -1,5 +1,5 @@
 //  jpeg.hpp -- JPEG image format support
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -67,7 +67,7 @@ struct common
 
 //!  Turn a sequence of image data into JPEG format
 class compressor
-  : public ofilter
+  : public filter
   , protected detail::common
 {
 public:
@@ -147,24 +147,9 @@ struct decompressor
 
 }       // namespace detail
 
-class idecompressor
-  : public ifilter
-  , protected detail::decompressor
-{
-public:
-  idecompressor ();
-
-  streamsize read (octet *data, streamsize n);
-
-protected:
-  void handle_marker (traits::int_type c);
-
-  size_t lines_left_;
-};
-
 //! Turn a sequence of JPEG data into raw image data
 class decompressor
-  : public ofilter
+  : public filter
   , protected detail::decompressor
 {
 public:

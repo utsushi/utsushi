@@ -1,5 +1,5 @@
 //  value.hpp -- union-like construct for various kinds of settings
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -104,6 +104,7 @@ protected:
     , toggle
     > bounded;
 
+public:
   //! Support for undefined default values
   class none
     : private boost::equality_comparable< none >
@@ -112,6 +113,7 @@ protected:
     bool operator== (const none&) const;
   };
 
+protected:
   friend
   std::ostream& operator<< (std::ostream& os, const value::none&);
   friend

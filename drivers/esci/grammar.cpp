@@ -63,8 +63,15 @@ status::operator== (const status& rhs) const
 bool
 status::fatal_error () const
 {
-  return err && (err::PE != err->what
-                 || (lft && 0 != *lft));
+  if (err.empty ()) return false;
+
+  std::vector< error >::const_iterator it = err.begin ();
+  for (; err.end () != it; ++it)
+    {
+      if (err::PE != it->what) return true;
+    }
+
+  return (lft && 0 != *lft);
 }
 
 bool
@@ -112,16 +119,24 @@ status::is_warming_up () const
 bool
 status::media_out () const
 {
-  return ((err && err::PE == err->what)
-          || (lft && 0 == *lft));
+  std::vector< error >::const_iterator it = err.begin ();
+  for (; err.end () != it; ++it)
+    {
+      if (err::PE == it->what) return true;
+    }
+  return (lft && 0 == *lft);
 }
 
 bool
 status::media_out (const quad& where) const
 {
-  return (err
-          && where   == err->part
-          && err::PE == err->what);
+  std::vector< error >::const_iterator it = err.begin ();
+  for (; err.end () != it; ++it)
+    {
+      if (   where   == it->part
+          && err::PE == it->what) return true;
+    }
+  return false;
 }
 
 void
@@ -135,8 +150,17 @@ status::check (const header& reply) const
 {
   using namespace code_token::reply;
 
-  if (err && IMG != reply.code)
+  if (!err.empty ()
+      && !(IMG == reply.code || TRDT == reply.code || MECH == reply.code))
     log::brief ("unexpected error detected (%1%)") % str (reply.code);
+
+  if (pen && pst)
+    {
+      log::brief ("simultaneous %1% and %2% not allowed")
+        % str (PST)
+        % str (PEN)
+        ;
+    }
 
   if (lft && !pen)
     log::brief ("orphaned images-left-to-scan info (%1% more)") % *lft;
@@ -173,16 +197,6 @@ status::check (const header& reply) const
 
       if (atn && atn::CAN == *atn)
         log::brief ("unexpected cancel request (%1%)") % str (reply.code);
-    }
-
-  if (pen && pst && 0 != reply.size)
-    {
-      // This is a F/W bug unless reply.size constitutes a complete
-      // image.  We can only check for that with uncompressed image
-      // data.  A check requires knowledge of the image data format
-      // and color mode.  We don't have that knowledge here.
-
-      log::brief ("probably detected a F/W bug");
     }
 }
 

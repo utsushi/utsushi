@@ -1,5 +1,5 @@
 //  buffer.cpp -- unit tests for the utsushi::buffer API
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -58,25 +58,7 @@ struct fixture
     exists (name) && remove (name);
   }
 
-  void run_ifilter_test (ifilter::ptr flt)
-  {
-    streamsize count = 0;
-    streamsize rv    = flt->read (data, size);
-
-    BOOST_CHECK_EQUAL (traits::bos (), rv);
-    rv = flt->read (data, size);
-    BOOST_CHECK_EQUAL (traits::boi (), rv);
-    rv = 0;
-    while (traits::eoi () != rv) {
-      count += rv;
-      rv = flt->read (data, size);
-    }
-    BOOST_CHECK_EQUAL (octets, count);
-    rv = flt->read (data, size);
-    BOOST_CHECK_EQUAL (traits::eos (), rv);
-  }
-
-  void run_ofilter_test (ofilter::ptr flt)
+  void run_filter_test (filter::ptr flt)
   {
     streamsize count = 0;
     context    ctx;
@@ -93,33 +75,10 @@ struct fixture
   }
 };
 
-BOOST_FIXTURE_TEST_CASE (buffered_device_read, fixture)
-{
-  idevice::ptr dev = make_shared< rawmem_idevice > (octets);
-  ibuffer buf;
-
-  streamsize count = 0;
-  streamsize rv;
-
-  buf.open (dev);
-  rv = buf.read (data, size);
-  BOOST_CHECK_EQUAL (traits::bos (), rv);
-  rv = buf.read (data, size);
-  BOOST_CHECK_EQUAL (traits::boi (), rv);
-  rv = 0;
-  while (traits::eoi () != rv) {
-    count += rv;
-    rv = buf.read (data, size);
-  }
-  BOOST_CHECK_EQUAL (octets, count);
-  rv = buf.read (data, size);
-  BOOST_CHECK_EQUAL (traits::eos (), rv);
-}
-
 BOOST_FIXTURE_TEST_CASE (buffered_device_write, fixture)
 {
   odevice::ptr dev = make_shared< file_odevice > (name);
-  obuffer buf;
+  buffer buf;
   context ctx;
 
   streamsize count = 0;
@@ -137,60 +96,32 @@ BOOST_FIXTURE_TEST_CASE (buffered_device_write, fixture)
   remove (name);
 }
 
-BOOST_FIXTURE_TEST_CASE (filtered_device_read, fixture)
-{
-  idevice::ptr dev = make_shared< rawmem_idevice > (octets);
-  ibuffer::ptr ibp = make_shared< ibuffer > ();
-  ifilter::ptr flt = make_shared< thru_ifilter > ();
-
-  ibp->open (dev);
-  flt->open (ibp);
-
-  run_ifilter_test (flt);
-}
-
 BOOST_FIXTURE_TEST_CASE (filtered_device_write, fixture)
 {
   odevice::ptr dev = make_shared< file_odevice > (name);
-  obuffer::ptr obp = make_shared< obuffer > ();
-  ofilter::ptr flt = make_shared< thru_ofilter > ();
+  buffer::ptr  buf = make_shared< buffer > ();
+  filter::ptr  flt = make_shared< thru_filter > ();
 
-  obp->open (dev);
-  flt->open (obp);
+  buf->open (dev);
+  flt->open (buf);
 
-  run_ofilter_test (flt);
-}
-
-BOOST_FIXTURE_TEST_CASE (doubly_filtered_device_read, fixture)
-{
-  idevice::ptr dev  = make_shared< rawmem_idevice > (octets);
-  ibuffer::ptr ibp0 = make_shared< ibuffer > ();
-  ifilter::ptr flt0 = make_shared< thru_ifilter > ();
-  ibuffer::ptr ibp  = make_shared< ibuffer > ();
-  ifilter::ptr flt  = make_shared< thru_ifilter > ();
-
-  ibp0->open (dev);
-  flt0->open (ibp0);
-  ibp->open (flt0);
-  flt->open (ibp);
-
-  run_ifilter_test (flt);
+  run_filter_test (flt);
 }
 
 BOOST_FIXTURE_TEST_CASE (doubly_filtered_device_write, fixture)
 {
   odevice::ptr dev  = make_shared< file_odevice > (name);
-  obuffer::ptr obp0 = make_shared< obuffer > ();
-  ofilter::ptr flt0 = make_shared< thru_ofilter > ();
-  obuffer::ptr obp  = make_shared< obuffer > ();
-  ofilter::ptr flt  = make_shared< thru_ofilter > ();
+  buffer::ptr  buf0 = make_shared< buffer > ();
+  filter::ptr  flt0 = make_shared< thru_filter > ();
+  buffer::ptr  buf  = make_shared< buffer > ();
+  filter::ptr  flt  = make_shared< thru_filter > ();
 
-  obp0->open (dev);
-  flt0->open (obp0);
-  obp->open (flt0);
-  flt->open (obp);
+  buf0->open (dev);
+  flt0->open (buf0);
+  buf->open (flt0);
+  flt->open (buf);
 
-  run_ofilter_test (flt);
+  run_filter_test (flt);
 }
 
 struct fixture_one_odevice
@@ -227,19 +158,19 @@ BOOST_FIXTURE_TEST_CASE (unprocessed_octets_preserved, fixture_one_odevice)
   traits::assign (out_data, dat_size, dat_size);
 
   odevice::ptr dev = make_shared< one_odevice > (out_data);
-  obuffer::ptr obp = make_shared< obuffer > (buf_size);
+  buffer::ptr  buf = make_shared< buffer > (buf_size);
 
-  obp->open (dev);
+  buf->open (dev);
 
   streamsize count = 0;
   while (count < dat_size)
   {
     streamsize s = dat_size - count;
     if (s > chu_size) s = chu_size;
-    count += obp->write (in_data + count, s);
+    count += buf->write (in_data + count, s);
   }
 
-  obp->mark (traits::eoi (), context ());
+  buf->mark (traits::eoi (), context ());
 
   BOOST_CHECK_EQUAL_COLLECTIONS (in_data , in_data  + dat_size,
                                  out_data, out_data + dat_size);

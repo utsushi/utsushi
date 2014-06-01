@@ -137,12 +137,9 @@ protected:
    *
    *  At the very bottom of the chain of events that constructs any
    *  compound_scanner object, they are initialized with information
-   *  obtained from the device (or just plain hard-coded).  Subclass
-   *  constructors are free to modify the result of this in any way
-   *  necessary to make devices behave.  They can do so by simply
-   *  setting a variable member to a hard-coded value, for example, or
-   *  even overwrite all information obtained from the device with
-   *  something read in from an external file.
+   *  obtained from the device and an optional device specific data
+   *  file.  Subclass constructors are free to modify the result of
+   *  this in any way necessary to make devices behave.
    *
    *  \note The min_width_ and min_height_ values are not based on any
    *        protocol information.  Their values have been determined
@@ -151,6 +148,16 @@ protected:
    *        that it is not really worth scanning anymore.
    */
   //! @{
+
+  //! Load device information, capabilities and default parameters
+  /*! The constructor's little helper, this function tries to consult
+   *  a product specific file to obtain information about the device,
+   *  its capabilities and default scan parameters.
+   *
+   *  \returns A \c true value if successful, \c false otherwise.
+   */
+  bool get_file_defs_(const std::string& product);
+
   const information  info_;
   const capabilities caps_;
   const capabilities caps_flip_;

@@ -1,5 +1,5 @@
 //  pdf.cpp -- unit tests for the PDF filter implementation
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -51,18 +51,19 @@ struct fixture
 
 BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
 {
-  istream istr;
-  ostream ostr;
   context ctx (32, 48, 3, 8);
   shared_ptr<setmem_idevice::generator> gen
     = make_shared< const_generator > (0x50);
 
-  istr.push (make_shared< setmem_idevice > (gen, ctx, 10));
-  ostr.push (make_shared< jpeg::compressor > ());
-  ostr.push (make_shared< pdf > ());
-  ostr.push (make_shared< file_odevice > (name_));
+  setmem_idevice dev (gen, ctx, 10);
+  idevice& idev (dev);
 
-  istr | ostr;
+  stream str;
+  str.push (make_shared< jpeg::compressor > ());
+  str.push (make_shared< pdf > ());
+  str.push (make_shared< file_odevice > (name_));
+
+  idev | str;
 
 #if HAVE_LIBMAGIC
 

@@ -177,16 +177,60 @@ capabilities::operator bool () const
           || qit);
 }
 
+static bool inline
+find_(boost::optional< std::vector< quad > > flags, const quad& token)
+{
+  return (flags
+          && flags->end () != std::find (flags->begin (), flags->end (),
+                                         token));
+}
+
 bool
 capabilities::has_duplex () const
 {
   using namespace code_token::capability;
 
-  return (adf
-          && adf->flags
-          && adf->flags->end () != std::find (adf->flags->begin (),
-                                              adf->flags->end (),
-                                              adf::DPLX));
+  return (adf && find_(adf->flags, adf::DPLX));
+}
+
+bool
+capabilities::has_media_end_detection () const
+{
+  using namespace code_token::capability;
+
+  return (adf && find_(adf->flags, adf::PEDT));
+}
+
+bool
+capabilities::can_calibrate () const
+{
+  using namespace code_token::capability;
+
+  return (adf && find_(adf->flags, adf::CALB));
+}
+
+bool
+capabilities::can_clean () const
+{
+  using namespace code_token::capability;
+
+  return (adf && find_(adf->flags, adf::CLEN));
+}
+
+bool
+capabilities::can_eject () const
+{
+  using namespace code_token::capability;
+
+  return (adf && find_(adf->flags, adf::EJCT));
+}
+
+bool
+capabilities::can_load () const
+{
+  using namespace code_token::capability;
+
+  return (adf && find_(adf->flags, adf::LOAD));
 }
 
 utsushi::constraint::ptr

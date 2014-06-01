@@ -50,6 +50,7 @@
 #include <utsushi/monitor.hpp>
 #include <utsushi/option.hpp>
 #include <utsushi/pump.hpp>
+#include <utsushi/range.hpp>
 #include <utsushi/run-time.hpp>
 #include <utsushi/scanner.hpp>
 #include <utsushi/stream.hpp>
@@ -74,6 +75,8 @@ using namespace _flt_;
 using std::invalid_argument;
 using std::logic_error;
 using std::runtime_error;
+
+static int status = EXIT_SUCCESS;
 
 #define nullptr 0
 static pump *pptr (nullptr);
@@ -261,6 +264,20 @@ option_visitor::operator() (const toggle& t) const
     (key.c_str (), po::bool_switch (), description.c_str ());
 }
 
+template<>
+void
+option_visitor::operator() (const value::none&) const
+{
+  std::string description;
+  std::string key (opt_.key ());
+
+  if (opt_.text ())             // only translate non-empty strings
+    description = _(opt_.text ());
+
+  desc_.add_options ()
+    (key.c_str (), description.c_str ());
+}
+
 //! Dispatch visitation based upon utsushi::value
 /*! When converting an utsushi::option::map, we cannot directly
  *  dispatch a visitor because we iterate over its options.  We need
@@ -292,6 +309,29 @@ public:
 protected:
   po::options_description& desc_;
   boost::optional< toggle > resampling_;
+};
+
+class run
+{
+public:
+  run (option::map::ptr acts)
+    : acts_(acts)
+  {}
+
+  void
+  operator() (const po::variables_map::value_type& kv)
+  {
+    if ("dont-scan" == kv.first) return;
+
+    result_code rc = (*acts_)[kv.first].run ();
+    if (rc)
+      {
+        std::cerr << rc.message () << "\n";
+        status = EXIT_FAILURE;
+      }
+  }
+
+  option::map::ptr acts_;
 };
 
 //! Collect command-line arguments so they can be assigned all at once
@@ -406,8 +446,6 @@ struct unrecognize
   }
 };
 
-static int status = EXIT_SUCCESS;
-
 void
 on_notify (log::priority level, std::string message)
 {
@@ -467,7 +505,7 @@ main (int argc, char *argv[])
         ("debug", _("log device I/O in hexdump format"))
         ("image-format", (po::value< std::string > (&fmt)),
          _("output image format\n"
-           "PNM, JPEG, PDF, TIFF "
+           "PNM, PNG, JPEG, PDF, TIFF "
            "or one of the device supported transfer-formats.  "
            "The explicitly mentioned types are normally inferred from"
            " the output file name."))
@@ -524,6 +562,22 @@ main (int argc, char *argv[])
 
       // Self-documenting device and add-on options
 
+      po::variables_map act_vm;
+      po::options_description dev_acts (_("Device actions"));
+      std::for_each (device->actions ()->begin (),
+                     device->actions ()->end (),
+                     visit (dev_acts));
+
+      if (!device->actions ()->empty ())
+        {
+          dev_acts
+            .add_options ()
+            ("dont-scan", po::bool_switch (),
+             _("Only perform the actions given on the command-line."
+               "  Do not perform image acquisition."))
+            ;
+        }
+
       po::variables_map dev_vm;
       po::options_description dev_opts (_("Device options"));
       boost::optional< toggle > resampling;
@@ -538,13 +592,16 @@ main (int argc, char *argv[])
 
       po::variables_map add_vm;
       po::options_description add_opts (_("Add-on options"));
-      ofilter::ptr blank_skip = make_shared< _flt_::image_skip > ();
+      filter::ptr blank_skip = make_shared< _flt_::image_skip > ();
       std::for_each (blank_skip->options ()->begin (),
                      blank_skip->options ()->end (),
                      visit (add_opts));
 
       if (rt.count ("help"))
         {
+          if (!device->actions ()->empty ())
+            std::cout << dev_acts;
+
           std::cout << dev_opts
                     << add_opts
                     << "\n"
@@ -560,6 +617,14 @@ main (int argc, char *argv[])
       run_time::sequence_type dev_argv;
       dev_argv = po::collect_unrecognized (cmd.options,
                                            po::exclude_positional);
+
+      po::parsed_options act (po::command_line_parser (dev_argv)
+                              .options (dev_acts)
+                              .allow_unregistered ()
+                              .run ());
+
+      dev_argv = po::collect_unrecognized (act.options,
+                                           po::include_positional);
 
       po::parsed_options dev (po::command_line_parser (dev_argv)
                               .options (dev_opts)
@@ -581,6 +646,12 @@ main (int argc, char *argv[])
           uri = dev_argv[0];
         }
 
+      po::store (act, act_vm);
+      po::notify (act_vm);
+
+      std::for_each (act_vm.begin (), act_vm.end (),
+                     run (device->actions ()));
+
       po::store (dev, dev_vm);
       po::notify (dev_vm);
 
@@ -593,6 +664,10 @@ main (int argc, char *argv[])
       std::for_each (add_vm.begin (), add_vm.end (),
                      assign (blank_skip->options ()));
 
+      if (act_vm.count ("dont-scan")
+          && !act_vm["dont-scan"].defaulted ())
+        return status;
+
       // Infer desired image format from file extension
 
       if (!uri.empty ())
@@ -600,6 +675,7 @@ main (int argc, char *argv[])
           fs::path path (uri);
 
           /**/ if (".pnm"  == path.extension ()) fmt = "PNM";
+          else if (".png"  == path.extension ()) fmt = "PNG";
           else if (".jpg"  == path.extension ()) fmt = "JPEG";
           else if (".jpeg" == path.extension ()) fmt = "JPEG";
           else if (".pdf"  == path.extension ()) fmt = "PDF";
@@ -613,14 +689,14 @@ main (int argc, char *argv[])
       // Configure the filter chain
 
       option::map& om (*device->options ());
-      ostream::ptr ostr = make_shared< ostream > ();
+      stream::ptr str = make_shared< stream > ();
 
       const std::string xfer_raw = "image/x-raster";
       const std::string xfer_jpg = "image/jpeg";
       std::string xfer_fmt = device->get_context ().content_type ();
 
       bool bilevel = (om["image-type"] == "Gray (1 bit)");
-      ofilter::ptr threshold (make_shared< threshold > ());
+      filter::ptr threshold (make_shared< threshold > ());
       try
         {
           (*threshold->options ())["threshold"]
@@ -631,7 +707,7 @@ main (int argc, char *argv[])
           log::error ("Falling back to default threshold value");
         }
 
-      ofilter::ptr jpeg_compress (make_shared< jpeg::compressor > ());
+      filter::ptr jpeg_compress (make_shared< jpeg::compressor > ());
       try
         {
           (*jpeg_compress->options ())["quality"]
@@ -665,7 +741,7 @@ main (int argc, char *argv[])
       if (om.count ("enable-resampling"))
         resample = value (om["enable-resampling"]);
 
-      ofilter::ptr magick;
+      filter::ptr magick;
       if (resample)
         {
           magick = make_shared< _flt_::magick > ();
@@ -695,6 +771,47 @@ main (int argc, char *argv[])
           (*magick->options ())["height"] = height;
         }
 
+      if (fmt == "PNG")
+        {
+          if (!magick) magick = make_shared< _flt_::magick > ();
+
+          (*magick->options ())["bilevel"] = toggle (bilevel);
+
+          quantity thr = value (om["threshold"]);
+          thr *= 100.0;
+          thr /= (dynamic_pointer_cast< range >
+                  (om["threshold"].constraint ()))->upper ();
+          (*magick->options ())["threshold"] = thr;
+
+          if (!resample)
+            {
+              toggle bound = true;
+              quantity res_x  = -1.0;
+              quantity res_y  = -1.0;
+
+              if (om.count ("resolution-x"))
+                {
+                  res_x = value (om["resolution-x"]);
+                  res_y = value (om["resolution-y"]);
+                }
+              if (om.count ("resolution-bind"))
+                bound = value (om["resolution-bind"]);
+
+              if (bound)
+                {
+                  res_x = value (om["resolution"]);
+                  res_y = value (om["resolution"]);
+                }
+
+              (*magick->options ())["resolution-x"] = res_x;
+              (*magick->options ())["resolution-y"] = res_y;
+              (*magick->options ())["force-extent"] = force_extent;
+              (*magick->options ())["width"]  = width;
+              (*magick->options ())["height"] = height;
+            }
+          (*magick->options ())["image-format"] = fmt;
+        }
+
       toggle skip_blank = !bilevel; // \todo fix filter limitation
       quantity skip_thresh = -1.0;
       try
@@ -722,9 +839,9 @@ main (int argc, char *argv[])
       /**/ if ("PNM" == fmt)
         {
           /**/ if (xfer_raw == xfer_fmt)
-            ostr->push (make_shared< padding > ());
+            str->push (make_shared< padding > ());
           else if (xfer_jpg == xfer_fmt)
-            ostr->push (make_shared< jpeg::decompressor > ());
+            str->push (make_shared< jpeg::decompressor > ());
           else
             BOOST_THROW_EXCEPTION
               (runtime_error
@@ -732,14 +849,34 @@ main (int argc, char *argv[])
                  % xfer_fmt
                  % fmt)
                 .str ()));
-          if (skip_blank) ostr->push (blank_skip);
+          if (skip_blank) str->push (blank_skip);
           if (magick)
-            ostr->push (magick);
+            str->push (magick);
           else if (force_extent)
-            ostr->push (make_shared< bottom_padder > (width, height));
+            str->push (make_shared< bottom_padder > (width, height));
           if (xfer_jpg == xfer_fmt && bilevel)
-            ostr->push (threshold);
-          ostr->push (make_shared< pnm > ());
+            str->push (threshold);
+          str->push (make_shared< pnm > ());
+        }
+      else if (fmt == "PNG")
+        {
+          /**/ if (xfer_raw == xfer_fmt)
+            {
+              str->push (make_shared< padding > ());
+              str->push (make_shared< pnm > ());
+            }
+          else if (xfer_jpg == xfer_fmt)
+            str->push (make_shared< jpeg::decompressor > ());
+          else
+            BOOST_THROW_EXCEPTION
+              (runtime_error
+               ((format (_("conversion from %1% to %2% is not supported"))
+                 % xfer_fmt
+                 % fmt)
+                .str ()));
+          if (skip_blank) str->push (blank_skip);
+          if (magick)
+            str->push (magick);
         }
       else if ("JPEG" == fmt)
         {
@@ -750,27 +887,27 @@ main (int argc, char *argv[])
 
           /**/ if (xfer_raw == xfer_fmt)
             {
-              ostr->push (make_shared< padding > ());
-              if (skip_blank) ostr->push (blank_skip);
+              str->push (make_shared< padding > ());
+              if (skip_blank) str->push (blank_skip);
               if (magick)
-                ostr->push (magick);
+                str->push (magick);
               else if (force_extent)
-                ostr->push (make_shared< bottom_padder > (width, height));
-              ostr->push (jpeg_compress);
+                str->push (make_shared< bottom_padder > (width, height));
+              str->push (jpeg_compress);
             }
           else if (xfer_jpg == xfer_fmt)
             {
               if (magick || force_extent || skip_blank)
                 {
-                  ostr->push (make_shared< jpeg::decompressor > ());
+                  str->push (make_shared< jpeg::decompressor > ());
                   if (skip_blank)
-                    ostr->push (blank_skip);
+                    str->push (blank_skip);
                   if (magick)
-                    ostr->push (magick);
+                    str->push (magick);
                   else if (force_extent)
-                    ostr->push (make_shared< bottom_padder >
+                    str->push (make_shared< bottom_padder >
                                 (width, height));
-                  ostr->push (jpeg_compress);
+                  str->push (jpeg_compress);
                 }
             }
           else
@@ -787,41 +924,41 @@ main (int argc, char *argv[])
         {
           /**/ if (xfer_raw == xfer_fmt)
             {
-              ostr->push (make_shared< padding > ());
-              if (skip_blank) ostr->push (blank_skip);
+              str->push (make_shared< padding > ());
+              if (skip_blank) str->push (blank_skip);
               if (magick)
-                ostr->push (magick);
+                str->push (magick);
               else if (force_extent)
-                ostr->push (make_shared< bottom_padder > (width, height));
+                str->push (make_shared< bottom_padder > (width, height));
 
               if (bilevel)
                 {
-                  ostr->push (make_shared< g3fax > ());
+                  str->push (make_shared< g3fax > ());
                 }
               else
                 {
-                  ostr->push (jpeg_compress);
+                  str->push (jpeg_compress);
                 }
             }
           else if (xfer_jpg == xfer_fmt)
             {
               if (magick || force_extent || skip_blank || bilevel)
                 {
-                  ostr->push (make_shared< jpeg::decompressor > ());
-                  if (skip_blank) ostr->push (blank_skip);
+                  str->push (make_shared< jpeg::decompressor > ());
+                  if (skip_blank) str->push (blank_skip);
                   if (magick)
-                    ostr->push (magick);
+                    str->push (magick);
                   else if (force_extent)
-                    ostr->push (make_shared< bottom_padder > (width, height));
+                    str->push (make_shared< bottom_padder > (width, height));
 
                   if (bilevel)
                     {
-                      ostr->push (threshold);
-                      ostr->push (make_shared< g3fax > ());
+                      str->push (threshold);
+                      str->push (make_shared< g3fax > ());
                     }
                   else
                     {
-                      ostr->push (jpeg_compress);
+                      str->push (jpeg_compress);
                     }
                 }
             }
@@ -834,14 +971,14 @@ main (int argc, char *argv[])
                    % fmt)
                   .str ()));
             }
-          ostr->push (make_shared< pdf > ());
+          str->push (make_shared< pdf > ());
         }
       else if ("TIFF" == fmt)
         {
           /**/ if (xfer_raw == xfer_fmt)
-            ostr->push (make_shared< padding > ());
+            str->push (make_shared< padding > ());
           else if (xfer_jpg == xfer_fmt)
-            ostr->push (make_shared< jpeg::decompressor > ());
+            str->push (make_shared< jpeg::decompressor > ());
           else
             BOOST_THROW_EXCEPTION
               (runtime_error
@@ -849,13 +986,13 @@ main (int argc, char *argv[])
                  % xfer_fmt
                  % fmt)
                 .str ()));
-          if (skip_blank) ostr->push (blank_skip);
+          if (skip_blank) str->push (blank_skip);
           if (magick)
-            ostr->push (magick);
+            str->push (magick);
           else if (force_extent)
-            ostr->push (make_shared< bottom_padder > (width, height));
+            str->push (make_shared< bottom_padder > (width, height));
           if (xfer_jpg == xfer_fmt && bilevel)
-            ostr->push (threshold);
+            str->push (threshold);
         }
       else
         {
@@ -873,11 +1010,11 @@ main (int argc, char *argv[])
           if (uri.empty ()) uri = "/dev/stdout";
           if ("TIFF" == fmt)
             {
-              ostr->push (make_shared< _out_::tiff_odevice > (uri));
+              str->push (make_shared< _out_::tiff_odevice > (uri));
             }
           else
             {
-              ostr->push (make_shared< file_odevice > (uri));
+              str->push (make_shared< file_odevice > (uri));
             }
         }
       else
@@ -887,7 +1024,7 @@ main (int argc, char *argv[])
                               ? path.parent_path () / path.stem ()
                               : path.stem (), path.extension ().native ());
 
-          ostr->push (make_shared< file_odevice > (gen));
+          str->push (make_shared< file_odevice > (gen));
         }
 
       pump p (device);
@@ -897,7 +1034,7 @@ main (int argc, char *argv[])
       set_signal (SIGINT , request_cancellation);
 
       p.connect (on_notify);
-      p.start (ostr);
+      p.start (str);
     }
   catch (std::exception& e)
     {

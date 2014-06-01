@@ -1,5 +1,5 @@
 //  image-skip.cpp -- unit tests for the image-skip filter implementation
-//  Copyright (C) 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -33,7 +33,6 @@
 
 using namespace utsushi;
 using _flt_::image_skip;
-using _flt_::iimage_skip;
 using _flt_::pnm;
 
 BOOST_AUTO_TEST_CASE (skip_all_white)
@@ -42,16 +41,16 @@ BOOST_AUTO_TEST_CASE (skip_all_white)
   shared_ptr< setmem_idevice::generator > gen
     = make_shared< const_generator > (0xff);
 
-  istream istr;
-  ostream ostr;
+  setmem_idevice dev (gen, ctx, 2);
+  idevice& idev (dev);
 
-  istr.push (make_shared< setmem_idevice > (gen, ctx, 2));
-  ostr.push (make_shared< image_skip > ());
-  ostr.push (make_shared< pnm > ());
-  ostr.push (make_shared< file_odevice >
+  stream str;
+  str.push (make_shared< image_skip > ());
+  str.push (make_shared< pnm > ());
+  str.push (make_shared< file_odevice >
              (path_generator ("skip", "pnm")));
 
-  istr | ostr;
+  idev | str;
 
   BOOST_CHECK (!fs::exists ("skip000.pnm"));
   if (fs::exists ("skip000.pnm")) remove ("skip000.pnm");
@@ -65,62 +64,16 @@ BOOST_AUTO_TEST_CASE (keep_all_black)
   shared_ptr< setmem_idevice::generator > gen
     = make_shared< const_generator > (0x00);
 
-  istream istr;
-  ostream ostr;
+  setmem_idevice dev (gen, ctx, 2);
+  idevice& idev (dev);
 
-  istr.push (make_shared< setmem_idevice > (gen, ctx, 2));
-  ostr.push (make_shared< image_skip > ());
-  ostr.push (make_shared< pnm > ());
-  ostr.push (make_shared< file_odevice >
+  stream str;
+  str.push (make_shared< image_skip > ());
+  str.push (make_shared< pnm > ());
+  str.push (make_shared< file_odevice >
              (path_generator ("skip", "pnm")));
 
-  istr | ostr;
-
-  BOOST_CHECK (fs::exists ("skip000.pnm"));
-  if (fs::exists ("skip000.pnm")) remove ("skip000.pnm");
-  BOOST_CHECK (fs::exists ("skip001.pnm"));
-  if (fs::exists ("skip001.pnm")) remove ("skip001.pnm");
-}
-
-BOOST_AUTO_TEST_CASE (iskip_all_white)
-{
-  context ctx (100, 100, context::GRAY8);
-  shared_ptr< setmem_idevice::generator > gen
-    = make_shared< const_generator > (0xff);
-
-  istream istr;
-  ostream ostr;
-
-  istr.push (make_shared< iimage_skip > ());
-  istr.push (make_shared< setmem_idevice > (gen, ctx, 2));
-  ostr.push (make_shared< pnm > ());
-  ostr.push (make_shared< file_odevice >
-             (path_generator ("skip", "pnm")));
-
-  istr | ostr;
-
-  BOOST_CHECK (!fs::exists ("skip000.pnm"));
-  if (fs::exists ("skip000.pnm")) remove ("skip000.pnm");
-  BOOST_CHECK (!fs::exists ("skip001.pnm"));
-  if (fs::exists ("skip001.pnm")) remove ("skip001.pnm");
-}
-
-BOOST_AUTO_TEST_CASE (ikeep_all_black)
-{
-  context ctx (100, 100, context::GRAY8);
-  shared_ptr< setmem_idevice::generator > gen
-    = make_shared< const_generator > (0x00);
-
-  istream istr;
-  ostream ostr;
-
-  istr.push (make_shared< iimage_skip > ());
-  istr.push (make_shared< setmem_idevice > (gen, ctx, 2));
-  ostr.push (make_shared< pnm > ());
-  ostr.push (make_shared< file_odevice >
-             (path_generator ("skip", "pnm")));
-
-  istr | ostr;
+  idev | str;
 
   BOOST_CHECK (fs::exists ("skip000.pnm"));
   if (fs::exists ("skip000.pnm")) remove ("skip000.pnm");

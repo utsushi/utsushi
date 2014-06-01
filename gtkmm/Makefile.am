@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -29,6 +29,8 @@ libutsushi_gtkmm_la_LIBADD  = ../lib/libutsushi.la
 libutsushi_gtkmm_la_LIBADD += $(LIBGTKMM_LIBS)
 libutsushi_gtkmm_la_LIBADD += $(BOOST_THREAD_LIB)
 libutsushi_gtkmm_la_SOURCES  =
+libutsushi_gtkmm_la_SOURCES += action-dialog.cpp
+libutsushi_gtkmm_la_SOURCES += action-dialog.hpp
 libutsushi_gtkmm_la_SOURCES += chooser.cpp
 libutsushi_gtkmm_la_SOURCES += chooser.hpp
 libutsushi_gtkmm_la_SOURCES += dialog.cpp

@@ -1,5 +1,5 @@
 //  pdf.hpp -- PDF image format support
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -37,7 +37,7 @@ namespace _pdf_ {
 }
 
 class pdf
-  : public ofilter
+  : public filter
 {
 public:
   pdf ();

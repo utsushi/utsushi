@@ -455,12 +455,6 @@ pump::pump (idevice::ptr idev)
   init_(option_);
 }
 
-pump::pump (istream::ptr istr)
-  : pimpl_(new impl (istr))
-{
-  init_(option_);
-}
-
 pump::~pump ()
 {
   delete pimpl_;
@@ -473,9 +467,9 @@ pump::start (odevice::ptr odev)
 }
 
 void
-pump::start (ostream::ptr ostr)
+pump::start (stream::ptr str)
 {
-  pimpl_->start (ostr, value ((*option_)[ASYNC]));
+  pimpl_->start (str, value ((*option_)[ASYNC]));
 }
 
 void

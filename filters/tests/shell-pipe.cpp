@@ -57,17 +57,15 @@ test_throughput (const std::pair< streamsize, unsigned >& args)
   const streamsize octet_count (args.first);
   const unsigned   image_count (args.second);
 
-  idevice::ptr idev (make_shared< rawmem_idevice > (octet_count, image_count));
+  rawmem_idevice dev (octet_count, image_count);
+  idevice& idev (dev);
 
-  istream istr;
-  ostream ostr;
-
-  istr.push (idev);
-  ostr.push (make_shared< shell_pipe > ("cat"));
-  ostr.push (make_shared< file_odevice >
+  stream str;
+  str.push (make_shared< shell_pipe > ("cat"));
+  str.push (make_shared< file_odevice >
              (path_generator ("throughput-", "out")));
 
-  istr | ostr;
+  idev | str;
 
   for (unsigned i = 0; i < image_count; ++i)
     {
@@ -85,7 +83,10 @@ init_test_runner ()
 {
   namespace but = ::boost::unit_test;
 
-  int pipe_capacity = fcntl (STDIN_FILENO, F_GETPIPE_SZ);
+  int pipe_capacity = 0;
+#ifdef F_GETPIPE_SZ
+  pipe_capacity = fcntl (STDIN_FILENO, F_GETPIPE_SZ);
+#endif
 
   if (0 >= pipe_capacity)
     pipe_capacity = 64 * 1024;  // Linux >= 2.6.11

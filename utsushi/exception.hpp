@@ -21,6 +21,30 @@
 #ifndef utsushi_exception_hpp_
 #define utsushi_exception_hpp_
 
+# if __cplusplus >= 201103L
+
+#include <exception>
+#define NAMESPACE std
+
+#else   /* emulate C++11 */
+
+#include <boost/exception_ptr.hpp>
+#define NAMESPACE boost
+
+#endif
+
+namespace utsushi {
+
+using NAMESPACE::exception_ptr;
+using NAMESPACE::current_exception;
+using NAMESPACE::rethrow_exception;
+
+}       // namespace utsushi
+
+#undef NAMESPACE
+
+// FIXME provide a clean split between Utsushi and C++11 headers
+
 #include <stdexcept>
 
 namespace utsushi {
@@ -37,13 +61,18 @@ class system_error
 {
 public:
   enum error_code {
-    unknown_error,
+    no_error = 0,
+
+    battery_low,
     cover_open,
-    media_out,
     media_jam,
+    media_out,
     permission_denied,
+
+    unknown_error               // keep this last
   };
 
+  system_error ();
   system_error (error_code ec, const std::string& message);
   system_error (error_code ec, const char *message);
 

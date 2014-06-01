@@ -1,5 +1,5 @@
 //  device.cpp -- interface default implementations
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -37,6 +37,7 @@ using std::logic_error;
 
 idevice::idevice (const context& ctx)
   : input (ctx)
+  , action_(new option::map)
   , work_in_progress_(false)
   , cancel_requested_(work_in_progress_)
 {}
@@ -149,6 +150,12 @@ bool
 idevice::is_single_image () const
 {
   return false;
+}
+
+option::map::ptr
+idevice::actions ()
+{
+  return action_;
 }
 
 bool

@@ -108,20 +108,21 @@ basic_grammar< Iterator >::basic_grammar ()
 
   // The protocol specification is quite clear as to what ordering the
   // various tokens are supposed to arrive in but, alas, firmware does
-  // whatever it pleases at times.  Cater to whatever ordering (but do
-  // insist on unique occurences) and defer priority ordering logic to
-  // the compound_base::decode_reply_block_hook_() implementation.
+  // whatever it pleases at times.  Cater to an arbitrary ordering but
+  // do insist on unique occurences (except for error codes) and defer
+  // priority logic to the compound_base::decode_reply_block_hook_()
+  // implementation.
 
   status_rule_ %=
     skip_rule_
-    > -(  ((token_(info::ERR) > err_rule_) > skip_rule_)
-        ^ ((token_(info::NRD) > nrd_token_) > skip_rule_)
-        ^ ((token_(info::PST) > pst_rule_) > skip_rule_)
-        ^ ((token_(info::PEN) > pen_rule_) > skip_rule_)
-        ^ ((token_(info::LFT) > this->decimal_) > skip_rule_)
-        ^ ((token_(info::TYP) > typ_token_) > skip_rule_)
-        ^ ((token_(info::ATN) > atn_token_) > skip_rule_)
-        ^ ((token_(info::PAR) > par_token_) > skip_rule_)
+    > -(  *((token_(info::ERR) > err_rule_)      > skip_rule_)
+        ^  ((token_(info::NRD) > nrd_token_)     > skip_rule_)
+        ^  ((token_(info::PST) > pst_rule_)      > skip_rule_)
+        ^  ((token_(info::PEN) > pen_rule_)      > skip_rule_)
+        ^  ((token_(info::LFT) > this->decimal_) > skip_rule_)
+        ^  ((token_(info::TYP) > typ_token_)     > skip_rule_)
+        ^  ((token_(info::ATN) > atn_token_)     > skip_rule_)
+        ^  ((token_(info::PAR) > par_token_)     > skip_rule_)
         )
     > (token_(info::END) | qi::eoi)
     ;
@@ -307,7 +308,7 @@ BOOST_FUSION_ADAPT_STRUCT
 
 BOOST_FUSION_ADAPT_STRUCT
 (ESCI_NS::status,
- (boost::optional< ESCI_NS::status::error >, err)
+ (std::vector< ESCI_NS::status::error >, err)
  (boost::optional< ESCI_NS::quad >, nrd)
  (boost::optional< ESCI_NS::status::image >, pst)
  (boost::optional< ESCI_NS::status::image >, pen)

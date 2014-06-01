@@ -23,6 +23,8 @@
 
 //! \copydoc grammar.hpp
 
+#include <vector>
+
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
 #include <boost/spirit/include/qi_rule.hpp>
@@ -84,8 +86,16 @@ struct hardware_status
     quad what_;
   };
 
-  boost::optional< result > medium;
-  boost::optional< result > error;
+  quad error (const quad& part) const;
+
+  //! Tells whether a battery is nearing exhaustion
+  /*! This checks whether batteries associated with any or a selected
+   *  \a part are low on energy.
+   */
+  bool is_battery_low (const quad& part = quad ()) const;
+
+  std::vector< result > medium;
+  std::vector< result > error_;
 
   /*! A special value of \c esci_non_int indicates that the device is
    *  calibrating.
@@ -93,6 +103,7 @@ struct hardware_status
   boost::optional< integer > focus;
   boost::optional< integer > push_button;
   boost::optional< quad > separation_mode;
+  boost::optional< quad > battery_status;
 
   //! Push button value bits that have meaning attached to them
   static const integer push_button_mask;
@@ -126,6 +137,7 @@ protected:
   qi::rule< Iterator, hardware_status::result () > stat_err_rule_;
   qi::rule< Iterator, integer () > stat_fcs_rule_;
   qi::rule< Iterator, quad () > stat_sep_rule_;
+  qi::rule< Iterator, quad () > stat_bat_rule_;
 
   qi::rule< Iterator, quad () > stat_psz_part_token_;
   qi::rule< Iterator, quad () > stat_psz_size_token_;

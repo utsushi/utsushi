@@ -112,7 +112,7 @@ bool
 hardware_status::operator== (const hardware_status& rhs) const
 {
   return (   medium          == rhs.medium
-          && error           == rhs.error
+          && error_          == rhs.error_
           && focus           == rhs.focus
           && push_button     == rhs.push_button
           && separation_mode == rhs.separation_mode);
@@ -129,21 +129,24 @@ hardware_status::size_detected (const quad& part) const
 {
   using namespace code_token::status::psz;
 
-  return (medium
-          && part == medium->part_
-          && INVD != medium->what_);
+  std::vector< result >::const_iterator it = medium.begin ();
+
+  for (; medium.end () != it && part != it->part_; ++it);
+  return medium.end () != it && INVD != it->what_;
 }
 
 media
 hardware_status::size (const quad& part) const
 {
-  if (!medium
-      || part != medium->part_)
+  std::vector< result >::const_iterator it = medium.begin ();
+
+  for (; medium.end () != it && part != it->part_; ++it);
+  if (medium.end () == it)
     return utsushi::media (length (), length ());
 
   if (!dict) initialize_dictionary ();
 
-  return dict->at (medium->what_);
+  return dict->at (it->what_);
 }
 
 integer
@@ -206,6 +209,37 @@ hardware_status::result::operator== (const hardware_status::result& rhs) const
 {
   return (   part_ == rhs.part_
           && what_ == rhs.what_);
+}
+
+quad
+hardware_status::error (const quad& part) const
+{
+  std::vector< result >::const_iterator it = error_.begin ();
+
+  for (; error_.end () != it && part != it->part_; ++it);
+  return (error_.end () != it ? it->what_ : quad ());
+}
+
+bool
+hardware_status::is_battery_low (const quad& part) const
+{
+  using namespace code_token::status;
+
+  bool rv (battery_status && bat::LOW == *battery_status);
+
+  if (part)
+    {
+      rv |= (err::BTLO == error (part));
+    }
+  else
+    {
+      std::vector< result >::const_iterator it = error_.begin ();
+      for (; error_.end () !=it; ++it)
+        {
+          rv |= (err::BTLO == it->what_);
+        }
+    }
+  return rv;
 }
 
 const integer hardware_status::push_button_mask = 0xf3;

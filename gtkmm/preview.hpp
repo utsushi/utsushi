@@ -1,5 +1,5 @@
 //  preview.hpp -- display/control preview images before final acquisition
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -58,7 +58,7 @@ class preview : public Gtk::HBox, public odevice
 
   idevice::ptr  idevice_;
   odevice::ptr  odevice_;
-  ostream::ptr  ostream_;
+  stream::ptr   stream_;
 
   option::map::ptr control_;
 

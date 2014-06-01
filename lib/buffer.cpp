@@ -27,70 +27,8 @@
 
 namespace utsushi {
 
-ibuffer::ibuffer (streamsize buffer_size)
-  : base (buffer_size)
-  , seq_(traits::not_marker (0))
-  , check_marker_(false)
-{
-  buffer_size_ = buffer_size;
-  setg (buffer_, buffer_ + buffer_size_, buffer_ + buffer_size_);
-}
-
-streamsize
-ibuffer::read (octet *data, streamsize n)
-{
-  streamsize rv = sgetn (data, n);
-  return ((0 < rv)
-          ? rv
-          : sequence_marker ());
-}
-
-streamsize
-ibuffer::marker ()
-{
-  check_marker_ = true;
-  streamsize rv = ((traits::eof () == sgetc ())
-                   ? sequence_marker () : traits::not_marker (0));
-  check_marker_ = false;
-
-  return rv;
-}
-
-ibuffer::base::int_type
-ibuffer::underflow ()
-{
-  if (traits::is_marker (seq_)) return traits::eof ();
-
-  streamsize rv = (check_marker_
-                   ? io_->marker ()
-                   : io_->read (buffer_, buffer_size_));
-
-  if (traits::is_marker (rv)) {
-    seq_ = rv;
-    ctx_ = io_->get_context ();
-    return traits::eof ();
-  }
-
-  setg (buffer_, buffer_, buffer_ + rv);
-
-  if (egptr () == gptr ()) {
-    seq_ = rv;
-    return traits::eof ();
-  }
-
-  return traits::to_int_type (*gptr ());
-}
-
-traits::int_type
-ibuffer::sequence_marker ()
-{
-  traits::int_type rv = seq_;
-  seq_ = traits::not_marker (seq_);
-  return rv;
-}
-
-obuffer::obuffer (streamsize buffer_size)
-  : base (buffer_size)
+buffer::buffer (streamsize buffer_size)
+  : buffer_(new octet[buffer_size])
   , max_size_(buffer_size)
   , min_size_(buffer_size)
 {
@@ -98,28 +36,39 @@ obuffer::obuffer (streamsize buffer_size)
   setp (buffer_, buffer_ + buffer_size_);
 }
 
+buffer::~buffer ()
+{
+  delete [] buffer_;
+}
+
 streamsize
-obuffer::write (const octet *data, streamsize n)
+buffer::write (const octet *data, streamsize n)
 {
   return sputn (data, n);
 }
 
 void
-obuffer::mark (traits::int_type c, const context& ctx)
+buffer::mark (traits::int_type c, const context& ctx)
 {
   if (traits::is_marker (c)) {
     if (traits::eoi() == c || traits::eos() == c) {
       if (0 > sync ())
-        log::error ("obuffer::sync: didn't sync all octets");
+        log::error ("buffer::sync: didn't sync all octets");
     }
-    io_->mark (c, ctx);
+    output_->mark (c, ctx);
   }
 }
 
-obuffer::base::int_type
-obuffer:: overflow (base::int_type c)
+void
+buffer::open (output::ptr output)
 {
-  streamsize rv = io_->write (buffer_, pptr () - buffer_);
+  output_ = output;
+}
+
+buffer::int_type
+buffer::overflow (int_type c)
+{
+  streamsize rv = output_->write (buffer_, pptr () - buffer_);
   traits::move (buffer_, buffer_ + rv, pptr () - buffer_ - rv);
   pbump (-rv);
 
@@ -158,7 +107,7 @@ obuffer:: overflow (base::int_type c)
 }
 
 int
-obuffer::sync ()
+buffer::sync ()
 {
   streamsize n = pptr () - buffer_; // remaining number of octets
 
@@ -168,8 +117,8 @@ obuffer::sync ()
 
   do
     {
-      rv = io_->write (pptr () - n, n);
-      if (0 == rv) log::trace ("obuffer::sync: cannot write to output");
+      rv = output_->write (pptr () - n, n);
+      if (0 == rv) log::trace ("buffer::sync: cannot write to output");
       n -= rv;
     }
   while (0 < n);

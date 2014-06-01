@@ -99,6 +99,12 @@ public:
    */
   void operator>> (connexion& cnx);
 
+  //! Check if a compound command session has started already
+  bool is_in_session () const;
+  //! \todo Expose more queries for status_
+  bool is_busy () const;
+  bool is_warming_up () const;
+
   //! \todo Change to independent utility function taking an interval
   bool delay_elapsed () const;
 
@@ -182,14 +188,16 @@ protected:
   //! Acts upon the result of decode_reply_block_()
   /*! The default implementation does absolutely nothing.
    */
-  virtual void decode_reply_block_hook_() throw () {}
-
+  virtual void decode_reply_block_hook_() throw ();
 
   //! Sets up a request to finish the session
   compound_base& finish ();
 
   //! Forget about the command object's connexion
   void finish_hook_();
+
+  void unknown_request_hook_();
+  void invalid_request_hook_();
 
   //! Sets up a request to get device information
   virtual compound_base& get (information& info);

@@ -1,5 +1,5 @@
 //  jpeg.cpp -- unit tests for the JPEG filter implementation
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -101,14 +101,14 @@ BOOST_AUTO_TEST_SUITE (compressor);
 
 BOOST_FIXTURE_TEST_CASE (mediatype, fixture)
 {
-  istream istr;
-  ostream ostr;
+  rawmem_idevice dev (context (32, 32, 3, 8));
+  idevice& idev (dev);
 
-  istr.push (make_shared< rawmem_idevice > (context (32, 32, 3, 8)));
-  ostr.push (make_shared< jpeg::compressor > ());
-  ostr.push (make_shared< file_odevice > (name_));
+  stream str;
+  str.push (make_shared< jpeg::compressor > ());
+  str.push (make_shared< file_odevice > (name_));
 
-  istr | ostr;
+  idev | str;
 
   test_magic (name_, "image/jpeg");
 }
@@ -119,16 +119,16 @@ BOOST_AUTO_TEST_SUITE (decompressor);
 
 BOOST_FIXTURE_TEST_CASE (mediatype, fixture)
 {
-  istream istr;
-  ostream ostr;
+  rawmem_idevice dev (context (32, 32, 3, 8));
+  idevice& idev (dev);
 
-  istr.push (make_shared< rawmem_idevice > (context (32, 32, 3, 8)));
-  ostr.push (make_shared< jpeg::compressor > ());
-  ostr.push (make_shared< jpeg::decompressor > ());
-  ostr.push (make_shared< pnm > ());
-  ostr.push (make_shared< file_odevice > (name_));
+  stream str;
+  str.push (make_shared< jpeg::compressor > ());
+  str.push (make_shared< jpeg::decompressor > ());
+  str.push (make_shared< pnm > ());
+  str.push (make_shared< file_odevice > (name_));
 
-  istr | ostr;
+  idev | str;
 
   test_magic (name_, "image/x-portable-pixmap");
 }
@@ -169,42 +169,15 @@ test_decompressor (file_spec t)
 
   const fs::path output_file (t.input_file_.stem ().replace_extension ("pnm"));
 
-  istream istr;
-  ostream ostr;
+  jpeg_idevice dev (t.input_file_, t.width_, t.height_, t.count_);
+  idevice& idev (dev);
 
-  istr.push (make_shared< jpeg_idevice > (t.input_file_, t.width_, t.height_,
-                                          t.count_));
-  ostr.push (make_shared< jpeg::decompressor > ());
-  ostr.push (make_shared< pnm > ());
-  ostr.push (make_shared< file_odevice > (output_file));
+  stream str;
+  str.push (make_shared< jpeg::decompressor > ());
+  str.push (make_shared< pnm > ());
+  str.push (make_shared< file_odevice > (output_file));
 
-  istr | ostr;
-
-  test_magic (output_file, "image/x-portable-pixmap");
-
-  BOOST_CHECK_EQ (t.expected_, file_size (output_file));
-
-  remove (output_file);
-}
-
-static void
-test_idecompressor (file_spec t)
-{
-  utsushi::test::change_test_case_name
-    ("idecompressor_" + t.input_file_.filename ().string ());
-
-  const fs::path output_file (t.input_file_.stem ().replace_extension ("pnm"));
-
-  istream istr;
-  ostream ostr;
-
-  istr.push (make_shared< jpeg::idecompressor > ());
-  istr.push (make_shared< jpeg_idevice > (t.input_file_, t.width_, t.height_,
-                                          t.count_));
-  ostr.push (make_shared< pnm > ());
-  ostr.push (make_shared< file_odevice > (output_file));
-
-  istr | ostr;
+  idev | str;
 
   test_magic (output_file, "image/x-portable-pixmap");
 
@@ -236,9 +209,6 @@ init_test_runner ()
 
   but::framework::master_test_suite ()
     .add (BOOST_PARAM_TEST_CASE (test_decompressor,
-                                 args.begin (), args.end ()));
-  but::framework::master_test_suite ()
-    .add (BOOST_PARAM_TEST_CASE (test_idecompressor,
                                  args.begin (), args.end ()));
   return true;
 }

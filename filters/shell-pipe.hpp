@@ -30,7 +30,7 @@ namespace utsushi {
 namespace _flt_ {
 
 class shell_pipe
-  : public ofilter
+  : public filter
 {
 public:
   ~shell_pipe ();

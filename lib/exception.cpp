@@ -1,5 +1,5 @@
 //  exception.cpp -- extensions to the std::exception hierarchy
-//  Copyright (C) 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -27,6 +27,11 @@
 using std::string;
 
 namespace utsushi {
+
+system_error::system_error ()
+  : std::runtime_error ("")
+  , ec_(no_error)
+{}
 
 system_error::system_error (error_code ec, const string& message)
   : std::runtime_error (message)

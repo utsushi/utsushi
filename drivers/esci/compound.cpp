@@ -53,7 +53,8 @@ compound_base::~compound_base ()
 void
 compound_base::operator>> (connexion& cnx)
 {
-  namespace reply = code_token::reply;
+  namespace request = code_token::request;
+  namespace reply   = code_token::reply;
 
   if (!cnx_)
     send_command_signature_(cnx);
@@ -79,34 +80,51 @@ compound_base::operator>> (connexion& cnx)
 
       if (request_.code != reply_.code)
         {
-          /**/ if (reply::UNKN == reply_.code)
+          if (request::FIN != request_.code)
             {
-              noop_hook_();
-              BOOST_THROW_EXCEPTION
-                (invalid_command
-                 (_("driver sent unsupported request code")));
+              /**/ if (reply::UNKN == reply_.code) {} // defer to hook
+              else if (reply::INVD == reply_.code) {} // defer to hook
+              else
+                {
+                  log::fatal ("%1%: %2% request got a %3% reply,"
+                              " terminating compound command session")
+                    % info_.product_name ()
+                    % str (request_.code)
+                    % str (reply_.code)
+                    ;
+                  *cnx_ << finish ();
+                }
             }
-          else if (reply::INVD == reply_.code)
+          else                  // something went very wrong
             {
-              noop_hook_();
-              BOOST_THROW_EXCEPTION
-                (invalid_command
-                 (_("driver sent supported request code at the wrong time")));
-            }
-          else
-            {
-              BOOST_THROW_EXCEPTION
-                (unknown_reply
-                 (_("driver and device are mutually confused about who's "
-                    "doing what right now")));
+              BOOST_THROW_EXCEPTION (protocol_error ());
             }
         }
-
       hook_[reply_.code] ();
     }
   while (!is_ready_() && delay_elapsed ());
 
   request_.code = quad ();
+}
+
+bool
+compound_base::is_in_session () const
+{
+  return cnx_;
+}
+
+bool
+compound_base::is_busy () const
+{
+  using namespace code_token;
+
+  return status_.is_busy () && reply::MECH != reply_.code;
+}
+
+bool
+compound_base::is_warming_up () const
+{
+  return status_.is_warming_up ();
 }
 
 bool
@@ -138,6 +156,8 @@ compound_base::compound_base (bool pedantic)
 
   hook_[reply::FIN ] = bind (&compound_base::finish_hook_, this);
   hook_[reply::CAN ] = bind (&compound_base::noop_hook_, this);
+  hook_[reply::UNKN] = bind (&compound_base::unknown_request_hook_, this);
+  hook_[reply::INVD] = bind (&compound_base::invalid_request_hook_, this);
   hook_[reply::INFO] = bind (&compound_base::get_information_hook_, this);
   hook_[reply::CAPA] = bind (&compound_base::get_capabilities_hook_, this);
   hook_[reply::CAPB] = bind (&compound_base::get_capabilities_hook_, this);
@@ -220,6 +240,11 @@ compound_base::decode_reply_block_()
   decode_reply_block_hook_();
 }
 
+void
+compound_base::decode_reply_block_hook_() throw ()
+{
+}
+
 compound_base&
 compound_base::finish ()
 {
@@ -236,6 +261,26 @@ compound_base::finish_hook_()
   noop_hook_();
 
   if (is_ready_()) cnx_ = 0;
+}
+
+void
+compound_base::unknown_request_hook_()
+{
+  log::error ("%1%: %2% request unknown")
+    % info_.product_name ()
+    % str (request_.code)
+    ;
+  noop_hook_();
+}
+
+void
+compound_base::invalid_request_hook_()
+{
+  log::error ("%1%: %2% request invalid at this point")
+    % info_.product_name ()
+    % str (request_.code)
+    ;
+  noop_hook_();
 }
 
 compound_base&
@@ -576,9 +621,13 @@ compound_base::is_ready_() const
   using namespace code_token;
   namespace nrd = reply::info::nrd;
 
-  return !(status_.nrd
-           && (nrd::BUSY == *status_.nrd
-               || (nrd::WUP == *status_.nrd && reply::MECH != reply_.code)));
+  if (status_.is_in_use ())
+    BOOST_THROW_EXCEPTION
+      (device_busy (_("The device is in use.  Please wait until the"
+                      " device becomes available, then try again.")));
+
+  return !(status_.is_busy ()
+           || (status_.is_warming_up () && reply::MECH != reply_.code));
 }
 
 }       // namespace esci

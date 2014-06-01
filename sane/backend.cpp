@@ -263,18 +263,20 @@ exception_to_sane_status (const runtime_error& e)
 {
   log::error ("runtime_error: %1%") % e.what ();
 
-  if (0 == strcmp (_("Please put your document in the ADF before scanning."),
-                   _(e.what ())))
+  std::string msg (_(e.what ()));
+
+  if (0 >= msg.compare
+      (_("Please put your document in the ADF before scanning.")))
     return SANE_STATUS_NO_DOCS;
-  if (0 == strcmp (_("Clear the ADF document jam and try again."),
-                   _(e.what ())))
+
+  if (0 >= msg.compare (_("Clear the ADF document jam and try again.")))
     return SANE_STATUS_JAMMED;
-  if (0 == strcmp (_("A multi page feed occurred in the ADF.\n"
-                     "Clear the document feeder and try again."),
-                   _(e.what ())))
+
+  if (0 >= msg.compare (_("A multi page feed occurred in the ADF.\n"
+                          "Clear the document feeder and try again.")))
     return SANE_STATUS_JAMMED;
-  if (0 == strcmp (_("Please close the ADF cover and try again."),
-                   _(e.what ())))
+
+  if (0 >= msg.compare (_("Please close the ADF cover and try again.")))
     return SANE_STATUS_COVER_OPEN;
 
   return SANE_STATUS_IO_ERROR;
@@ -671,9 +673,8 @@ sane_control_option (SANE_Handle handle, SANE_Int index, SANE_Action action,
       //! \todo Review control of inactive options
       return_invalid_unless (h->is_active (index));
 
-      //! \todo Review control of group and button options
-      return_invalid_if (h->is_group  (index));
-      return_value_if (h->is_button (index), SANE_STATUS_UNSUPPORTED);
+      //! \todo Review control of group options
+      return_invalid_if (h->is_group (index));
 
       /**/ if (SANE_ACTION_GET_VALUE == action)
         {

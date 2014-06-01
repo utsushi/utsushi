@@ -1,5 +1,5 @@
 //  device.hpp -- interface declarations
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -121,6 +121,8 @@ public:
    */
   virtual bool is_single_image () const;
 
+  option::map::ptr actions ();
+
 protected:
   idevice (const context& ctx = context ());
 
@@ -215,6 +217,8 @@ protected:
    *           \c false otherwise
    */
   bool cancel_requested () const;
+
+  option::map::ptr action_;
 
 private:
   streamsize read_(octet *data, streamsize n);

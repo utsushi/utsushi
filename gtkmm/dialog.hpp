@@ -1,5 +1,5 @@
 //  dialog.hpp -- to acquire image data
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -27,13 +27,14 @@
 #include <gtkmm/uimanager.h>
 #include <sigc++/connection.h>
 
-#include <utsushi/device.hpp>
+#include <utsushi/scanner.hpp>
 
 #include "pump.hpp"
 
 namespace utsushi {
 namespace gtkmm {
 
+class action_dialog;
 class editor;
 
 class dialog : public Gtk::Dialog
@@ -48,14 +49,19 @@ class dialog : public Gtk::Dialog
   Gtk::ToggleButton *expand_;
   sigc::connection   cancel_;
 
-  idevice::ptr idevice_;
+  scanner::ptr idevice_;
   pump::ptr pump_;
 
   option::map::ptr opts_;
   option::map::ptr app_opts_;
 
+  Gtk::Button     *maintenance_;
+  action_dialog   *maintenance_dialog_;
+  sigc::connection maintenance_trigger_;
+
 public:
   dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder);
+  ~dialog ();
 
   sigc::signal< void, option::map::ptr >
   signal_options_changed ();
@@ -68,7 +74,7 @@ protected:
   void on_scan_update (traits::int_type c);
   void on_about (void);
 
-  void on_device_changed (idevice::ptr idev);
+  void on_device_changed (scanner::ptr idev);
   void on_notify (log::priority level, std::string message);
 
   sigc::signal< void, option::map::ptr >

@@ -1,5 +1,5 @@
 //  lut.cpp -- look-up table based filtering support
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -54,7 +54,7 @@ lut::write (const octet *data, streamsize n)
     mapped += opr_;
   }
 
-  streamsize rv = io_->write (tmp, mapped);
+  streamsize rv = output_->write (tmp, mapped);
   delete [] tmp;
   return rv;
 }

@@ -1,5 +1,5 @@
 //  memory.hpp -- based input devices
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -175,20 +175,12 @@ public:
   { file_.sgetn (data, n); }
 };
 
-//!  Filters that do not change their %input at all
-class thru_ifilter : public ifilter
-{
-public:
-  streamsize read (octet *data, streamsize n)
-  { return io_->read (data, n); }
-};
-
 //!  Filters that %output their %input unchanged
-class thru_ofilter : public ofilter
+class thru_filter : public filter
 {
 public:
   streamsize write (const octet *data, streamsize n)
-  { return io_->write (data, n); }
+  { return output_->write (data, n); }
 };
 
 }       // namespace utsushi

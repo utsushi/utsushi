@@ -1,5 +1,5 @@
 //  hal.hpp -- OO wrapper around bits and pieces of the HAL API
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -24,7 +24,7 @@
 #ifndef _hal_hpp_
 #define _hal_hpp_
 
-#include <hal/libhal.h>
+#include <libhal.h>
 
 #include <string>
 
@@ -32,6 +32,9 @@
 #include "utsushi/device-info.hpp"
 
 namespace HAL {
+
+using utsushi::uint8_t;
+using utsushi::uint16_t;
 
     class device
       : public utsushi::device_info
@@ -49,6 +52,9 @@ namespace HAL {
       std::string usb_serial (void) const;
       uint8_t usb_configuration (void) const;
       uint8_t usb_interface (void) const;
+      uint8_t usb_bus_number (void) const;
+      uint8_t usb_port_number (void) const;
+      uint8_t usb_device_address (void) const;
 
     private:
       void get_property_(const std::string& name, int& value) const;

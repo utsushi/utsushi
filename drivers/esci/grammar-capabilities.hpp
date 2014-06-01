@@ -23,6 +23,7 @@
 
 //! \copydoc grammar.hpp
 
+#include <limits>
 #include <vector>
 
 #include <boost/operators.hpp>
@@ -50,6 +51,12 @@ struct capabilities
   operator bool () const;
 
   bool has_duplex () const;
+  bool has_media_end_detection () const;
+
+  bool can_calibrate () const;
+  bool can_clean () const;
+  bool can_eject () const;
+  bool can_load () const;
 
   utsushi::constraint::ptr border_fill () const;
   utsushi::constraint::ptr border_size (const quantity& default_value = quantity ()) const;
@@ -65,7 +72,7 @@ struct capabilities
   utsushi::constraint::ptr jpeg_quality (const boost::optional< integer >& default_value) const;
   utsushi::constraint::ptr resolutions (const quad& direction,
                                         const boost::optional< integer >& default_value,
-                                        const integer& max) const;
+                                        const integer& max = std::numeric_limits< integer >::max ()) const;
   utsushi::constraint::ptr threshold (const boost::optional< integer >& default_value) const;
 
   struct range

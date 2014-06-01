@@ -1,5 +1,5 @@
-//  null.hpp -- device and filter implementations
-//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
+//  action-dialog.hpp -- controls to trigger device maintenance
+//  Copyright (C) 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -18,38 +18,37 @@
 //  You ought to have received a copy of the GNU General Public License
 //  along with this package.  If not, see <http://www.gnu.org/licenses/>.
 
-#ifndef utsushi_test_null_hpp_
-#define utsushi_test_null_hpp_
+#ifndef gtkmm_action_dialog_hpp_
+#define gtkmm_action_dialog_hpp_
 
-#include "../device.hpp"
-#include "../filter.hpp"
+#include <utsushi/option.hpp>
+#include <utsushi/thread.hpp>
+
+#include <gtkmm/dialog.h>
 
 namespace utsushi {
+namespace gtkmm {
 
-//!  Devices that do not produce any images whatsoever
-class null_idevice : public idevice
+class action_dialog
+  : public Gtk::Dialog
 {
 public:
-  streamsize read (octet *data, streamsize n)
-  { return traits::eof (); }
+  action_dialog (option::map::ptr actions, Gtk::Widget *trigger,
+                 bool use_spinner = false);
+  ~action_dialog ();
+
+  void on_action (Gtk::Button *button, std::string key,
+                  std::string message);
+  void on_maintenance (void);
+
+private:
+  option::map::ptr actions_;
+  Gtk::Widget     *trigger_;
+  Gtk::ButtonBox  *buttons_;
+  thread          *process_;
 };
 
-//!  Devices that discard any and all images
-class null_odevice : public odevice
-{
-public:
-  streamsize write (const octet *data, streamsize n) { return n; }
-};
-
-
-//!  Filters that discard all image data
-class null_filter : public filter
-{
-public:
-  streamsize write (const octet *data, streamsize n)
-  { return n; }
-};
-
+}       // namespace gtkmm
 }       // namespace utsushi
 
-#endif  /* utsushi_test_null_hpp_ */
+#endif  /* gtkmm_action_dialog_hpp_ */

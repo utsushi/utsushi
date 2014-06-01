@@ -53,7 +53,7 @@ struct bucket;
  *  \todo Add an algorithm based on the variance in luminance?
  */
 class image_skip
-  : public ofilter
+  : public filter
 {
 public:
   image_skip ();
@@ -75,29 +75,6 @@ private:
 
   double threshold_;
   double darkness_;
-
-  std::deque< shared_ptr< bucket > > pool_;
-};
-
-class iimage_skip
-  : public ifilter
-{
-public:
-  iimage_skip ();
-
-  streamsize read (octet *data, streamsize n);
-  streamsize marker ();
-
-protected:
-  void handle_marker (traits::int_type c);
-
-private:
-  bool skip_();
-  void process_(shared_ptr< bucket > b);
-
-  double threshold_;
-  double darkness_;
-  bool release_;
 
   std::deque< shared_ptr< bucket > > pool_;
 };

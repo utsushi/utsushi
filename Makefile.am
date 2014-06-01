@@ -1,6 +1,6 @@
 ##  Makefile.am -- an automake template for Makefile.in
+##  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 ##  Copyright (C) 2013  Olaf Meeuwissen
-##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -41,6 +41,7 @@ SUBDIRS += doc
 SUBDIRS += tests
 
 EXTRA_DIST  = bootstrap
+EXTRA_DIST += config-bot.h
 EXTRA_DIST += install-deps
 EXTRA_DIST += tools/boost-test-report
 EXTRA_DIST += tools/boost-test-report.xsl
@@ -144,6 +145,7 @@ $(srcdir)/utsushi/tag.hpp $(srcdir)/lib/tag.cpp: $(srcdir)/lib/tag.xml \
 	    -e "/^<!--/s/\.xml ::/.$$format --/" \
 	    -e '/^<!--/,/-->/{ /-->/d; s|^$$|//|p; s|^....|//|p; }' $< > $@; \
 	xsltproc --stringparam format $$format $(srcdir)/lib/tag.xsl $< >> $@
+	sed -i 's/N_("%1%")/"%1%"/' $@
 
 if with_included_boost
 

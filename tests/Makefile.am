@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -64,6 +64,7 @@ vc_list_files = \
 ##  such as when you are working from a distributed source archive.
 ##  Note that files are listed relative to $(srcdir).
 
+distdir ?= $(srcdir)
 vc-dist-files:
 	-@top_srcdir=`echo $(top_srcdir) | sed 's|\\.|\\\\.|g'`; \
 	for file in `$(vc_list_files)`; do \

@@ -177,6 +177,17 @@ using std::runtime_error;
   libusb_device_handle *
   usb::usable_match_(const device_info::ptr& device, libusb_device *dev)
   {
+    if (device->usb_bus_number () != libusb_get_bus_number (dev))
+      return NULL;
+
+#if HAVE_LIBUSB_GET_PORT_NUMBER
+    if (device->usb_port_number () != libusb_get_port_number (dev))
+      return NULL;
+#endif
+
+    if (device->usb_device_address () != libusb_get_device_address (dev))
+      return NULL;
+
     struct libusb_device_descriptor descriptor;
 
     int err = libusb_get_device_descriptor (dev, &descriptor);

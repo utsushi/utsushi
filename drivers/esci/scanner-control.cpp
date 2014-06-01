@@ -30,6 +30,28 @@ namespace utsushi {
 namespace _drv_ {
 namespace esci {
 
+namespace {
+
+std::string
+str (const std::vector< status::error >& err)
+{
+  std::string rv;
+
+  std::vector< status::error >::const_iterator it = err.begin ();
+  while (err.end () != it)
+    {
+      rv += esci::str (it->part);
+      rv += "/";
+      rv += esci::str (it->what);
+      ++it;
+      if (err.end () != it) rv += ", ";
+    }
+
+  return rv;
+}
+
+}       // namespace
+
 scanner_control::scanner_control (bool pedantic)
   : base_type_(pedantic)
   , acquiring_(false)
@@ -326,9 +348,12 @@ scanner_control::mechanics (const quad& part, const quad& action,
   return *this;
 }
 
-boost::optional< status::error >
+boost::optional< std::vector < status::error > >
 scanner_control::fatal_error () const
 {
+  if (status_.err.empty ())
+    return boost::none;
+
   if (status_.fatal_error ()
       || (status_.media_out ()
           && (acquiring_image ()
@@ -378,7 +403,7 @@ scanner_control::decode_reply_block_hook_() throw ()
 
   if (reply::TRDT == reply_.code)
     {
-      acquiring_ = !(status_.err
+      acquiring_ = !(!status_.err.empty ()
                      || status_.is_in_use ()
                      || status_.is_busy ());
       do_cancel_ = false;
@@ -462,29 +487,31 @@ scanner_control::decode_reply_block_hook_() throw ()
             log::brief ("starting acquisition of face side image");
         }
     }
-  if (status_.err
+  if (!status_.err.empty ()
       || reply::CAN == reply_.code
       || reply::FIN == reply_.code)
     {
+      if (acquiring_)
+        {
+          /**/ if (reply::FIN == reply_.code)
+            {
+              log::brief ("image acquisition finished");
+            }
+          else if (reply::CAN == reply_.code)
+            {
+              log::brief ("image acquisition cancelled");
+            }
+          else
+            {
+              log::brief ("image acquisition terminated: %1%")
+                % str (status_.err)
+                ;
+            }
+        }
+
       acquiring_ = false;
       do_cancel_ = false;
       cancelled_ = (reply::CAN == reply_.code);
-
-      /**/ if (reply::FIN == reply_.code)
-        {
-          log::brief ("finished image acquisition");
-        }
-      else if (reply::CAN == reply_.code)
-        {
-          log::brief ("cancelled image acquisition");
-        }
-      else
-        {
-          log::brief ("terminated image acquisition: %1%/%2%")
-            % str (status_.err->part)
-            % str (status_.err->what)
-            ;
-        }
 
       // The acquiring_face_ and acquiring_rear_ flags should *not* be
       // modified here.  Both flags are used to determine whether a PE

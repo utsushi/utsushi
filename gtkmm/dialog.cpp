@@ -33,11 +33,13 @@
 
 #include <gtkmm/action.h>
 #include <gtkmm/filechooserdialog.h>
+#include <gtkmm/main.h>
 #include <gtkmm/messagedialog.h>
 #include <gtkmm/stock.h>
 
 #include <utsushi/file.hpp>
 #include <utsushi/i18n.hpp>
+#include <utsushi/range.hpp>
 #include <utsushi/run-time.hpp>
 
 #include "../filters/g3fax.hpp"
@@ -50,11 +52,14 @@
 #include "../filters/threshold.hpp"
 #include "../outputs/tiff.hpp"
 
+#include "action-dialog.hpp"
 #include "chooser.hpp"
 #include "dialog.hpp"
 #include "editor.hpp"
 #include "presets.hpp"
 #include "preview.hpp"
+
+#define nullptr 0
 
 namespace utsushi {
 namespace gtkmm {
@@ -64,6 +69,8 @@ using std::runtime_error;
 
 dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
   : base (ptr), opts_ (new option::map), app_opts_ (new option::map)
+  , maintenance_(nullptr)
+  , maintenance_dialog_(nullptr)
 {
   Glib::RefPtr<Glib::Object> obj = builder->get_object ("uimanager");
   ui_manager_ = Glib::RefPtr<Gtk::UIManager>::cast_dynamic (obj);
@@ -156,6 +163,19 @@ dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
     }
   }
 
+  if (builder->get_object ("maintenance-button")) {
+    builder->get_widget ("maintenance-button", maintenance_);
+    if (maintenance_) {
+      Glib::RefPtr<Gtk::Action> action;
+      action = ui_manager_->get_action ("/dialog/maintenance");
+      if (action) {
+        action->connect_proxy (*maintenance_);
+        action->set_sensitive (false);
+        // action->signal_activate()d in dialog::on_device_changed()
+      }
+    }
+  }
+
   if (builder->get_object ("help-button")) {
     Gtk::Button *about = 0;
     builder->get_widget ("help-button", about);
@@ -170,6 +190,15 @@ dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
     }
   }
   set_sensitive ();
+}
+
+dialog::~dialog ()
+{
+  if (maintenance_dialog_)
+    {
+      maintenance_trigger_.disconnect ();
+      delete maintenance_dialog_;
+    }
 }
 
 sigc::signal< void, option::map::ptr >
@@ -265,6 +294,7 @@ dialog::on_scan (void)
     if (!ext.empty ())
       {
         /**/ if (".pnm"  == ext) fmt = "PNM";
+        else if (".png"  == ext) fmt = "PNG";
         else if (".jpg"  == ext) fmt = "JPEG";
         else if (".jpeg" == ext) fmt = "JPEG";
         else if (".pdf"  == ext) fmt = "PDF";
@@ -282,7 +312,7 @@ dialog::on_scan (void)
         tbd.set_secondary_text
           ((format (_("Support for images in %1% format has not been "
                       "implemented yet.\n"
-                      "Please use PNM, JPEG, PDF or TIFF for now."))
+                      "Please use PNM, PNG, JPEG, PDF or TIFF for now."))
             % (ext.substr (1))).str (), true);
         tbd.run ();
         return;
@@ -292,14 +322,14 @@ dialog::on_scan (void)
 
     using namespace _flt_;
 
-    ostream::ptr ostr = make_shared< ostream > ();
+    stream::ptr str = make_shared< stream > ();
 
     const std::string xfer_raw = "image/x-raster";
     const std::string xfer_jpg = "image/jpeg";
     std::string xfer_fmt = idevice_->get_context ().content_type ();
 
     bool bilevel = ((*opts_)["device/image-type"] == "Gray (1 bit)");
-    ofilter::ptr threshold (make_shared< threshold > ());
+    filter::ptr threshold (make_shared< threshold > ());
     try
       {
         (*threshold->options ())["threshold"]
@@ -310,7 +340,7 @@ dialog::on_scan (void)
         log::error ("Falling back to default threshold value");
       }
 
-    ofilter::ptr jpeg_compress (make_shared< jpeg::compressor > ());
+    filter::ptr jpeg_compress (make_shared< jpeg::compressor > ());
     try
       {
         (*jpeg_compress->options ())["quality"]
@@ -341,10 +371,10 @@ dialog::on_scan (void)
     if (force_extent) force_extent = (width > 0 || height > 0);
 
     toggle resample = false;
-    if (opts_->count ("enable-resampling"))
-      resample = value ((*opts_)["enable-resampling"]);
+    if (opts_->count ("device/enable-resampling"))
+      resample = value ((*opts_)["device/enable-resampling"]);
 
-    ofilter::ptr magick;
+    filter::ptr magick;
     if (resample)
       {
         magick = make_shared< _flt_::magick > ();
@@ -353,18 +383,18 @@ dialog::on_scan (void)
         quantity res_x  = -1.0;
         quantity res_y  = -1.0;
 
-        if (opts_->count ("sw-resolution-x"))
+        if (opts_->count ("device/sw-resolution-x"))
           {
-            res_x = value ((*opts_)["sw-resolution-x"]);
-            res_y = value ((*opts_)["sw-resolution-y"]);
+            res_x = value ((*opts_)["device/sw-resolution-x"]);
+            res_y = value ((*opts_)["device/sw-resolution-y"]);
           }
-        if (opts_->count ("sw-resolution-bind"))
-          bound = value ((*opts_)["sw-resolution-bind"]);
+        if (opts_->count ("device/sw-resolution-bind"))
+          bound = value ((*opts_)["device/sw-resolution-bind"]);
 
         if (bound)
           {
-            res_x = value ((*opts_)["sw-resolution"]);
-            res_y = value ((*opts_)["sw-resolution"]);
+            res_x = value ((*opts_)["device/sw-resolution"]);
+            res_y = value ((*opts_)["device/sw-resolution"]);
           }
 
         (*magick->options ())["resolution-x"] = res_x;
@@ -374,9 +404,50 @@ dialog::on_scan (void)
         (*magick->options ())["height"] = height;
       }
 
+    if (fmt == "PNG")
+      {
+        if (!magick) magick = make_shared< _flt_::magick > ();
+
+        (*magick->options ())["bilevel"] = toggle (bilevel);
+
+        quantity thr = value ((*opts_)["device/threshold"]);
+        thr *= 100.0;
+        thr /= (dynamic_pointer_cast< range >
+                ((*opts_)["device/threshold"].constraint ()))->upper ();
+        (*magick->options ())["threshold"] = thr;
+
+        if (!resample)
+          {
+            toggle bound = true;
+            quantity res_x  = -1.0;
+            quantity res_y  = -1.0;
+
+            if (opts_->count ("device/resolution-x"))
+              {
+                res_x = value ((*opts_)["device/resolution-x"]);
+                res_y = value ((*opts_)["device/resolution-y"]);
+              }
+            if (opts_->count ("device/resolution-bind"))
+              bound = value ((*opts_)["device/resolution-bind"]);
+
+            if (bound)
+              {
+                res_x = value ((*opts_)["device/resolution"]);
+                res_y = value ((*opts_)["device/resolution"]);
+              }
+
+            (*magick->options ())["resolution-x"] = res_x;
+            (*magick->options ())["resolution-y"] = res_y;
+            (*magick->options ())["force-extent"] = force_extent;
+            (*magick->options ())["width"]  = width;
+            (*magick->options ())["height"] = height;
+          }
+        (*magick->options ())["image-format"] = fmt;
+      }
+
     toggle skip_blank = !bilevel; // \todo fix filter limitation
     quantity skip_thresh = -1.0;
-    ofilter::ptr blank_skip (make_shared< image_skip > ());
+    filter::ptr blank_skip (make_shared< image_skip > ());
     try
       {
         (*blank_skip->options ())["blank-threshold"]
@@ -404,9 +475,9 @@ dialog::on_scan (void)
     /**/ if ("PNM"  == fmt)
       {
         /**/ if (xfer_raw == xfer_fmt)
-          ostr->push (make_shared< padding > ());
+          str->push (make_shared< padding > ());
         else if (xfer_jpg == xfer_fmt)
-          ostr->push (make_shared< jpeg::decompressor> ());
+          str->push (make_shared< jpeg::decompressor> ());
         else
           BOOST_THROW_EXCEPTION
             (runtime_error
@@ -414,14 +485,34 @@ dialog::on_scan (void)
                % xfer_fmt
                % fmt)
               .str ()));
-        if (skip_blank) ostr->push (blank_skip);
+        if (skip_blank) str->push (blank_skip);
         if (magick)
-          ostr->push (magick);
+          str->push (magick);
         else if (force_extent)
-          ostr->push (make_shared< bottom_padder > (width, height));
+          str->push (make_shared< bottom_padder > (width, height));
         if (xfer_jpg == xfer_fmt && bilevel)
-          ostr->push (threshold);
-        ostr->push (make_shared< pnm > ());
+          str->push (threshold);
+        str->push (make_shared< pnm > ());
+      }
+    else if (fmt == "PNG")
+      {
+        /**/ if (xfer_raw == xfer_fmt)
+          {
+            str->push (make_shared< padding > ());
+            str->push (make_shared< pnm > ());
+          }
+        else if (xfer_jpg == xfer_fmt)
+          str->push (make_shared< jpeg::decompressor > ());
+        else
+          BOOST_THROW_EXCEPTION
+            (runtime_error
+             ((format (_("conversion from %1% to %2% is not supported"))
+               % xfer_fmt
+               % fmt)
+              .str ()));
+        if (skip_blank) str->push (blank_skip);
+        if (magick)
+          str->push (magick);
       }
     else if ("JPEG" == fmt)
       {
@@ -432,27 +523,27 @@ dialog::on_scan (void)
 
         /**/ if (xfer_raw == xfer_fmt)
           {
-            ostr->push (make_shared< padding > ());
-            if (skip_blank) ostr->push (blank_skip);
+            str->push (make_shared< padding > ());
+            if (skip_blank) str->push (blank_skip);
             if (magick)
-              ostr->push (magick);
+              str->push (magick);
             else if (force_extent)
-              ostr->push (make_shared< bottom_padder > (width, height));
-            ostr->push (jpeg_compress);
+              str->push (make_shared< bottom_padder > (width, height));
+            str->push (jpeg_compress);
           }
         else if (xfer_jpg == xfer_fmt)
           {
             if (magick || force_extent || skip_blank)
               {
-                ostr->push (make_shared< jpeg::decompressor > ());
+                str->push (make_shared< jpeg::decompressor > ());
                 if (skip_blank)
-                  ostr->push (blank_skip);
+                  str->push (blank_skip);
                 if (magick)
-                  ostr->push (magick);
+                  str->push (magick);
                 else if (force_extent)
-                  ostr->push (make_shared< bottom_padder >
+                  str->push (make_shared< bottom_padder >
                               (width, height));
-                ostr->push (jpeg_compress);
+                str->push (jpeg_compress);
               }
           }
         else
@@ -469,41 +560,41 @@ dialog::on_scan (void)
       {
         /**/ if (xfer_raw == xfer_fmt)
           {
-            ostr->push (make_shared< padding > ());
-            if (skip_blank) ostr->push (blank_skip);
+            str->push (make_shared< padding > ());
+            if (skip_blank) str->push (blank_skip);
             if (magick)
-              ostr->push (magick);
+              str->push (magick);
             else if (force_extent)
-              ostr->push (make_shared< bottom_padder > (width, height));
+              str->push (make_shared< bottom_padder > (width, height));
 
             if (bilevel)
               {
-                ostr->push (make_shared< g3fax > ());
+                str->push (make_shared< g3fax > ());
               }
             else
               {
-                ostr->push (jpeg_compress);
+                str->push (jpeg_compress);
               }
           }
         else if (xfer_jpg == xfer_fmt)
           {
             if (magick || force_extent || skip_blank || bilevel)
               {
-                ostr->push (make_shared< jpeg::decompressor > ());
-                if (skip_blank) ostr->push (blank_skip);
+                str->push (make_shared< jpeg::decompressor > ());
+                if (skip_blank) str->push (blank_skip);
                 if (magick)
-                  ostr->push (magick);
+                  str->push (magick);
                 else if (force_extent)
-                  ostr->push (make_shared< bottom_padder > (width, height));
+                  str->push (make_shared< bottom_padder > (width, height));
 
                 if (bilevel)
                   {
-                    ostr->push (threshold);
-                    ostr->push (make_shared< g3fax > ());
+                    str->push (threshold);
+                    str->push (make_shared< g3fax > ());
                   }
                 else
                   {
-                    ostr->push (jpeg_compress);
+                    str->push (jpeg_compress);
                   }
               }
           }
@@ -516,15 +607,15 @@ dialog::on_scan (void)
                  % fmt)
                 .str ()));
           }
-        ostr->push (make_shared< pdf > ());
+        str->push (make_shared< pdf > ());
       }
     else if ("TIFF" == fmt)
       {
         /**/ if (xfer_raw == xfer_fmt)
-          ostr->push (make_shared< padding > ());
+          str->push (make_shared< padding > ());
         else if (xfer_jpg == xfer_fmt)
           {
-            ostr->push (make_shared< jpeg::decompressor > ());
+            str->push (make_shared< jpeg::decompressor > ());
           }
         else
           BOOST_THROW_EXCEPTION
@@ -533,13 +624,13 @@ dialog::on_scan (void)
                % xfer_fmt
                % fmt)
               .str ()));
-        if (skip_blank) ostr->push (blank_skip);
+        if (skip_blank) str->push (blank_skip);
         if (magick)
-          ostr->push (magick);
+          str->push (magick);
         else if (force_extent)
-          ostr->push (make_shared< bottom_padder > (width, height));
+          str->push (make_shared< bottom_padder > (width, height));
         if (xfer_jpg == xfer_fmt && bilevel)
-          ostr->push (threshold);
+          str->push (threshold);
       }
     else
         {
@@ -595,7 +686,7 @@ dialog::on_scan (void)
           % gen ().string ()).str (), true);
       if (Gtk::RESPONSE_OK != tbd.run ()) return;
     }
-    ostr->push (odev);
+    str->push (odev);
 
     // disable scan button
     Glib::RefPtr<Gtk::Action> action;
@@ -616,7 +707,7 @@ dialog::on_scan (void)
         Gdk::flush ();
       }
 
-    pump_->start (ostr);
+    pump_->start (str);
   }
 }
 
@@ -636,7 +727,7 @@ dialog::on_about (void)
 }
 
 void
-dialog::on_device_changed (utsushi::idevice::ptr idev)
+dialog::on_device_changed (utsushi::scanner::ptr idev)
 {
   idevice_ = idev;
 
@@ -645,6 +736,23 @@ dialog::on_device_changed (utsushi::idevice::ptr idev)
   opts_->add_option_map () ("device", idevice_->options ());
   _flt_::image_skip skip;
   opts_->add_option_map () ("blank-skip", skip.options ());
+
+  Glib::RefPtr<Gtk::Action> action;
+  action = ui_manager_->get_action ("/dialog/maintenance");
+  if (action)
+    {
+      if (maintenance_dialog_)
+        {
+          maintenance_trigger_.disconnect ();
+          delete maintenance_dialog_;
+        }
+      maintenance_dialog_  = new action_dialog (idevice_->actions (),
+                                                maintenance_);
+      maintenance_trigger_ = action->signal_activate ()
+        .connect (sigc::mem_fun (*maintenance_dialog_,
+                                 &action_dialog::on_maintenance));
+      action->set_sensitive (!idevice_->actions ()->empty ());
+    }
 
   signal_options_changed_.emit (opts_);
 

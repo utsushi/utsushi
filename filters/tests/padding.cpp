@@ -63,14 +63,14 @@ BOOST_FIXTURE_TEST_CASE (mono_width_height, fixture)
   BOOST_REQUIRE_NE (ctx.scan_width (), ctx.octets_per_line ());
   BOOST_REQUIRE_NE (ctx.scan_height (), ctx.lines_per_image ());
 
-  istream istr;
-  ostream ostr;
+  rawmem_idevice dev (ctx);
+  idevice& idev (dev);
 
-  istr.push (make_shared< rawmem_idevice > (ctx));
-  ostr.push (make_shared< padding > ());
-  ostr.push (make_shared< file_odevice > (name_));
+  stream str;
+  str.push (make_shared< padding > ());
+  str.push (make_shared< file_odevice > (name_));
 
-  istr | ostr;
+  idev | str;
 
   BOOST_CHECK_EQUAL (ctx.scan_size (), file_size (name_));
 }
@@ -85,14 +85,14 @@ BOOST_FIXTURE_TEST_CASE (gray8_width_height, fixture)
   BOOST_REQUIRE_NE (ctx.scan_width (), ctx.octets_per_line ());
   BOOST_REQUIRE_NE (ctx.scan_height (), ctx.lines_per_image ());
 
-  istream istr;
-  ostream ostr;
+  rawmem_idevice dev (ctx);
+  idevice& idev (dev);
 
-  istr.push (make_shared< rawmem_idevice > (ctx));
-  ostr.push (make_shared< padding > ());
-  ostr.push (make_shared< file_odevice > (name_));
+  stream str;
+  str.push (make_shared< padding > ());
+  str.push (make_shared< file_odevice > (name_));
 
-  istr | ostr;
+  idev | str;
 
   BOOST_CHECK_EQUAL (ctx.scan_size (), file_size (name_));
 }
@@ -107,14 +107,14 @@ BOOST_FIXTURE_TEST_CASE (gray16_width_height, fixture)
   BOOST_REQUIRE_NE (ctx.scan_width (), ctx.octets_per_line ());
   BOOST_REQUIRE_NE (ctx.scan_height (), ctx.lines_per_image ());
 
-  istream istr;
-  ostream ostr;
+  rawmem_idevice dev (ctx);
+  idevice& idev (dev);
 
-  istr.push (make_shared< rawmem_idevice > (ctx));
-  ostr.push (make_shared< padding > ());
-  ostr.push (make_shared< file_odevice > (name_));
+  stream str;
+  str.push (make_shared< padding > ());
+  str.push (make_shared< file_odevice > (name_));
 
-  istr | ostr;
+  idev | str;
 
   BOOST_CHECK_EQUAL (ctx.scan_size (), file_size (name_));
 }
@@ -129,14 +129,14 @@ BOOST_FIXTURE_TEST_CASE (rgb8_width_height, fixture)
   BOOST_REQUIRE_NE (ctx.scan_width (), ctx.octets_per_line ());
   BOOST_REQUIRE_NE (ctx.scan_height (), ctx.lines_per_image ());
 
-  istream istr;
-  ostream ostr;
+  rawmem_idevice dev (ctx);
+  idevice& idev (dev);
 
-  istr.push (make_shared< rawmem_idevice > (ctx));
-  ostr.push (make_shared< padding > ());
-  ostr.push (make_shared< file_odevice > (name_));
+  stream str;
+  str.push (make_shared< padding > ());
+  str.push (make_shared< file_odevice > (name_));
 
-  istr | ostr;
+  idev | str;
 
   BOOST_CHECK_EQUAL (ctx.scan_size (), file_size (name_));
 }
@@ -151,14 +151,14 @@ BOOST_FIXTURE_TEST_CASE (rgb16_width_height, fixture)
   BOOST_REQUIRE_NE (ctx.scan_width (), ctx.octets_per_line ());
   BOOST_REQUIRE_NE (ctx.scan_height (), ctx.lines_per_image ());
 
-  istream istr;
-  ostream ostr;
+  rawmem_idevice dev (ctx);
+  idevice& idev (dev);
 
-  istr.push (make_shared< rawmem_idevice > (ctx));
-  ostr.push (make_shared< padding > ());
-  ostr.push (make_shared< file_odevice > (name_));
+  stream str;
+  str.push (make_shared< padding > ());
+  str.push (make_shared< file_odevice > (name_));
 
-  istr | ostr;
+  idev | str;
 
   BOOST_CHECK_EQUAL (ctx.scan_size (), file_size (name_));
 }
