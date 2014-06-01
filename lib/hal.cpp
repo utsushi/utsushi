@@ -1,5 +1,5 @@
 //  hal.cpp -- OO wrapper around bits and pieces of the HAL API
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -179,6 +179,45 @@ namespace HAL {
       }
       catch (const runtime_error& e) {
         // use the default interface
+      }
+      return i;
+    }
+
+    uint8_t
+    device::usb_bus_number (void) const
+    {
+      int i = 0;
+      try {
+        get_property_("usb.bus_number", i);
+      }
+      catch (const runtime_error& e) {
+        // return an invalid bus number
+      }
+      return i;
+    }
+
+    uint8_t
+    device::usb_port_number (void) const
+    {
+      int i = 0;
+      try {
+        get_property_("usb.port_number", i);
+      }
+      catch (const runtime_error& e) {
+        // return an invalid port number
+      }
+      return i;
+    }
+
+    uint8_t
+    device::usb_device_address (void) const
+    {
+      int i = 0;
+      try {
+        get_property_("usb.linux.device_number", i);
+      }
+      catch (const runtime_error& e) {
+        // return an invalid device address
       }
       return i;
     }

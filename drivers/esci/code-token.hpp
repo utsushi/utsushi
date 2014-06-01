@@ -443,6 +443,14 @@ namespace information {
     const quad AREA = CODE_TOKEN (UPPER_A, UPPER_R, UPPER_E, UPPER_A);
     const quad AMIN = CODE_TOKEN (UPPER_A, UPPER_M, UPPER_I, UPPER_N);
     const quad AMAX = CODE_TOKEN (UPPER_A, UPPER_M, UPPER_A, UPPER_X);
+    //! Document source dependent optical resolution
+    /*! The optical resolution imposes an upper limit on the value
+     *  that the main resolution for this document source can take.
+     *  As such it affects both capability::RSM and parameter::RSM.
+     *  It also caps the corresponding document source specific RSMS
+     *  capability.  Note that it does not affect capability::RSS or
+     *  parameter::RSS.
+     */
     const quad RESO = CODE_TOKEN (UPPER_R, UPPER_E, UPPER_S, UPPER_O);
     const quad RCVR = CODE_TOKEN (UPPER_R, UPPER_C, UPPER_V, UPPER_R);
     const quad OVSN = CODE_TOKEN (UPPER_O, UPPER_V, UPPER_S, UPPER_N);
@@ -466,6 +474,7 @@ namespace information {
     // keys and flags
     const quad ARE1 = CODE_TOKEN (UPPER_A, UPPER_R, UPPER_E, DIGIT_1);
     const quad ARE2 = CODE_TOKEN (UPPER_A, UPPER_R, UPPER_E, DIGIT_2);
+    //! \copydoc adf::RESO
     const quad RESO = CODE_TOKEN (UPPER_R, UPPER_E, UPPER_S, UPPER_O);
     const quad OVSN = CODE_TOKEN (UPPER_O, UPPER_V, UPPER_S, UPPER_N);
 
@@ -479,6 +488,7 @@ namespace information {
     const quad DETY = CODE_TOKEN (UPPER_D, UPPER_E, UPPER_T, UPPER_Y);
     const quad ALGN = CODE_TOKEN (UPPER_A, UPPER_L, UPPER_G, UPPER_N);
     const quad AREA = CODE_TOKEN (UPPER_A, UPPER_R, UPPER_E, UPPER_A);
+    //! \copydoc adf::RESO
     const quad RESO = CODE_TOKEN (UPPER_R, UPPER_E, UPPER_S, UPPER_O);
     const quad OVSN = CODE_TOKEN (UPPER_O, UPPER_V, UPPER_S, UPPER_N);
 
@@ -539,7 +549,33 @@ namespace capability {
   const quad MRR  = CODE_TOKEN (NUMBER , UPPER_M, UPPER_R, UPPER_R);
   const quad BSZ  = CODE_TOKEN (NUMBER , UPPER_B, UPPER_S, UPPER_Z);
   const quad PAG  = CODE_TOKEN (NUMBER , UPPER_P, UPPER_A, UPPER_G);
+  //! Supported resolutions in the main (horizontal) direction
+  /*! The resolution in the main or horizontal direction can take any
+   *  of the values within the range or in the list reported by this
+   *  capability, up to a maximum determined by the selected document
+   *  source's optical resolution.  As different document sources may
+   *  use different optical resolutions, the effective capability can
+   *  change at run-time.
+   *
+   *  Let's suppose the RSM capability reports a range from 50dpi to
+   *  1200dpi.  Let's further suppose that the flatbed has an optical
+   *  resolution of 1200dpi and the ADF of 600dpi.  When the flatbed
+   *  is selected, the supported resolutions become 50dpi through
+   *  1200dpi.  However, when the ADF is selected as the document
+   *  source, only resolutions in the 50dpi through 600dpi range are
+   *  supported.
+   *
+   *  \sa information::adf::RESO, information::tpu::RESO,
+   *      information::fb:RESO
+   */
   const quad RSM  = CODE_TOKEN (NUMBER , UPPER_R, UPPER_S, UPPER_M);
+  //! Supported resolutions in the sub (vertical) direction
+  /*! The resolution in the sub or vertical direction can take any of
+   *  the values reported by this capability.
+   *
+   *  Unlike RSM, the RSS capability is not subject to the selected
+   *  document source's optical resolution.
+   */
   const quad RSS  = CODE_TOKEN (NUMBER , UPPER_R, UPPER_S, UPPER_S);
   const quad CRP  = CODE_TOKEN (NUMBER , UPPER_C, UPPER_R, UPPER_P);
   const quad FCS  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_C, UPPER_S);
@@ -570,6 +606,23 @@ namespace capability {
     const quad OVSN = CODE_TOKEN (UPPER_O, UPPER_V, UPPER_S, UPPER_N);
     const quad CLEN = CODE_TOKEN (UPPER_C, UPPER_L, UPPER_E, UPPER_N);
     const quad CALB = CODE_TOKEN (UPPER_C, UPPER_A, UPPER_L, UPPER_B);
+    //! Document source dependent recommended resolutions
+    /*! Primarily meant for software that cannot handle imagery with
+     *  resolutions that differ in the main and sub directions, this
+     *  capability is currently not exposed by the driver.
+     *
+     *  When using resolutions based on this capability both main and
+     *  sub resolutions need to be set to the same value.
+     *
+     *  Note that the list or range reported here should be a proper
+     *  subset of the main \e and sub resolution capabilities.  This
+     *  capability is also subject to the document source's optical
+     *  resolution so all values reported should be less or at most
+     *  equal to this optical resolution.
+     *
+     *  \sa information::adf::RESO,
+     *      capability::adf::RSM, capability::adf::RSS
+     */
     const quad RSMS = CODE_TOKEN (UPPER_R, UPPER_S, UPPER_M, UPPER_S);
 
   }   // namespace adf
@@ -587,6 +640,7 @@ namespace capability {
     const quad CRP  = CODE_TOKEN (UPPER_C, UPPER_R, UPPER_P, SPACE  );
     const quad SKEW = CODE_TOKEN (UPPER_S, UPPER_K, UPPER_E, UPPER_W);
     const quad OVSN = CODE_TOKEN (UPPER_O, UPPER_V, UPPER_S, UPPER_N);
+    //! \copydoc adf::RSMS
     const quad RSMS = CODE_TOKEN (UPPER_R, UPPER_S, UPPER_M, UPPER_S);
 
   }   // namespace tpu
@@ -601,6 +655,7 @@ namespace capability {
     const quad CRP  = CODE_TOKEN (UPPER_C, UPPER_R, UPPER_P, SPACE  );
     const quad SKEW = CODE_TOKEN (UPPER_S, UPPER_K, UPPER_E, UPPER_W);
     const quad OVSN = CODE_TOKEN (UPPER_O, UPPER_V, UPPER_S, UPPER_N);
+    //! \copydoc adf::RSMS
     const quad RSMS = CODE_TOKEN (UPPER_R, UPPER_S, UPPER_M, UPPER_S);
 
   }   // namespace fb
@@ -883,6 +938,7 @@ namespace status {
   const quad FCS  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_C, UPPER_S);
   const quad PB   = CODE_TOKEN (NUMBER , UPPER_P, UPPER_B, SPACE  );
   const quad SEP  = CODE_TOKEN (NUMBER , UPPER_S, UPPER_E, UPPER_P);
+  const quad BAT  = CODE_TOKEN (NUMBER , UPPER_B, UPPER_A, UPPER_T);
 
   //! Detected media sizes
   /*! The detectable media sizes expand on those from the media_value
@@ -981,6 +1037,13 @@ namespace status {
 
     const quad ON   = CODE_TOKEN (UPPER_O, UPPER_N, SPACE  , SPACE  );
     const quad OFF  = CODE_TOKEN (UPPER_O, UPPER_F, UPPER_F, SPACE  );
+
+  }   // namespace sep
+
+  //! Battery power level reporting
+  namespace bat {
+
+    const quad LOW  = CODE_TOKEN (UPPER_L, UPPER_O, UPPER_W, SPACE  );
 
   }   // namespace sep
 

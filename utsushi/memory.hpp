@@ -54,6 +54,7 @@
 namespace utsushi {
 
 using NAMESPACE::dynamic_pointer_cast;
+using NAMESPACE::static_pointer_cast;
 using NAMESPACE::make_shared;
 using NAMESPACE::shared_ptr;
 using NAMESPACE::weak_ptr;

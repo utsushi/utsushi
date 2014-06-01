@@ -93,7 +93,7 @@ public:
 
   using base_type_::extension;
 
-  boost::optional< status::error > fatal_error () const;
+  boost::optional< std::vector< status::error > > fatal_error () const;
 
   //! Indicates expected out-of-media conditions
   bool media_out () const;

@@ -1,5 +1,5 @@
 //  pnm.cpp -- PNM image format support
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -38,14 +38,14 @@ streamsize
 pnm::write (const octet *data, streamsize n)
 {
   if (1 != ctx_.depth ())       // PGM or PPM
-    return io_->write (data, n);
+    return output_->write (data, n);
 
   boost::scoped_array< octet > tmp (new octet[n]);      // PBM
   for (streamsize i = 0; i < n; ++i)
     {
       tmp[i] = ~data[i];
     }
-  return io_->write (tmp.get (), n);
+  return output_->write (tmp.get (), n);
 }
 
 void
@@ -83,7 +83,7 @@ pnm::boi (const context& ctx)
   ctx_.content_type ("image/x-portable-anymap");
 
   std::string header = (fmt % ctx_.width() % ctx_.height()).str();
-  io_->write (header.c_str (), header.length ());
+  output_->write (header.c_str (), header.length ());
 }
 
 }       // namespace _flt_

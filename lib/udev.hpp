@@ -1,5 +1,5 @@
 //  udev.hpp -- OO wrapper around bits and pieces of the libudev API
-//  Copyright (C) 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -32,6 +32,9 @@ extern "C" {                    // needed until libudev-150
 
 namespace udev_ {
 
+using utsushi::uint8_t;
+using utsushi::uint16_t;
+
 class device
   : public utsushi::device_info
 {
@@ -45,6 +48,9 @@ public:
   std::string usb_serial () const;
   uint8_t usb_configuration () const;
   uint8_t usb_interface () const;
+  uint8_t usb_bus_number () const;
+  uint8_t usb_port_number () const;
+  uint8_t usb_device_address () const;
 
 private:
   struct udev_device *dev_;

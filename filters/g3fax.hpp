@@ -1,5 +1,5 @@
-//  g3fax.hpp -- convert scanlines to G3 fascimile format
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  g3fax.hpp -- convert scanlines to G3 facsimile format
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -45,7 +45,7 @@ namespace _flt_ {
  *  used in the implementation has not been checked.
  */
 class g3fax
-  : public ofilter
+  : public filter
 {
 public:
   /*! Image \a data need not be aligned on an eight pixel boundary but

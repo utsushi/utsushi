@@ -1,5 +1,5 @@
 //  lut.hpp -- look-up table based filtering support
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -28,7 +28,7 @@ namespace utsushi {
 namespace _flt_ {
 
 class lut
-  : public ofilter
+  : public filter
 {
 public:
   typedef int64_t index_type;

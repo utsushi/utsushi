@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--  dialog.glade :: user interface definition
-      Copyright (C) 2012  SEIKO EPSON CORPORATION
+      Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 
       License: GPL-3.0+
       Author : AVASYS CORPORATION
@@ -25,13 +25,17 @@
       <object class="GtkActionGroup" id="dialog-actions">
         <child>
           <object class="GtkAction" id="scan">
-            <property name="stock-id">gtk-execute</property>
             <property name="label" translatable="yes">_Scan</property>
           </object>
         </child>
         <child>
           <object class="GtkAction" id="cancel">
             <property name="stock-id">gtk-cancel</property>
+          </object>
+        </child>
+        <child>
+          <object class="GtkAction" id="maintenance">
+            <property name="label" translatable="yes">_Maintenance</property>
           </object>
         </child>
         <child>
@@ -117,6 +121,7 @@
         <!-- explicitly defining the GUI control elements later -->
         <placeholder action="scan"/>
         <placeholder action="cancel"/>
+        <placeholder action="maintenance"/>
         <placeholder action="help"/>
         <placeholder action="expand"/>
       </menubar>
@@ -332,24 +337,24 @@ Active tags indicate the kind of settings that are relevant to the user's task a
         <property name="layout-style">GTK_BUTTONBOX_END</property>
         <child>
           <object class="GtkButton" id="cancel-button">
-            <property name="visible">True</property>
-            <property name="label" translatable="yes">gtk-cancel</property>
             <property name="use-stock">True</property>
           </object>
         </child>
         <child>
           <object class="GtkButton" id="scan-button">
-            <property name="visible">True</property>
             <property name="label" translatable="yes">_Scan</property>
-            <property name="use-underline">True</property>
           </object>
         </child>
         <child>
           <object class="GtkButton" id="help-button">
-            <property name="visible">True</property>
-            <property name="label" translatable="yes">gtk-help</property>
             <property name="use-stock">True</property>
           </object>
+          <packing>
+            <property name="secondary">True</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButton" id="maintenance-button"/>
           <packing>
             <property name="secondary">True</property>
           </packing>

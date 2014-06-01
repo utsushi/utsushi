@@ -28,6 +28,9 @@
 #include <string>
 
 #include <boost/assert.hpp>
+#include <boost/bind.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/foreach.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/throw_exception.hpp>
@@ -37,9 +40,11 @@
 #include <utsushi/i18n.hpp>
 #include <utsushi/media.hpp>
 #include <utsushi/range.hpp>
+#include <utsushi/run-time.hpp>
 #include <utsushi/store.hpp>
 
 #include "compound-scanner.hpp"
+#include "scanner-inquiry.hpp"
 
 #define for_each BOOST_FOREACH
 
@@ -51,9 +56,16 @@ using std::deque;
 using std::domain_error;
 using std::logic_error;
 using std::runtime_error;
+using std::ios_base;
+
+namespace fs = boost::filesystem;
 
 static system_error::error_code token_to_error_code (const quad& what);
 static std::string create_message (const quad& part, const quad& what);
+static system_error::error_code
+token_to_error_code (const std::vector< status::error >& error);
+static std::string
+create_message (const std::vector< status::error >& error);
 
 // Disable the restriction checking for now to work around limitations
 // in the option::map support for this.
@@ -231,8 +243,7 @@ patch_jpeg_image_size_(deque< data_buffer >& q)
  *  member and, if one is found, copies the pen member's size to the
  *  pst member of the buffer at the queue's front.
  *
- *  If no buffer with pen member is found or the sizes were identical,
- *  the queue is left unmodified.
+ *  If no buffer with pen member is found, the queue is not modified.
  *
  *  The \a format argument is used to invoke add-on functions that
  *  know how to modify image size information embedded in the image
@@ -255,13 +266,6 @@ patch_image_size_(deque< data_buffer >& q,
     {
       log::error ("no image end info found");
       return false;
-    }
-
-  if (   (q.front ().pst->width  == it->pen->width)
-      && (q.front ().pst->height == it->pen->height))
-    {
-      log::trace ("initial image size was correct");
-      return true;
     }
 
   q.front ().pst->width  = it->pen->width;
@@ -320,6 +324,108 @@ nearest_(const quantity& q, const constraint::ptr cp)
   return q;
 }
 
+result_code
+do_mechanics (connexion::ptr cnx, scanner_control& ctrl,
+              const quad& part, const quad& action)
+{
+  bool do_finish = !ctrl.is_in_session ();
+  result_code rc;
+
+  using namespace code_token::mechanic;
+
+  if (ADF == part)
+    {
+      hardware_status stat;
+
+      *cnx << ctrl.get (stat);
+
+      switch (action)
+        {
+        case adf::LOAD:
+        case adf::EJCT:
+          {
+            *cnx << ctrl.mechanics (part, action);
+            if (!ctrl.fatal_error ())
+              {
+                rc = result_code (system_error::no_error,
+                                  adf::LOAD == action
+                                  ? _("Loading completed")
+                                  : _("Ejecting completed"));
+              }
+            break;
+          }
+        case adf::CLEN:
+        case adf::CALB:
+          {
+            using namespace code_token::status;
+
+            if (!stat.is_battery_low (err::ADF))
+              {
+                *cnx << ctrl.mechanics (part, action);
+                if (!ctrl.fatal_error())
+                  {
+                    do
+                      {
+                        *cnx << ctrl.get (stat);
+                      }
+                    while (ctrl.is_busy () && ctrl.delay_elapsed ());
+
+                    if (!ctrl.fatal_error())
+                      {
+                        rc = result_code (system_error::no_error,
+                                          adf::CLEN == action
+                                          ? _("Cleaning is complete.")
+                                          : _("Calibration is complete."));
+                      }
+                  }
+              }
+            else
+              {
+                rc = result_code (system_error::battery_low,
+                                  adf::CLEN == action
+                                  ? _("Cleaning is failed.")
+                                  : _("Calibration is failed."));
+              }
+            break;
+          }
+        default:
+          {
+            log::alert ("unknown %1% request parameters: %2%%3%")
+              % str (ADF) % str (part) % str (action)
+              ;
+          }
+        }
+    }
+  else                          // just do it
+    {
+      *cnx << ctrl.mechanics (part, action);
+    }
+
+  if (!rc && (ctrl.fatal_error () || ctrl.is_warming_up ()))
+    {
+      /**/ if (adf::LOAD == action)
+        rc = result_code (system_error::unknown_error, _("Loading failed"));
+      else if (adf::EJCT == action)
+        rc = result_code (system_error::unknown_error, _("Ejecting failed"));
+      else if (adf::CLEN == action)
+        rc = result_code (system_error::unknown_error, _("Cleaning is failed."));
+      else if (adf::CALB == action)
+        rc = result_code (system_error::unknown_error, _("Calibration is failed."));
+      else
+        rc = result_code (system_error::unknown_error, _("Maintenance failed"));
+    }
+
+  if (do_finish) *cnx << ctrl.finish ();
+
+  return rc;
+}
+
+static void
+erase (std::vector< quad >& v, const quad& token)
+{
+  v.erase (remove (v.begin (), v.end (), token), v.end ());
+}
+
 compound_scanner::compound_scanner (const connexion::ptr& cnx)
   : scanner (cnx)
   , info_()                     // initialize reference data
@@ -332,13 +438,28 @@ compound_scanner::compound_scanner (const connexion::ptr& cnx)
   , image_count_(0)
   , cancelled_(false)
 {
-  scanner_control cmd;          // get *default* parameter settings
+  {
+    log::trace ("getting basic device information");
 
-  *cnx_ << cmd.get (const_cast< information&  > (info_));
-  *cnx_ << cmd.get (const_cast< capabilities& > (caps_));
-  *cnx_ << cmd.get (const_cast< capabilities& > (caps_flip_), true);
-  *cnx_ << cmd.get (const_cast< parameters&   > (defs_));
-  *cnx_ << cmd.get (const_cast< parameters&   > (defs_flip_), true);
+    scanner_inquiry cmd;
+
+    *cnx_ << cmd.get (const_cast< information&  > (info_));
+    *cnx_ << cmd.get (const_cast< capabilities& > (caps_));
+    *cnx_ << cmd.get (const_cast< capabilities& > (caps_flip_), true);
+  }
+
+  if (!get_file_defs_(info_.product_name ()))
+    {
+      log::error ("falling back to device defaults");
+
+      scanner_control cmd;      // resets device state
+
+      *cnx_ << cmd.get (const_cast< information&  > (info_));
+      *cnx_ << cmd.get (const_cast< capabilities& > (caps_));
+      *cnx_ << cmd.get (const_cast< capabilities& > (caps_flip_), true);
+      *cnx_ << cmd.get (const_cast< parameters&   > (defs_));
+      *cnx_ << cmd.get (const_cast< parameters&   > (defs_flip_), true);
+    }
 
   // Initialize private protocol extension bits
   // These capabilities don't make sense for the flip-side only so
@@ -370,6 +491,18 @@ compound_scanner::compound_scanner (const connexion::ptr& cnx)
 
       caps_flip = capabilities ();
       defs_flip = parameters ();
+    }
+
+  // Disable load and eject functionality until it can be verified to
+  // work as intended.
+
+  if (caps_.adf)
+    {
+      capabilities& caps (const_cast< capabilities& > (caps_));
+
+      using namespace code_token::capability;
+      if (caps.adf && caps.adf->flags) erase (*caps.adf->flags, adf::LOAD);
+      if (caps.adf && caps.adf->flags) erase (*caps.adf->flags, adf::EJCT);
     }
 }
 
@@ -564,7 +697,8 @@ compound_scanner::configure ()
   //       need a way to figure out whether it makes sense to present
   //       the functionality to the user.  That should really be based
   //       on some kind of driver capability query.
-  if (use_final_image_size_(parm_))
+  if (info_.truncates_at_media_end
+      || caps_.has_media_end_detection ())
     {
       add_options ()
         ("force-extent", toggle (true),
@@ -601,6 +735,45 @@ compound_scanner::configure ()
          (_("esci::compound_scanner(): internal inconsistency")));
     }
   finalize (values ());
+
+  {                             // add actions
+    namespace mech = code_token::mechanic;
+    using boost::bind;
+
+    // FIXME flaming hack alert, abusing text() for progress message
+    if (caps_.can_calibrate ())
+      {
+        action_->add_actions ()
+          ("calibrate", bind (do_mechanics, cnx_, ref (acquire_),
+                              mech::ADF, mech::adf::CALB),
+           _("Calibration"),
+           _("Calibrating ..."));
+      }
+    if (caps_.can_clean ())
+      {
+        action_->add_actions ()
+          ("clean", bind (do_mechanics, cnx_, ref (acquire_),
+                          mech::ADF, mech::adf::CLEN),
+           _("Cleaning"),
+           _("Cleaning ..."));
+      }
+    if (caps_.can_eject ())
+      {
+        action_->add_actions ()
+          ("eject", bind (do_mechanics, cnx_, ref (acquire_),
+                          mech::ADF, mech::adf::EJCT),
+           _("Eject"),
+           _("Ejecting ..."));
+      }
+    if (caps_.can_load ())
+      {
+        action_->add_actions ()
+          ("load", bind (do_mechanics, cnx_, ref (acquire_),
+                         mech::ADF, mech::adf::LOAD),
+           _("Load"),
+           _("Loading ..."));
+      }
+  }
 }
 
 bool
@@ -755,22 +928,30 @@ compound_scanner::set_up_hardware ()
 
   *cnx_ << acquire_.get (stat_);
 
-  if (stat_.error)
-    {
+  {
+    using namespace code_token::status;
+
+    string doc_src = val_["doc-source"];
+    quad   src     = quad ();
+
+    if (doc_src == "Flatbed")  src = psz::FB;
+    else if (doc_src == "ADF") src = psz::ADF;
+
+    quad error = stat_.error (src);
+
+    if (error)
       BOOST_THROW_EXCEPTION
         (system_error
-         (token_to_error_code (stat_.error->what_),
-          create_message (stat_.error->part_, stat_.error->what_)));
-    }
+         (token_to_error_code (src), create_message (src, error)));
+  }
 
   *cnx_ << acquire_.start ();
 
   if (acquire_.fatal_error ())
     BOOST_THROW_EXCEPTION
       (system_error
-       (token_to_error_code (acquire_.fatal_error ()->what),
-        create_message (acquire_.fatal_error ()->part,
-                        acquire_.fatal_error ()->what)));
+       (token_to_error_code (*acquire_.fatal_error ()),
+        create_message (*acquire_.fatal_error ())));
 
   if (parm_.bsz)
     buffer_size_ = *parm_.bsz;
@@ -895,6 +1076,11 @@ compound_scanner::set_up_doc_source ()
       if (caps_.fb ) parm_.fb  = src_opts;
       if (caps_.adf) parm_.adf = src_opts;
       if (caps_.tpu) parm_.tpu = src_opts;
+    }
+
+  if (parm_.adf && caps_.has_media_end_detection ())
+    {
+      parm_.adf->push_back (adf::PEDT);
     }
 }
 
@@ -1244,9 +1430,8 @@ compound_scanner::queue_image_data_()
   if (acquire_.fatal_error ())
     BOOST_THROW_EXCEPTION
       (system_error
-       (token_to_error_code (acquire_.fatal_error ()->what),
-        create_message (acquire_.fatal_error ()->part,
-                        acquire_.fatal_error ()->what)));
+       (token_to_error_code (*acquire_.fatal_error ()),
+        create_message (*acquire_.fatal_error ())));
 }
 
 void
@@ -1281,7 +1466,18 @@ compound_scanner::media_out () const
 bool
 compound_scanner::use_final_image_size_(const parameters& parm) const
 {
-  return info_.truncates_at_media_end;
+  bool rv = info_.truncates_at_media_end;
+
+  if (!rv && parm.adf)
+    {
+      namespace adf = code_token::parameter::adf;
+
+      rv = (parm.adf->end ()
+            != std::find (parm.adf->begin (), parm.adf->end (),
+                          adf::PEDT));
+    }
+
+  return rv;
 }
 
 bool
@@ -1294,8 +1490,8 @@ compound_scanner::enough_image_data_(const parameters& parm,
   // status should fall through.  A queue with only PST data may or
   // may not be sufficient.
 
-  if (q.back ().err) return true;
-  if (q.back ().nrd)
+  if (!q.back ().err.empty ()) return true;
+  if ( q.back ().nrd)
     {
       log::trace ("unexpected not-ready status while acquiring");
       return true;
@@ -1492,6 +1688,14 @@ compound_scanner::finalize (const value::map& vm)
           size = media::lookup (scan_area);
         }
       update_scan_area_(size, final_vm);
+    }
+
+  // Link force-extent default value to scan-area changes.
+
+  if (final_vm.count ("force-extent")
+      && final_vm["scan-area"] != *values_["scan-area"])
+    {
+      final_vm["force-extent"] = toggle (scan_area != "Automatic");
     }
 
   {                             // minimal scan area check
@@ -1916,7 +2120,7 @@ compound_scanner::add_resolution_options (option::map& opts,
     max = std::numeric_limits< integer >::max ();
 
   constraint::ptr cp_x (caps_.resolutions (RSM, defs_.rsm, max));
-  constraint::ptr cp_y (caps_.resolutions (RSS, defs_.rss, max));
+  constraint::ptr cp_y (caps_.resolutions (RSS, defs_.rss));
   constraint::ptr cp (intersection_of_(cp_x, cp_y));
 
   if (cp)                       // both cp_x and cp_y exist too
@@ -2291,6 +2495,170 @@ compound_scanner::align_document (const string& doc_source,
   br_y += y_shift;
 }
 
+//! Return refspec file name for \a product
+/*! This contains the logic to map a \a product name to a suitable
+ *  file in the filesystem that holds device specific information.
+ *
+ *  \todo Add a product to file name dictionary to accommodate any
+ *        product names that are troublesome as file system names.
+ *        This dictionary should be maintained in a file itself.
+ */
+static fs::path
+map_(std::string product)
+{
+  run_time rt;
+
+  if (rt.running_in_place ())
+    product.insert (0, "data/");
+
+  product.insert (0, "drivers/esci/");
+  return rt.data_file (run_time::pkg, product + ".dat");
+}
+
+bool
+compound_scanner::get_file_defs_(const std::string& product)
+{
+  log::trace ("trying to get device information from file");
+
+  if (product.empty ())
+    {
+      log::error ("product name unknown");
+      return false;
+    }
+
+  fs::path refspec (map_(product));
+
+  if (!fs::exists (refspec))
+    {
+      log::trace ("file not found: %1%") % refspec;
+      return false;
+    }
+
+  fs::basic_ifstream< byte > fs (refspec, ios_base::binary | ios_base::in);
+
+  if (!fs.is_open ())
+    {
+      log::error ("cannot read %1%") % refspec;
+      return false;
+    }
+
+  // Based on code from verify.cpp
+
+  information  info;
+  capabilities caps;
+  capabilities caps_flip;
+  parameters   parm;
+  parameters   parm_flip;
+
+  byte_buffer blk;
+  header      hdr;
+
+  try
+    {
+      decoding::grammar           gram;
+      decoding::grammar::iterator head;
+      decoding::grammar::iterator tail;
+
+      while (fs::basic_ifstream< byte >::traits_type::eof ()
+             != fs.peek ())
+        {
+          const streamsize hdr_len = 12;
+          blk.resize (hdr_len);
+          fs.read (blk.data (), hdr_len);
+
+          head = blk.begin ();
+          tail = head + hdr_len;
+
+          if (!gram.header_(head, tail, hdr))
+            {
+              log::error ("%1%") % gram.trace ();
+              fs.close ();
+              return false;
+            }
+
+          log::trace ("%1%: %2% byte payload")
+            % str (hdr.code)
+            % hdr.size
+            ;
+
+          if (0 == hdr.size) continue;
+
+          blk.resize (hdr.size);
+          fs.read (blk.data (), hdr.size);
+
+          head = blk.begin ();
+          tail = head + hdr.size;
+
+          bool result = false;
+          namespace reply = code_token::reply;
+          /**/ if (reply::INFO == hdr.code)
+            {
+              result = gram.information_(head, tail, info);
+            }
+          else if (reply::CAPA == hdr.code)
+            {
+              result = gram.capabilities_(head, tail, caps);
+            }
+          else if (reply::CAPB == hdr.code)
+            {
+              result = gram.capabilities_(head, tail, caps_flip);
+            }
+          else if (reply::RESA == hdr.code)
+            {
+              result = gram.scan_parameters_(head, tail, parm);
+            }
+          else if (reply::RESB == hdr.code)
+            {
+              result = gram.scan_parameters_(head, tail, parm_flip);
+            }
+
+          if (!result)
+            {
+              log::error ("%1%") % gram.trace ();
+              fs.close ();
+              return false;
+            }
+        }
+    }
+  catch (decoding::grammar::expectation_failure& e)
+    {
+      std::stringstream ss;
+      ss << "\n  " << e.what () << " @ "
+         << std::hex << e.first - blk.begin ()
+         << "\n  Looking at " << str (hdr.code)
+         << "\n  Processing " << std::string (blk.begin (), blk.end ())
+         << "\n  Expecting " << e.what_
+         << "\n  Got: " << std::string (e.first, e.last);
+      log::error (ss.str ());
+      return false;
+    }
+
+  // Data files may modify product and version information for other
+  // purposes.  Make sure to keep values obtained from the device.
+  info.product = info_.product;
+  info.version = info_.version;
+  if (info_ != info)
+    {
+      log::brief ("using device information from file");
+      const_cast< information& > (info_) = info;
+    }
+  if (caps_ != caps)
+    {
+      log::brief ("using device capabilities from file");
+      const_cast< capabilities& > (caps_) = caps;
+    }
+  if (caps_flip_ != caps_flip)
+    {
+      log::brief ("using device flip-side capabilities from file");
+      const_cast< capabilities& > (caps_flip_) = caps_flip;
+    }
+
+  const_cast< parameters&   > (defs_     ) = parm;
+  const_cast< parameters&   > (defs_flip_) = parm_flip;
+
+  return true;
+}
+
 context::size_type
 compound_scanner::pixel_width () const
 {
@@ -2384,6 +2752,31 @@ token_to_error_code (const quad& what)
   return system_error::unknown_error;
 }
 
+static system_error::error_code
+token_to_error_code (const std::vector< status::error >& error)
+{
+  using namespace code_token::reply::info;
+
+  std::vector< status::error >::const_iterator it;
+
+  for (it = error.begin (); error.end () != it; ++it)
+    {
+      if (err::AUTH == it->what) return token_to_error_code (it->what);
+    }
+  for (it = error.begin (); error.end () != it; ++it)
+    {
+      if (err::PERM == it->what) return token_to_error_code (it->what);
+    }
+  for (it = error.begin (); error.end () != it; ++it)
+    {
+      if (err::PE   != it->what) return token_to_error_code (it->what);
+    }
+
+  return (!error.empty ()
+          ? token_to_error_code (error.begin ()->what)
+          : token_to_error_code (quad ()));
+}
+
 // Helper functions for create_message()
 static std::string create_adf_message (const quad& what);
 static std::string create_fb_message (const quad& what);
@@ -2433,6 +2826,52 @@ create_message (const quad& part, const quad& what)
   if (err::TPU == part) return create_tpu_message (what);
 
   return fallback_message (part, what);
+}
+
+static std::string
+create_message (const std::vector< status::error >& error)
+{
+  using namespace code_token::reply::info;
+
+  std::string rv;
+  std::vector< status::error >::const_iterator it;
+
+  for (it = error.begin (); error.end () != it; ++it)
+    {
+      if (err::AUTH == it->what)
+        {
+          if (!rv.empty ()) rv += "\n";
+          rv += create_message (it->part, it->what);
+        }
+    }
+  for (it = error.begin (); error.end () != it; ++it)
+    {
+      if (err::PERM == it->what)
+        {
+          if (!rv.empty ()) rv += "\n";
+          rv += create_message (it->part, it->what);
+        }
+    }
+  for (it = error.begin (); error.end () != it; ++it)
+    {
+      if (   err::AUTH != it->what
+          && err::PERM != it->what
+          && err::PE   != it->what)
+        {
+          if (!rv.empty ()) rv += "\n";
+          rv += create_message (it->part, it->what);
+        }
+    }
+  for (it = error.begin (); error.end () != it; ++it)
+    {
+      if (err::PE == it->what)
+        {
+          if (!rv.empty ()) rv += "\n";
+          rv += create_message (it->part, it->what);
+        }
+    }
+
+  return rv;
 }
 
 /*! \warn  The message strings are used by the SANE backend to map some

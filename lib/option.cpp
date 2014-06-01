@@ -40,6 +40,27 @@ using std::out_of_range;
 
 namespace utsushi {
 
+result_code::result_code ()
+  : val_(0)
+  , msg_("Success")
+{}
+
+result_code::result_code (int value, const std::string& msg)
+  : val_(value)
+  , msg_(msg)
+{}
+
+std::string
+result_code::message () const
+{
+  return msg_;
+}
+
+result_code::operator bool () const
+{
+  return 0 != val_;
+}
+
 option::operator value () const
 {
   return *owner_.values_[key_];
@@ -124,6 +145,12 @@ option::is_read_only () const
 {
   return (owner_.constraints_[key_]->is_singular ()
           || owner_.descriptors_[key_]->is_read_only ());
+}
+
+result_code
+option::run ()
+{
+  return owner_.callbacks_[key_] ();
 }
 
 option::option (option::map& owner, const utsushi::key& k)
@@ -250,6 +277,12 @@ void
 option::map::impose (const restriction& r)
 {
   restrictions_.push_back (r);
+}
+
+option::map::builder
+option::map::add_actions ()
+{
+  return builder (*this);
 }
 
 option::map::builder
@@ -488,6 +521,19 @@ option::map::relink (const option::map& om)
 option::map::builder::builder (option::map& owner)
   : owner_(owner)
 {}
+
+const option::map::builder&
+option::map::builder::operator() (const utsushi::key& k,
+                                  boost::function< result_code () > f,
+                                  const string& name,
+                                  const string& text) const
+{
+  operator() (k, value (), attributes (), name, text);
+
+  owner_.callbacks_[k] = f;
+
+  return *this;
+}
 
 const option::map::builder&
 option::map::builder::operator() (const utsushi::key& k,

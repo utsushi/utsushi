@@ -489,6 +489,7 @@ handle::handle(const scanner::info& info)
     ;
   opt_.add_option_map ()
     (option_prefix, idev_->options ())
+    ("action", idev_->actions ())
     ;
 
   image_skip flt;
@@ -554,7 +555,7 @@ handle::handle(const scanner::info& info)
         }
     }
 
-  //  Pick up options without any tags
+  //  Pick up options and actions without any tags
 
   bool group_added (false);
   option::map::iterator om_it (opt_.begin ());
@@ -713,7 +714,8 @@ handle::set (SANE_Int index, void *value, SANE_Word *info)
   if (name::is_scan_area (sod_[index].sane_key))
     v /= unit::mm_per_inch;
 
-  if (opt_[k] == v) return SANE_STATUS_GOOD;
+  if (SANE_TYPE_BUTTON != option_descriptor (opt_[k]).type)
+    if (opt_[k] == v) return SANE_STATUS_GOOD;
 
   if (is_scanning ()) return SANE_STATUS_DEVICE_BUSY;
 
@@ -721,23 +723,53 @@ handle::set (SANE_Int index, void *value, SANE_Word *info)
 
   SANE_Status status = SANE_STATUS_GOOD;
 
-  try
+  if (SANE_TYPE_BUTTON != option_descriptor (opt_[k]).type)
     {
-      opt_[k] = v;
-
-      update_options (info);
-
-      if (info)
+      try
         {
-          if (v != opt_[k])
-            *info |= SANE_INFO_INEXACT;
+          opt_[k] = v;
 
-          *info |= SANE_INFO_RELOAD_PARAMS;
+          update_options (info);
+
+          if (info)
+            {
+              if (v != opt_[k])
+                *info |= SANE_INFO_INEXACT;
+
+              *info |= SANE_INFO_RELOAD_PARAMS;
+            }
+        }
+      catch (const constraint::violation&)
+        {
+          status = SANE_STATUS_INVAL;
         }
     }
-  catch (const constraint::violation&)
+  else
     {
-      status = SANE_STATUS_INVAL;
+      try
+        {
+          std::string basename (k);
+          std::string::size_type pos = basename.find_last_of ("/");
+
+          if (std::string::npos != pos)
+            k = basename.substr (pos + 1);
+
+          result_code rc = (*idev_->actions ())[k].run ();
+          if (rc)
+            {
+              log::error (rc.message ());
+              status = SANE_STATUS_CANCELLED;
+            }
+        }
+      catch (const runtime_error& e)
+        {
+          log::alert (e.what ());
+          status = SANE_STATUS_CANCELLED;
+        }
+      catch (...)
+        {
+          status = SANE_STATUS_UNSUPPORTED;
+        }
     }
 
   return status;
@@ -756,8 +788,8 @@ handle::set (SANE_Int index, SANE_Word *info)
 context
 handle::get_context () const
 {
-  if (istream::ptr istr = iptr_.lock ())
-    return istr->get_context ();
+  if (idevice::ptr iptr = iptr_.lock ())
+    return iptr->get_context ();
 
   return idev_->get_context ();
 }
@@ -840,7 +872,7 @@ handle::start ()
           cancel_requested_ = work_in_progress_;
         }
 
-      if (traits::boi () != last_marker_) istr_.reset ();
+      if (traits::boi () != last_marker_) cache_.reset ();
     }
 
   BOOST_ASSERT (   traits::boi () == last_marker_
@@ -869,9 +901,9 @@ handle::read (octet *buffer, streamsize length)
 
   try
     {
-      if (istream::ptr istr = iptr_.lock ())
+      if (idevice::ptr iptr = iptr_.lock ())
         {
-          rv = istr->read (buffer, length);
+          rv = iptr->read (buffer, length);
         }
       else
         {
@@ -884,7 +916,7 @@ handle::read (octet *buffer, streamsize length)
       cancel_requested_ = work_in_progress_;
 
       last_marker_ = traits::eof ();
-      istr_.reset ();
+      cache_.reset ();
 
       throw;
     }
@@ -899,7 +931,7 @@ handle::read (octet *buffer, streamsize length)
         }
 
       last_marker_ = rv;
-      if (traits::eof () == last_marker_) istr_.reset ();
+      if (traits::eof () == last_marker_) cache_.reset ();
     }
 
   BOOST_ASSERT (  !traits::is_marker (rv)
@@ -927,7 +959,7 @@ handle::end_scan_sequence ()
 streamsize
 handle::marker ()
 {
-  /**/ if (  !istr_
+  /**/ if (  !cache_
            || traits::eos () == last_marker_
            || traits::eof () == last_marker_)
     {
@@ -948,10 +980,10 @@ handle::marker ()
           return last_marker_;
         }
 
-      ostream::ptr ostr  = make_shared< ostream > ();
+      stream::ptr str  = make_shared< stream > ();
 
       bool bilevel = (opt_[option_prefix / "image-type"] == "Gray (1 bit)");
-      ofilter::ptr threshold (make_shared< threshold > ());
+      filter::ptr threshold (make_shared< threshold > ());
       try
         {
           (*threshold->options ())["threshold"]
@@ -985,7 +1017,7 @@ handle::marker ()
       if (opt_.count (option_prefix / "enable-resampling"))
         resample = value (opt_[option_prefix / "enable-resampling"]);
 
-      ofilter::ptr magick;
+      filter::ptr magick;
       if (resample)
         {
           magick = make_shared< _flt_::magick > ();
@@ -1017,7 +1049,7 @@ handle::marker ()
 
       toggle skip_blank = !bilevel; // \todo fix filter limitation
       quantity skip_thresh = -1.0;
-      ofilter::ptr blank_skip (make_shared< image_skip > ());
+      filter::ptr blank_skip (make_shared< image_skip > ());
       try
         {
           (*blank_skip->options ())["blank-threshold"]
@@ -1035,9 +1067,9 @@ handle::marker ()
                     && (quantity (0.) < skip_thresh));
 
       /**/ if (xfer_raw == xfer_fmt)
-        ostr->push (make_shared< _flt_::padding > ());
+        str->push (make_shared< _flt_::padding > ());
       else if (xfer_jpg == xfer_fmt)
-        ostr->push (make_shared< _flt_::jpeg::decompressor > ());
+        str->push (make_shared< _flt_::jpeg::decompressor > ());
       else
         {
           BOOST_THROW_EXCEPTION
@@ -1045,34 +1077,32 @@ handle::marker ()
              ((format ("unsupported transfer format: '%1%'") % xfer_fmt)
               .str ()));
         }
-      if (skip_blank) ostr->push (blank_skip);
+      if (skip_blank) str->push (blank_skip);
       if (magick)
-        ostr->push (magick);
+        str->push (magick);
       else if (force_extent)
-        ostr->push (make_shared< bottom_padder > (width, height));
+        str->push (make_shared< bottom_padder > (width, height));
       if (xfer_jpg == xfer_fmt && bilevel)
-        ostr->push (threshold);
+        str->push (threshold);
 
-      iocache::ptr cache = make_shared< iocache > ();
-      ostr->push (odevice::ptr (cache));
-      istream::ptr istr = make_shared< istream > ();
-      istr->push (idevice::ptr (cache));
-      istr_ = istr;
-      iptr_ = istr_;
+      iocache::ptr cache (make_shared< iocache > ());
+      str->push (odevice::ptr (cache));
+      cache_ = idevice::ptr (cache);
+      iptr_ = cache_;
 
       pump_->connect (boost::bind (on_notify, cache, _1, _2));
-      pump_->start (ostr);
+      pump_->start (str);
     }
 
   streamsize rv = traits::eof ();
 
-  if (istream::ptr istr = iptr_.lock ())
+  if (idevice::ptr iptr = iptr_.lock ())
     {
       try
         {
-          rv = istr->marker ();
+          rv = iptr->marker ();
           if (traits::eof () == rv)
-            rv = istr->marker ();
+            rv = iptr->marker ();
         }
       catch (const exception& e)
         {
@@ -1080,7 +1110,7 @@ handle::marker ()
           cancel_requested_ = work_in_progress_;
 
           last_marker_ = traits::eof ();
-          istr_.reset ();
+          cache_.reset ();
 
           throw;
         }
@@ -1297,13 +1327,15 @@ handle::option_descriptor::option_descriptor (const option& visitor)
 {
   orig_key = visitor.key ();
   sane_key = sanitize_(orig_key);
+  name_ = visitor.name ().c_str ();
+  if (visitor.text ())
+    desc_  = visitor.text ().c_str ();
+  else
+    desc_ = visitor.name ().c_str ();
 
   name  = sane_key.c_str ();
-  title = visitor.name ().c_str ();
-  if (visitor.text ())
-    desc  = visitor.text ().c_str ();
-  else
-    desc  = visitor.name ().c_str ();
+  title = name_.c_str ();
+  desc  = desc_.c_str ();
 
   const sane::value sv (visitor);
   type = sv.type ();
@@ -1331,6 +1363,11 @@ handle::option_descriptor::option_descriptor (const option& visitor)
     }
 
   if (name::num_options == sane_key)
+    {
+      return;
+    }
+
+  if (SANE_TYPE_BUTTON == type)
     {
       return;
     }
@@ -1387,13 +1424,15 @@ handle::option_descriptor::option_descriptor (const option& visitor)
           else if (SANE_TYPE_STRING == type)
             {
               SANE_String_Const *sl = new SANE_String_Const[1 + s->size ()];
+              strings_.reserve (s->size ());
 
               int i = 0;
               store::const_iterator it = s->begin ();
               for (; s->end () != it; ++i, ++it)
                 {
                   string s = *it;
-                  sl[i] = s.c_str ();
+                  strings_.push_back(s);
+                  sl[i] = strings_.back ().c_str ();
                 }
               sl[i] = NULL;
 
@@ -1431,7 +1470,8 @@ handle::option_descriptor::operator== (const handle::option_descriptor& rhs)
   bool rv (   orig_key == rhs.orig_key
            && sane_key == rhs.sane_key
            && name_    == rhs.name_
-           && desc_    == rhs.desc_);
+           && desc_    == rhs.desc_
+           && strings_ == rhs.strings_);
 
   // Compare the SANE_Option_Descriptor base "class" part
 

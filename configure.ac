@@ -23,12 +23,13 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.61)
-AC_INIT([Utsushi], [0.5.0],
+AC_INIT([Utsushi], [0.6.0],
         [linux-scanner@epson.jp],
         [utsushi])
 
 AC_CONFIG_SRCDIR([configure.ac])
 AC_CONFIG_HEADERS([config.h])
+AH_BOTTOM([#include <config-bot.h>])
 
 AC_CONFIG_AUX_DIR([upstream])
 AC_CONFIG_MACRO_DIR([upstream/aclocal])
@@ -177,6 +178,8 @@ AC_DEFINE([HAVE_LIBUSB],
   [0], [define to 1 if libusb-1.0 is available])
 AC_DEFINE([HAVE_LIBUSB_ERROR_NAME],
   [0], [define to 1 if libusb_error_name() is available])
+AC_DEFINE([HAVE_LIBUSB_GET_PORT_NUMBER],
+  [0], [define to 1 if libusb_get_port_number() is available])
 AC_DEFINE([HAVE_LIBUSB_LEGACY],
   [0], [define to 1 if libusb-0.1 is available])
 AC_DEFINE([HAVE_LT_DLADVISE],
@@ -356,7 +359,7 @@ AS_IF([test xno != "x$with_magick"],
 AM_CONDITIONAL([have_magick], [test x != "x$MAGICK_CONVERT"])
 
 AS_IF([test xno != "x$with_gtkmm"],
-  [PKG_CHECK_MODULES([LIBGTKMM], [gtkmm-2.4 > 2.12],
+  [PKG_CHECK_MODULES([LIBGTKMM], [gtkmm-2.4 >= 2.20],
      [AC_DEFINE([HAVE_LIBGTKMM], [1])],
      [AS_IF([test xcheck != "x$with_gtkmm"],
         [AC_MSG_ERROR([gtkmm library required but not found])])
@@ -498,6 +501,8 @@ AS_IF([test xyes != "x$with_legacy_usb"],
    LDFLAGS="$LDFLAGS $LIBUSB_LIBS"
    AC_CHECK_LIB([usb-1.0], [libusb_error_name],
      [AC_DEFINE([HAVE_LIBUSB_ERROR_NAME], [1])])
+   AC_CHECK_LIB([usb-1.0], [libusb_get_port_number],
+     [AC_DEFINE([HAVE_LIBUSB_GET_PORT_NUMBER], [1])])
    LDFLAGS="$save_LDFLAGS"
    CFLAGS="$save_CFLAGS"],
   [true])

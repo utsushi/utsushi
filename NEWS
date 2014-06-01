@@ -1,6 +1,16 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.6.0                                             (2014-04-23)
+----------------------------------------------------------------------
+ * adds driver support for the DS-40
+ * adds support for PNG output
+ * fixes the emulated resolution support when used from the GUI
+ * fixes device selection when multiple identical devices are detected
+ * fixes detection and handling of device-in-use conditions
+ * fixes memory issues in the SANE backend that could trigger a crash
+
+----------------------------------------------------------------------
 utsushi-0.5.0                                             (2014-02-05)
 ----------------------------------------------------------------------
  * adds driver support for the DS-560, DS-760 and DS-860

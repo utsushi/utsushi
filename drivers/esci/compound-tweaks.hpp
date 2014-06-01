@@ -44,6 +44,9 @@ namespace esci {
   }                                             \
   /**/
 
+DERIVED_COMPOUND_(compound_scanner, DS_40,
+                  void configure ();
+);
 DERIVED_COMPOUND_(compound_scanner, DS_510_560,
                   void configure ();
 );

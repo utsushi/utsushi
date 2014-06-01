@@ -43,6 +43,84 @@ erase (std::vector< quad >& v, const quad& token)
   v.erase (remove (v.begin (), v.end (), token), v.end ());
 }
 
+DS_40::DS_40 (const connexion::ptr& cnx)
+  : compound_scanner (cnx)
+{
+  capabilities& caps (const_cast< capabilities& > (caps_));
+  parameters&   defs (const_cast< parameters& > (defs_));
+
+  // Both resolution settings need to be identical
+  caps.rss = boost::none;
+
+  if (HAVE_MAGICK)              /* enable resampling */
+    {
+      constraint::ptr res_x (from< range > ()
+                             -> bounds (50, 600)
+                             -> default_value (*defs.rsm));
+      const_cast< constraint::ptr& > (res_x_) = res_x;
+
+      if (caps.rss)
+        {
+          constraint::ptr res_y (from< range > ()
+                                 -> bounds (50, 600)
+                                 -> default_value (*defs.rss));
+          const_cast< constraint::ptr& > (res_y_) = res_y;
+        }
+    }
+
+  // Assume people prefer brighter colors over B/W
+  defs.col = code_token::parameter::col::C024;
+  defs.gmm = code_token::parameter::gmm::UG18;
+
+  // Boost USB I/O throughput
+  defs.bsz = 1024 * 1024;
+
+  // Color correction parameters
+
+  vector< double, 3 >& exp
+    (const_cast< vector< double, 3 >& > (gamma_exponent_));
+
+  exp[0] = 1.012;
+  exp[1] = 0.994;
+  exp[2] = 0.994;
+
+  matrix< double, 3 >& mat
+    (const_cast< matrix< double, 3 >& > (profile_matrix_));
+
+  mat[0][0] =  1.0392;
+  mat[0][1] = -0.0023;
+  mat[0][2] = -0.0369;
+  mat[1][0] =  0.0146;
+  mat[1][1] =  1.0586;
+  mat[1][2] = -0.0732;
+  mat[2][0] =  0.0191;
+  mat[2][1] = -0.1958;
+  mat[2][2] =  1.1767;
+
+  read_back_ = false;           // see #1061
+}
+
+void
+DS_40::configure ()
+{
+  compound_scanner::configure ();
+
+  add_options ()
+    ("speed", toggle (true),
+     attributes (),
+     N_("Speed"),
+     N_("Optimize image acquisition for speed")
+     );
+
+  // FIXME disable workaround for #1094
+  descriptors_["speed"]->active (false);
+  descriptors_["speed"]->read_only (true);
+
+  // FIXME disable workaround for limitations mentioned in #1098
+  descriptors_["enable-resampling"]->active (false);
+  descriptors_["enable-resampling"]->read_only (true);
+}
+
 DS_510_560::DS_510_560 (const connexion::ptr& cnx)
   : compound_scanner (cnx)
 {

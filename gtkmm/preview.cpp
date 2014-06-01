@@ -268,7 +268,7 @@ preview::on_refresh ()
       std::string xfer_fmt = idevice_->get_context ().content_type ();
 
       bool bilevel = ((*control_)["image-type"] == "Gray (1 bit)");
-      ofilter::ptr threshold (make_shared< threshold > ());
+      filter::ptr threshold (make_shared< threshold > ());
       try
         {
           (*threshold->options ())["threshold"]
@@ -279,7 +279,7 @@ preview::on_refresh ()
           log::error ("Falling back to default threshold value");
         }
 
-      ofilter::ptr jpeg_compress (make_shared< jpeg::compressor > ());
+      filter::ptr jpeg_compress (make_shared< jpeg::compressor > ());
       try
         {
           (*jpeg_compress->options ())["quality"]
@@ -290,25 +290,25 @@ preview::on_refresh ()
           log::error ("Falling back to default JPEG compression quality");
         }
 
-      ostream_ = make_shared< ostream > ();
+      stream_ = make_shared< stream > ();
       /**/ if (xfer_raw == xfer_fmt)
         {
-          ostream_->push (make_shared< padding > ());
+          stream_->push (make_shared< padding > ());
           if (force_extent)
-            ostream_->push (make_shared< bottom_padder > (width, height));
-          ostream_->push (make_shared< pnm > ());
+            stream_->push (make_shared< bottom_padder > (width, height));
+          stream_->push (make_shared< pnm > ());
         }
       else if (xfer_jpg == xfer_fmt)
         {
           if (force_extent || bilevel)
             {
-              ostream_->push (make_shared< jpeg::decompressor > ());
+              stream_->push (make_shared< jpeg::decompressor > ());
             }
-          if (bilevel) ostream_->push (threshold);
+          if (bilevel) stream_->push (threshold);
           if (force_extent)
             {
-              ostream_->push (make_shared< bottom_padder > (width, height));
-              if (!bilevel) ostream_->push (jpeg_compress);
+              stream_->push (make_shared< bottom_padder > (width, height));
+              if (!bilevel) stream_->push (jpeg_compress);
             }
         }
       else
@@ -320,9 +320,9 @@ preview::on_refresh ()
           if (force_extent)
             log::alert ("extent forcing support not implemented");
         }
-      ostream_->push (odevice::ptr (odevice_));
+      stream_->push (odevice::ptr (odevice_));
 
-      *idevice_ | *ostream_;
+      *idevice_ | *stream_;
       scale ();
     }
   catch (const runtime_error& e)

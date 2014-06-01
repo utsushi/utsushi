@@ -29,28 +29,10 @@ namespace _flt_ {
 /*! \file
  *  \todo Move duplicated code into a single location
  *  \todo Add removal of padding scan lines
- *  \todo Add eoi() processing to ipadding filter
- *  \todo Add ipadding documentation
  */
 
-class ipadding
-  : public ifilter
-{
-public:
-  //! Produces as much unpadded image data as possible
-  streamsize read (octet *data, streamsize n);
-
-protected:
-  void handle_marker (traits::int_type c);
-
-  context::size_type w_padding_;
-  context::size_type h_padding_;
-  context::size_type scan_line_count_;
-  context::size_type skip_;
-};
-
 class padding
-  : public ofilter
+  : public filter
 {
 public:
   //! Consumes as much unpadded image data as possible
@@ -64,7 +46,7 @@ protected:
   /*! After requirement checking, the context \a ctx is copied, its
    *  padding information backed up and the padding information of the
    *  copied context is set to zero.  This is done here so that other
-   *  producers later in the ostream get advance notice.
+   *  producers later in the stream get advance notice.
    */
   void boi (const context& ctx);
 
@@ -99,26 +81,6 @@ protected:
   context::size_type skip_;
 };
 
-//! \copydoc bottom_padder
-class ibottom_padder
-  : public ifilter
-{
-public:
-  ibottom_padder (const quantity& width, const quantity& height);
-
-  streamsize read (octet *data, streamsize n);
-  streamsize marker ();
-
-protected:
-  void handle_marker (traits::int_type c);
-
-  quantity width_;
-  quantity height_;
-
-  context::size_type octets_left_;
-  bool insert_padding_;
-};
-
 //! Add scanlines at the bottom of an image
 /*! Adds white scanlines at the bottom until the image has a desired
  *  height.  If height is less than the incoming image's height scan
@@ -133,7 +95,7 @@ protected:
  *  \todo Rename to match functionality
  */
 class bottom_padder
-  : public ofilter
+  : public filter
 {
 public:
   bottom_padder (const quantity& width, const quantity& height);

@@ -124,7 +124,10 @@ inline
 void
 reserve_(octet *&buffer, ssize_t& size, int pipe)
 {
-  int pipe_size = fcntl (pipe, F_GETPIPE_SZ);
+  int pipe_size = 0;
+#ifdef F_GETPIPE_SZ
+  pipe_size = fcntl (pipe, F_GETPIPE_SZ);
+#endif
 
   if (pipe_size > size)
     {
@@ -224,7 +227,7 @@ shell_pipe::estimate (const context& ctx) const
 context
 shell_pipe::finalize (const context& ctx) const
 {
-  return ctx;
+  return estimate (ctx);
 }
 
 std::string
@@ -357,7 +360,7 @@ shell_pipe::service_pipes_(const octet *data, streamsize n)
     {
       rv = ::read (o_pipe_, buffer_, buffer_size_);
 
-      /**/ if (0 < rv) { io_->write (buffer_, rv); }
+      /**/ if (0 < rv) { output_->write (buffer_, rv); }
       else if (0 > rv) { log_io_(command_, process_, errno); }
       else  /* EOF */  { close_(o_pipe_); }
     }

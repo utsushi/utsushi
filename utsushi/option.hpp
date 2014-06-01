@@ -27,6 +27,7 @@
 #include <typeinfo>
 #include <vector>
 
+#include <boost/function.hpp>
 #include <boost/operators.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -40,6 +41,21 @@ namespace utsushi {
 
 using std::bad_cast;
 using std::out_of_range;
+
+// FIXME replace with signal emission for actions
+class result_code
+{
+public:
+  result_code ();
+  result_code (int value, const std::string& msg);
+
+  std::string message () const;
+  operator bool () const;
+
+private:
+  int         val_;
+  std::string msg_;
+};
 
 //! Bundle information about a configurable setting
 class option
@@ -79,6 +95,8 @@ public:
   bool is_emulated () const;
   //! Whether the option's value can be changed
   bool is_read_only () const;
+
+  result_code run ();
 
   class map;
 
@@ -136,6 +154,7 @@ public:
 
   void impose (const restriction& r);
 
+  builder add_actions ();
   builder add_options ();
   builder add_option_map ();
 
@@ -188,6 +207,7 @@ protected:
   container< utsushi::key, value::ptr > values_;
   container< utsushi::key, constraint::ptr > constraints_;
   container< utsushi::key, descriptor::ptr > descriptors_;
+  container< utsushi::key, boost::function< result_code () > > callbacks_;
   std::vector< restriction > restrictions_;
   std::map< utsushi::key, map::ptr > submaps_;
 
@@ -202,6 +222,10 @@ class option::map::builder
 {
 public:
   builder (option::map& owner);
+  const builder& operator() (const utsushi::key& k,
+                             boost::function< result_code () > f,
+                             const string& name,
+                             const string& text = string ()) const;
   //! Creates a %value type constrained %option
   const builder& operator() (const utsushi::key& k,
                              const value& v,

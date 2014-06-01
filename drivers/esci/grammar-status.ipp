@@ -31,6 +31,7 @@
 #include <boost/spirit/include/qi_eoi.hpp>
 #include <boost/spirit/include/qi_expect.hpp>
 #include <boost/spirit/include/qi_permutation.hpp>
+#include <boost/spirit/include/qi_skip.hpp>
 
 //  *::basic_grammar_status<T> implementation requirements
 #include <boost/fusion/include/adapt_struct.hpp>
@@ -55,11 +56,12 @@ basic_grammar_status< Iterator >::basic_grammar_status ()
   using namespace code_token::status;
 
   hardware_status_rule_ %=
-    (  (token_(PSZ) > stat_psz_rule_)
-     ^ (token_(ERR) > stat_err_rule_)
-     ^ (token_(FCS) > stat_fcs_rule_)
-     ^ (token_(PB ) > this->decimal_)
-     ^ (token_(SEP) > stat_sep_rule_)
+    (  *(token_(PSZ) > stat_psz_rule_)
+     ^ *(token_(ERR) > stat_err_rule_)
+     ^  (token_(FCS) > stat_fcs_rule_)
+     ^  (token_(PB ) > this->decimal_)
+     ^  (token_(SEP) > stat_sep_rule_)
+     ^  (token_(BAT) > stat_bat_rule_)
      )
     > qi::eoi
     ;
@@ -82,6 +84,12 @@ basic_grammar_status< Iterator >::basic_grammar_status ()
   stat_sep_rule_ %=
     &(  token_(sep::ON)
       | token_(sep::OFF)
+      )
+    > token_
+    ;
+
+  stat_bat_rule_ %=
+    &( token_(bat::LOW)
       )
     > token_
     ;
@@ -176,11 +184,12 @@ BOOST_FUSION_ADAPT_STRUCT
 
 BOOST_FUSION_ADAPT_STRUCT
 (ESCI_NS::hardware_status,
- (boost::optional< ESCI_NS::hardware_status::result >, medium)
- (boost::optional< ESCI_NS::hardware_status::result >, error)
+ (std::vector< ESCI_NS::hardware_status::result >, medium)
+ (std::vector< ESCI_NS::hardware_status::result >, error_)
  (boost::optional< ESCI_NS::integer >, focus)
  (boost::optional< ESCI_NS::integer >, push_button)
- (boost::optional< ESCI_NS::quad >, separation_mode))
+ (boost::optional< ESCI_NS::quad >, separation_mode)
+ (boost::optional< ESCI_NS::quad >, battery_status))
 
 #undef ESCI_NS
 

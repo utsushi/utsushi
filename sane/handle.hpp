@@ -96,11 +96,11 @@ protected:
 
   std::string name_;
   utsushi::scanner::ptr idev_;
-  utsushi::istream::ptr istr_;
+  utsushi::idevice::ptr cache_;
   utsushi::pump::ptr pump_;
 
-  //! Manage istr_ resource safely in the face of concurrency
-  utsushi::weak_ptr< utsushi::istream > iptr_;
+  //! Manage cache_ resource safely in the face of concurrency
+  utsushi::weak_ptr< utsushi::idevice > iptr_;
 
   utsushi::streamsize last_marker_;
 
@@ -134,6 +134,7 @@ private:
     std::string  sane_key;
     utsushi::string name_;
     utsushi::string desc_;
+    std::vector< utsushi::string > strings_;
 
     option_descriptor () {}
     option_descriptor (const utsushi::option& visitor);

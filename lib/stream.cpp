@@ -1,5 +1,5 @@
 //  stream.cpp -- interface declarations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -27,61 +27,54 @@
 namespace utsushi {
 
 streamsize
-istream::read (octet *data, streamsize n)
+stream::write (const octet *data, streamsize n)
 {
-  return io_bottom_->read (data, n);
-}
-
-streamsize
-istream::marker ()
-{
-  return io_bottom_->marker ();
-}
-
-context
-istream::get_context () const
-{
-  return io_bottom_->get_context ();
+  return out_bottom_->write (data, n);
 }
 
 void
-istream::push (idevice::ptr device)
+stream::mark (traits::int_type c, const context& ctx)
+{
+  out_bottom_->mark (c, ctx);
+}
+
+void
+stream::push (odevice::ptr device)
 {
   push (device, device);
   device_ = device;
 }
 
 void
-istream::push (ifilter::ptr filter)
+stream::push (filter::ptr filter)
 {
   push (filter, filter);
   filter_ = filter;
 }
 
 streamsize
-ostream::write (const octet *data, streamsize n)
+stream::buffer_size () const
 {
-  return io_bottom_->write (data, n);
+  return get_device ()->buffer_size ();
+}
+
+odevice::ptr
+stream::get_device () const
+{
+  return static_pointer_cast< odevice > (dev_bottom_);
 }
 
 void
-ostream::mark (traits::int_type c, const context& ctx)
+stream::attach (output::ptr out, device_ptr device,
+                output::ptr buf, buffer::ptr buffer)
 {
-  io_bottom_->mark (c, ctx);
-}
-
-void
-ostream::push (odevice::ptr device)
-{
-  push (device, device);
-  device_ = device;
-}
-
-void
-ostream::push (ofilter::ptr filter)
-{
-  push (filter, filter);
-  filter_ = filter;
+  if (buffer) {
+    buffer ->open (out);
+    filter_->open (buf);
+  } else {
+    out_bottom_ = out;
+    dev_bottom_ = device;
+  }
 }
 
 }       // namespace utsushi

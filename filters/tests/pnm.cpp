@@ -1,5 +1,5 @@
 //  pnm.cpp -- unit tests for the PNM filter implementation
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -45,15 +45,15 @@ struct fixture
 
 BOOST_FIXTURE_TEST_CASE (triple_image, fixture)
 {
-  context ctx (100, 100);
-  istream istr;
-  ostream ostr;
+  context  ctx (100, 100);
+  rawmem_idevice dev (ctx, 3);
+  idevice& idev (dev);
 
-  istr.push (make_shared< rawmem_idevice > (ctx, 3));
-  ostr.push (make_shared< pnm > ());
-  ostr.push (make_shared< file_odevice > (name_));
+  stream  str;
+  str.push (make_shared< pnm > ());
+  str.push (make_shared< file_odevice > (name_));
 
-  istr | ostr;
+  idev | str;
 
   std::string header = "P5 100 100 255\n";
   BOOST_CHECK_EQUAL (3 * (ctx.octets_per_image () + header.length ()),

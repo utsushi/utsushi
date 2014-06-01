@@ -1,5 +1,5 @@
 //  threshold.cpp -- unit tests for the threshold filter implementation
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -46,20 +46,21 @@ struct fixture
 
 BOOST_FIXTURE_TEST_CASE (gray_to_binary, fixture)
 {
-  context ctx (8, 2, context::GRAY8);
-  istream istr;
-  ostream ostr;
-  shared_ptr<setmem_idevice::generator> gen
-    = make_shared< const_generator > (0x7f);
   octet o[] = {'P', '4', ' ', '8', ' ', '2', '\n',
                octet(0xff), octet(0xff)};
 
-  istr.push (make_shared< setmem_idevice > (gen, ctx, 1));
-  ostr.push (make_shared< threshold > ());
-  ostr.push (make_shared< pnm > ());
-  ostr.push (make_shared< file_odevice > (name_));
+  shared_ptr<setmem_idevice::generator> gen
+    = make_shared< const_generator > (0x7f);
+  context ctx (8, 2, context::GRAY8);
+  setmem_idevice dev (gen, ctx, 1);
+  idevice& idev (dev);
 
-  istr | ostr;
+  stream str;
+  str.push (make_shared< threshold > ());
+  str.push (make_shared< pnm > ());
+  str.push (make_shared< file_odevice > (name_));
+
+  idev | str;
 
   fs::ifstream file;
   file.open (name_);

@@ -69,7 +69,7 @@ image_skip::image_skip ()
     ;
 }
 
-// Our marker handlers decide when to call io_->mark() and produce any
+// Our marker handlers decide when to call output_->mark() and produce any
 // image data.  We always use the most up-to-date context information.
 // That means that the end-of context replaces the begin-of one.
 void
@@ -132,13 +132,13 @@ image_skip::eoi (const context& ctx)
           if (traits::eos () == last_marker_)
             {
               last_marker_ = traits::bos ();
-              io_->mark (last_marker_, ctx_);
+              output_->mark (last_marker_, ctx_);
             }
           if (   traits::bos () == last_marker_
               || traits::eoi () == last_marker_)
             {
               last_marker_ = traits::boi ();
-              io_->mark (last_marker_, ctx_);
+              output_->mark (last_marker_, ctx_);
             }
         }
       while (!pool_.empty ())
@@ -146,12 +146,12 @@ image_skip::eoi (const context& ctx)
           shared_ptr< bucket > p = pool_.front ();
           pool_.pop_front ();
           if (p)
-            io_->write (p->data_, p->size_);
+            output_->write (p->data_, p->size_);
         }
       if (last_marker_ == traits::boi ())
         {
           last_marker_ = traits::eoi ();
-          io_->mark (last_marker_, ctx_);
+          output_->mark (last_marker_, ctx_);
         }
     }
   else
@@ -164,14 +164,14 @@ void
 image_skip::eos (const context& ctx)
 {
   if (traits::eos () == last_marker_)
-    io_->mark (traits::bos (), ctx_);
-  io_->mark (traits::eos (), ctx);
+    output_->mark (traits::bos (), ctx_);
+  output_->mark (traits::eos (), ctx);
 }
 
 void
 image_skip::eof (const context& ctx)
 {
-  io_->mark (traits::eof (), ctx);
+  output_->mark (traits::eof (), ctx);
 }
 
 bool
@@ -188,147 +188,6 @@ image_skip::skip_()
 
 void
 image_skip::process_(shared_ptr< bucket > bp)
-{
-  if (!bp) return;
-
-  int scale_factor = std::numeric_limits< uint8_t >::max ();
-  int bucket_sum = bp->size_ * scale_factor;
-
-  octet *p = bp->data_;
-  while (p < bp->data_ + bp->size_)
-    {
-      bucket_sum -= uint8_t (*p++);
-    }
-  bp->seen_ = true;
-
-  darkness_ += double (bucket_sum) / scale_factor;
-}
-
-iimage_skip::iimage_skip ()
-  : release_(false)
-{
-  option_->add_options ()
-    ("blank-threshold", (from< range > ()
-                         -> lower (  0.)
-                         -> upper (100.)
-                         -> default_value (0.)
-                         ),
-     attributes (tag::enhancement)(level::standard),
-     N_("Blank Image Threshold")
-     )
-    ;
-}
-
-streamsize
-iimage_skip::read (octet *data, streamsize n)
-{
-  if (release_)
-    {
-      if (pool_.empty ()) return traits::eoi ();
-      if (!data || 0 > n) return traits::not_marker (0);
-
-      octet *p = pool_.front ()->data_;
-      streamsize rv = std::min (n, pool_.front ()->size_);
-
-      traits::copy (data, p, rv);
-      if (rv < pool_.front ()->size_)
-        {
-          traits::move (p, p + rv, pool_.front ()->size_ - rv);
-          pool_.front ()->size_ -= rv;
-        }
-      else
-        {
-          pool_.pop_front ();
-        }
-      return rv;
-    }
-
-  streamsize rv = io_->read (data, n); // abuse caller's buffer
-
-  if (traits::is_marker (rv))
-    {
-      handle_marker (rv);
-      return last_marker_;
-    }
-  else if (0 < rv)
-    {
-      pool_.push_back (make_shared< bucket > (data, rv));
-
-      if (context::unknown_size != ctx_.width ())
-        {
-          process_(pool_.back ());
-        }
-    }
-
-  return 0;
-}
-
-streamsize
-iimage_skip::marker ()
-{
-  ifilter::marker ();
-  return last_marker_;
-}
-
-void
-iimage_skip::handle_marker (traits::int_type c)
-{
-  ctx_ = io_->get_context ();
-
-  /**/ if (traits::bos () == c)
-    {
-      quantity q = value ((*option_)["blank-threshold"]);
-      threshold_ = q.amount< double > ();
-    }
-  else if (traits::boi () == c)
-    {
-      // \todo remove limitations
-      BOOST_ASSERT (8 == ctx_.depth ());
-
-      // Achieved via e.g. jpeg::decompressor
-      BOOST_ASSERT (ctx_.is_raster_image ());
-      // These are easily achieved by using a padding filter!
-      BOOST_ASSERT (0 == ctx_.padding_octets ());
-      BOOST_ASSERT (0 == ctx_.padding_lines ());
-
-      BOOST_ASSERT (pool_.empty ());
-
-      darkness_ = 0;
-      release_ = false;
-
-      octet data[default_buffer_size];
-      while (!release_ && c != traits::eos () && c != traits::eof ())
-        c = read (data, default_buffer_size);
-
-      if (release_) c = traits::boi ();
-    }
-  else if (traits::eoi () == c)
-    {
-      release_ = !skip_();
-      if (!release_) pool_.clear ();
-    }
-  else if (   traits::eos () == c
-           || traits::eof () == c)
-    {
-      pool_.clear ();
-    }
-  last_marker_ = c;
-}
-
-bool
-iimage_skip::skip_()
-{
-  std::deque< shared_ptr< bucket > >::iterator it;
-  for (it = pool_.begin (); pool_.end () != it; ++it)
-    {
-      if (!(*it)->seen_) process_(*it);
-    }
-
-  return 100 * darkness_ <= threshold_ * ctx_.octets_per_image ();
-}
-
-void
-iimage_skip::process_(shared_ptr< bucket > bp)
 {
   if (!bp) return;
 

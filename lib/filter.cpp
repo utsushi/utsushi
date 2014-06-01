@@ -1,5 +1,5 @@
 //  filter.cpp -- interface declarations
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -26,121 +26,63 @@
 
 namespace utsushi {
 
-streamsize
-ifilter::marker ()
-{
-  streamsize rv = io_->marker ();
-
-  if (traits::is_marker (rv))
-    handle_marker (rv);
-
-  return rv;
-}
-
 void
-ifilter::handle_marker (traits::int_type c)
-{
-  if (traits::boi () == c) ctx_ = io_->get_context ();
-  if (traits::eoi () == c) ctx_ = io_->get_context ();
-}
-
-void
-ifilter::buffer_size (streamsize size)
-{
-  buffer_size_ = size;
-}
-
-void
-ofilter::mark (traits::int_type c, const context& ctx)
+filter::mark (traits::int_type c, const context& ctx)
 {
   output::mark (c, ctx);
   if (traits::is_marker (c)) {
-    io_->mark (c, ctx_);
+    output_->mark (c, ctx_);
   }
 }
 
 void
-ofilter::buffer_size (streamsize size)
+filter::open (output::ptr output)
+{
+  output_ = output;
+}
+
+void
+filter::buffer_size (streamsize size)
 {
   buffer_size_ = size;
 }
 
-decorator<ifilter>::decorator (ptr instance)
+decorator<filter>::decorator (ptr instance)
   : instance_(instance)
 {}
 
 streamsize
-decorator<ifilter>::read (octet *data, streamsize n)
-{
-  return instance_->read (data, n);
-}
-
-streamsize
-decorator<ifilter>::marker ()
-{
-  return instance_->marker ();
-}
-
-void
-decorator<ifilter>::open (io_ptr io)
-{
-  instance_->open (io);
-}
-
-streamsize
-decorator<ifilter>::buffer_size () const
-{
-  return instance_->buffer_size ();
-}
-
-void
-decorator<ifilter>::buffer_size (streamsize size)
-{
-  instance_->buffer_size (size);
-}
-
-context
-decorator<ifilter>::get_context () const
-{
-  return instance_->get_context ();
-}
-
-decorator<ofilter>::decorator (ptr instance)
-  : instance_(instance)
-{}
-
-streamsize
-decorator<ofilter>::write (const octet *data, streamsize n)
+decorator<filter>::write (const octet *data, streamsize n)
 {
   return instance_->write (data, n);
 }
 
 void
-decorator<ofilter>::mark(traits::int_type c, const context& ctx)
+decorator<filter>::mark(traits::int_type c, const context& ctx)
 {
   instance_->mark (c, ctx);
 }
 
 void
-decorator<ofilter>::open (io_ptr io)
+decorator<filter>::open (output::ptr output)
 {
-  instance_->open (io);
+  instance_->open (output);
 }
 
 streamsize
-decorator<ofilter>::buffer_size () const
+decorator<filter>::buffer_size () const
 {
   return instance_->buffer_size ();
 }
 
 void
-decorator<ofilter>::buffer_size (streamsize size)
+decorator<filter>::buffer_size (streamsize size)
 {
   instance_->buffer_size (size);
 }
 
 context
-decorator<ofilter>::get_context () const
+decorator<filter>::get_context () const
 {
   return instance_->get_context ();
 }

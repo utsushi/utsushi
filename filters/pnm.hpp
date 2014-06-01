@@ -1,5 +1,5 @@
 //  pnm.hpp -- PNM image format support
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -53,7 +53,7 @@ namespace _flt_ {
  *  \todo  Extend to support the PAM format as well?
  */
 class pnm
-  : public ofilter
+  : public filter
 {
 public:
   streamsize write (const octet *data, streamsize n);

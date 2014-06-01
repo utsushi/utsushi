@@ -66,7 +66,8 @@ get_property_(struct udev_device *device,
  */
 void
 get_sysattr_(struct udev_device *device,
-             const std::string& name, int& value)
+             const std::string& name, int& value,
+             std::ios_base& (radix)(std::ios_base&) = std::hex)
 {
   struct udev_device *p (device);
   const char *rv (nullptr);
@@ -79,7 +80,7 @@ get_sysattr_(struct udev_device *device,
   if (!rv) return;
 
   std::stringstream ss (rv);
-  ss >> std::hex >> value;      // all values are hexadecimal!
+  ss >> radix >> value;
 }
 
 //! Handle to udev config file content, needed by all udev API calls
@@ -171,6 +172,30 @@ device::usb_interface () const
 {
   int i = 0;
   get_sysattr_(dev_, "bInterfaceNumber", i);
+  return i;
+}
+
+uint8_t
+device::usb_bus_number () const
+{
+  int i = 0;
+  get_sysattr_(dev_, "busnum", i, std::dec);
+  return i;
+}
+
+uint8_t
+device::usb_port_number () const
+{
+  int i = 0;
+  get_sysattr_(dev_, "devpath", i, std::dec);
+  return i;
+}
+
+uint8_t
+device::usb_device_address () const
+{
+  int i = 0;
+  get_sysattr_(dev_, "devnum", i, std::dec);
   return i;
 }
 

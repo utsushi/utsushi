@@ -102,7 +102,7 @@ run_time::locate (const std::string& command) const
 {
   std::string rv;
 
-  if (!impl::instance_->running_in_place_())
+  if (!running_in_place ())
     {
       rv = ((fs::path (PKGLIBEXECDIR) / impl::libexec_prefix_).string ()
             + command);
@@ -189,7 +189,7 @@ run_time::load_dirs (scope s, const std::string& component) const
 
   if (dirs.empty ())
     {
-      if (impl::instance_->running_in_place_())
+      if (running_in_place ())
         {
           dirs.push_back ((fs::path ("..")
                            / "drivers" / "esci").string ());
@@ -204,7 +204,7 @@ run_time::load_dirs (scope s, const std::string& component) const
 std::string
 run_time::data_file (scope s, const std::string& name) const
 {
-  if (impl::instance_->running_in_place_())
+  if (running_in_place ())
     return (impl::instance_->top_srcdir_ / name).string ();
 
   return (fs::path (PKGDATADIR) / name).string ();
@@ -213,10 +213,16 @@ run_time::data_file (scope s, const std::string& name) const
 std::string
 run_time::conf_file (scope s, const std::string& name) const
 {
-  if (impl::instance_->running_in_place_())
+  if (running_in_place ())
     return (impl::instance_->top_srcdir_ / name).string ();
 
   return (fs::path (PKGSYSCONFDIR) / name).string ();
+}
+
+bool
+run_time::running_in_place () const
+{
+  return impl::instance_->running_in_place_();
 }
 
 static

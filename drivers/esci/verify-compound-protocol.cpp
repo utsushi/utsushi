@@ -1,5 +1,5 @@
 //  verify-compound-protocol.cpp -- compliance tests
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -122,7 +122,7 @@ struct test_compound
                            esci::str (this->reply_.code)
                            << " reply fails 4-byte alignment");
 
-    BOOST_REQUIRE (!this->status_.err);
+    BOOST_REQUIRE (this->status_.err.empty ());
   }
 };
 

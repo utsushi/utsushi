@@ -1,5 +1,5 @@
 //  device-info.hpp -- abstraction layer
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -43,6 +43,9 @@ public:
   virtual std::string usb_serial () const = 0;
   virtual uint8_t usb_configuration () const = 0;
   virtual uint8_t usb_interface () const = 0;
+  virtual uint8_t usb_bus_number () const = 0;
+  virtual uint8_t usb_port_number () const = 0;
+  virtual uint8_t usb_device_address () const = 0;
 };
 
 } // namespace utsushi

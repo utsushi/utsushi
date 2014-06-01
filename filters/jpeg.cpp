@@ -1,5 +1,5 @@
 //  jpeg.cpp -- JPEG image format support
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -454,7 +454,7 @@ compressor::empty_output_buffer ()
 
   octet *data = reinterpret_cast< octet * > (jbuf_);
 
-  streamsize n = io_->write (data, jbuf_size_);
+  streamsize n = output_->write (data, jbuf_size_);
 
   if (0 == n)
     log::alert ("unable to empty JPEG buffer");
@@ -475,13 +475,13 @@ compressor::term_destination ()
   octet *data = reinterpret_cast< octet * > (jbuf_);
 
   size_t count = jbuf_size_ - dmgr_.free_in_buffer;
-  size_t n = io_->write (data, count);
+  size_t n = output_->write (data, count);
 
   while (0 != n && count != n)
     {
       data  += n;
       count -= n;
-      n = io_->write (data, count);
+      n = output_->write (data, count);
     }
 
   if (0 == n)
@@ -733,158 +733,6 @@ decompressor::handle_eoi ()
 
 }       // namespace detail
 
-idecompressor::idecompressor ()
-  : lines_left_(0)
-{
-  // Set up filter specific options
-
-  common::add_buffer_size_(option_);
-}
-
-streamsize
-idecompressor::read (octet *data, streamsize n)
-{
-  streamsize left = n;
-
-  if (lines_left_)
-    {
-      while (0 < left && lines_left_)
-        {
-          BOOST_STATIC_ASSERT ((sizeof (JSAMPLE) == sizeof (octet)));
-
-          int i = bytes_to_skip_ / ctx_.scan_width ();
-
-          octet *line = reinterpret_cast< octet * > (sample_rows_[i]);
-          streamsize skip = bytes_to_skip_ % ctx_.scan_width ();
-          streamsize cnt  = min (left, ctx_.scan_width () - skip);
-
-          traits::copy (data, line + skip, cnt);
-          data += cnt;
-          left -= cnt;
-
-          bytes_to_skip_ += cnt;
-          if (0 == bytes_to_skip_ % ctx_.scan_width ())
-            --lines_left_;
-        }
-      return n - left;
-    }
-
-  if (reclaim_space () && !flushing_)
-    {
-      JOCTET *next_free_byte = const_cast< JOCTET * >
-        (smgr_.next_input_byte + smgr_.bytes_in_buffer);
-
-      streamsize rv = io_->read (reinterpret_cast< octet * > (next_free_byte),
-                                 jbuf_size_ - (next_free_byte - jbuf_));
-
-      if (!traits::is_marker (rv))
-        {
-          smgr_.bytes_in_buffer += rv;
-        }
-      else
-        {
-          flushing_ = (traits::eoi() == rv && smgr_.bytes_in_buffer);
-          if (!flushing_)
-            {
-              handle_marker (rv);
-              return rv;
-            }
-        }
-    }
-
-  if (!read_header ())             return n - left;
-  if (!start_decompressing (ctx_)) return n - left;
-
-  int count;
-  while (0 < left
-         && cinfo_.output_scanline < cinfo_.output_height
-         && (count = jpeg_read_scanlines (&cinfo_, sample_rows_,
-                                          cinfo_.rec_outbuf_height)))
-    {
-      bytes_to_skip_ = 0;
-      lines_left_ = count;
-
-      for (int i = 0; 0 < left && lines_left_; ++i)
-        {
-          BOOST_STATIC_ASSERT ((sizeof (JSAMPLE) == sizeof (octet)));
-
-          octet *line = reinterpret_cast< octet * > (sample_rows_[i]);
-          streamsize cnt = min (left, ctx_.scan_width ());
-
-          traits::copy (data, line, cnt);
-          data += cnt;
-          left -= cnt;
-
-          bytes_to_skip_ += cnt;
-          if (0 == bytes_to_skip_ % ctx_.scan_width())
-            --lines_left_;
-        }
-    }
-
-  if (cinfo_.output_scanline < cinfo_.output_height)
-    return n - left;
-
-  // If we get here, there is junk between the last image data and the
-  // JPEG EOI marker.  We skip this so we can produce proper output as
-  // well as continue with the next image, if any.
-
-  int state = !JPEG_REACHED_EOI;
-  while (JPEG_REACHED_EOI != state)
-    {
-      state = jpeg_consume_input (&cinfo_);
-
-      if (!flushing_)
-        {
-          JOCTET *next_free_byte = const_cast< JOCTET * >
-            (smgr_.next_input_byte + smgr_.bytes_in_buffer);
-
-          streamsize rv
-            = io_->read (reinterpret_cast< octet * > (next_free_byte),
-                         jbuf_size_ - (next_free_byte - jbuf_));
-
-          if (!traits::is_marker (rv))
-            {
-              smgr_.bytes_in_buffer += rv;
-            }
-          else
-            {
-              flushing_ = (traits::eoi() == rv && smgr_.bytes_in_buffer);
-              if (!flushing_)
-                {
-                  handle_marker (rv);
-                  return rv;
-                }
-            }
-        }
-      else if (n == left)
-        {
-          flushing_ = false;
-          handle_marker (traits::eoi ());
-          return traits::eoi ();
-        }
-    }
-  return n - left;
-}
-
-void
-idecompressor::handle_marker (traits::int_type c)
-{
-  if (traits::is_marker (c))
-    {
-      if (traits::bos () == c) handle_bos (*option_);
-      if (traits::boi () == c)
-        {
-          ctx_ = handle_boi (io_->get_context ());
-          lines_left_ = 0;
-        }
-      if (traits::eoi () == c)
-        {
-          handle_eoi ();
-          lines_left_ = 0;
-        }
-    }
-}
-
 decompressor::decompressor ()
 {
   // Set up filter specific options
@@ -940,13 +788,13 @@ decompressor::write (const octet *data, streamsize n)
 
               octet *line = reinterpret_cast< octet * > (sample_rows_[i]);
               size_t cnt  = ctx_.scan_width ();
-              size_t n    = io_->write (line, cnt);
+              size_t n    = output_->write (line, cnt);
 
               while (0 != n && cnt != n)
                 {
                   line += n;
                   cnt  -= n;
-                  n = io_->write (line, cnt);
+                  n = output_->write (line, cnt);
                 }
 
               if (0 == n)

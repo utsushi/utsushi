@@ -33,7 +33,7 @@ AM_LDFLAGS  += $(BOOST_LDFLAGS)
 driver = esci
 
 driverlibdir    = $(pkglibdir)
-driverdatadir   = $(pkgdatadir)
+driverdatadir   = $(pkgdatadir)/drivers/esci
 driver_ldflags  = $(AM_LDFLAGS)
 driver_ldflags += -export-dynamic
 driver_ldflags += -export-symbols-regex libdrv_$(driver)_LTX_factory
@@ -179,18 +179,22 @@ verify_LDADD += ../../connexions/libcnx-hexdump.la
 
 endif # enable_boost_unit_test_framework
 
-##  Data files for use by the verify utility
+##  Data files for use by the driver and verify utility
 
-EXTRA_DIST += data/DS-510.dat
-EXTRA_DIST += data/DS-560.dat
-EXTRA_DIST += data/DS-760.dat
-EXTRA_DIST += data/DS-860.dat
-EXTRA_DIST += data/DS-5500.dat
-EXTRA_DIST += data/DS-6500.dat
-EXTRA_DIST += data/DS-7500.dat
-EXTRA_DIST += data/DS-50000.dat
-EXTRA_DIST += data/DS-60000.dat
-EXTRA_DIST += data/DS-70000.dat
+driverdata_DATA  =
+driverdata_DATA += data/DS-40.dat
+driverdata_DATA += data/DS-510.dat
+driverdata_DATA += data/DS-560.dat
+driverdata_DATA += data/DS-760.dat
+driverdata_DATA += data/DS-860.dat
+driverdata_DATA += data/DS-5500.dat
+driverdata_DATA += data/DS-6500.dat
+driverdata_DATA += data/DS-7500.dat
+driverdata_DATA += data/DS-50000.dat
+driverdata_DATA += data/DS-60000.dat
+driverdata_DATA += data/DS-70000.dat
+
+EXTRA_DIST += $(driverdata_DATA)
 
 ##  A recipe to clone data files from an existing file.  Note that the
 ##  $$src and $$dst variables need to have the same length for cloning

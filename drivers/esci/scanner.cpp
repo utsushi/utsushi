@@ -67,7 +67,11 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
 
       log::brief ("detected a '%1%'") % info.product_name ();
 
-      /**/ if (   info.product_name () == "DS-510"
+      /**/ if (info.product_name () == "DS-40")
+        {
+          sp = make_shared< DS_40 > (cnx);
+        }
+      else if (   info.product_name () == "DS-510"
                || info.product_name () == "DS-560"
                )
         {

@@ -27,5 +27,6 @@
     <property name="copyright">Copyright (C) 2012-2014  SEIKO EPSON CORPORATION</property>
     <property name="website">@PACKAGE_URL@</property>
     <property name="authors">AVASYS CORPORATION</property>
+    <property name="skip-taskbar-hint">True</property>
   </object>
 </interface>

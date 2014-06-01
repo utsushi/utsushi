@@ -1,5 +1,5 @@
 //  pump.hpp -- move image octets from a source to a sink
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -37,12 +37,11 @@ public:
   typedef shared_ptr< pump > ptr;
 
   pump (idevice::ptr idev);
-  pump (istream::ptr istr);
 
   virtual ~pump ();
 
   virtual void start (odevice::ptr odev);
-  virtual void start (ostream::ptr ostr);
+  virtual void start (stream::ptr str);
 
   void cancel ();
 

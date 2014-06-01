@@ -1,5 +1,5 @@
 //  writer.cpp -- putting PDF object in a file
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -57,10 +57,10 @@ writer::~writer ()
 }
 
 streamsize
-writer::write (pdf::io_ptr& io)
+writer::write (pdf::output::ptr& output)
 {
-  streamsize rv (io->write (stream_.str ().c_str (),
-                            stream_.str ().size ()));
+  streamsize rv (output->write (stream_.str ().c_str (),
+                                stream_.str ().size ()));
 
   if (string::size_type (rv) != stream_.str ().size ())
     BOOST_THROW_EXCEPTION

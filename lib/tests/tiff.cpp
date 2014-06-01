@@ -1,5 +1,5 @@
 //  tiff.cpp -- unit tests for the TIFF output implementation
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -47,13 +47,13 @@ using boost::filesystem::remove;
 struct fixture
 {
   shared_ptr<setmem_idevice::generator> gen_;
-  istream istr_;
-  ostream ostr_;
+  idevice::ptr iptr_;
+  stream str_;
 
   fixture ()
     : gen_ (new const_generator (octet(0xac)))
-    , istr_ ()
-    , ostr_ ()
+    , iptr_ ()
+    , str_ ()
 #if !HAVE_LIBMAGIC
   {}
 #else
@@ -82,10 +82,10 @@ BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
   context ctx (643, 487, context::RGB8);
   const fs::path name ("tiff.out");
 
-  istr_.push (make_shared< setmem_idevice > (gen_, ctx));
-  ostr_.push (make_shared< tiff_odevice > (name));
+  iptr_ = make_shared< setmem_idevice > (gen_, ctx);
+  str_.push (make_shared< tiff_odevice > (name));
 
-  istr_ | ostr_;
+  *iptr_ | str_;
 
 #if HAVE_LIBMAGIC
   const char *mime = magic_file (cookie_, name.string ().c_str ());
@@ -101,10 +101,10 @@ BOOST_FIXTURE_TEST_CASE (test_magic_multipage, fixture)
   path_generator pathgen ("tiff-", "out");
   const unsigned images = 11;
 
-  istr_.push (make_shared< setmem_idevice > (gen_, ctx, images));
-  ostr_.push (make_shared< tiff_odevice > (pathgen));
+  iptr_ = make_shared< setmem_idevice > (gen_, ctx, images);
+  str_.push (make_shared< tiff_odevice > (pathgen));
 
-  istr_ | ostr_;
+  *iptr_ | str_;
 
   for (unsigned i = 0; i < images; ++i)
     {

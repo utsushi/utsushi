@@ -1,5 +1,5 @@
 //  pump.hpp -- move image octets from a source to a sink
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -42,10 +42,9 @@ public:
   typedef boost::shared_ptr< pump > ptr;
 
   pump (idevice::ptr idev);
-  pump (istream::ptr istr);
 
   void start (odevice::ptr odev);
-  void start (ostream::ptr ostr);
+  void start (stream::ptr str);
 
   typedef sigc::signal< void, traits::int_type >           marker_signal_type;
   typedef sigc::signal< void, streamsize, streamsize >     update_signal_type;

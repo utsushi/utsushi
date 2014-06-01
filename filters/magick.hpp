@@ -38,9 +38,11 @@ protected:
   void bos (const context& ctx);
 
   context estimate (const context& ctx) const;
-  context finalize (const context& ctx) const;
 
   std::string arguments (const context& ctx);
+
+  bool bilevel_;
+  double threshold_;
 
   double x_resolution_;
   double y_resolution_;
@@ -48,6 +50,8 @@ protected:
   bool force_extent_;
   double width_;
   double height_;
+
+  string image_format_;
 };
 
 }       // namespace _flt_

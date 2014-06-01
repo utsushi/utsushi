@@ -31,6 +31,8 @@
  *  \sa encoding::default_iterator_type
  */
 
+#include <vector>
+
 #include <boost/operators.hpp>
 #include <boost/optional.hpp>
 #include <boost/spirit/include/karma_delimit.hpp>
@@ -135,7 +137,7 @@ struct status
     integer padding;
   };
 
-  boost::optional< error > err;
+  std::vector< error > err;
   boost::optional< quad > nrd;
   boost::optional< image > pst;
   boost::optional< image > pen;

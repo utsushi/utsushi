@@ -24,7 +24,7 @@
 #
 #  on the files under version control filtered through
 #
-#    sed 's|\.xsl$|.cpp|; /\.cc$/d; /\/tests\//d'
+#    sed 's|\.xsl$|.cpp|; /Makefile\.am$/d; /\/tests\//d'
 
 connexions/usb.cpp
 drivers/esci/code-token.hpp
@@ -34,7 +34,6 @@ drivers/esci/compound.cpp
 drivers/esci/exception.hpp
 drivers/esci/extended-scanner.cpp
 drivers/esci/grammar-capabilities.cpp
-drivers/esci/verify.cpp
 filters/image-skip.cpp
 filters/jpeg.cpp
 filters/lut.cpp
@@ -42,6 +41,7 @@ filters/padding.cpp
 filters/pdf/object.cpp
 filters/pdf/writer.cpp
 filters/threshold.cpp
+gtkmm/action-dialog.cpp
 gtkmm/chooser.cpp
 gtkmm/dialog-alt.glade
 gtkmm/dialog.cpp

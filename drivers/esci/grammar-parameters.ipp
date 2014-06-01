@@ -33,6 +33,7 @@
 #include <boost/spirit/include/qi_permutation.hpp>
 #include <boost/spirit/include/qi_plus.hpp>
 #include <boost/spirit/include/qi_repeat.hpp>
+#include <boost/spirit/include/qi_skip.hpp>
 
 //  encoding::basic_grammar_parameters<T> implementation requirements
 #include <boost/spirit/include/karma_alternative.hpp>
@@ -67,9 +68,9 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
   using namespace code_token::parameter;
 
   parameters_rule_ %=
-    (  (token_(ADF) > *parm_adf_token_)
-     ^ (token_(TPU) > *parm_tpu_token_)
-     ^ (token_(FB ) > *parm_fb_token_)
+    (  (token_(ADF) > (qi::skip (token_(ADF)) [ *parm_adf_token_ ]))
+     ^ (token_(TPU) > (qi::skip (token_(TPU)) [ *parm_tpu_token_ ]))
+     ^ (token_(FB ) > (qi::skip (token_(FB )) [ *parm_fb_token_  ]))
      ^ (token_(COL) >  parm_col_token_)
      ^ (token_(FMT) >  parm_fmt_token_)
      ^ (token_(JPG) >  this->decimal_)
@@ -94,7 +95,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     ;
 
   gamma_table_rule_ %=
-    parm_gmt_token_ > this->bin_hex_data_;
+    qi::skip (token_(GMT)) [ parm_gmt_token_ > this->bin_hex_data_ ];
 
   color_matrix_rule_ %=
       (&token_(cmx::UNIT) > token_)
@@ -284,8 +285,8 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     << - karma::buffer [ token_(THR) << this->decimal_ ]
     << - karma::buffer [ token_(DTH) << parm_dth_token_ ]
     << - karma::buffer [ token_(GMM) << parm_gmm_token_ ]
-    << - karma::buffer [ token_(GMT) <<
-                         +(parm_gmt_token_ << this->bin_hex_data_) ]
+    << - karma::buffer [ +(token_(GMT) <<
+                           parm_gmt_token_ << this->bin_hex_data_) ]
     << - karma::buffer [ token_(CMX) <<
                          ( (parm_cmx_token_ << this->bin_hex_data_)
                            | token_(cmx::UNIT)) ]
