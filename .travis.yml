@@ -1,0 +1,9 @@
+language: cpp
+compiler:
+  - gcc
+  - clang
+install:
+  - sudo apt-get update -qq
+  - ./install-deps
+before_script: ./bootstrap
+script: ./configure && make
