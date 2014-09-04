@@ -41,7 +41,8 @@ namespace _flt_ {
 using std::string;
 using std::vector;
 
-static string transform (const octet *scanline, streamsize n);
+static string transform (const octet *scanline, streamsize n,
+                         bool is_light_based);
 static string transform (vector<size_t>& runs);
 
 streamsize
@@ -49,7 +50,11 @@ g3fax::write (const octet *data, streamsize n)
 {
   BOOST_ASSERT ((data && 0 < n) || 0 == n);
 
-  streamsize octets = std::min (ctx_.octets_per_line () - partial_size_, n);
+  streamsize header_size = 0;
+  if (!pbm_header_seen_) header_size = skip_pbm_header_(data, n);
+
+  streamsize octets = std::min (ctx_.octets_per_line () - partial_size_,
+                                n - header_size);
 
   {                             // continue with stashed octets
     traits::copy (partial_line_.get () + partial_size_,
@@ -57,7 +62,8 @@ g3fax::write (const octet *data, streamsize n)
     partial_size_ += octets;
     if (partial_size_ == ctx_.octets_per_line ())
       {
-        string g3_enc = transform (partial_line_.get (), ctx_.width ());
+        string g3_enc = transform (partial_line_.get (), ctx_.width (),
+                                   is_light_based_);
         output_->write (g3_enc.data (), g3_enc.size ());
 
         ctx_.octets_seen () += ctx_.octets_per_line ();
@@ -68,16 +74,17 @@ g3fax::write (const octet *data, streamsize n)
       }
   }
 
-  while (octets + ctx_.octets_per_line () <= n)
+  while (octets + ctx_.octets_per_line () <= n - header_size)
     {
-      string g3_enc = transform (data + octets, ctx_.width ());
+      string g3_enc = transform (data + octets, ctx_.width (),
+                                 is_light_based_);
       output_->write (g3_enc.data (), g3_enc.size ());
 
       octets              += ctx_.octets_per_line ();
       ctx_.octets_seen () += ctx_.octets_per_line ();
     }
 
-  partial_size_ = n - octets;
+  partial_size_ = n - header_size - octets;
   if (0 < partial_size_)        // stash left-over octets for next write
     {
       traits::copy (partial_line_.get (), data + octets,
@@ -93,6 +100,12 @@ g3fax::boi (const context& ctx)
   BOOST_ASSERT (1 == ctx.depth ());
   BOOST_ASSERT (1 == ctx.comps ());
   BOOST_ASSERT (0 == ctx.padding_octets ());
+
+  BOOST_ASSERT (   "image/g3fax"             == ctx.content_type ()
+                || "image/x-portable-bitmap" == ctx.content_type ());
+
+  pbm_header_seen_ = ("image/g3fax" == ctx.content_type ());
+  is_light_based_ = ("image/g3fax" == ctx.content_type ());
 
   ctx_ = ctx;
   ctx_.content_type ("image/g3fax");
@@ -111,6 +124,64 @@ g3fax::eoi (const context& ctx)
   ctx_ = ctx;
   ctx_.content_type ("image/g3fax");
   ctx_.octets_seen () = ctx.octets_per_image ();
+}
+
+static inline
+bool
+is_white_space (char c)
+{
+  return (' ' == c || '\t' == c || '\r' == c || '\n' == c);
+}
+
+static inline
+bool
+is_ascii_digit (char c)
+{
+  return ('0' <= c && c <= '9');
+}
+
+streamsize
+g3fax::skip_pbm_header_(const octet *& data, streamsize n)
+{
+  // Assume n is suitably large (> ~20 in the absence of comments)
+  // FIXME allow for comments
+
+  const char *head = data;
+  const char *tail = head + n;
+
+  BOOST_ASSERT (2 < n);
+  BOOST_ASSERT ('P' == head[0]);
+  BOOST_ASSERT ('4' == head[1]);
+
+  head += 2;
+
+  while (head != tail && is_white_space (*head))
+    {
+      ++head;
+    }
+  BOOST_ASSERT (head != tail && '#' != *head);
+
+  while (head != tail && is_ascii_digit (*head))
+    {
+      ++head;
+    }
+  while (head != tail && is_white_space (*head))
+    {
+      ++head;
+    }
+  BOOST_ASSERT (head != tail && '#' != *head);
+
+  while (head != tail && is_ascii_digit (*head))
+    {
+      ++head;
+    }
+  BOOST_ASSERT (head != tail && is_white_space (*head));
+  ++head;
+  pbm_header_seen_ = true;
+
+  streamsize rv = head - data;
+  data = head;
+  return rv;
 }
 
   struct code {
@@ -349,17 +420,18 @@ g3fax::eoi (const context& ctx)
    *  which is then returned to the caller.
    */
   static string
-  transform (const octet* scanline, streamsize bits)
+  transform (const octet* scanline, streamsize bits, bool is_light_based)
   {
     bool   colour = WHITE;
     size_t length = 0;
     vector< size_t > runs;
 
     uint8_t bit = 0x80;
+    octet oct = (is_light_based ? *scanline : ~*scanline);
 
     while (0 < bits--)
       {
-        if (colour == bool ((*scanline | ~bit) & bit))
+        if (colour == bool ((oct | ~bit) & bit))
           {
             ++length;
           }
@@ -375,6 +447,7 @@ g3fax::eoi (const context& ctx)
           {
             bit = 0x80;
             ++scanline;
+            oct = (is_light_based ? *scanline : ~*scanline);
           }
       }
     runs.push_back (length);

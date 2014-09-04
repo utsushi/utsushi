@@ -36,6 +36,10 @@ ATTRS{idProduct}=="0150", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="014d", ENV{utsushi_driver}="esci"
 #  DS-40
 ATTRS{idProduct}=="0152", ENV{utsushi_driver}="esci"
+#  PX-M7050 Series, WF-8510/8590 Series
+ATTRS{idProduct}=="08bc", ENV{utsushi_driver}="esci"
+#  PX-M7050FX Series, WF-R8590 Series
+ATTRS{idProduct}=="08cc", ENV{utsushi_driver}="esci"
 
 #  Give scanner users read/write permissions on the device.
 ENV{utsushi_driver}=="esci", MODE="0666", OWNER="root", GROUP="root"

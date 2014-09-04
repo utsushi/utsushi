@@ -28,8 +28,12 @@
 #include <utsushi/format.hpp>
 #include <utsushi/stream.hpp>
 #include <utsushi/test/memory.hpp>
+#include <utsushi/test/tools.hpp>
 
+#include <boost/assign/list_of.hpp>
 #include <boost/assign/list_inserter.hpp>
+#include <boost/filesystem.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -40,7 +44,12 @@
 
 #include <fcntl.h>
 
+namespace fs = boost::filesystem;
+
 using namespace utsushi;
+using boost::assign::list_of;
+
+static int pipe_capacity = 0;
 
 class shell_pipe
   : public _flt_::shell_pipe
@@ -63,7 +72,7 @@ test_throughput (const std::pair< streamsize, unsigned >& args)
   stream str;
   str.push (make_shared< shell_pipe > ("cat"));
   str.push (make_shared< file_odevice >
-             (path_generator ("throughput-", "out")));
+             (path_generator ("throughput-%3i.out")));
 
   idev | str;
 
@@ -78,12 +87,37 @@ test_throughput (const std::pair< streamsize, unsigned >& args)
     }
 }
 
+void
+test_chaining (int length)
+{
+  test::suffix_test_case_name (boost::lexical_cast< std::string > (length));
+
+  const streamsize  octet_count (2.5 * pipe_capacity);
+  const unsigned    image_count (2);
+  const std::string file ("chaining.out");
+
+  rawmem_idevice dev (octet_count, image_count);
+  idevice& idev (dev);
+
+  stream str;
+  for (int i = 0; i < length; ++i)
+    {
+      str.push (make_shared< shell_pipe > ("cat"));
+    }
+  str.push (make_shared< file_odevice > (file));
+
+  idev | str;
+
+  BOOST_CHECK (fs::exists (file));
+  BOOST_CHECK_EQUAL (fs::file_size (file), octet_count * image_count);
+  fs::remove (file);
+}
+
 bool
 init_test_runner ()
 {
   namespace but = ::boost::unit_test;
 
-  int pipe_capacity = 0;
 #ifdef F_GETPIPE_SZ
   pipe_capacity = fcntl (STDIN_FILENO, F_GETPIPE_SZ);
 #endif
@@ -116,6 +150,11 @@ init_test_runner ()
   but::framework::master_test_suite ()
     .add (BOOST_PARAM_TEST_CASE (test_throughput,
                                  args.begin (), args.end ()));
+
+  std::list< int > lengths = list_of (2)(3)(4)(5);
+  but::framework::master_test_suite ()
+    .add (BOOST_PARAM_TEST_CASE (&test_chaining,
+                                 lengths.begin (), lengths.end ()));
 
   return true;
 }

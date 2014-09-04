@@ -1,5 +1,5 @@
 //  run-time.ipp -- implementation details
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -76,6 +76,7 @@ public:
 
   std::string shell_;
 
+  fs::path top_builddir_;
   fs::path top_srcdir_;
   bool running_in_place_() const
   {

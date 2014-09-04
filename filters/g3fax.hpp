@@ -75,6 +75,11 @@ protected:
 
   boost::scoped_array< octet > partial_line_;
   streamsize                   partial_size_;
+
+private:
+  streamsize skip_pbm_header_(const octet *& data, streamsize n);
+  bool pbm_header_seen_;
+  bool is_light_based_;
 };
 
 }       // namespace _flt_

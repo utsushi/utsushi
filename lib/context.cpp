@@ -1,5 +1,5 @@
 //  context.cpp -- in which to interpret octets in streams
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -253,7 +253,8 @@ context::depth (const size_type& bits)
     }
   else if (3 == comps ())
     {
-      /**/ if ( 8 == bits) pixel_type_ = RGB8;
+      /**/ if ( 1 == bits) pixel_type_ = MONO;
+      else if ( 8 == bits) pixel_type_ = RGB8;
       else if (16 == bits) pixel_type_ = RGB16;
       else BOOST_THROW_EXCEPTION (BAD_PIXEL_TYPE);
     }

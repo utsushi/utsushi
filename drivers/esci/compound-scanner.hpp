@@ -22,6 +22,7 @@
 #define drivers_esci_compound_scanner_hpp_
 
 #include <deque>
+#include <string>
 
 #include <utsushi/connexion.hpp>
 #include <utsushi/constraint.hpp>
@@ -40,6 +41,8 @@ class compound_scanner : public scanner
 {
 public:
   compound_scanner (const connexion::ptr& cnx);
+
+  std::string model () const;
 
   void configure ();
 
@@ -173,7 +176,7 @@ protected:
   const constraint::ptr res_y_;
   //! @}
 
-  scanner_control acquire_;
+  mutable scanner_control acquire_;
   hardware_status stat_;
 
   parameters parm_;

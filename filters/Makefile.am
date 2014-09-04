@@ -28,6 +28,9 @@ filterdatadir   = $(pkgdatadir)
 filter_ldflags  = $(AM_LDFLAGS)
 filter_ldflags += -export-dynamic
 
+dist_pkglibexec_SCRIPTS =
+pkglibexec_PROGRAMS     =
+
 ##  FIXME: split each filter into its own plugin
 filterlib_LTLIBRARIES  = libflt-all.la
 
@@ -61,7 +64,7 @@ endif
 if have_magick
 libflt_all_la_SOURCES  += magick.cpp
 libflt_all_la_SOURCES  += magick.hpp
-endif
+endif				# have_magick
 
 pdf_filter  =
 pdf_filter += pdf.cpp
@@ -76,3 +79,5 @@ pdf_filter += pdf/primitive.cpp
 pdf_filter += pdf/primitive.hpp
 pdf_filter += pdf/writer.cpp
 pdf_filter += pdf/writer.hpp
+
+.PHONY: $(dist_pkglibexec_SCRIPTS)

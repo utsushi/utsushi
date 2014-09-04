@@ -35,9 +35,11 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include <boost/any.hpp>
+#include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
 #include <boost/throw_exception.hpp>
@@ -47,12 +49,14 @@
 #include <utsushi/format.hpp>
 #include <utsushi/i18n.hpp>
 #include <utsushi/log.hpp>
+#include <utsushi/memory.hpp>
 #include <utsushi/monitor.hpp>
 #include <utsushi/option.hpp>
 #include <utsushi/pump.hpp>
 #include <utsushi/range.hpp>
 #include <utsushi/run-time.hpp>
 #include <utsushi/scanner.hpp>
+#include <utsushi/store.hpp>
 #include <utsushi/stream.hpp>
 #include <utsushi/value.hpp>
 
@@ -64,9 +68,9 @@
 #include "../filters/pdf.hpp"
 #include "../filters/pnm.hpp"
 #include "../filters/magick.hpp"
-#include "../filters/threshold.hpp"
 #include "../outputs/tiff.hpp"
 
+namespace fs = boost::filesystem;
 namespace po = boost::program_options;
 
 using namespace utsushi;
@@ -381,6 +385,10 @@ public:
       {
         vm_[kv.first] = kv.second.as< string > ();
       }
+    else if (boost::any_cast< std::string > (&kv.second.value ()))
+      {
+        vm_[kv.first] = kv.second.as< std::string > ();
+      }
     else if (boost::any_cast< bool > (&kv.second.value ()))
       {
         std::string key (kv.first);
@@ -503,7 +511,8 @@ main (int argc, char *argv[])
       cmd_opts
         .add_options ()
         ("debug", _("log device I/O in hexdump format"))
-        ("image-format", (po::value< std::string > (&fmt)),
+        ("image-format", (po::value< std::string > (&fmt)
+                          ->default_value ("PNM")),
          _("output image format\n"
            "PNM, PNG, JPEG, PDF, TIFF "
            "or one of the device supported transfer-formats.  "
@@ -544,6 +553,8 @@ main (int argc, char *argv[])
 
       if (rt.count ("help"))
         {
+          // FIXME clarify the command-line API
+          // FIXME explain %-escape pattern usage
           std::cout << "\n"
                     << cmd_opts
                     << "\n";
@@ -580,18 +591,20 @@ main (int argc, char *argv[])
 
       po::variables_map dev_vm;
       po::options_description dev_opts (_("Device options"));
+      po::variables_map add_vm;
+      po::options_description add_opts (_("Add-on options"));
+
       boost::optional< toggle > resampling;
       if (device->options ()->count ("enable-resampling"))
         {
           toggle t = value ((*device->options ())["enable-resampling"]);
           resampling = t;
         }
+
       std::for_each (device->options ()->begin (),
                      device->options ()->end (),
                      visit (dev_opts, resampling));
 
-      po::variables_map add_vm;
-      po::options_description add_opts (_("Add-on options"));
       filter::ptr blank_skip = make_shared< _flt_::image_skip > ();
       std::for_each (blank_skip->options ()->begin (),
                      blank_skip->options ()->end (),
@@ -649,17 +662,19 @@ main (int argc, char *argv[])
       po::store (act, act_vm);
       po::notify (act_vm);
 
-      std::for_each (act_vm.begin (), act_vm.end (),
-                     run (device->actions ()));
-
       po::store (dev, dev_vm);
       po::notify (dev_vm);
 
-      std::for_each (dev_vm.begin (), dev_vm.end (),
-                     assign (device->options ()));
-
       po::store (add, add_vm);
       po::notify (add_vm);
+
+      // Push all options to their respective providers
+
+      std::for_each (act_vm.begin (), act_vm.end (),
+                     run (device->actions ()));
+
+      std::for_each (dev_vm.begin (), dev_vm.end (),
+                     assign (device->options ()));
 
       std::for_each (add_vm.begin (), add_vm.end (),
                      assign (blank_skip->options ()));
@@ -668,9 +683,9 @@ main (int argc, char *argv[])
           && !act_vm["dont-scan"].defaulted ())
         return status;
 
-      // Infer desired image format from file extension
+      // Determine the requested image format
 
-      if (!uri.empty ())
+      if (cmd_vm["image-format"].defaulted () && !uri.empty ())
         {
           fs::path path (uri);
 
@@ -682,8 +697,97 @@ main (int argc, char *argv[])
           else if (".tif"  == path.extension ()) fmt = "TIFF";
           else if (".tiff" == path.extension ()) fmt = "TIFF";
           else
-            log::alert
-              ("cannot infer image format from destination: '%1%'") % path;
+            {
+              std::cerr <<
+                format (_("cannot infer image format from file"
+                          " extension: '%1%'"))
+                % path.extension ()
+                ;
+              return EXIT_FAILURE;
+            }
+        }
+
+      // Check whether the requested image format is supported
+
+      fs::path ext;
+
+      /**/ if ("PNM"  == fmt) ext = ".pnm";
+      else if ("PNG"  == fmt) ext = ".png";
+      else if ("JPEG" == fmt) ext = ".jpeg";
+      else if ("PDF"  == fmt) ext = ".pdf";
+      else if ("TIFF" == fmt) ext = ".tiff";
+      else if ("ASIS" == fmt) ;        // for troubleshooting purposes
+      else
+        {
+          std::cerr <<
+            format (_("unsupported image format: '%1%'"))
+            % fmt
+            ;
+          return EXIT_FAILURE;
+        }
+
+      if (!uri.empty () && !ext.empty ())
+        {
+          fs::path path (uri);
+
+          if (ext != path.extension ())
+            {
+              /**/ if ("JPEG" == fmt && ".jpg" == path.extension ());
+              else if ("TIFF" == fmt && ".tif" == path.extension ());
+              else
+                {
+                  log::alert
+                    ("uncommon file extension for %1% image format: '%2%'")
+                    % fmt
+                    % ext
+                    ;
+                }
+            }
+        }
+
+      const std::string stdout ("/dev/stdout");
+
+      if (uri.empty ()) uri = stdout;
+
+      path_generator gen (uri);
+
+      // TODO add (optional) overwrite checking
+
+      // Create an output device
+
+      odevice::ptr odev;
+
+      if (!gen)                 // single file (or standard output)
+        {
+          /**/ if ("TIFF" == fmt)
+            {
+              odev = make_shared< _out_::tiff_odevice > (uri);
+            }
+          else if ("PDF" == fmt
+                   || stdout == uri
+                   || device->is_single_image ())
+            {
+              odev = make_shared< file_odevice > (uri);
+            }
+          else
+            {
+              std::cerr <<
+                format (_("%1% does not support multi-image files"))
+                % fmt
+                ;
+              return EXIT_FAILURE;
+            }
+        }
+      else                      // file per image
+        {
+          if ("TIFF" == fmt)
+            {
+              odev = make_shared< _out_::tiff_odevice > (gen);
+            }
+          else
+            {
+              odev = make_shared< file_odevice > (gen);
+            }
         }
 
       // Configure the filter chain
@@ -696,27 +800,6 @@ main (int argc, char *argv[])
       std::string xfer_fmt = device->get_context ().content_type ();
 
       bool bilevel = (om["image-type"] == "Gray (1 bit)");
-      filter::ptr threshold (make_shared< threshold > ());
-      try
-        {
-          (*threshold->options ())["threshold"]
-            = value (om["threshold"]);
-        }
-      catch (const std::out_of_range&)
-        {
-          log::error ("Falling back to default threshold value");
-        }
-
-      filter::ptr jpeg_compress (make_shared< jpeg::compressor > ());
-      try
-        {
-          (*jpeg_compress->options ())["quality"]
-            = value ((om)["jpeg-quality"]);
-        }
-      catch (const std::out_of_range&)
-        {
-          log::error ("Falling back to default JPEG compression quality");
-        }
 
       toggle force_extent = true;
       quantity width  = -1.0;
@@ -741,81 +824,49 @@ main (int argc, char *argv[])
       if (om.count ("enable-resampling"))
         resample = value (om["enable-resampling"]);
 
-      filter::ptr magick;
-      if (resample)
+      filter::ptr magick (make_shared< _flt_::magick > ());
+
+      toggle bound = true;
+      quantity res_x  = -1.0;
+      quantity res_y  = -1.0;
+
+      std::string sw (resample ? "sw-" : "");
+      if (om.count (sw + "resolution-x"))
         {
-          magick = make_shared< _flt_::magick > ();
+          res_x = value (om[sw + "resolution-x"]);
+          res_y = value (om[sw + "resolution-y"]);
+        }
+      if (om.count (sw + "resolution-bind"))
+        bound = value (om[sw + "resolution-bind"]);
 
-          toggle bound = true;
-          quantity res_x  = -1.0;
-          quantity res_y  = -1.0;
-
-          if (om.count ("sw-resolution-x"))
-            {
-              res_x = value (om["sw-resolution-x"]);
-              res_y = value (om["sw-resolution-y"]);
-            }
-          if (om.count ("sw-resolution-bind"))
-            bound = value (om["sw-resolution-bind"]);
-
-          if (bound)
-            {
-              res_x = value (om["sw-resolution"]);
-              res_y = value (om["sw-resolution"]);
-            }
-
-          (*magick->options ())["resolution-x"] = res_x;
-          (*magick->options ())["resolution-y"] = res_y;
-          (*magick->options ())["force-extent"] = force_extent;
-          (*magick->options ())["width"]  = width;
-          (*magick->options ())["height"] = height;
+      if (bound)
+        {
+          res_x = value (om[sw + "resolution"]);
+          res_y = value (om[sw + "resolution"]);
         }
 
-      if (fmt == "PNG")
-        {
-          if (!magick) magick = make_shared< _flt_::magick > ();
+      (*magick->options ())["resolution-x"] = res_x;
+      (*magick->options ())["resolution-y"] = res_y;
+      (*magick->options ())["force-extent"] = force_extent;
+      (*magick->options ())["width"]  = width;
+      (*magick->options ())["height"] = height;
 
-          (*magick->options ())["bilevel"] = toggle (bilevel);
+      (*magick->options ())["bilevel"] = toggle (bilevel);
 
-          quantity thr = value (om["threshold"]);
-          thr *= 100.0;
-          thr /= (dynamic_pointer_cast< range >
-                  (om["threshold"].constraint ()))->upper ();
-          (*magick->options ())["threshold"] = thr;
+      quantity thr = value (om["threshold"]);
+      thr *= 100.0;
+      thr /= (dynamic_pointer_cast< range >
+              (om["threshold"].constraint ()))->upper ();
+      (*magick->options ())["threshold"] = thr;
 
-          if (!resample)
-            {
-              toggle bound = true;
-              quantity res_x  = -1.0;
-              quantity res_y  = -1.0;
-
-              if (om.count ("resolution-x"))
-                {
-                  res_x = value (om["resolution-x"]);
-                  res_y = value (om["resolution-y"]);
-                }
-              if (om.count ("resolution-bind"))
-                bound = value (om["resolution-bind"]);
-
-              if (bound)
-                {
-                  res_x = value (om["resolution"]);
-                  res_y = value (om["resolution"]);
-                }
-
-              (*magick->options ())["resolution-x"] = res_x;
-              (*magick->options ())["resolution-y"] = res_y;
-              (*magick->options ())["force-extent"] = force_extent;
-              (*magick->options ())["width"]  = width;
-              (*magick->options ())["height"] = height;
-            }
-          (*magick->options ())["image-format"] = fmt;
-        }
+      (*magick->options ())["image-format"] = fmt;
 
       toggle skip_blank = !bilevel; // \todo fix filter limitation
       quantity skip_thresh = -1.0;
+      /* blank_skip generated earlier due to command-line handling issues */
       try
         {
+          /* blank_skip options already set thru command-line handling */
           skip_thresh = value ((*blank_skip->options ())["blank-threshold"]);
         }
       catch (const std::out_of_range&)
@@ -828,210 +879,54 @@ main (int argc, char *argv[])
       skip_blank = (skip_blank
                     && (quantity (0.) < skip_thresh));
 
-      /**/ if (xfer_raw == xfer_fmt) {}
-      else if (xfer_jpg == xfer_fmt) {}
+      /**/ if (xfer_raw == xfer_fmt)
+        {
+          str->push (make_shared< padding > ());
+        }
+      else if (xfer_jpg == xfer_fmt)
+        {
+          str->push (make_shared< jpeg::decompressor > ());
+        }
       else
         {
           log::alert
             ("unsupported transfer format: '%1%'") % xfer_fmt;
-        }
 
-      /**/ if ("PNM" == fmt)
-        {
-          /**/ if (xfer_raw == xfer_fmt)
-            str->push (make_shared< padding > ());
-          else if (xfer_jpg == xfer_fmt)
-            str->push (make_shared< jpeg::decompressor > ());
-          else
+          if ("ASIS" != fmt)
             BOOST_THROW_EXCEPTION
               (runtime_error
                ((format (_("conversion from %1% to %2% is not supported"))
                  % xfer_fmt
                  % fmt)
                 .str ()));
+        }
+
+      /**/ if ("ASIS" != fmt)
+        {
           if (skip_blank) str->push (blank_skip);
-          if (magick)
-            str->push (magick);
-          else if (force_extent)
-            str->push (make_shared< bottom_padder > (width, height));
-          if (xfer_jpg == xfer_fmt && bilevel)
-            str->push (threshold);
           str->push (make_shared< pnm > ());
-        }
-      else if (fmt == "PNG")
-        {
-          /**/ if (xfer_raw == xfer_fmt)
-            {
-              str->push (make_shared< padding > ());
-              str->push (make_shared< pnm > ());
-            }
-          else if (xfer_jpg == xfer_fmt)
-            str->push (make_shared< jpeg::decompressor > ());
-          else
-            BOOST_THROW_EXCEPTION
-              (runtime_error
-               ((format (_("conversion from %1% to %2% is not supported"))
-                 % xfer_fmt
-                 % fmt)
-                .str ()));
-          if (skip_blank) str->push (blank_skip);
-          if (magick)
-            str->push (magick);
-        }
-      else if ("JPEG" == fmt)
-        {
-          if (bilevel)
-            BOOST_THROW_EXCEPTION
-              (logic_error
-               (_("JPEG does not support bi-level imagery")));
+          str->push (magick);
 
-          /**/ if (xfer_raw == xfer_fmt)
+          if ("PDF" == fmt)
             {
-              str->push (make_shared< padding > ());
-              if (skip_blank) str->push (blank_skip);
-              if (magick)
-                str->push (magick);
-              else if (force_extent)
-                str->push (make_shared< bottom_padder > (width, height));
-              str->push (jpeg_compress);
+              if (bilevel) str->push (make_shared< g3fax > ());
+              str->push (make_shared< pdf > (gen));
             }
-          else if (xfer_jpg == xfer_fmt)
-            {
-              if (magick || force_extent || skip_blank)
-                {
-                  str->push (make_shared< jpeg::decompressor > ());
-                  if (skip_blank)
-                    str->push (blank_skip);
-                  if (magick)
-                    str->push (magick);
-                  else if (force_extent)
-                    str->push (make_shared< bottom_padder >
-                                (width, height));
-                  str->push (jpeg_compress);
-                }
-            }
-          else
-            {
-              BOOST_THROW_EXCEPTION
-                (runtime_error
-                 ((format (_("conversion from %1% to %2% is not supported"))
-                   % xfer_fmt
-                   % fmt)
-                  .str ()));
-            }
-        }
-      else if ("PDF" == fmt)
-        {
-          /**/ if (xfer_raw == xfer_fmt)
-            {
-              str->push (make_shared< padding > ());
-              if (skip_blank) str->push (blank_skip);
-              if (magick)
-                str->push (magick);
-              else if (force_extent)
-                str->push (make_shared< bottom_padder > (width, height));
-
-              if (bilevel)
-                {
-                  str->push (make_shared< g3fax > ());
-                }
-              else
-                {
-                  str->push (jpeg_compress);
-                }
-            }
-          else if (xfer_jpg == xfer_fmt)
-            {
-              if (magick || force_extent || skip_blank || bilevel)
-                {
-                  str->push (make_shared< jpeg::decompressor > ());
-                  if (skip_blank) str->push (blank_skip);
-                  if (magick)
-                    str->push (magick);
-                  else if (force_extent)
-                    str->push (make_shared< bottom_padder > (width, height));
-
-                  if (bilevel)
-                    {
-                      str->push (threshold);
-                      str->push (make_shared< g3fax > ());
-                    }
-                  else
-                    {
-                      str->push (jpeg_compress);
-                    }
-                }
-            }
-          else
-            {
-              BOOST_THROW_EXCEPTION
-                (runtime_error
-                 ((format (_("conversion from %1% to %2% is not supported"))
-                   % xfer_fmt
-                   % fmt)
-                  .str ()));
-            }
-          str->push (make_shared< pdf > ());
-        }
-      else if ("TIFF" == fmt)
-        {
-          /**/ if (xfer_raw == xfer_fmt)
-            str->push (make_shared< padding > ());
-          else if (xfer_jpg == xfer_fmt)
-            str->push (make_shared< jpeg::decompressor > ());
-          else
-            BOOST_THROW_EXCEPTION
-              (runtime_error
-               ((format (_("conversion from %1% to %2% is not supported"))
-                 % xfer_fmt
-                 % fmt)
-                .str ()));
-          if (skip_blank) str->push (blank_skip);
-          if (magick)
-            str->push (magick);
-          else if (force_extent)
-            str->push (make_shared< bottom_padder > (width, height));
-          if (xfer_jpg == xfer_fmt && bilevel)
-            str->push (threshold);
         }
       else
         {
           log::brief
-            ("unsupported image format requested, passing data as is");
+            ("as-is image format requested, not applying any filters");
         }
 
-      // Create an output device
-
-      if (device->is_single_image ()
-          || uri.empty ()
-          || "PDF"  == fmt
-          || "TIFF" == fmt)
-        {
-          if (uri.empty ()) uri = "/dev/stdout";
-          if ("TIFF" == fmt)
-            {
-              str->push (make_shared< _out_::tiff_odevice > (uri));
-            }
-          else
-            {
-              str->push (make_shared< file_odevice > (uri));
-            }
-        }
-      else
-        {
-          fs::path path (uri);
-          path_generator gen (!path.parent_path ().empty ()
-                              ? path.parent_path () / path.stem ()
-                              : path.stem (), path.extension ().native ());
-
-          str->push (make_shared< file_odevice > (gen));
-        }
-
+      str->push (odev);
       pump p (device);
       pptr = &p;                // for use in request_cancellation
 
       set_signal (SIGTERM, request_cancellation);
       set_signal (SIGINT , request_cancellation);
+      set_signal (SIGPIPE, request_cancellation);
+      set_signal (SIGHUP , request_cancellation);
 
       p.connect (on_notify);
       p.start (str);

@@ -69,6 +69,10 @@ USING THE SOFTWARE
       - DS-50000
       - DS-60000
       - DS-70000
+      - PX-M7050 Series
+      - PX-M7050FX Series
+      - WF-8510/8590 Series
+      - WF-R8590 Series
 
 
 BUILDING/INSTALLING FROM SOURCE
@@ -91,6 +95,16 @@ BUILDING/INSTALLING FROM SOURCE
   See the output of `./configure --help` for a complete list and more
   information.  To save time compiling the sources, you can use one of
   the '--disable-static' and '--disable-shared' options.
+
+  If you have a sufficiently recent Boost installed on your system but
+  `./configure` fails to find any of its libraries, please specify the
+  library directory with the `--with-boost-libdir` option.  Something
+  like:
+
+    $ ./configure --with-boost-libdir=/usr/lib/i386-linux-gnu
+
+  ought to work.  This problem is most likely to manifest itself on a
+  multiarch system.
 
   After you have `./configure`d the build to taste, all you need to do
   is just:

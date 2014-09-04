@@ -32,15 +32,19 @@
 
 #include "../pnm.hpp"
 
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
 using namespace utsushi;
 using _flt_::pnm;
 
 struct fixture
 {
-  const fs::path name_;
+  const std::string name_;
 
   fixture () : name_("pnm.out") {}
-  ~fixture () { remove (name_); }
+  ~fixture () { fs::remove (name_); }
 };
 
 BOOST_FIXTURE_TEST_CASE (triple_image, fixture)
@@ -57,7 +61,7 @@ BOOST_FIXTURE_TEST_CASE (triple_image, fixture)
 
   std::string header = "P5 100 100 255\n";
   BOOST_CHECK_EQUAL (3 * (ctx.octets_per_image () + header.length ()),
-                     file_size (name_));
+                     fs::file_size (name_));
 }
 
 #include "utsushi/test/runner.ipp"

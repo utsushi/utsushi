@@ -28,12 +28,13 @@
 #include <algorithm>
 #include <vector>
 
+#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 #include <boost/regex.hpp>
 #include <boost/throw_exception.hpp>
 
-#include "utsushi/format.hpp"
 #include "utsushi/i18n.hpp"
+#include "utsushi/log.hpp"
 
 #include "run-time.ipp"
 
@@ -100,12 +101,12 @@ run_time::arguments () const
 std::string
 run_time::locate (const std::string& command) const
 {
-  std::string rv;
+  fs::path rv;
 
   if (!running_in_place ())
     {
-      rv = ((fs::path (PKGLIBEXECDIR) / impl::libexec_prefix_).string ()
-            + command);
+      rv = fs::path (PKGLIBEXECDIR) / impl::libexec_prefix_;
+      rv = rv.native () + command;
     }
   else
     {
@@ -115,11 +116,14 @@ run_time::locate (const std::string& command) const
         {
           path = path.parent_path ();
         }
-      rv = (path / command).string ();
+      rv = path / command;
     }
-  rv += impl::instance_->argzero_.extension ().string ();
+  rv = rv.native () + impl::instance_->argzero_.extension ().native ();
 
-  return rv;
+  if (!fs::exists (rv))
+    log::trace ("%1%: no such file") % rv.string ();
+
+  return rv.string ();
 }
 
 void
@@ -182,41 +186,119 @@ run_time::version (const std::string& legalese,
           % disclaimer).str ();
 }
 
-const run_time::sequence_type&
+run_time::sequence_type
 run_time::load_dirs (scope s, const std::string& component) const
 {
-  static sequence_type dirs;
+  sequence_type rv;
 
-  if (dirs.empty ())
+  if (!running_in_place ())
     {
-      if (running_in_place ())
+      /**/ if (pkg == s)
         {
-          dirs.push_back ((fs::path ("..")
-                           / "drivers" / "esci").string ());
+          rv.push_back (fs::path (PKGLIBDIR).string ());
         }
-
-      dirs.push_back (fs::path (PKGLIBDIR).string ());
+      else
+        {
+          log::alert ("unsupported scope: %1%") % s;
+        }
+    }
+  else
+    {
+      /**/ if ("driver" == component)
+        {
+          rv.push_back ((impl::instance_->top_builddir_
+                         / "drivers" / "esci").string ());
+        }
+      else
+        {
+          log::alert ("unsupported component: %1%") % component;
+        }
     }
 
-  return dirs;
+  return rv;
 }
 
 std::string
 run_time::data_file (scope s, const std::string& name) const
 {
-  if (running_in_place ())
-    return (impl::instance_->top_srcdir_ / name).string ();
+  fs::path rv;
 
-  return (fs::path (PKGDATADIR) / name).string ();
+  if (!running_in_place ())
+    {
+      /**/ if (pkg == s)
+        {
+          rv = fs::path (PKGDATADIR) / name;
+        }
+      else
+        {
+          log::alert ("unsupported scope: %1%") % s;
+        }
+    }
+  else
+    {
+      rv = impl::instance_->top_srcdir_ / name;
+    }
+
+  if (!fs::exists (rv))
+    log::trace ("%1%: no such file") % rv.string ();
+
+  return rv.string ();
 }
 
 std::string
 run_time::conf_file (scope s, const std::string& name) const
 {
-  if (running_in_place ())
-    return (impl::instance_->top_srcdir_ / name).string ();
+  fs::path rv;
 
-  return (fs::path (PKGSYSCONFDIR) / name).string ();
+  if (!running_in_place ())
+    {
+      /**/ if (pkg == s || sys == s)
+        {
+          rv = fs::path (PKGSYSCONFDIR) / name;
+        }
+      else
+        {
+          log::alert ("unsupported scope: %1%") % s;
+        }
+    }
+  else
+    {
+      rv = impl::instance_->top_srcdir_ / "lib" / name;
+      if (!fs::exists (rv))
+        rv = impl::instance_->top_srcdir_ / name;
+    }
+
+  if (!fs::exists (rv))
+    log::trace ("%1%: no such file") % rv.string ();
+
+  return rv.string ();
+}
+
+std::string
+run_time::exec_file (scope s, const std::string& name) const
+{
+  fs::path rv;
+
+  if (!running_in_place ())
+    {
+      /**/ if (pkg == s)
+        {
+          rv = fs::path (PKGLIBEXECDIR) / name;
+        }
+      else
+        {
+          log::alert ("unsupported scope: %1%") % s;
+        }
+    }
+  else
+    {
+      rv = impl::instance_->top_srcdir_ / "filters" / name;
+    }
+
+  if (!fs::exists (rv))
+    log::trace ("%1%: no such file") % rv.string ();
+
+  return rv.string ();
 }
 
 bool
@@ -285,10 +367,43 @@ run_time::impl::impl (int argc, const char *const argv[])
 {
   lt_dlinit ();
 
-  //! \todo Fix breakage when running from deeper nested directories
-  //! \todo Fix race condition
-  if (getenv ("srcdir"))
-    top_srcdir_ = fs::path (getenv ("srcdir")) / "..";
+  const char *srcdir (getenv ("srcdir"));
+  if (srcdir)
+    {
+      // Set up run-in-place support
+      // This support requires knowledge of where the top source and
+      // build directories can be found.  We search for known source
+      // and object files from suitable starting points in the file
+      // system tree and walk up that tree until a match is found.
+
+      fs::path src (fs::absolute (srcdir));
+
+      while (!src.empty ()
+             && !fs::exists (src / "lib" / "tests" / "run-time.cpp"))
+        {
+          src = src.parent_path ();
+        }
+      top_srcdir_ = src;
+
+      if (top_srcdir_.empty ())
+        {
+          log::alert ("not in a source tree: %1%") % srcdir;
+        }
+
+      fs::path obj (fs::absolute ("."));
+
+      while (!obj.empty ()
+             && !fs::exists (obj / "lib" / "tests" / ".deps" / "run-time.Po"))
+        {
+          obj = obj.parent_path ();
+        }
+      top_builddir_ = obj;
+
+      if (top_builddir_.empty ())
+        {
+          log::alert ("not in a build tree");
+        }
+    }
 
   argzero_ = argv[0];
 

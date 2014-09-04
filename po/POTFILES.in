@@ -1,5 +1,5 @@
 #  POTFILES.in -- list of files containing translatable strings
-#  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+#  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 #
 #  License: GPL-3.0+
 #  Author : AVASYS CORPORATION
@@ -48,6 +48,7 @@ gtkmm/dialog.cpp
 gtkmm/dialog.glade
 gtkmm/dropdown.cpp
 gtkmm/editor.cpp
+gtkmm/file-chooser.cpp
 lib/descriptor.cpp
 lib/device.cpp
 lib/media.cpp

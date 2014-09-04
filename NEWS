@@ -1,6 +1,14 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.7.0                                             (2014-08-06)
+----------------------------------------------------------------------
+ * adds driver support for the PX-M7050 Series, PX-M7050FX Series,
+   WF-8510/8590 Series and WF-R8590 Series
+ * improves the GUI's file selection dialog
+ * adds support for file name patterns, e.g. "Untitled-%03i.png"
+
+----------------------------------------------------------------------
 utsushi-0.6.0                                             (2014-04-23)
 ----------------------------------------------------------------------
  * adds driver support for the DS-40

@@ -131,7 +131,7 @@ public:
     usr,                        //!< user's home directory
   };
 
-  const sequence_type&
+  sequence_type
   load_dirs (scope s, const std::string& component) const;
 
   std::string
@@ -139,6 +139,9 @@ public:
 
   std::string
   conf_file (scope s, const std::string& name) const;
+
+  std::string
+  exec_file (scope s, const std::string& name) const;
 
   bool
   running_in_place () const;

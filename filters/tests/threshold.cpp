@@ -31,6 +31,10 @@
 #include "../pnm.hpp"
 #include "../threshold.hpp"
 
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
 using namespace utsushi;
 using _flt_::threshold;
 using _flt_::pnm;
@@ -39,9 +43,9 @@ struct fixture
   : public threshold
 {
   fixture () : name_("threshold.pnm") {}
-  ~fixture () { remove (name_); }
+  ~fixture () { fs::remove (name_); }
 
-  const fs::path name_;
+  const std::string name_;
 };
 
 BOOST_FIXTURE_TEST_CASE (gray_to_binary, fixture)
@@ -62,8 +66,8 @@ BOOST_FIXTURE_TEST_CASE (gray_to_binary, fixture)
 
   idev | str;
 
-  fs::ifstream file;
-  file.open (name_);
+  std::ifstream file;
+  file.open (name_.c_str ());
   octet *buf = new octet [sizeof (o)];
   file.read (buf, sizeof (o));
   file.close ();

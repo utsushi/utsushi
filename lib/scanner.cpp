@@ -140,6 +140,19 @@ scanner::create (connexion::ptr cnx, const scanner::info& info)
   return rv;
 }
 
+std::string
+scanner::model () const
+{
+  return std::string ();
+}
+
+scanner::scanner (connexion::ptr cnx)
+  : cnx_(cnx)
+{
+  option_.reset (static_cast< option::map * > (this),
+                 null_deleter ());
+}
+
 scanner::info::info (const std::string& udi)
   : udi_(udi)
 {

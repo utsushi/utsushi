@@ -32,6 +32,8 @@
 #include "utsushi/file.hpp"
 #include "utsushi/test/memory.hpp"
 
+#include <boost/filesystem.hpp>
+
 using namespace utsushi;
 
 using boost::filesystem::file_size;
@@ -45,7 +47,7 @@ struct fixture
   const streamsize size;
   octet *data;
 
-  const path name;
+  const std::string name;
 
   fixture () : octets ((5 * default_buffer_size) / 2),
                size   (     default_buffer_size  / 3),

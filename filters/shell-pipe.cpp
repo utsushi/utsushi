@@ -59,18 +59,6 @@ close_(int& fd)
 
 inline
 void
-log_io_(const std::string& cmd, pid_t pid, int ec)
-{
-  if (EINTR == ec || EAGAIN == ec || EWOULDBLOCK == ec)
-    log::debug ("%1% (pid: %2%): %3%")
-      % cmd % pid % strerror (ec);
-  else
-    log::error ("%1% (pid: %2%): %3%")
-      % cmd % pid % strerror (ec);
-}
-
-inline
-void
 log_process_exit_(const std::string& cmd, const siginfo_t& info)
 {
   switch (info.si_code)
@@ -91,33 +79,6 @@ log_process_exit_(const std::string& cmd, const siginfo_t& info)
       log::error ("%1% exited (pid: %2%, code: %3)")
         % cmd % info.si_pid % info.si_code;
     }
-}
-
-// \todo Read any waiting error messages from \a efd and log them
-inline
-void
-reap_(const std::string& cmd, pid_t pid, int efd)
-{
-  int ec = 0;
-
-  do
-    {
-      siginfo_t info;
-
-      if (0 == waitid (P_PID, pid, &info, WEXITED))
-        {
-          log_process_exit_(cmd, info);
-        }
-      else
-        {
-          ec = errno;
-          if (EINTR != ec && ECHILD != ec)
-            log::debug (strerror (ec));
-        }
-    }
-  while (EINTR == ec);
-
-  close_(efd);
 }
 
 inline
@@ -151,6 +112,7 @@ reset_(int& pipe, int fd)
   close_(pipe);
   pipe = fd;
   fcntl (pipe, F_SETFL, O_NONBLOCK);
+  fcntl (pipe, F_SETFD, FD_CLOEXEC);
 }
 
 }       // namespace
@@ -179,17 +141,36 @@ shell_pipe::~shell_pipe ()
   if (0 < process_) waitid (P_PID, process_, nullptr, WEXITED);
 }
 
+void
+shell_pipe::mark (traits::int_type c, const context& ctx)
+{
+  output::mark (c, ctx);        // bypass base class' implementation
+
+  output_->mark (last_marker_, ctx_);
+  signal_marker_(last_marker_);
+}
+
 streamsize
 shell_pipe::write (const octet *data, streamsize n)
 {
+  if (-1 == i_pipe_) return n;
+
   return service_pipes_(data, n);
+}
+
+void
+shell_pipe::bos (const context& ctx)
+{
+  freeze_options ();
+  ctx_ = estimate (ctx);
+  last_marker_ = traits::bos ();
 }
 
 void
 shell_pipe::boi (const context& ctx)
 {
   ctx_ = estimate (ctx);
-  execute_(command_ + ' ' + arguments (ctx));
+  last_marker_ = exec_process_(ctx);
 }
 
 void
@@ -202,30 +183,40 @@ shell_pipe::eoi (const context& ctx)
 
   ctx_ = finalize (ctx);
 
-  reap_(command_, process_, e_pipe_);
-  process_ = -1;
-  e_pipe_  = -1;
+  last_marker_ = reap_process_();
+}
+
+void
+shell_pipe::eos (const context& ctx)
+{
+  ctx_ = finalize (ctx);
+  last_marker_ = traits::eos ();
 }
 
 void
 shell_pipe::eof (const context& ctx)
 {
   close_(i_pipe_);
-  close_(o_pipe_);              // trigger EPIPE/SIGPIPE in process_
+  close_(o_pipe_);              // trigger SIGPIPE in process_
 
-  reap_(command_, process_, e_pipe_);
-  process_ = -1;
-  e_pipe_  = -1;
+  ctx_ = finalize (ctx);
+
+  last_marker_ = reap_process_();
+}
+
+void
+shell_pipe::freeze_options ()
+{
 }
 
 context
-shell_pipe::estimate (const context& ctx) const
+shell_pipe::estimate (const context& ctx)
 {
   return ctx;
 }
 
 context
-shell_pipe::finalize (const context& ctx) const
+shell_pipe::finalize (const context& ctx)
 {
   return estimate (ctx);
 }
@@ -237,8 +228,16 @@ shell_pipe::arguments (const context& ctx)
 }
 
 void
-shell_pipe::execute_(const std::string& command_line)
+shell_pipe::checked_write (octet *data, streamsize n)
 {
+  output_->write (data, n);
+}
+
+traits::int_type
+shell_pipe::exec_process_(const context& ctx)
+{
+  std::string command_line (command_ + ' ' + arguments (ctx));
+
   BOOST_ASSERT (0 > process_);
 
   int in [2] = { -1, -1 };
@@ -256,7 +255,7 @@ shell_pipe::execute_(const std::string& command_line)
       close (out[0]); close (out[1]);
       close (err[0]); close (err[1]);
 
-      return;
+      return traits::eof ();
     }
 
   BOOST_ASSERT (0 <= process_);
@@ -271,6 +270,10 @@ shell_pipe::execute_(const std::string& command_line)
           && 0 <= dup2 (out[1], STDOUT_FILENO)
           && 0 <= dup2 (in[0] , STDIN_FILENO))
         {
+          close (in[0]);        // unused duplicates
+          close (out[1]);
+          close (err[1]);
+
           execl (SHELL, SHELL, "-c", command_line.c_str (), NULL);
         }
 
@@ -281,7 +284,7 @@ shell_pipe::execute_(const std::string& command_line)
       close (in[0]);
       close (out[1]);
       close (err[1]);
-      _exit (EXIT_FAILURE);
+      _exit (EXIT_FAILURE);     // FIXME should trigger traits::eof()
     }
   else                          // parent process
     {
@@ -298,6 +301,62 @@ shell_pipe::execute_(const std::string& command_line)
       log::trace ("%1% started (pid: %2%)") % command_ % process_;
       log::debug ("invocation: %1%") % command_line;
     }
+
+  return traits::boi ();
+}
+
+// \todo Read any waiting error messages from \a efd and log them
+traits::int_type
+shell_pipe::reap_process_()
+{
+  if (-1 != e_pipe_)            // empty child's stderr and log it
+    {
+      ssize_t rv = 0;
+      do
+        {
+          message_.append (buffer_, rv);
+          rv = ::read (e_pipe_, buffer_, buffer_size_);
+        }
+      while (0 < rv);
+
+      if (0 > rv)
+        log::error ("reap (%1%): %2%") % process_ % strerror (errno);
+
+      if (!message_.empty ())
+        log::error ("%1% (pid: %2%): %3%")
+          % command_ % process_ % message_;
+
+      message_.clear ();
+
+      close_(e_pipe_);
+     }
+
+  siginfo_t info;
+  int ec = 0;
+
+  do
+    {
+      ec = 0;
+
+      if (0 == waitid (P_PID, process_, &info, WEXITED))
+        {
+          log_process_exit_(command_, info);
+        }
+      else
+        {
+          ec = errno;
+          if (EINTR != ec)
+            log::debug ("waitid (%1%): %2%") % process_ % strerror (ec);
+        }
+    }
+  while (EINTR == ec);
+
+  process_ = -1;
+
+  return ((   CLD_EXITED   == info.si_code
+           && EXIT_SUCCESS == info.si_status)
+          ? traits::eoi ()
+          : traits::eof ());
 }
 
 streamsize
@@ -347,12 +406,16 @@ shell_pipe::service_pipes_(const octet *data, streamsize n)
       rv = ::read (e_pipe_, buffer_, buffer_size_);
 
       /**/ if (0 < rv) { message_.append (buffer_, rv); }
-      else if (0 > rv) { log_io_(command_, process_, errno); }
-      else if (!message_.empty ())
+      else if (0 > rv) { handle_error_(errno, e_pipe_); }
+      else  /* EOF */
         {
-          log::error ("%1% (pid: %2%): %3%")
-            % command_ % process_ % message_;
-          message_.clear ();
+          close_(e_pipe_);
+          if (!message_.empty ())
+            {
+              log::error ("%1% (pid: %2%): %3%")
+                % command_ % process_ % message_;
+              message_.clear ();
+            }
         }
     }
 
@@ -360,8 +423,8 @@ shell_pipe::service_pipes_(const octet *data, streamsize n)
     {
       rv = ::read (o_pipe_, buffer_, buffer_size_);
 
-      /**/ if (0 < rv) { output_->write (buffer_, rv); }
-      else if (0 > rv) { log_io_(command_, process_, errno); }
+      /**/ if (0 < rv) { checked_write (buffer_, rv); }
+      else if (0 > rv) { handle_error_(errno, o_pipe_); }
       else  /* EOF */  { close_(o_pipe_); }
     }
 
@@ -370,11 +433,34 @@ shell_pipe::service_pipes_(const octet *data, streamsize n)
       rv = ::write (i_pipe_, data, n);
 
       /**/ if (0 < rv) { return rv; }
-      else if (0 > rv) { log_io_(command_, process_, errno); }
+      else if (0 > rv) { handle_error_(errno, i_pipe_); }
       else             { return rv; }
     }
 
   return 0;                     // make caller hold onto data
+}
+
+void
+shell_pipe::handle_error_(int ec, int& fd)
+{
+  if (EINTR == ec || EAGAIN == ec || EWOULDBLOCK == ec)
+    {
+      log::debug ("%1% (pid: %2%): %3%")
+        % command_ % process_ % strerror (ec);
+    }
+  else
+    {
+      log::error ("%1% (pid: %2%): %3%")
+        % command_ % process_ % strerror (ec);
+
+      if (e_pipe_ != fd)
+        last_marker_ = traits::eof ();
+
+      // The file descriptor should no longer be included in the sets
+      // passed to pselect() beyond this point.  See: select_tut(2).
+
+      close_(fd);
+    }
 }
 
 }       // namespace _flt_

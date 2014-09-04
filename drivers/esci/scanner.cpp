@@ -98,6 +98,11 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
         {
           sp = make_shared< DS_x0000 > (cnx);
         }
+      else if (   info.product_name () == "PID 08BC"
+               || info.product_name () == "PID 08CC")
+        {
+          sp = make_shared< PX_M7050 > (cnx);
+        }
       else
         {
           sp = make_shared< compound_scanner > (cnx);

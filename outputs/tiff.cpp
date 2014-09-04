@@ -1,5 +1,5 @@
 //  tiff.cpp -- TIFF image file format support
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -22,14 +22,25 @@
 #include <config.h>
 #endif
 
-#include <ios>
-#include <stdexcept>
+#include "tiff.hpp"
+
+#include <utsushi/i18n.hpp>
+#include <utsushi/log.hpp>
 
 #include <boost/assert.hpp>
+#include <boost/scoped_array.hpp>
 #include <boost/throw_exception.hpp>
 
-#include "utsushi/i18n.hpp"
-#include "tiff.hpp"
+#include <cerrno>
+#include <cstdarg>
+#include <ios>
+#include <new>
+#include <stdexcept>
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 namespace utsushi {
 namespace _out_ {
@@ -39,181 +50,262 @@ using std::ios_base;
 using std::logic_error;
 using std::runtime_error;
 
-// TODO Review the overly trigger-happy throwing of exceptions.
-//      We may want to pass error and warning handlers to the libtiff
-//      code as well.
+std::string tiff_odevice::err_msg = std::string ();
 
-static TIFF *
-open (const fs::path& name)
+namespace {
+
+// The TIFF library only allows for library-wide handlers.  If there
+// are more components that use the TIFF library in the same run-time,
+// then they may be clobbering each other's handlers.  Until such time
+// this possibility will be ignored.
+//
+// The error and warning handlers below simply forward the formatted
+// message to utsushi::log at a suitable level of verbosity.  In case
+// of an error, the class-wide tiff_odevice::err_msg variable is set
+// so that member functions can create a more intelligible exception.
+// They need to clear this variable before calling TIFF library API.
+
+using boost::scoped_array;
+
+void
+handle_error (const char *module, const char *fmt, va_list ap)
 {
-  // TIFFOpen() interprets 'b' as big-endian, not binary as fopen()
-  TIFF *rv (TIFFOpen (name.string ().c_str (), "w"));
-  if (!rv) BOOST_THROW_EXCEPTION (bad_alloc ());
-  return rv;
+  int sz = vsnprintf (NULL, 0, fmt, ap);
+  scoped_array< char > buf (new char[sz + 1]);
+
+  vsnprintf (buf.get (), sz + 1, fmt, ap);
+  log::fatal (format ("%1%: %2%") % module % buf.get ());
+
+  tiff_odevice::err_msg = buf.get ();
 }
 
-static void set_tags (TIFF *_tiff, const context& ctx);
+void
+handle_warning (const char *module, const char *fmt, va_list ap)
+{
+  int sz = vsnprintf (NULL, 0, fmt, ap);
+  scoped_array< char > buf (new char[sz + 1]);
 
-  tiff_odevice::tiff_odevice (const fs::path& name)
-    : name_ (name)
-  {}
+  vsnprintf (buf.get (), sz + 1, fmt, ap);
+  log::alert (format ("%1%: %2%") % module % buf.get ());
+}
 
-  tiff_odevice::tiff_odevice (const path_generator& generator)
-    : generator_ (generator)
-  {}
+}       // namespace
 
-  streamsize
-  tiff_odevice::write (const octet *data, streamsize n)
-  {
-    BOOST_ASSERT ((data && 0 < n) || 0 == n);
-
-    ios_base::failure e (_("failure writing TIFF scanline"));
-
-    streamsize octets = std::min (ctx_.octets_per_line () - partial_size_, n);
-
-    {                           // continue with stashed octets
-      traits::copy (partial_line_.get () + partial_size_,
-                    data, octets);
-      partial_size_ += octets;
-      if (partial_size_ == ctx_.octets_per_line ())
+tiff_odevice::tiff_odevice (const std::string& filename)
+  : file_odevice (filename)
+  , tiff_(NULL)
+{
+  if (filename_ == "/dev/stdout")
+    {
+      if (-1 == lseek (STDOUT_FILENO, 0L, SEEK_SET))
         {
-          if (1 != TIFFWriteScanline (_tiff, partial_line_.get (), _row, 1))
-            {
-              BOOST_THROW_EXCEPTION (e);
-            }
-          ctx_.octets_seen () += ctx_.octets_per_line ();
-          ++_row;
-        }
-      else
-        {
-          return n;
+          if (ESPIPE == errno)
+            BOOST_THROW_EXCEPTION
+              (logic_error (_("cannot write TIFF to tty or pipe")));
+          else
+            BOOST_THROW_EXCEPTION
+              (runtime_error (strerror (errno)));
         }
     }
 
-    while (octets + ctx_.octets_per_line () <= n)
+  TIFFSetErrorHandler (handle_error);
+  TIFFSetWarningHandler (handle_warning);
+}
+
+tiff_odevice::tiff_odevice (const path_generator& generator)
+  : file_odevice (generator)
+  , tiff_(NULL)
+{
+  TIFFSetErrorHandler (handle_error);
+  TIFFSetWarningHandler (handle_warning);
+}
+
+tiff_odevice::~tiff_odevice ()
+{
+  close ();
+}
+
+streamsize
+tiff_odevice::write (const octet *data, streamsize n)
+{
+  BOOST_ASSERT ((data && 0 < n) || 0 == n);
+
+  streamsize octets = std::min (ctx_.octets_per_line () - partial_size_, n);
+
+  {                             // continue with stashed octets
+    traits::copy (partial_line_.get () + partial_size_,
+                  data, octets);
+    partial_size_ += octets;
+    if (partial_size_ == ctx_.octets_per_line ())
       {
-        // TIFFWriteScanline() is not const-correct :-(
-        tdata_t buffer (const_cast< octet * > (data + octets));
-        if (1 != TIFFWriteScanline (_tiff, buffer, _row, 1))
+        err_msg.clear ();
+        if (1 != TIFFWriteScanline (tiff_, partial_line_.get (), row_, 1))
           {
-            BOOST_THROW_EXCEPTION (e);
+            BOOST_THROW_EXCEPTION (ios_base::failure (err_msg));
           }
-        octets              += ctx_.octets_per_line ();
         ctx_.octets_seen () += ctx_.octets_per_line ();
-        ++_row;
+        ++row_;
       }
-
-    partial_size_ = n - octets;
-    if (0 < partial_size_)    // stash left-over octets for next write
+    else
       {
-        traits::copy (partial_line_.get (), data + octets,
-                      partial_size_);
+        return n;
       }
-
-    return n;
   }
 
-  void
-  tiff_odevice::bos (const context& ctx)
-  {
-    _page = 0;
-    if (!generator_) _tiff = open (name_);
-  }
-
-  void
-  tiff_odevice::boi (const context& ctx)
-  {
-    if (!(1 == ctx.comps () || 3 == ctx.comps ()))
-      {
-        BOOST_THROW_EXCEPTION
-          (logic_error (_("unsupported colour space")));
-      }
-    if (!(1 == ctx.depth () || 8 == ctx.depth ()))
-      {
-        BOOST_THROW_EXCEPTION
-          (logic_error (_("unsupported bit depth")));
-      }
-
-    if (generator_) {
-      name_ = generator_();
-      _tiff = open (name_);
+  while (octets + ctx_.octets_per_line () <= n)
+    {
+      // TIFFWriteScanline() is not const-correct :-(
+      tdata_t buffer (const_cast< octet * > (data + octets));
+      err_msg.clear ();
+      if (1 != TIFFWriteScanline (tiff_, buffer, row_, 1))
+        {
+          BOOST_THROW_EXCEPTION (ios_base::failure (err_msg));
+        }
+      octets              += ctx_.octets_per_line ();
+      ctx_.octets_seen () += ctx_.octets_per_line ();
+      ++row_;
     }
 
-    ctx_ = ctx;
-    ctx_.content_type ("image/tiff");
+  partial_size_ = n - octets;
+  if (0 < partial_size_)      // stash left-over octets for next write
+    {
+      traits::copy (partial_line_.get (), data + octets,
+                    partial_size_);
+    }
 
-    partial_line_.reset (new octet[ctx_.octets_per_line ()]);
-    partial_size_ = 0;
-    ctx_.octets_seen () = 0;
+  return n;
+}
 
-    ++_page;
-    _row = 0;
+void
+tiff_odevice::open ()
+{
+  file_odevice::open ();
+  err_msg.clear ();
+  tiff_ = TIFFFdOpen (fd_, filename_.c_str (), "w");
 
-    set_tags (_tiff, ctx_);
-  }
+  if (!tiff_)
+    {
+      eof (ctx_);               // reverse effects of base class' open()
+      BOOST_THROW_EXCEPTION (ios_base::failure (err_msg));
+    }
+}
 
-  void
-  tiff_odevice::eoi (const context& ctx)
-  {
-    BOOST_ASSERT (partial_size_ == 0);
-    BOOST_ASSERT (ctx_.octets_seen () == ctx.octets_per_image ());
+void
+tiff_odevice::close ()
+{
+  if (!tiff_) return;
 
-    if (1 != TIFFWriteDirectory (_tiff))
-      {
-        BOOST_THROW_EXCEPTION
-          (runtime_error (_("failure writing TIFF directory")));
-      }
+  TIFFClose (tiff_);
+  tiff_ = NULL;
 
-    if (generator_) TIFFClose (_tiff);
-  }
+  // The call to TIFFClose() causes fd_ to become invalid.  That will
+  // trigger a spurious warning in the base class' close().  Setting
+  // fd_ to -1 here will prevent the warning but also short-circuits
+  // any other logic that that function is taking care of.
+  // Try reopening the file to get a good file descriptor again.  In
+  // any case, make sure that the base class' close() can do its job.
 
-  void
-  tiff_odevice::eos (const context& ctx)
-  {
-    if (!generator_) TIFFClose (_tiff);
-  }
+  int fd = ::open (filename_.c_str (), O_RDONLY);
+  if (-1 == fd)
+    {
+      log::alert (strerror (errno));
+    }
+  else
+    {
+      fd_ = fd;
+    }
 
-  static void
-  set_tags (TIFF *_tiff, const context& ctx)
-  {
-    TIFFSetField (_tiff, TIFFTAG_SAMPLESPERPIXEL, ctx.comps ());
+  file_odevice::close ();
+}
 
-    uint16 pm = 0;              // uint16 is courtesy of tiffio.h
-    if (8 == ctx.depth())
-      {
-        if (3 == ctx.comps())
-          {
-            pm = PHOTOMETRIC_RGB;
-          }
-        else if (1 == ctx.comps())
-          {
-            pm = PHOTOMETRIC_MINISBLACK;
-          }
-      }
-    else if (1 == ctx.depth() && 1 == ctx.comps())
-      {
-        pm = PHOTOMETRIC_MINISBLACK;
-      }
-    TIFFSetField (_tiff, TIFFTAG_PHOTOMETRIC, pm);
+void
+tiff_odevice::bos (const context& ctx)
+{
+  page_ = 0;
+  file_odevice::bos (ctx_);
+}
 
-    if (3 == ctx.comps())
-      TIFFSetField (_tiff, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+void
+tiff_odevice::boi (const context& ctx)
+{
+  if (!(1 == ctx.comps () || 3 == ctx.comps ()))
+    {
+      BOOST_THROW_EXCEPTION
+        (logic_error (_("unsupported colour space")));
+    }
+  if (!(1 == ctx.depth () || 8 == ctx.depth ()))
+    {
+      BOOST_THROW_EXCEPTION
+        (logic_error (_("unsupported bit depth")));
+    }
 
-    TIFFSetField (_tiff, TIFFTAG_BITSPERSAMPLE, ctx.depth());
+  ctx_ = ctx;
+  ctx_.content_type ("image/tiff");
 
-    TIFFSetField (_tiff, TIFFTAG_IMAGEWIDTH , ctx.width ());
-    TIFFSetField (_tiff, TIFFTAG_IMAGELENGTH, ctx.height ());
-    TIFFSetField (_tiff, TIFFTAG_ROWSPERSTRIP, 1);
+  partial_line_.reset (new octet[ctx_.octets_per_line ()]);
+  partial_size_ = 0;
+  ctx_.octets_seen () = 0;
 
-    if (0 != ctx.x_resolution () && 0 != ctx.y_resolution ())
-      {
-        TIFFSetField (_tiff, TIFFTAG_XRESOLUTION, float (ctx.x_resolution ()));
-        TIFFSetField (_tiff, TIFFTAG_YRESOLUTION, float (ctx.y_resolution ()));
-        TIFFSetField (_tiff, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH);
-      }
+  ++page_;
+  row_ = 0;
 
-    TIFFSetField (_tiff, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
-  }
+  file_odevice::boi (ctx_);
 
-} // namespace _out_
-} // namespace utsushi
+  // set up TIFF tags for the upcoming image
+
+  TIFFSetField (tiff_, TIFFTAG_SAMPLESPERPIXEL, ctx.comps ());
+
+  uint16 pm = 0;                // uint16 is courtesy of tiffio.h
+  if (8 == ctx.depth())
+    {
+      if (3 == ctx.comps())
+        {
+          pm = PHOTOMETRIC_RGB;
+        }
+      else if (1 == ctx.comps())
+        {
+          pm = PHOTOMETRIC_MINISBLACK;
+        }
+    }
+  else if (1 == ctx.depth() && 1 == ctx.comps())
+    {
+      pm = PHOTOMETRIC_MINISBLACK;
+    }
+  TIFFSetField (tiff_, TIFFTAG_PHOTOMETRIC, pm);
+
+  if (3 == ctx.comps())
+    TIFFSetField (tiff_, TIFFTAG_PLANARCONFIG, PLANARCONFIG_CONTIG);
+
+  TIFFSetField (tiff_, TIFFTAG_BITSPERSAMPLE, ctx.depth());
+
+  TIFFSetField (tiff_, TIFFTAG_IMAGEWIDTH , ctx.width ());
+  TIFFSetField (tiff_, TIFFTAG_IMAGELENGTH, ctx.height ());
+  TIFFSetField (tiff_, TIFFTAG_ROWSPERSTRIP, 1);
+
+  if (0 != ctx.x_resolution () && 0 != ctx.y_resolution ())
+    {
+      TIFFSetField (tiff_, TIFFTAG_XRESOLUTION, float (ctx.x_resolution ()));
+      TIFFSetField (tiff_, TIFFTAG_YRESOLUTION, float (ctx.y_resolution ()));
+      TIFFSetField (tiff_, TIFFTAG_RESOLUTIONUNIT, RESUNIT_INCH);
+    }
+
+  TIFFSetField (tiff_, TIFFTAG_COMPRESSION, COMPRESSION_NONE);
+}
+
+void
+tiff_odevice::eoi (const context& ctx)
+{
+  BOOST_ASSERT (partial_size_ == 0);
+  BOOST_ASSERT (ctx_.octets_seen () == ctx.octets_per_image ());
+
+  err_msg.clear ();
+  if (1 != TIFFWriteDirectory (tiff_))
+    {
+      BOOST_THROW_EXCEPTION (ios_base::failure (err_msg));
+    }
+
+  file_odevice::eoi (ctx_);
+}
+
+}       // namespace _out_
+}       // namespace utsushi

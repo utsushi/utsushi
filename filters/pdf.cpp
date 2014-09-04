@@ -32,7 +32,7 @@
 namespace utsushi {
 namespace _flt_ {
 
-pdf::pdf ()
+pdf::pdf (bool multi_file)
   : _match_direction (false)
   , _doc (NULL)
   , _pages (NULL)
@@ -40,6 +40,7 @@ pdf::pdf ()
   , _trailer (NULL)
   , _img_height_obj (NULL)
   , _rotate_180 (false)
+  , _multi_file (multi_file)
 {
   _doc = new _pdf_::writer ();
 }
@@ -85,6 +86,13 @@ pdf::boi (const context& ctx)
 {
   BOOST_ASSERT (   "image/jpeg"  == ctx.content_type ()
                 || "image/g3fax" == ctx.content_type ());
+
+  if (_multi_file)
+    {
+      size_type page (_page);
+      bos (ctx);
+      _page = page;
+    }
 
   content_type_ = ctx.content_type ();
   ctx_ = ctx;

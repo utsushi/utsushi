@@ -37,11 +37,12 @@
 
 #include "../../outputs/tiff.hpp"
 
+#include <boost/filesystem.hpp>
+
 using namespace utsushi;
 
 using _out_::tiff_odevice;
 
-using boost::filesystem::path;
 using boost::filesystem::remove;
 
 struct fixture
@@ -80,7 +81,7 @@ struct fixture
 BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
 {
   context ctx (643, 487, context::RGB8);
-  const fs::path name ("tiff.out");
+  const std::string name ("tiff.out");
 
   iptr_ = make_shared< setmem_idevice > (gen_, ctx);
   str_.push (make_shared< tiff_odevice > (name));
@@ -88,7 +89,7 @@ BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
   *iptr_ | str_;
 
 #if HAVE_LIBMAGIC
-  const char *mime = magic_file (cookie_, name.string ().c_str ());
+  const char *mime = magic_file (cookie_, name.c_str ());
   BOOST_CHECK_EQUAL ("image/tiff", mime);
 #endif  /* HAVE_LIBMAGIC */
 
@@ -98,7 +99,7 @@ BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
 BOOST_FIXTURE_TEST_CASE (test_magic_multipage, fixture)
 {
   context ctx (643, 487, context::MONO);
-  path_generator pathgen ("tiff-", "out");
+  path_generator pathgen ("tiff-%3i.out");
   const unsigned images = 11;
 
   iptr_ = make_shared< setmem_idevice > (gen_, ctx, images);
@@ -108,10 +109,10 @@ BOOST_FIXTURE_TEST_CASE (test_magic_multipage, fixture)
 
   for (unsigned i = 0; i < images; ++i)
     {
-      path p = pathgen ();
+      std::string p = pathgen ();
 
 #if HAVE_LIBMAGIC
-      const char *mime = magic_file (cookie_, p.string ().c_str ());
+      const char *mime = magic_file (cookie_, p.c_str ());
       BOOST_CHECK_EQUAL ("image/tiff", mime);
 #endif  /* HAVE_LIBMAGIC */
 

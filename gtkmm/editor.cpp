@@ -1,6 +1,6 @@
 //  editor.cpp -- scanning dialog's option value editor
+//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
 //  Copyright (C) 2013  Olaf Meeuwissen
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -639,9 +639,19 @@ editor::set (const std::string& key, const value& v)
 
   if (v == opt) return;
 
+  value new_v (v);
+
+  if (key == "device/scan-area"
+      && opts_->count ("magick/automatic-scan-area"))
+    {
+      toggle t = (value ("Automatic") == new_v);
+      (*opts_)["magick/automatic-scan-area"] = t;
+      if (t) new_v = value ("Maximum");
+    }
+
   try
     {
-      opt = v;
+      opt = new_v;
     }
   catch (const constraint::violation& e)
     {
@@ -738,8 +748,16 @@ editor::update_appearance (keyed_list::value_type& v)
 
   if (k == "device/scan-area")  // has device/doc-source dependency
     {
-      resetter r (controls_[k], connects_[k], opt);
-      value (opt).apply (r);
+      toggle automatic;
+      if (opts_->count ("magick/automatic-scan-area"))
+        {
+          automatic = value ((*opts_)["magick/automatic-scan-area"]);
+        }
+      if (!automatic)
+        {
+          resetter r (controls_[k], connects_[k], opt);
+          value (opt).apply (r);
+        }
     }
 
   const std::set< key > coordinates = boost::assign::list_of

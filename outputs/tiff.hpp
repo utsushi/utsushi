@@ -1,5 +1,5 @@
 //  tiff.hpp -- TIFF image file format support
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -21,43 +21,49 @@
 #ifndef outputs_tiff_hpp_
 #define outputs_tiff_hpp_
 
-#include <tiffio.h>
+#include <utsushi/file.hpp>
 
 #include <boost/scoped_array.hpp>
 
-#include <utsushi/file.hpp>
+#include <string>
+
+#include <tiffio.h>
 
 namespace utsushi {
 namespace _out_ {
 
-  class tiff_odevice
-    : public odevice
-  {
-  public:
-    tiff_odevice (const fs::path& name);
-    tiff_odevice (const path_generator& generator);
+class tiff_odevice
+  : public file_odevice
+{
+public:
+  tiff_odevice (const std::string& filename);
+  tiff_odevice (const path_generator& generator);
 
-    streamsize write (const octet *data, streamsize n);
+  ~tiff_odevice ();
 
-  protected:
-    void bos (const context& ctx);
-    void boi (const context& ctx);
-    void eoi (const context& ctx);
-    void eos (const context& ctx);
+  streamsize write (const octet *data, streamsize n);
 
-    boost::scoped_array< octet > partial_line_;
-    streamsize                   partial_size_;
+protected:
+  void open ();
+  void close ();
 
-  private:
-    fs::path name_;
-    path_generator generator_;
+  void bos (const context& ctx);
+  void boi (const context& ctx);
+  void eoi (const context& ctx);
 
-    TIFF   *_tiff;
-    uint32  _row;
-    uint32  _page;
-  };
+private:
+  TIFF   *tiff_;
+  uint32  page_;
+  uint32  row_;
 
-} // namespace _out_
-} // namespace utsushi
+  boost::scoped_array< octet > partial_line_;
+  streamsize                   partial_size_;
 
-#endif /* outputs_tiff_hpp_ */
+public:
+  static std::string err_msg;
+};
+
+}       // namespace _out_
+}       // namespace utsushi
+
+#endif  /* outputs_tiff_hpp_ */

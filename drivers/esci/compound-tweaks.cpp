@@ -37,10 +37,11 @@ namespace utsushi {
 namespace _drv_ {
 namespace esci {
 
+template< typename T >
 static void
-erase (std::vector< quad >& v, const quad& token)
+erase (std::vector< T >& v, const T& value)
 {
-  v.erase (remove (v.begin (), v.end (), token), v.end ());
+  v.erase (remove (v.begin (), v.end (), value), v.end ());
 }
 
 DS_40::DS_40 (const connexion::ptr& cnx)
@@ -299,6 +300,87 @@ DS_x0000::DS_x0000 (const connexion::ptr& cnx)
   mat[2][0] = -0.0083;
   mat[2][1] = -0.3662;
   mat[2][2] =  1.3745;
+}
+
+PX_M7050::PX_M7050 (const connexion::ptr& cnx)
+  : compound_scanner (cnx)
+{
+  information&  info (const_cast< information& > (info_));
+  capabilities& caps (const_cast< capabilities& > (caps_));
+  parameters&   defs (const_cast< parameters& > (defs_));
+
+  // Keep the "PID XXXX" product names out of sight.  Note that the
+  // base class constructor already maps these for "refspec" access
+  // purposes.  We could move this tinkering with the firmware info
+  // into the refspec but that file may be used for other purposes.
+  {
+    std::string product;
+    if ("PID 08BC" == info.product_name ()) product = "PX-M7050";
+    if ("PID 08CC" == info.product_name ()) product = "PX-M7050FX";
+    if (!product.empty ())
+      info.product.assign (product.begin (), product.end ());
+  }
+
+  // Disable 300dpi vertical resolution for performance reasons.
+  // Acquiring at 400dpi is faster for some reason.
+  if (caps.rss)
+    {
+      try
+        {
+          std::vector< integer >& v
+            = boost::get< std::vector< integer >& > (*caps.rss);
+          erase (v, 300);
+        }
+      catch (const boost::bad_get& e)
+        {
+          log::alert (e.what ());
+        }
+    }
+
+  if (HAVE_MAGICK)              /* enable resampling */
+    {
+      constraint::ptr res_x (from< range > ()
+                             -> bounds (50, 1200)
+                             -> default_value (*defs.rsm));
+      const_cast< constraint::ptr& > (res_x_) = res_x;
+
+      if (caps.rss)
+        {
+          constraint::ptr res_y (from< range > ()
+                                 -> bounds (50, 1200)
+                                 -> default_value (*defs.rss));
+          const_cast< constraint::ptr& > (res_y_) = res_y;
+        }
+    }
+
+  // Assume people prefer brighter colors over B/W
+  defs.col = code_token::parameter::col::C024;
+  defs.gmm = code_token::parameter::gmm::UG18;
+
+  // Boost USB I/O throughput
+  defs.bsz = 256 * 1024;
+
+  // Color correction parameters
+
+  vector< double, 3 >& exp
+    (const_cast< vector< double, 3 >& > (gamma_exponent_));
+
+  exp[0] = 1.012;
+  exp[1] = 0.991;
+  exp[2] = 0.998;
+
+  matrix< double, 3 >& mat
+    (const_cast< matrix< double, 3 >& > (profile_matrix_));
+
+  mat[0][0] =  1.0559;
+  mat[0][1] =  0.0471;
+  mat[0][2] = -0.1030;
+  mat[1][0] =  0.0211;
+  mat[1][1] =  1.0724;
+  mat[1][2] = -0.0935;
+  mat[2][0] =  0.0091;
+  mat[2][1] = -0.1525;
+  mat[2][2] =  1.1434;
 }
 
 }       // namespace esci

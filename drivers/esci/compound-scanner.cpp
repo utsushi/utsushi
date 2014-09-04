@@ -506,6 +506,12 @@ compound_scanner::compound_scanner (const connexion::ptr& cnx)
     }
 }
 
+std::string
+compound_scanner::model () const
+{
+  return info_.product_name ();
+}
+
 void
 compound_scanner::configure ()
 {
@@ -779,13 +785,16 @@ compound_scanner::configure ()
 bool
 compound_scanner::is_single_image () const
 {
-  return value ("ADF") != *values_["doc-source"];
+  return (value ("ADF") != *values_["doc-source"]
+          || value (1) == *values_["image-count"]);
 }
 
 bool
 compound_scanner::is_consecutive () const
 {
-  return (parm_.adf || parm_flip_.adf);
+  bool rv (parm_.adf || parm_flip_.adf);
+  if (!rv) *cnx_ << acquire_.finish ();
+  return rv;
 }
 
 static
@@ -811,7 +820,9 @@ compound_scanner::obtain_media ()
       queue_image_data_();
     }
 
-  return (!cancelled_ && !media_out () && at_image_start (q));
+  bool rv (!cancelled_ && !media_out () && at_image_start (q));
+  if (!rv) *cnx_ << acquire_.finish ();
+  return rv;
 }
 
 bool
@@ -819,7 +830,11 @@ compound_scanner::set_up_image ()
 {
   fill_data_queue_();           // until width and height are known
 
-  if (cancelled_) return false;
+  if (cancelled_)
+    {
+      *cnx_ << acquire_.finish ();
+      return false;
+    }
 
   ctx_ = context (pixel_width (), pixel_height (), pixel_type ());
   ctx_.resolution (*parm_.rsm, *parm_.rss);
@@ -863,7 +878,11 @@ compound_scanner::sgetn (octet *data, streamsize n)
   if (offset_ == buffer_.size ())
     {
       fill_data_queue_();
-      if (cancelled_) return traits::eof ();
+      if (cancelled_)
+        {
+          *cnx_ << acquire_.finish ();
+          return traits::eof ();
+        }
     }
 
   streamsize rv = std::min (buffer_.size () - offset_, sz);
@@ -940,18 +959,27 @@ compound_scanner::set_up_hardware ()
     quad error = stat_.error (src);
 
     if (error)
-      BOOST_THROW_EXCEPTION
-        (system_error
-         (token_to_error_code (src), create_message (src, error)));
+      {
+        *cnx_ << acquire_.finish ();
+
+        BOOST_THROW_EXCEPTION
+          (system_error
+           (token_to_error_code (src), create_message (src, error)));
+      }
   }
 
   *cnx_ << acquire_.start ();
 
   if (acquire_.fatal_error ())
-    BOOST_THROW_EXCEPTION
-      (system_error
-       (token_to_error_code (*acquire_.fatal_error ()),
-        create_message (*acquire_.fatal_error ())));
+    {
+      std::vector < status::error > error (*acquire_.fatal_error ());
+
+      *cnx_ << acquire_.finish ();
+
+      BOOST_THROW_EXCEPTION
+        (system_error
+         (token_to_error_code (error), create_message (error)));
+    }
 
   if (parm_.bsz)
     buffer_size_ = *parm_.bsz;
@@ -1420,7 +1448,11 @@ compound_scanner::queue_image_data_()
 
   cancelled_ = (buf.empty()
                 && (do_cancel || buf.is_cancel_requested ()));
-  if (cancelled_) cancel ();            // notify idevice::read()
+  if (cancelled_)
+    {
+      cancel ();            // notify idevice::read()
+      *cnx_ << acquire_.finish ();
+    }
 
   if (buf.is_flip_side ())
     rear_.push_back (buf);
@@ -1428,10 +1460,15 @@ compound_scanner::queue_image_data_()
     face_.push_back (buf);
 
   if (acquire_.fatal_error ())
-    BOOST_THROW_EXCEPTION
-      (system_error
-       (token_to_error_code (*acquire_.fatal_error ()),
-        create_message (*acquire_.fatal_error ())));
+    {
+      std::vector < status::error > error (*acquire_.fatal_error ());
+
+      *cnx_ << acquire_.finish ();
+
+      BOOST_THROW_EXCEPTION
+        (system_error
+         (token_to_error_code (error), create_message (error)));
+    }
 }
 
 void
@@ -1526,6 +1563,8 @@ compound_scanner::probe_media_size_(const string& doc_source)
       while (!stat_.size_detected (src)
              && acquire_.delay_elapsed ()
              && --repeat_count);
+
+      *cnx_ << acquire_.finish ();
 
       if (stat_.size_detected (src))
         {
@@ -2507,6 +2546,9 @@ static fs::path
 map_(std::string product)
 {
   run_time rt;
+
+  if ("PID 08BC" == product) product = "PX-M7050";
+  if ("PID 08CC" == product) product = "PX-M7050FX";
 
   if (rt.running_in_place ())
     product.insert (0, "data/");

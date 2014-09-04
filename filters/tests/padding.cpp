@@ -32,6 +32,10 @@
 
 #include "../padding.hpp"
 
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
 using namespace utsushi;
 using _flt_::padding;
 
@@ -42,7 +46,7 @@ struct fixture
   {
   }
 
-  ~fixture () { remove (name_); }
+  ~fixture () { fs::remove (name_); }
 
   context::size_type expected_size () const
   {
@@ -50,7 +54,7 @@ struct fixture
   }
 
   context ctx_;
-  fs::path name_;
+  std::string name_;
 };
 
 BOOST_FIXTURE_TEST_CASE (mono_width_height, fixture)
@@ -72,7 +76,7 @@ BOOST_FIXTURE_TEST_CASE (mono_width_height, fixture)
 
   idev | str;
 
-  BOOST_CHECK_EQUAL (ctx.scan_size (), file_size (name_));
+  BOOST_CHECK_EQUAL (ctx.scan_size (), fs::file_size (name_));
 }
 
 BOOST_FIXTURE_TEST_CASE (gray8_width_height, fixture)
@@ -94,7 +98,7 @@ BOOST_FIXTURE_TEST_CASE (gray8_width_height, fixture)
 
   idev | str;
 
-  BOOST_CHECK_EQUAL (ctx.scan_size (), file_size (name_));
+  BOOST_CHECK_EQUAL (ctx.scan_size (), fs::file_size (name_));
 }
 
 BOOST_FIXTURE_TEST_CASE (gray16_width_height, fixture)
@@ -116,7 +120,7 @@ BOOST_FIXTURE_TEST_CASE (gray16_width_height, fixture)
 
   idev | str;
 
-  BOOST_CHECK_EQUAL (ctx.scan_size (), file_size (name_));
+  BOOST_CHECK_EQUAL (ctx.scan_size (), fs::file_size (name_));
 }
 
 BOOST_FIXTURE_TEST_CASE (rgb8_width_height, fixture)
@@ -138,7 +142,7 @@ BOOST_FIXTURE_TEST_CASE (rgb8_width_height, fixture)
 
   idev | str;
 
-  BOOST_CHECK_EQUAL (ctx.scan_size (), file_size (name_));
+  BOOST_CHECK_EQUAL (ctx.scan_size (), fs::file_size (name_));
 }
 
 BOOST_FIXTURE_TEST_CASE (rgb16_width_height, fixture)
@@ -160,7 +164,7 @@ BOOST_FIXTURE_TEST_CASE (rgb16_width_height, fixture)
 
   idev | str;
 
-  BOOST_CHECK_EQUAL (ctx.scan_size (), file_size (name_));
+  BOOST_CHECK_EQUAL (ctx.scan_size (), fs::file_size (name_));
 }
 
 #include "utsushi/test/runner.ipp"

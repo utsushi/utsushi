@@ -40,7 +40,7 @@ class pdf
   : public filter
 {
 public:
-  pdf ();
+  pdf (bool multi_file = false);
   ~pdf ();
 
   streamsize write (const octet *data, streamsize n);
@@ -70,6 +70,7 @@ private:
   _pdf_::primitive *_img_height_obj;
 
   bool _rotate_180;
+  bool _multi_file;
 
   friend class _pdf_::writer;
 
