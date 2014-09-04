@@ -32,15 +32,19 @@
 #include "../pnm.hpp"
 #include "../lut.hpp"
 
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
 using namespace utsushi;
 using namespace _flt_;
 
 struct fixture : public bc_lut
 {
-  const fs::path name_;
+  const std::string name_;
 
   fixture () : name_("lut.pnm") {}
-  ~fixture () { remove (name_); }
+  ~fixture () { fs::remove (name_); }
 };
 
 BOOST_FIXTURE_TEST_CASE (gray_to_binary, fixture)
@@ -62,8 +66,8 @@ BOOST_FIXTURE_TEST_CASE (gray_to_binary, fixture)
 
   idev | str;
 
-  fs::ifstream file;
-  file.open (name_);
+  std::ifstream file;
+  file.open (name_.c_str ());
   octet *buf = new octet [sizeof (o)];
   file.read (buf, sizeof (o));
   file.close ();

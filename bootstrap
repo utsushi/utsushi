@@ -225,7 +225,7 @@ fi
 #  we can fall back to our included Boost sources.
 #  Older versions did not support the ACTION-IF-[NOT-]FOUND API.
 
-serial=`awk '/^#serial/{ if ($2>21) print $2 }' $macro_dir/ax_boost_base.m4`
+serial=`awk '/^#serial/{ if ($2>23) print $2 }' $macro_dir/ax_boost_base.m4`
 if test -n "$serial"; then
     cat <<EOF >&2
 It seems there is a new AX_BOOST_BASE macro version out there.  The
@@ -233,7 +233,7 @@ local patching that follows has not been tested on this version, so
 there may be trouble ahead.  If everything went fine for you please
 update the serial number used for this check in $0.
 
-When doing so, also check if our patch is still necessary.
+When doing so, also check if our patch is still correct/necessary.
 EOF
 fi
 sed -i 's/\(-VERSION\]\))/\1, [ACTION-IF-FOUND], [ACTION-IF-NOT-FOUND])/' \

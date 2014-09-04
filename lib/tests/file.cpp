@@ -1,5 +1,5 @@
 //  file.cpp -- unit tests for the utsushi::file API
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -29,6 +29,8 @@
 #include "utsushi/test/memory.hpp"
 #include "utsushi/test/null.hpp"
 
+#include <boost/filesystem.hpp>
+
 using namespace utsushi;
 
 using boost::filesystem::file_size;
@@ -43,13 +45,116 @@ BOOST_AUTO_TEST_CASE (logical_non_existence)
 
 BOOST_AUTO_TEST_CASE (logical_existence)
 {
-  path_generator gen ("prefix");
+  path_generator gen ("%i");
   BOOST_CHECK (gen);
+}
+
+BOOST_AUTO_TEST_CASE (no_formatter_pattern)
+{
+  BOOST_CHECK_EQUAL (path_generator (), path_generator ("i"));
+}
+
+BOOST_AUTO_TEST_CASE (percent_i)
+{
+  path_generator gen ("%i");
+
+  BOOST_CHECK_EQUAL (gen (), path ("0"));
+  BOOST_CHECK_EQUAL (gen (), path ("1"));
+  BOOST_CHECK_EQUAL (gen (), path ("2"));
+  BOOST_CHECK_EQUAL (gen (), path ("3"));
+}
+
+BOOST_AUTO_TEST_CASE (percent_i_extension)
+{
+  path_generator gen ("%i.out");
+
+  BOOST_CHECK_EQUAL (gen (), path ("0.out"));
+  for (int i = 0; i < 2; ++i) gen ();
+  BOOST_CHECK_EQUAL (gen (), path ("3.out"));
+  BOOST_CHECK_EQUAL (gen (), path ("4.out"));
+  BOOST_CHECK_EQUAL (gen (), path ("5.out"));
+}
+
+BOOST_AUTO_TEST_CASE (percent_i_postfix)
+{
+  path_generator gen ("%i-postfix");
+
+  BOOST_CHECK_EQUAL (gen (), path ("0-postfix"));
+  for (int i = 0; i < 3; ++i) gen ();
+  BOOST_CHECK_EQUAL (gen (), path ("4-postfix"));
+  for (int i = 0; i < 3; ++i) gen ();
+  BOOST_CHECK_EQUAL (gen (), path ("8-postfix"));
+}
+
+BOOST_AUTO_TEST_CASE (prefix_percent_i)
+{
+  path_generator gen ("prefix-%i");
+
+  BOOST_CHECK_EQUAL (gen (), path ("prefix-0"));
+  for (int i = 0; i < 2; ++i) gen ();
+  BOOST_CHECK_EQUAL (gen (), path ("prefix-3"));
+  for (int i = 0; i < 3; ++i) gen ();
+  BOOST_CHECK_EQUAL (gen (), path ("prefix-7"));
+}
+
+BOOST_AUTO_TEST_CASE (prefix_percent_i_extension)
+{
+  path_generator gen ("prefix%i.ext");
+
+  BOOST_CHECK_EQUAL (gen (), path ("prefix0.ext"));
+  for (int i = 0; i < 8; ++i) gen ();
+  BOOST_CHECK_EQUAL (gen (), path ("prefix9.ext"));
+}
+
+BOOST_AUTO_TEST_CASE (prefix_percent_i_postfix)
+{
+  path_generator gen ("prefix.%ipost");
+
+  BOOST_CHECK_EQUAL (gen (), path ("prefix.0post"));
+  for (int i = 0; i < 3; ++i) gen ();
+  BOOST_CHECK_EQUAL (gen (), path ("prefix.4post"));
+  BOOST_CHECK_EQUAL (gen (), path ("prefix.5post"));
+}
+
+BOOST_AUTO_TEST_CASE (percent_escaping)
+{
+  path_generator gen ("%%%%%i%%%%");
+
+  BOOST_CHECK_EQUAL (gen (), path ("%%0%%"));
+  for (int i = 0; i < 4; ++i) gen ();
+  BOOST_CHECK_EQUAL (gen (), path ("%%5%%"));
+}
+
+BOOST_AUTO_TEST_CASE (field_width)
+{
+  path_generator gen ("prefix-%3i.ext");
+
+  BOOST_CHECK_EQUAL (gen (), "prefix-000.ext");
+  BOOST_CHECK_EQUAL (gen (), "prefix-001.ext");
+  BOOST_CHECK_EQUAL (gen (), "prefix-002.ext");
+}
+
+BOOST_AUTO_TEST_CASE (zero_padded_field_width)
+{
+  path_generator gen ("prefix-%03i.ext");
+
+  BOOST_CHECK_EQUAL (gen (), "prefix-000.ext");
+  BOOST_CHECK_EQUAL (gen (), "prefix-001.ext");
+  BOOST_CHECK_EQUAL (gen (), "prefix-002.ext");
+}
+
+BOOST_AUTO_TEST_CASE (zeroes_padded_field_width)
+{
+  path_generator gen ("prefix-%0000003i.ext");
+
+  BOOST_CHECK_EQUAL (gen (), "prefix-000.ext");
+  BOOST_CHECK_EQUAL (gen (), "prefix-001.ext");
+  BOOST_CHECK_EQUAL (gen (), "prefix-002.ext");
 }
 
 BOOST_AUTO_TEST_CASE (default_series)
 {
-  path_generator gen ("abc");
+  path_generator gen ("abc%3i");
 
   BOOST_CHECK_EQUAL (gen (), path ("abc000"));
   BOOST_CHECK_EQUAL (gen (), path ("abc001"));
@@ -58,7 +163,7 @@ BOOST_AUTO_TEST_CASE (default_series)
 
 BOOST_AUTO_TEST_CASE (series_with_rollover)
 {
-  path_generator gen ("./", "", 2);
+  path_generator gen ("./%2i");
 
   for (int i = 0; i < 99; ++i)
     gen ();
@@ -69,7 +174,7 @@ BOOST_AUTO_TEST_CASE (series_with_rollover)
 
 BOOST_AUTO_TEST_CASE (series_with_extension)
 {
-  path_generator gen ("/tmp/prefix-", "ps", 5);
+  path_generator gen ("/tmp/prefix-%5i.ps");
 
   BOOST_CHECK_EQUAL (gen (), path ("/tmp/prefix-00000.ps"));
   for (int i = 0; i < 13; ++i) gen ();
@@ -79,8 +184,9 @@ BOOST_AUTO_TEST_CASE (series_with_extension)
 
 BOOST_AUTO_TEST_CASE (series_with_dotted_extension)
 {
-  path_generator gen ("../cjkv-", ".tiff", 4, 751);
+  path_generator gen ("../cjkv-%4i.tiff");
 
+  for (int i = 0; i < 751; ++i) gen ();
   BOOST_CHECK_EQUAL (gen (), path ("../cjkv-0751.tiff"));
   for (int i = 0; i < 123; ++i) gen ();
   BOOST_CHECK_EQUAL (gen (), path ("../cjkv-0875.tiff"));
@@ -90,7 +196,7 @@ BOOST_AUTO_TEST_CASE (series_with_dotted_extension)
 
 struct fixture
 {
-  const path name_;
+  const std::string name_;
   file_odevice odev_;
 
   fixture () : name_("file.out"), odev_(name_) {}
@@ -130,7 +236,7 @@ BOOST_AUTO_TEST_CASE (multi_ofile)
   const streamsize octets = 1 << 10;
   const unsigned   images = 4;
 
-  path_generator gen ("file-multi-", "out");
+  path_generator gen ("file-multi-%3i.out");
   file_odevice odev (gen);
 
   rawmem_idevice idev (octets, images);
@@ -182,7 +288,7 @@ BOOST_AUTO_TEST_CASE (multi_ifile)
   const streamsize octets = 1 << 10;
   const unsigned   images = 4;
 
-  path_generator generator ("file-multi-", "in");
+  path_generator generator ("file-multi-%3i.in");
   {                             // create input files for test
     path_generator gen = generator;
     file_odevice odev (gen);
@@ -292,7 +398,7 @@ struct gen_file_fixture
 
   gen_file_fixture ()
     : octet_count (40 * 8192), image_count (3), sequence_count (9),
-      gen ("gen-file-"), idev (gen),
+      gen ("gen-file-%3i"), idev (gen),
       idev_gen (octet_count, image_count), odev_gen (gen)
   {
   }

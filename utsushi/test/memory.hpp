@@ -21,19 +21,19 @@
 #ifndef utsushi_test_memory_hpp_
 #define utsushi_test_memory_hpp_
 
-#include <stdexcept>
-
-#include <boost/filesystem/fstream.hpp>
-#include <boost/throw_exception.hpp>
-
 #include "../device.hpp"
 #include "../filter.hpp"
+
+#include <boost/throw_exception.hpp>
+
+#include <fstream>
+#include <stdexcept>
 
 namespace utsushi {
 
 using std::domain_error;
 
-typedef boost::filesystem::basic_filebuf<octet> file;
+typedef std::basic_filebuf<octet> file;
 
 //!  Devices that care next to nothing about the image data they produce
 /*!  A number of test scenarios is primarily concerned with the flow

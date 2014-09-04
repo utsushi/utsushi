@@ -242,25 +242,6 @@ preview::on_refresh ()
   }
   catch (const std::out_of_range&){}
 
-  toggle force_extent = true;
-  quantity width  = -1.0;
-  quantity height = -1.0;
-  try
-    {
-      force_extent = value ((*control_)["force-extent"]);
-      width   = value ((*control_)["br-x"]);
-      width  -= value ((*control_)["tl-x"]);
-      height  = value ((*control_)["br-y"]);
-      height -= value ((*control_)["tl-y"]);
-    }
-  catch (const std::out_of_range&)
-    {
-      force_extent = false;
-      width  = -1.0;
-      height = -1.0;
-    }
-  if (force_extent) force_extent = (width > 0 || height > 0);
-
   try
     {
       const std::string xfer_raw = "image/x-raster";
@@ -268,6 +249,28 @@ preview::on_refresh ()
       std::string xfer_fmt = idevice_->get_context ().content_type ();
 
       bool bilevel = ((*control_)["image-type"] == "Gray (1 bit)");
+
+      toggle force_extent = true;
+      quantity width  = -1.0;
+      quantity height = -1.0;
+      try
+        {
+          force_extent = value ((*control_)["force-extent"]);
+          width   = value ((*control_)["br-x"]);
+          width  -= value ((*control_)["tl-x"]);
+          height  = value ((*control_)["br-y"]);
+          height -= value ((*control_)["tl-y"]);
+        }
+      catch (const std::out_of_range&)
+        {
+          force_extent = false;
+          width  = -1.0;
+          height = -1.0;
+        }
+      if (force_extent) force_extent = (width > 0 || height > 0);
+
+      //! \todo decide what to do WRT resampling
+
       filter::ptr threshold (make_shared< threshold > ());
       try
         {
@@ -300,16 +303,11 @@ preview::on_refresh ()
         }
       else if (xfer_jpg == xfer_fmt)
         {
-          if (force_extent || bilevel)
-            {
-              stream_->push (make_shared< jpeg::decompressor > ());
-            }
+          stream_->push (make_shared< jpeg::decompressor > ());
           if (bilevel) stream_->push (threshold);
           if (force_extent)
-            {
-              stream_->push (make_shared< bottom_padder > (width, height));
-              if (!bilevel) stream_->push (jpeg_compress);
-            }
+            stream_->push (make_shared< bottom_padder > (width, height));
+          stream_->push (make_shared< pnm > ());
         }
       else
         {

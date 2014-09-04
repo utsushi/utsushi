@@ -38,15 +38,19 @@
 #include "../jpeg.hpp"
 #include "../pdf.hpp"
 
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
 using namespace utsushi;
 using namespace _flt_;
 
 struct fixture
 {
   fixture () : name_("pdf.out") {}
-  ~fixture () { remove (name_); }
+  ~fixture () { fs::remove (name_); }
 
-  const fs::path name_;
+  const std::string name_;
 };
 
 BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
@@ -76,7 +80,7 @@ BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
                          "libmagic failed to load its database ("
                          << magic_error (cookie) << ")");
 
-  const char *mime = magic_file (cookie, name_.string ().c_str ());
+  const char *mime = magic_file (cookie, name_.c_str ());
 
   BOOST_CHECK_EQUAL ("application/pdf", mime);
 

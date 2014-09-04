@@ -1,5 +1,5 @@
 //  verify.cpp -- ESC/I protocol assumptions and specification compliance
-//  Copyright (C) 2012, 2013  AVASYS CORPORATION
+//  Copyright (C) 2012-2014  AVASYS CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : Olaf Meeuwissen

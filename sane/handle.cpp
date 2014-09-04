@@ -34,6 +34,7 @@
 #include <boost/throw_exception.hpp>
 
 #include <utsushi/condition-variable.hpp>
+#include <utsushi/memory.hpp>
 #include <utsushi/mutex.hpp>
 #include <utsushi/range.hpp>
 #include <utsushi/store.hpp>
@@ -44,7 +45,7 @@
 #include "../filters/jpeg.hpp"
 #include "../filters/magick.hpp"
 #include "../filters/padding.hpp"
-#include "../filters/threshold.hpp"
+#include "../filters/pnm.hpp"
 
 #include "handle.hpp"
 #include "log.hpp"
@@ -53,9 +54,9 @@
 using std::exception;
 using std::runtime_error;
 using utsushi::_flt_::bottom_padder;
-using utsushi::_flt_::threshold;
 using utsushi::_flt_::image_skip;
 using utsushi::_flt_::magick;
+using utsushi::_flt_::pnm;
 
 namespace sane {
 
@@ -487,6 +488,7 @@ handle::handle(const scanner::info& info)
     (name::num_options, quantity (0),
      attributes ())
     ;
+
   opt_.add_option_map ()
     (option_prefix, idev_->options ())
     ("action", idev_->actions ())
@@ -697,6 +699,7 @@ handle::get (SANE_Int index, void *value) const
     {
       v *= unit::mm_per_inch;
     }
+
   v >> value;
 
   return status;
@@ -965,13 +968,15 @@ handle::marker ()
     {
       pump_->cancel ();         // prevent deadlock
 
+      stream::ptr str  = make_shared< stream > ();
+
       const std::string xfer_raw = "image/x-raster";
       const std::string xfer_jpg = "image/jpeg";
       std::string xfer_fmt = idev_->get_context ().content_type ();
 
       /**/ if (xfer_raw == xfer_fmt) {}
       else if (xfer_jpg == xfer_fmt) {}
-      else
+      else                      // bail as soon as possible
         {
           log::alert
             ("unsupported transfer format: '%1%'") % xfer_fmt;
@@ -980,19 +985,7 @@ handle::marker ()
           return last_marker_;
         }
 
-      stream::ptr str  = make_shared< stream > ();
-
       bool bilevel = (opt_[option_prefix / "image-type"] == "Gray (1 bit)");
-      filter::ptr threshold (make_shared< threshold > ());
-      try
-        {
-          (*threshold->options ())["threshold"]
-            = value (opt_[option_prefix / "threshold"]);
-        }
-      catch (const std::out_of_range&)
-        {
-          log::error ("Falling back to default threshold value");
-        }
 
       toggle force_extent = true;
       quantity width  = -1.0;
@@ -1017,35 +1010,42 @@ handle::marker ()
       if (opt_.count (option_prefix / "enable-resampling"))
         resample = value (opt_[option_prefix / "enable-resampling"]);
 
-      filter::ptr magick;
-      if (resample)
+      filter::ptr magick (make_shared< _flt_::magick > ());
+
+      toggle bound = true;
+      quantity res_x  = -1.0;
+      quantity res_y  = -1.0;
+
+      std::string sw (resample ? "sw-" : "");
+      if (opt_.count (option_prefix / (sw + "resolution-x")))
         {
-          magick = make_shared< _flt_::magick > ();
-
-          toggle bound = true;
-          quantity res_x  = -1.0;
-          quantity res_y  = -1.0;
-
-          if (opt_.count (option_prefix / "sw-resolution-x"))
-            {
-              res_x = value (opt_[option_prefix / "sw-resolution-x"]);
-              res_y = value (opt_[option_prefix / "sw-resolution-y"]);
-            }
-          if (opt_.count (option_prefix / "sw-resolution-bind"))
-            bound = value (opt_[option_prefix / "sw-resolution-bind"]);
-
-          if (bound)
-            {
-              res_x = value (opt_[option_prefix / "sw-resolution"]);
-              res_y = value (opt_[option_prefix / "sw-resolution"]);
-            }
-
-          (*magick->options ())["resolution-x"] = res_x;
-          (*magick->options ())["resolution-y"] = res_y;
-          (*magick->options ())["force-extent"] = force_extent;
-          (*magick->options ())["width"]  = width;
-          (*magick->options ())["height"] = height;
+          res_x = value (opt_[option_prefix / (sw + "resolution-x")]);
+          res_y = value (opt_[option_prefix / (sw + "resolution-y")]);
         }
+      if (opt_.count (option_prefix / (sw + "resolution-bind")))
+        bound = value (opt_[option_prefix / (sw + "resolution-bind")]);
+
+      if (bound)
+        {
+          res_x = value (opt_[option_prefix / (sw + "resolution")]);
+          res_y = value (opt_[option_prefix / (sw + "resolution")]);
+        }
+
+      (*magick->options ())["resolution-x"] = res_x;
+      (*magick->options ())["resolution-y"] = res_y;
+      (*magick->options ())["force-extent"] = force_extent;
+      (*magick->options ())["width"]  = width;
+      (*magick->options ())["height"] = height;
+
+      (*magick->options ())["bilevel"] = toggle (bilevel);
+
+      quantity thr = value (opt_[option_prefix / "threshold"]);
+      thr *= 100.0;
+      thr /= (dynamic_pointer_cast< range >
+              (opt_[option_prefix / "threshold"].constraint ()))->upper ();
+      (*magick->options ())["threshold"] = thr;
+
+      // keep magick filter's default format to generate image/x-raster
 
       toggle skip_blank = !bilevel; // \todo fix filter limitation
       quantity skip_thresh = -1.0;
@@ -1067,23 +1067,27 @@ handle::marker ()
                     && (quantity (0.) < skip_thresh));
 
       /**/ if (xfer_raw == xfer_fmt)
-        str->push (make_shared< _flt_::padding > ());
+        {
+          str->push (make_shared< _flt_::padding > ());
+        }
       else if (xfer_jpg == xfer_fmt)
-        str->push (make_shared< _flt_::jpeg::decompressor > ());
+        {
+          str->push (make_shared< _flt_::jpeg::decompressor > ());
+        }
       else
         {
+          log::alert
+            ("unsupported transfer format: '%1%'") % xfer_fmt;
+
           BOOST_THROW_EXCEPTION
             (logic_error
              ((format ("unsupported transfer format: '%1%'") % xfer_fmt)
               .str ()));
         }
+
       if (skip_blank) str->push (blank_skip);
-      if (magick)
-        str->push (magick);
-      else if (force_extent)
-        str->push (make_shared< bottom_padder > (width, height));
-      if (xfer_jpg == xfer_fmt && bilevel)
-        str->push (threshold);
+      str->push (make_shared< pnm > ());
+      str->push (magick);
 
       iocache::ptr cache (make_shared< iocache > ());
       str->push (odevice::ptr (cache));

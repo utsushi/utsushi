@@ -22,8 +22,8 @@ dnl  Process this file with autoconf to make a configure file.
 
 dnl  preamble
 
-AC_PREREQ(2.61)
-AC_INIT([Utsushi], [0.6.0],
+AC_PREREQ(2.62)
+AC_INIT([Utsushi], [0.7.0],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -95,7 +95,8 @@ AC_ARG_WITH(jpeg,
 AC_ARG_WITH(magick,
   AS_HELP_STRING([--with-magick],
     [include image processing with convert @<:@check@:>@.
-     Both GraphicsMagick and ImageMagick are supported.]),
+     Both GraphicsMagick and ImageMagick are supported but the latter provides
+     somewhat more functionality.]),
   [],
   [with_magick=check])
 
@@ -107,7 +108,7 @@ AC_ARG_WITH(tiff,
 
 AC_ARG_WITH(sane,
   AS_HELP_STRING([--with-sane],
-    [build SANE compatibility components @<:@check@:>@])],
+    [build SANE compatibility components @<:@check@:>@]),
   [],
   [with_sane=check])
 AC_ARG_ENABLE(sane-config,
@@ -186,15 +187,21 @@ AC_DEFINE([HAVE_LT_DLADVISE],
   [0], [Define to 1 if your libltdl supports lt_dladvise_* API.])
 AC_DEFINE([HAVE_MAGICK],
   [0], [Define to 1 if GraphicsMagick or ImageMagick is available])
+AC_DEFINE([HAVE_GRAPHICS_MAGICK],
+  [0], [Define to 1 if GraphicsMagick is available])
+AC_DEFINE([HAVE_IMAGE_MAGICK],
+  [0], [Define to 1 if ImageMagick is available])
 AC_DEFINE([MAGICK_CONVERT],
   [], [Define to an appropriate command-line invocation for convert])
 
 dnl  checks for programs, modules and libraries
 
-AM_INIT_AUTOMAKE([1.11 gnu tar-ustar -Wall -Werror std-options nostdinc])
+AM_INIT_AUTOMAKE([1.11 gnu tar-ustar -Wall -Werror std-options nostdinc subdir-objects])
 AM_MAINTAINER_MODE([enable])
-AM_SILENT_RULES
+m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
+AC_PROG_CC
+AC_OPENMP([C])
 AC_PROG_CXX
 AS_IF([test xno != x$enable_code_coverage],
   [AS_IF([test xyes = x$ac_cv_cxx_compiler_gnu],
@@ -345,18 +352,47 @@ AM_CONDITIONAL([have_libusb], [test x != "x$LIBUSB_LIBS"])
 AM_CONDITIONAL([have_libusb_legacy], [test x != "x$LIBUSB_LEGACY_LIBS"])
 
 AS_IF([test xno != "x$with_magick"],
-  [AC_CHECK_PROGS([MAGICK_CONVERT], [gm convert])
-   AS_IF([test x != x$MAGICK_CONVERT],
-     [AC_DEFINE([HAVE_MAGICK], [1])
-      AS_IF([test xgm = x$MAGICK_CONVERT],
-        [MAGICK_CONVERT="gm convert"])
-      AC_DEFINE_UNQUOTED([MAGICK_CONVERT], ["$MAGICK_CONVERT"])
-     ],
-     [AS_IF([test xcheck != "x$with_magick"],
-        [AC_MSG_ERROR([magick required but not found])])
-     ])
+  [dnl PKG_CHECK_MODULES([IMAGEMAGICK], [ImageMagick >= 6.8.9-1])
+   dnl The above line is a hack for the tools/include-magick-src script
+   AS_CASE("x$with_magick",
+     [xGraphicsMagick],
+       [AC_CHECK_PROGS([MAGICK_CONVERT], [gm])
+        AS_IF([test xgm != x$MAGICK_CONVERT],
+          [AC_MSG_ERROR([$with_magick requested but not found])])
+       ],
+     [xImageMagick],
+       [AC_CHECK_PROGS([MAGICK_CONVERT], [convert])
+        AS_IF([test xconvert != x$MAGICK_CONVERT],
+          [AC_MSG_ERROR([$with_magick requested but not found])])
+       ],
+     [xyes|xcheck],
+       [AC_CHECK_PROGS([MAGICK_CONVERT], [convert gm])
+        AS_IF([test x == x$MAGICK_CONVERT],
+          [AS_IF([test xcheck != "x$with_magick"],
+             [AC_MSG_ERROR([magick required but not found])])
+          ])
+       ],
+     [dnl default case
+      AC_MSG_ERROR([unknown value: --with-magick=$with_magick])
+     ])])
+AS_CASE(x$MAGICK_CONVERT,
+  [xconvert],
+    [AC_DEFINE([HAVE_IMAGE_MAGICK], [1])
+    ],
+  [xgm],
+    [AC_DEFINE([HAVE_GRAPHICS_MAGICK], [1])
+     MAGICK_CONVERT="gm convert"
+    ])
+AS_IF([test x != "x$MAGICK_CONVERT"],
+  [AC_DEFINE([HAVE_MAGICK], [1])
+   AC_DEFINE_UNQUOTED([MAGICK_CONVERT], ["$MAGICK_CONVERT"])
   ])
-AM_CONDITIONAL([have_magick], [test x != "x$MAGICK_CONVERT"])
+AM_CONDITIONAL([have_image_magick],
+  [test xconvert = "x$MAGICK_CONVERT"])
+AM_CONDITIONAL([have_graphics_magick],
+  [test "xgm convert" = "x$MAGICK_CONVERT"])
+AM_CONDITIONAL([have_magick],
+  [test x != "x$MAGICK_CONVERT"])
 
 AS_IF([test xno != "x$with_gtkmm"],
   [PKG_CHECK_MODULES([LIBGTKMM], [gtkmm-2.4 >= 2.20],
@@ -453,9 +489,27 @@ dnl  checks for header files
 
 dnl  checks for typedefs, structures, and compiler characteristics
 
+AC_C_CONST
+AC_C_INLINE
+AC_C_RESTRICT
+AC_CHECK_SIZEOF(unsigned long long)
 AX_C___ATTRIBUTE__
 
 dnl  checks for library functions
+
+AC_CHECK_FUNCS([ \
+  nanosleep \
+  poll \
+  sleep \
+  usleep \
+])
+
+AC_CHECK_LIB([m], [sqrt],
+  [AC_SUBST([LIBM_LIBS], [-lm])
+   AC_SUBST([LIBM_CFLAGS], [])
+  ],
+  [AC_MSG_ERROR([math library required but not found])
+  ])
 
 dnl  The JPEG library does not come with .pc files :-(
 dnl  We emulate the results of PKG_CHECK_MODULES here with a simple

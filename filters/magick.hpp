@@ -35,9 +35,9 @@ public:
   magick ();
 
 protected:
-  void bos (const context& ctx);
+  void freeze_options ();
 
-  context estimate (const context& ctx) const;
+  context estimate (const context& ctx);
 
   std::string arguments (const context& ctx);
 

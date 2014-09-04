@@ -37,6 +37,8 @@
 
 #include <string>
 
+namespace fs = boost::filesystem;
+
 using namespace utsushi;
 using _flt_::magick;
 
@@ -69,7 +71,7 @@ test_resample (const resample_argv& arg)
   (*flt->options ())["resolution-y"] = quantity::integer_type (arg.o_res);
 
   stream str;
-  fs::path output ("magick-resample.out");
+  std::string output ("magick-resample.out");
 
   str.push (flt);
   str.push (make_shared< file_odevice > (output));
@@ -99,7 +101,7 @@ BOOST_AUTO_TEST_CASE (independent_resolutions)
   (*flt->options ())["resolution-y"] = quantity::integer_type (500);
 
   stream str;
-  fs::path output ("magick-independent-resolutions.out");
+  std::string output ("magick-independent-resolutions.out");
 
   str.push (flt);
   str.push (make_shared< file_odevice > (output));
@@ -132,7 +134,7 @@ BOOST_AUTO_TEST_CASE (force_extent)
   (*flt->options ())["height"] = quantity::non_integer_type (600./500);
 
   stream str;
-  fs::path output ("magick-force-extent.out");
+  std::string output ("magick-force-extent.out");
 
   str.push (flt);
   str.push (make_shared< file_odevice > (output));

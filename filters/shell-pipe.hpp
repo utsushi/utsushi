@@ -35,24 +35,33 @@ class shell_pipe
 public:
   ~shell_pipe ();
 
+  void mark (traits::int_type c, const context& ctx);
   streamsize write (const octet *data, streamsize n);
 
 protected:
   shell_pipe (const std::string& command);
 
+  void bos (const context& ctx);
   void boi (const context& ctx);
   void eoi (const context& ctx);
+  void eos (const context& ctx);
   void eof (const context& ctx);
 
-  virtual context estimate (const context& ctx) const;
-  virtual context finalize (const context& ctx) const;
+  virtual void freeze_options ();
+
+  virtual context estimate (const context& ctx);
+  virtual context finalize (const context& ctx);
 
   virtual std::string arguments (const context& ctx);
 
+  virtual void checked_write (octet *data, streamsize n);
+
 private:
-  void execute_(const std::string& command_line);
+  traits::int_type exec_process_(const context& ctx);
+  traits::int_type reap_process_();
 
   streamsize service_pipes_(const octet *data, streamsize n);
+  void handle_error_(int ec, int& fd);
 
   std::string command_;
   std::string message_;

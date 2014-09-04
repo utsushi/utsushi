@@ -1,5 +1,5 @@
 //  file.hpp -- based output devices
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -21,26 +21,16 @@
 #ifndef utsushi_file_hpp_
 #define utsushi_file_hpp_
 
-#include <sstream>
-
-#include <boost/filesystem.hpp>
-#include <boost/filesystem/fstream.hpp>
-
 #include "device.hpp"
-#include "format.hpp"
+
+#include <fstream>
+#include <string>
 
 namespace utsushi {
-
-namespace fs = boost::filesystem;
-
-typedef boost::filesystem::basic_filebuf<octet> file;
 
 //!  Create path names following a simple pattern
 class path_generator
 {
-  format   format_;
-  unsigned offset_;
-
 public:
   //!  Default constructor
   /*!  A default path_generator instance evaluates to \c false in a
@@ -54,33 +44,42 @@ public:
    */
   path_generator ();
 
-  //!  Creates a regular path_generator instance
-  /*!  A regular instance uses a path \a prefix and an optional \a
-   *   extension to generate sequentially numbered paths.  The paths
-   *   contain a \e minimal number of \a digits and start at a given
-   *   non-negative \a offset.  The \a offset is zero-padded (on the
-   *   left) if necessary.
+  //!  Creates a \c %i formatter \a pattern based instance
+  /*!  The formatter may be a simple \c %i or contain a field width
+   *   specifier, similar to the printf() version.  A `0` flag is
+   *   allowed but not required.  Fields are always zero filled.
    *
-   *   If a non-empty \a extension does not start with an extension
-   *   separator (a dot), one is automatically inserted.
+   *   If \a pattern does not contain a \c %i formatter, a default
+   *   constructed instance will be created.
    */
-  path_generator (const fs::path& prefix,
-                  const fs::path& extension = fs::path(),
-                  unsigned digits = 3, unsigned offset = 0);
+  explicit path_generator (const std::string& pattern);
 
   operator bool () const;
 
-  fs::path operator() ();
+  std::string operator() ();
+
+private:
+  std::string parent_;
+  std::string format_;
+  unsigned    offset_;
 };
 
 //!  Load an image data sequence from file(s)
-class file_idevice : public idevice
+class file_idevice
+  : public idevice
 {
-  path_generator generator_;
+public:
+  //!  Creates a device that loads an image from file
+  file_idevice (const std::string& filename);
 
-  fs::path name_;
-  file file_;
-  bool used_;
+  //!  Create a device that loads images from multiple files
+  /*!  Path names are provided by a \a generator.  The first path name
+   *   for which no corresponding file exists triggers an end of image
+   *   data sequence condition.
+   */
+  file_idevice (const path_generator& generator);
+
+  ~file_idevice ();
 
 protected:
   bool is_consecutive () const;
@@ -91,34 +90,24 @@ protected:
 
   streamsize sgetn (octet *data, streamsize n);
 
-public:
-  //!  Creates a device that loads an image from file
-  file_idevice (const fs::path& name);
-
-  //!  Create a device that loads images from multiple files
-  /*!  Path names are provided by a \a generator.  The first path name
-   *   for which no corresponding file exists triggers an end of image
-   *   data sequence condition.
-   */
-  file_idevice (const path_generator& generator);
-
-  ~file_idevice ();
-};
-
-//!  Save an image data sequence to file
-class file_odevice : public odevice
-{
-  fs::path name_;
-  file file_;
-
+private:
+  std::string    filename_;
   path_generator generator_;
 
+  std::basic_filebuf< octet > file_;
+  bool used_;
+};
+
+//!  Save an image data sequence to one or more files
+class file_odevice
+  : public odevice
+{
 public:
   //!  Creates a device that saves all image data in a single file
   /*!  \note  The file will not be opened until the sequence of scans
    *          begins.
    */
-  file_odevice (const fs::path& name);
+  file_odevice (const std::string& filename);
 
   //!  Creates a device that saves images in separate files
   /*!  Path names are provided by a \a generator.
@@ -126,13 +115,25 @@ public:
    */
   file_odevice (const path_generator& generator);
 
+  ~file_odevice ();
+
   streamsize write (const octet *data, streamsize n);
 
 protected:
+  virtual void open ();
+  virtual void close ();
+
   void bos (const context& ctx);
   void boi (const context& ctx);
   void eoi (const context& ctx);
   void eos (const context& ctx);
+  void eof (const context& ctx);
+
+  std::string    filename_;
+  path_generator generator_;
+
+  int fd_;
+  int fd_flags_;
 };
 
 }       // namespace utsushi

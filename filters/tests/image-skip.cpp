@@ -31,6 +31,10 @@
 #include "../image-skip.hpp"
 #include "../pnm.hpp"
 
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
 using namespace utsushi;
 using _flt_::image_skip;
 using _flt_::pnm;
@@ -48,7 +52,7 @@ BOOST_AUTO_TEST_CASE (skip_all_white)
   str.push (make_shared< image_skip > ());
   str.push (make_shared< pnm > ());
   str.push (make_shared< file_odevice >
-             (path_generator ("skip", "pnm")));
+             (path_generator ("skip%3i.pnm")));
 
   idev | str;
 
@@ -71,7 +75,7 @@ BOOST_AUTO_TEST_CASE (keep_all_black)
   str.push (make_shared< image_skip > ());
   str.push (make_shared< pnm > ());
   str.push (make_shared< file_odevice >
-             (path_generator ("skip", "pnm")));
+             (path_generator ("skip%3i.pnm")));
 
   idev | str;
 

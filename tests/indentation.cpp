@@ -61,7 +61,7 @@ test_indentation_conformance (const fs::path& p)
 
   command_line indent ("uncrustify -c " + config.string ()
                        + " -f " + p.string ()
-                       + " -l CPP | diff -u "
+                       + " -l CPP | diff -q "
                        + p.string () + " -");
   if (EXIT_SUCCESS != indent.execute ())
     {

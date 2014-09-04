@@ -43,19 +43,23 @@
 #include "../jpeg.hpp"
 #include "../pnm.hpp"
 
+#include <boost/filesystem.hpp>
+
+namespace fs = boost::filesystem;
+
 using namespace utsushi;
 using namespace _flt_;
 
 struct fixture
 {
   fixture () : name_("jpeg.out") {}
-  ~fixture () { remove (name_); }
+  ~fixture () { fs::remove (name_); }
 
-  const fs::path name_;
+  const std::string name_;
 };
 
 static void
-test_magic (const fs::path& name, const char *type)
+test_magic (const std::string& name, const char *type)
 {
 #if HAVE_LIBMAGIC
 
@@ -68,7 +72,7 @@ test_magic (const fs::path& name, const char *type)
                          "libmagic failed to load its database ("
                          << magic_error (cookie) << ")");
 
-  const char *mime = magic_file (cookie, name.string ().c_str ());
+  const char *mime = magic_file (cookie, name.c_str ());
 
   BOOST_CHECK_EQUAL (type, mime);
 
@@ -83,7 +87,7 @@ class jpeg_idevice
   int cnt_;
 
 public:
-  jpeg_idevice (const fs::path& name, int width, int height, int cnt = 1)
+  jpeg_idevice (const std::string& name, int width, int height, int cnt = 1)
     : file_idevice (name)
     , cnt_(cnt)
   {
@@ -167,9 +171,10 @@ test_decompressor (file_spec t)
   utsushi::test::change_test_case_name
     ("decompressor_" + t.input_file_.filename ().string ());
 
-  const fs::path output_file (t.input_file_.stem ().replace_extension ("pnm"));
+  const std::string output_file (t.input_file_.stem ()
+                                 .replace_extension ("pnm").string ());
 
-  jpeg_idevice dev (t.input_file_, t.width_, t.height_, t.count_);
+  jpeg_idevice dev (t.input_file_.string (), t.width_, t.height_, t.count_);
   idevice& idev (dev);
 
   stream str;
@@ -181,9 +186,9 @@ test_decompressor (file_spec t)
 
   test_magic (output_file, "image/x-portable-pixmap");
 
-  BOOST_CHECK_EQ (t.expected_, file_size (output_file));
+  BOOST_CHECK_EQ (t.expected_, fs::file_size (output_file));
 
-  remove (output_file);
+  fs::remove (output_file);
 }
 
 bool
@@ -196,15 +201,15 @@ init_test_runner ()
   std::list< file_spec > args;
   boost::assign::push_back (args)
     // single image scan sequence tests
-    (srcdir / "data/A4-max-x-max.jpg", 2550, 3513)
-    (srcdir / "data/A4-max-x-300.jpg", 2550,  300)
-    (srcdir / "data/A4-300-x-max.jpg",  300, 3489)
-    (srcdir / "data/A4-300-x-300.jpg",  300,  300)
+    (srcdir / "data" / "A4-max-x-max.jpg", 2550, 3513)
+    (srcdir / "data" / "A4-max-x-300.jpg", 2550,  300)
+    (srcdir / "data" / "A4-300-x-max.jpg",  300, 3489)
+    (srcdir / "data" / "A4-300-x-300.jpg",  300,  300)
     // multi image scan sequence tests
-    (srcdir / "data/A4-max-x-max.jpg", 2550, 3513, 2)
-    (srcdir / "data/A4-max-x-300.jpg", 2550,  300, 3)
-    (srcdir / "data/A4-300-x-max.jpg",  300, 3489, 4)
-    (srcdir / "data/A4-300-x-300.jpg",  300,  300, 5)
+    (srcdir / "data" / "A4-max-x-max.jpg", 2550, 3513, 2)
+    (srcdir / "data" / "A4-max-x-300.jpg", 2550,  300, 3)
+    (srcdir / "data" / "A4-300-x-max.jpg",  300, 3489, 4)
+    (srcdir / "data" / "A4-300-x-300.jpg",  300,  300, 5)
     ;
 
   but::framework::master_test_suite ()

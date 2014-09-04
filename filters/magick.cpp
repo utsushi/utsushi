@@ -70,12 +70,16 @@ magick::magick ()
     ("height", quantity ())
     ("image-format", (from< store > ()
                       -> alternative ("PNG")
+                      -> alternative ("PNM")
+                      -> alternative ("JPEG")
+                      -> alternative ("TIFF")
+                      -> alternative ("PDF")
                       -> default_value (string ())))
     ;
 }
 
 void
-magick::bos (const context& ctx)
+magick::freeze_options ()
 {
   {
     toggle t = value ((*option_)["bilevel"]);
@@ -107,7 +111,7 @@ magick::bos (const context& ctx)
 }
 
 context
-magick::estimate (const context& ctx) const
+magick::estimate (const context& ctx)
 {
   double x_sample_factor = x_resolution_ / ctx.x_resolution ();
   double y_sample_factor = y_resolution_ / ctx.y_resolution ();
@@ -128,13 +132,32 @@ magick::estimate (const context& ctx) const
     {
       /**/ if (image_format_ == "GIF" ) rv.content_type ("image/gif");
       else if (image_format_ == "JPEG") rv.content_type ("image/jpeg");
+      else if (image_format_ == "PDF")
+        {
+          rv.content_type (bilevel_
+                           ? "image/x-portable-bitmap"
+                           : "image/jpeg");
+        }
       else if (image_format_ == "PNG" ) rv.content_type ("image/png");
+      else if (image_format_ == "PNM" )
+        {
+          rv.content_type ("image/x-portable-anymap");
+        }
+      else if (image_format_ == "TIFF") rv.content_type ("image/x-raster");
       else
         {
           // internal error
         }
     }
+  else
+    {
+      rv.content_type ("image/x-raster");
+    }
 
+  if (bilevel_)
+    {
+      rv.depth (1);
+    }
   return rv;
 }
 
@@ -185,7 +208,14 @@ magick::arguments (const context& ctx)
     {
       // Thresholding an already thresholded image should be safe
       argv += " -threshold " + lexical_cast< string > (threshold_) + "%";
-      argv += " -type bilevel";
+      if (image_format_ == "PNG")
+        {
+          argv += " -monochrome";
+        }
+      else
+        {
+          argv += " -type bilevel";
+        }
     }
 
   // Prevent GraphicsMagick from converting gray JPEG images to RGB
@@ -196,7 +226,21 @@ magick::arguments (const context& ctx)
     {
       /**/ if (image_format_ == "GIF" ) argv += " gif:-";
       else if (image_format_ == "JPEG") argv += " jpeg:-";
+      else if (image_format_ == "PDF" )
+        {
+          if (!bilevel_) argv += " jpeg:-";
+          else           argv += " pbm:-";
+        }
       else if (image_format_ == "PNG" ) argv += " png:-";
+      else if (image_format_ == "PNM" ) argv += " pnm:-";
+      else if (image_format_ == "TIFF")
+        {
+          argv += " -depth " + lexical_cast< string > (ctx_.depth ());
+          /**/ if (ctx_.is_rgb ())
+            argv += " rgb:-";
+          else
+            argv += " gray:-";
+        }
       else
         {
           argv += " -";
@@ -204,7 +248,11 @@ magick::arguments (const context& ctx)
     }
   else
     {
-      argv += " -";
+      argv += " -depth " + lexical_cast< string > (ctx_.depth ());
+      /**/ if (ctx_.is_rgb ())
+        argv += " rgb:-";
+      else
+        argv += " gray:-";
     }
 
   return argv;
