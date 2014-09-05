@@ -4,6 +4,7 @@ compiler:
   - clang
 install:
   - sudo apt-get update -qq
-  - ./install-deps
+  - ./install-deps --with-included-boost
+  - ./tools/include-boost-src
 before_script: ./bootstrap
-script: ./configure && make
+script: ./configure --with-included-boost && make
