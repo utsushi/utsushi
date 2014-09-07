@@ -267,10 +267,11 @@ fi
 EOF
 autoreconf                      # sync build infra-structure
 
-#  Make sure the top-level config.h can be found when we `./configure
-#  --with-included-ltdl`.
+#  Make sure the top-level config.h and its dependencies can be found
+#  when we `./configure --with-included-ltdl`.
 
 echo 'AM_CPPFLAGS += -I$(top_builddir)' >> "$aux_dir/ltdl/Makefile.am"
+echo 'AM_CPPFLAGS += -I$(top_srcdir)'   >> "$aux_dir/ltdl/Makefile.am"
 ${AUTOMAKE} "$aux_dir/ltdl/Makefile"
 
 exit
