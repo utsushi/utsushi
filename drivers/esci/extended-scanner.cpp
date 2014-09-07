@@ -590,10 +590,11 @@ extended_scanner::set_up_dithering ()
   byte value = dither_pattern->right.at (s);
   parm_.halftone_processing (value);
 
-  if (!(CUSTOM_DITHER_A == value || CUSTOM_DITHER_B == value)) return;
+  if (!(   static_cast< byte > (CUSTOM_DITHER_A) == value
+        || static_cast< byte > (CUSTOM_DITHER_B) == value)) return;
 
   set_dither_pattern pattern;
-  *cnx_ << pattern (CUSTOM_DITHER_A == value
+  *cnx_ << pattern (static_cast< byte > (CUSTOM_DITHER_A) == value
                     ? set_dither_pattern::CUSTOM_A
                     : set_dither_pattern::CUSTOM_B);
 }
