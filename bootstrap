@@ -271,6 +271,6 @@ autoreconf                      # sync build infra-structure
 #  --with-included-ltdl`.
 
 echo 'AM_CPPFLAGS += -I$(top_builddir)' >> "$aux_dir/ltdl/Makefile.am"
-automake "$aux_dir/ltdl/Makefile"
+${AUTOMAKE} "$aux_dir/ltdl/Makefile"
 
 exit
