@@ -184,6 +184,7 @@ bcp --boost=$sources bcp build $boost_modules $upstream_dir
 
 cp $sources/LICENSE_1_0.txt $upstream_dir
 cp $sources/Jamroot $upstream_dir
+cp $sources/boostcpp.jam $upstream_dir
 
 #  Patch up the Boost.Math sources so they build.  It seems that bcp
 #  misses the dependency on the Boost.Math config directory.
