@@ -35,6 +35,7 @@
 /stamp-h1
 Makefile
 Makefile.in
+.dirstamp
 
 #  Libtool stuff
 *.l[ao]
