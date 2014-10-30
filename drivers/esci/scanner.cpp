@@ -73,10 +73,11 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
           sp = make_shared< DS_40 > (cnx);
         }
       else if (   info.product_name () == "DS-510"
+               || info.product_name () == "DS-520"
                || info.product_name () == "DS-560"
                )
         {
-          sp = make_shared< DS_510_560 > (cnx);
+          sp = make_shared< DS_5x0 > (cnx);
         }
       else if (   info.product_name () == "DS-760"
                || info.product_name () == "DS-860"

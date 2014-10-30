@@ -42,6 +42,8 @@
 #include <utsushi/run-time.hpp>
 #include <utsushi/store.hpp>
 
+#include "../filters/autocrop.hpp"
+#include "../filters/deskew.hpp"
 #include "../filters/g3fax.hpp"
 #include "../filters/image-skip.hpp"
 #include "../filters/jpeg.hpp"
@@ -359,6 +361,45 @@ dialog::on_scan (void)
       }
     if (force_extent) force_extent = (width > 0 || height > 0);
 
+    filter::ptr autocrop;
+    if (opts_->count ("magick/automatic-scan-area"))
+      {
+        toggle t = value ((*opts_)["magick/automatic-scan-area"]);
+        if (t)
+          autocrop = make_shared< _flt_::autocrop > ();
+      }
+    if (autocrop) force_extent = false;
+
+    if (autocrop)
+      {
+        (*autocrop->options ())["lo-threshold"] = 60.2;
+        (*autocrop->options ())["hi-threshold"] = 79.3;
+        if (idevice_->model () == "DS-40")
+          {
+            (*autocrop->options ())["lo-threshold"] = 12.1;
+            (*autocrop->options ())["hi-threshold"] = 25.4;
+          }
+      }
+
+    filter::ptr deskew;
+    if (!autocrop && opts_->count ("magick/deskew"))
+      {
+        toggle t = value ((*opts_)["magick/deskew"]);
+        if (t)
+          deskew = make_shared< _flt_::deskew > ();
+      }
+
+    if (deskew)
+      {
+        (*deskew->options ())["lo-threshold"] = 60.2;
+        (*deskew->options ())["hi-threshold"] = 79.3;
+        if (idevice_->model () == "DS-40")
+          {
+            (*deskew->options ())["lo-threshold"] = 12.1;
+            (*deskew->options ())["hi-threshold"] = 25.4;
+          }
+      }
+
     toggle resample = false;
     if (opts_->count ("device/enable-resampling"))
       resample = value ((*opts_)["device/enable-resampling"]);
@@ -442,6 +483,8 @@ dialog::on_scan (void)
 
     if (skip_blank) str->push (blank_skip);
     str->push (make_shared< pnm > ());
+    if (autocrop)   str->push (autocrop);
+    if (deskew)     str->push (deskew);
     str->push (magick);
 
     if ("PDF" == fmt)
@@ -501,6 +544,37 @@ dialog::on_device_changed (utsushi::scanner::ptr idev)
   opts_->add_option_map () ("device", idevice_->options ());
   _flt_::image_skip skip;
   opts_->add_option_map () ("blank-skip", skip.options ());
+  if (   idevice_->model () == "DS-40"
+      || idevice_->model () == "DS-510"
+      || idevice_->model () == "DS-520"
+      || idevice_->model () == "DS-560"
+      )
+    {
+      option::map::ptr opts (make_shared< option::map > ());
+      if (HAVE_libMagickPP)
+        {
+          opts->add_options ()
+            ("deskew", toggle (),
+             attributes (tag::enhancement)(level::standard),
+             N_("Deskew"));
+        }
+
+      if (HAVE_libMagickPP
+          && idevice_->options ()->count ("scan-area"))
+        {
+          constraint::ptr c ((*idevice_->options ())["scan-area"]
+                             .constraint ());
+          if (value ("Automatic") != (*c) (value ("Automatic")))
+            {
+              dynamic_pointer_cast< store >
+                (c)->alternative ("Automatic");
+              opts->add_options ()
+                ("automatic-scan-area", toggle ());
+            }
+        }
+
+      opts_->add_option_map () ("magick", opts);
+    }
 
   Glib::RefPtr<Gtk::Action> action;
   action = ui_manager_->get_action ("/dialog/maintenance");

@@ -99,6 +99,24 @@ media::media (const length& width, const length& height)
   : pimpl_(new impl (width, height))
 {}
 
+media::media (const media& m)
+  : pimpl_(new impl (*m.pimpl_))
+{}
+
+media::~media ()
+{
+  delete pimpl_;
+}
+
+media&
+media::operator= (const media& m)
+{
+  if (this != &m)
+    *pimpl_ = *m.pimpl_;
+
+  return *this;
+}
+
 length
 media::width () const
 {

@@ -5,11 +5,11 @@
 #  License: GPL-2.0+ (same as ltmain.sh)
 #  Author : AVASYS CORPORATION
 #
-#  Patch relative to: GNU libtool 2.4 Debian-2.4-2
+#  Patch relative to: GNU libtool 2.4.2 Debian-2.4.2-1.1
 
---- upstream/ltmain.sh.orig	2011-04-22 14:38:08.000000000 +0900
-+++ upstream/ltmain.sh	2011-04-22 14:54:59.000000000 +0900
-@@ -2509,10 +2509,20 @@
+--- ../upstream/ltmain.sh.orig	2014-10-18 01:00:39.043067853 +0000
++++ ../upstream/ltmain.sh	2014-10-18 01:00:53.003381339 +0000
+@@ -2510,10 +2510,20 @@
        s/^Usage:.*--mode=\([^ ]*\) .*/Description of \1 mode:/'
    fi
    exit $?
@@ -30,7 +30,7 @@
  func_mode_execute ()
  {
      $opt_debug
-@@ -3948,10 +3958,62 @@
+@@ -3951,10 +3961,62 @@
  
  # Core function for launching the target application
  func_exec_program_core ()
@@ -93,7 +93,7 @@
    *-*-mingw | *-*-os2* | *-cegcc*)
      $ECHO "\
        if test -n \"\$lt_option_debug\"; then
-@@ -8102,10 +8164,46 @@
+@@ -8118,10 +8180,46 @@
  	fi
  	if test -z "$dlname"; then
  	  dlname=$soname
@@ -140,7 +140,7 @@
  	for link
  	do
  	  func_append linknames " $link"
-@@ -8560,15 +8658,18 @@
+@@ -8576,15 +8674,18 @@
  	  if test "$realname" != "$linkname"; then
  	    func_show_eval '(cd "$output_objdir" && $RM "$linkname" && $LN_S "$realname" "$linkname")' 'exit $?'
  	  fi

@@ -66,6 +66,21 @@ libflt_all_la_SOURCES  += magick.cpp
 libflt_all_la_SOURCES  += magick.hpp
 endif				# have_magick
 
+if have_libMagickPP
+pkglibexec_PROGRAMS += doc-locate
+
+doc_locate_CPPFLAGS  = $(AM_CPPFLAGS)
+doc_locate_CPPFLAGS += $(libMagickPP_CFLAGS)
+doc_locate_LDFLAGS   = $(libMagickPP_LIBS) -lm
+
+doc_locate_SOURCES = doc-locate.cpp
+
+libflt_all_la_SOURCES   += autocrop.cpp
+libflt_all_la_SOURCES   += autocrop.hpp
+libflt_all_la_SOURCES   += deskew.cpp
+libflt_all_la_SOURCES   += deskew.hpp
+endif				# have_libMagickPP
+
 pdf_filter  =
 pdf_filter += pdf.cpp
 pdf_filter += pdf.hpp

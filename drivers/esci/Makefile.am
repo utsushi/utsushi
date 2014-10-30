@@ -184,6 +184,7 @@ endif # enable_boost_unit_test_framework
 driverdata_DATA  =
 driverdata_DATA += data/DS-40.dat
 driverdata_DATA += data/DS-510.dat
+driverdata_DATA += data/DS-520.dat
 driverdata_DATA += data/DS-560.dat
 driverdata_DATA += data/DS-760.dat
 driverdata_DATA += data/DS-860.dat
@@ -213,6 +214,12 @@ clone_dat = \
 	    -e 's,\([^\#]\)FB  ....,\1FB      ,' \
 	    -e 's,\([^\#]\)TPU ....,\1TPU     ,' \
 	    $< > $@
+
+$(srcdir)/data/DS-520.dat: $(srcdir)/data/DS-510.dat
+	$(clone_dat)
+
+$(srcdir)/data/DS-560.dat: $(srcdir)/data/DS-510.dat
+	$(clone_dat)
 
 $(srcdir)/data/DS-760.dat: $(srcdir)/data/DS-860.dat
 	$(clone_dat)

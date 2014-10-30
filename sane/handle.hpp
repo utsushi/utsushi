@@ -148,6 +148,9 @@ private:
 
   std::vector< option_descriptor > sod_;
 
+  bool emulating_automatic_scan_area_;
+  bool do_automatic_scan_area_;
+
   friend struct match_key;
 };
 

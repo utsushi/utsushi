@@ -1,6 +1,13 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.8.0                                             (2014-10-17)
+----------------------------------------------------------------------
+ * adds driver support for the DS-520
+ * adds software-based autocrop support for selected models
+ * adds software-based deskew support for selected models
+
+----------------------------------------------------------------------
 utsushi-0.7.0                                             (2014-08-06)
 ----------------------------------------------------------------------
  * adds driver support for the PX-M7050 Series, PX-M7050FX Series,

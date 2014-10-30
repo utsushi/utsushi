@@ -157,6 +157,7 @@ case "$PKG_MGR" in
         pkg_list="$pkg_list libmagic-dev"
         pkg_list="$pkg_list libsane-dev"
         pkg_list="$pkg_list libtiff-dev"
+        pkg_list="$pkg_list libmagick++-dev"
         #  Needed for logo and icon format conversion
         has rsvg-convert      || pkg_list="$pkg_list librsvg2-bin"
         has gm || has convert || pkg_list="$pkg_list graphicsmagick"
