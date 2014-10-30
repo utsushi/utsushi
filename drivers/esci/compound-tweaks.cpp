@@ -122,7 +122,7 @@ DS_40::configure ()
   descriptors_["enable-resampling"]->read_only (true);
 }
 
-DS_510_560::DS_510_560 (const connexion::ptr& cnx)
+DS_5x0::DS_5x0 (const connexion::ptr& cnx)
   : compound_scanner (cnx)
 {
   capabilities& caps (const_cast< capabilities& > (caps_));
@@ -180,7 +180,7 @@ DS_510_560::DS_510_560 (const connexion::ptr& cnx)
 }
 
 void
-DS_510_560::configure ()
+DS_5x0::configure ()
 {
   compound_scanner::configure ();
 

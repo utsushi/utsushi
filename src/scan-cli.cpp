@@ -61,6 +61,8 @@
 #include <utsushi/value.hpp>
 
 #include "../connexions/hexdump.hpp"
+#include "../filters/autocrop.hpp"
+#include "../filters/deskew.hpp"
 #include "../filters/g3fax.hpp"
 #include "../filters/image-skip.hpp"
 #include "../filters/jpeg.hpp"
@@ -601,6 +603,37 @@ main (int argc, char *argv[])
           resampling = t;
         }
 
+      bool emulating_automatic_scan_area = false;
+
+      if (   device->model () == "DS-40"
+          || device->model () == "DS-510"
+          || device->model () == "DS-520"
+          || device->model () == "DS-560"
+          )
+        {
+          if (HAVE_libMagickPP
+              && device->options ()->count ("scan-area"))
+            {
+              constraint::ptr c ((*device->options ())["scan-area"]
+                                 .constraint ());
+              if (value ("Automatic") != (*c) (value ("Automatic")))
+                {
+                  dynamic_pointer_cast< utsushi::store >
+                    (c)->alternative ("Automatic");
+                  emulating_automatic_scan_area = true;
+                }
+            }
+
+          if (HAVE_libMagickPP)
+            {
+              add_opts
+                .add_options ()
+                ("deskew", po::bool_switch (),
+                 _("Deskew"))
+                ;
+            }
+        }
+
       std::for_each (device->options ()->begin (),
                      device->options ()->end (),
                      visit (dev_opts, resampling));
@@ -667,6 +700,28 @@ main (int argc, char *argv[])
 
       po::store (add, add_vm);
       po::notify (add_vm);
+
+      // Pick off those options and option values that need special
+      // handling
+
+      filter::ptr autocrop;
+      if (emulating_automatic_scan_area
+          && (dev_vm["scan-area"].as< string > () == "Automatic"))
+        {
+          autocrop = make_shared< _flt_::autocrop > ();
+          dev_vm.erase ("scan-area");
+          po::variable_value v (std::string ("Maximum"), false);
+          dev_vm.insert (std::make_pair ("scan-area", v));
+        }
+
+      filter::ptr deskew;
+      if (!autocrop             // autocrop already deskews
+          && add_vm.count ("deskew"))
+        {
+          if (add_vm["deskew"].as< bool > ())
+            deskew = make_shared< _flt_::deskew > ();
+          add_vm.erase ("deskew");
+        }
 
       // Push all options to their respective providers
 
@@ -820,6 +875,37 @@ main (int argc, char *argv[])
         }
       if (force_extent) force_extent = (width > 0 || height > 0);
 
+      /* autocrop has been instantiated earlier if necessary
+       * It is not done here due to command-line option handling.
+       */
+      if (autocrop)     force_extent = false;
+
+      if (autocrop)
+        {
+          (*autocrop->options ())["lo-threshold"] = 60.2;
+          (*autocrop->options ())["hi-threshold"] = 79.3;
+          if (device->model () == "DS-40")
+            {
+              (*autocrop->options ())["lo-threshold"] = 12.1;
+              (*autocrop->options ())["hi-threshold"] = 25.4;
+            }
+        }
+
+      /* deskew has been instantiated earlier if necessary
+       * It is not done here due to command-line option handling.
+       */
+
+      if (deskew)
+        {
+          (*deskew->options ())["lo-threshold"] = 60.2;
+          (*deskew->options ())["hi-threshold"] = 79.3;
+          if (device->model () == "DS-40")
+            {
+              (*deskew->options ())["lo-threshold"] = 12.1;
+              (*deskew->options ())["hi-threshold"] = 25.4;
+            }
+        }
+
       toggle resample = false;
       if (om.count ("enable-resampling"))
         resample = value (om["enable-resampling"]);
@@ -905,6 +991,8 @@ main (int argc, char *argv[])
         {
           if (skip_blank) str->push (blank_skip);
           str->push (make_shared< pnm > ());
+          if (autocrop)   str->push (autocrop);
+          if (deskew)     str->push (deskew);
           str->push (magick);
 
           if ("PDF" == fmt)

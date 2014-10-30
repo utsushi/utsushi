@@ -159,7 +159,7 @@ case "$VERSION" in
 esac
 if test -n "$patch"; then
     if ! `grep "^## Utsushi SANE " $aux_dir/ltmain.sh >/dev/null 2>&1`; then
-        patch -z .orig -p0 < $patch
+        patch -z .orig -p1 < $patch
     fi
 fi
 

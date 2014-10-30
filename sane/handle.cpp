@@ -41,6 +41,8 @@
 #include <utsushi/stream.hpp>
 #include <utsushi/i18n.hpp>
 
+#include "../filters/autocrop.hpp"
+#include "../filters/deskew.hpp"
 #include "../filters/image-skip.hpp"
 #include "../filters/jpeg.hpp"
 #include "../filters/magick.hpp"
@@ -56,6 +58,8 @@ using std::runtime_error;
 using utsushi::_flt_::bottom_padder;
 using utsushi::_flt_::image_skip;
 using utsushi::_flt_::magick;
+using utsushi::_flt_::deskew;
+using utsushi::_flt_::autocrop;
 using utsushi::_flt_::pnm;
 
 namespace sane {
@@ -483,11 +487,55 @@ handle::handle(const scanner::info& info)
   , last_marker_(traits::eos ())
   , work_in_progress_(false)
   , cancel_requested_(work_in_progress_)
+  , emulating_automatic_scan_area_(false)
+  , do_automatic_scan_area_(false)
 {
   opt_.add_options ()
     (name::num_options, quantity (0),
      attributes ())
     ;
+
+  if (   idev_->model () == "DS-40"
+      || idev_->model () == "DS-510"
+      || idev_->model () == "DS-520"
+      || idev_->model () == "DS-560"
+      )
+    {
+      if (HAVE_libMagickPP
+          && idev_->options ()->count ("scan-area"))
+        {
+          using utsushi::value;
+
+          constraint::ptr c ((*idev_->options ())["scan-area"]
+                             .constraint ());
+          if (value ("Automatic") != (*c) (value ("Automatic")))
+            {
+              dynamic_pointer_cast< store >
+                (c)->alternative ("Automatic");
+
+              // All SANE options are exposed so we cannot really
+              // stick this in an option as we do in the GUI.
+              emulating_automatic_scan_area_ = true;
+              do_automatic_scan_area_ = false;
+            }
+        }
+
+      // Playing tricky games with the option namespacing here to get
+      // software deskewing listed with a reasonable SANE option name.
+      // An utsushi::key normally uses a '/' to separate namespaces
+      // but SANE does not allow those.  We already map the '/' to a
+      // '-', so using a '-' here will make it appear to be in the
+      // "software" namespace without actually having to be a member
+      // of that namespace (which is used by the image_skip filter
+      // below as well).
+      if (HAVE_libMagickPP)
+        {
+          opt_.add_options ()
+            ("software-deskew", toggle (),
+             attributes (tag::enhancement)(level::standard),
+             N_("Deskew"));
+        }
+    }
 
   opt_.add_option_map ()
     (option_prefix, idev_->options ())
@@ -700,6 +748,13 @@ handle::get (SANE_Int index, void *value) const
       v *= unit::mm_per_inch;
     }
 
+  if (k == option_prefix / "scan-area"
+      && emulating_automatic_scan_area_
+      && do_automatic_scan_area_)
+    {
+      v = utsushi::value ("Automatic");
+    }
+
   v >> value;
 
   return status;
@@ -716,6 +771,15 @@ handle::set (SANE_Int index, void *value, SANE_Word *info)
   // FIXME remove unit conversion kludge
   if (name::is_scan_area (sod_[index].sane_key))
     v /= unit::mm_per_inch;
+
+  if (k == option_prefix / "scan-area"
+      && emulating_automatic_scan_area_)
+    {
+      const utsushi::value automatic ("Automatic");
+      do_automatic_scan_area_ = (automatic == utsushi::value (v));
+      if (do_automatic_scan_area_)
+        v = utsushi::value ("Maximum");
+    }
 
   if (SANE_TYPE_BUTTON != option_descriptor (opt_[k]).type)
     if (opt_[k] == v) return SANE_STATUS_GOOD;
@@ -1006,6 +1070,44 @@ handle::marker ()
         }
       if (force_extent) force_extent = (width > 0 || height > 0);
 
+      filter::ptr autocrop;
+      if (emulating_automatic_scan_area_
+          && do_automatic_scan_area_)
+        {
+          autocrop = make_shared< _flt_::autocrop > ();
+        }
+      if (autocrop) force_extent = false;
+
+      if (autocrop)
+        {
+          (*autocrop->options ())["lo-threshold"] = 60.2;
+          (*autocrop->options ())["hi-threshold"] = 79.3;
+          if (idev_->model () == "DS-40")
+            {
+              (*autocrop->options ())["lo-threshold"] = 12.1;
+              (*autocrop->options ())["hi-threshold"] = 25.4;
+            }
+        }
+
+      filter::ptr deskew;
+      if (!autocrop && opt_.count ("software-deskew"))
+        {
+          toggle t = value ((opt_)["software-deskew"]);
+          if (t)
+            deskew = make_shared< _flt_::deskew > ();
+        }
+
+      if (deskew)
+        {
+          (*deskew->options ())["lo-threshold"] = 60.2;
+          (*deskew->options ())["hi-threshold"] = 79.3;
+          if (idev_->model () == "DS-40")
+            {
+              (*deskew->options ())["lo-threshold"] = 12.1;
+              (*deskew->options ())["hi-threshold"] = 25.4;
+            }
+        }
+
       toggle resample = false;
       if (opt_.count (option_prefix / "enable-resampling"))
         resample = value (opt_[option_prefix / "enable-resampling"]);
@@ -1087,6 +1189,8 @@ handle::marker ()
 
       if (skip_blank) str->push (blank_skip);
       str->push (make_shared< pnm > ());
+      if (autocrop)   str->push (autocrop);
+      if (deskew)     str->push (deskew);
       str->push (magick);
 
       iocache::ptr cache (make_shared< iocache > ());

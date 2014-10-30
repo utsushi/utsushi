@@ -31,11 +31,14 @@ ATTRS{idProduct}=="0146", ENV{utsushi_driver}="esci"
 #  DS-510
 ATTRS{idProduct}=="014c", ENV{utsushi_driver}="esci"
 #  DS-560
-ATTRS{idProduct}=="0150", ENV{utsushi_driver}="esci"
-#  DS-760, DS-860
 ATTRS{idProduct}=="014d", ENV{utsushi_driver}="esci"
 #  DS-40
+ATTRS{idProduct}=="0150", ENV{utsushi_driver}="esci"
+#  DS-760, DS-860
 ATTRS{idProduct}=="0152", ENV{utsushi_driver}="esci"
+#  DS-520
+ATTRS{idProduct}=="0154", ENV{utsushi_driver}="esci"
+
 #  PX-M7050 Series, WF-8510/8590 Series
 ATTRS{idProduct}=="08bc", ENV{utsushi_driver}="esci"
 #  PX-M7050FX Series, WF-R8590 Series

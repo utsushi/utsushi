@@ -32,8 +32,5 @@ Andrew Fitzsimons
 ----------------------------------------------------------------------
 ImageMagick Studio LLC
 
-  - provided all files below upstream/ImageMagick/ (with the exception
-    of magick/magick-baseconfig.h which is generated).
-    This directory is "maintained" with tools/include-magick-src.
-  - provided http://imagemagick.org/source/core.c upon which the Canny
-    Edge and Hough Line utilities are based
+  - wrote the code upon which skew angle detection in the `doc-locate`
+    helper utility is based

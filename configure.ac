@@ -23,7 +23,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.62)
-AC_INIT([Utsushi], [0.7.0],
+AC_INIT([Utsushi], [0.8.0],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -191,6 +191,8 @@ AC_DEFINE([HAVE_GRAPHICS_MAGICK],
   [0], [Define to 1 if GraphicsMagick is available])
 AC_DEFINE([HAVE_IMAGE_MAGICK],
   [0], [Define to 1 if ImageMagick is available])
+AC_DEFINE([HAVE_libMagickPP],
+  [0], [Define to 1 if ImageMagick's Magick++ API is usable])
 AC_DEFINE([MAGICK_CONVERT],
   [], [Define to an appropriate command-line invocation for convert])
 
@@ -352,8 +354,8 @@ AM_CONDITIONAL([have_libusb], [test x != "x$LIBUSB_LIBS"])
 AM_CONDITIONAL([have_libusb_legacy], [test x != "x$LIBUSB_LEGACY_LIBS"])
 
 AS_IF([test xno != "x$with_magick"],
-  [dnl PKG_CHECK_MODULES([IMAGEMAGICK], [ImageMagick >= 6.8.9-1])
-   dnl The above line is a hack for the tools/include-magick-src script
+  [PKG_CHECK_MODULES([libMagickPP], [Magick++ > 6.4.2],
+     [AC_DEFINE([HAVE_libMagickPP], [1])])
    AS_CASE("x$with_magick",
      [xGraphicsMagick],
        [AC_CHECK_PROGS([MAGICK_CONVERT], [gm])
@@ -393,6 +395,7 @@ AM_CONDITIONAL([have_graphics_magick],
   [test "xgm convert" = "x$MAGICK_CONVERT"])
 AM_CONDITIONAL([have_magick],
   [test x != "x$MAGICK_CONVERT"])
+AM_CONDITIONAL([have_libMagickPP], [test x != "x$libMagickPP_LIBS"])
 
 AS_IF([test xno != "x$with_gtkmm"],
   [PKG_CHECK_MODULES([LIBGTKMM], [gtkmm-2.4 >= 2.20],

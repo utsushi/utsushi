@@ -269,6 +269,8 @@ preview::on_refresh ()
         }
       if (force_extent) force_extent = (width > 0 || height > 0);
 
+      //! \todo add autocrop support?
+      //! \todo add deskew support?
       //! \todo decide what to do WRT resampling
 
       filter::ptr threshold (make_shared< threshold > ());
