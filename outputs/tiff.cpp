@@ -130,6 +130,24 @@ tiff_odevice::write (const octet *data, streamsize n)
 {
   BOOST_ASSERT ((data && 0 < n) || 0 == n);
 
+  boost::scoped_array< octet > tmp;
+  if (HAVE_GRAPHICS_MAGICK
+      && (1 == ctx_.depth() && 1 == ctx_.comps()))
+    {
+      tmp.reset (new octet[n]);
+      for (streamsize i = 0; i < n; ++i)
+        {
+          octet v = data[i];
+
+          v = ((v >> 1) & 0x55) | ((v & 0x55) << 1);
+          v = ((v >> 2) & 0x33) | ((v & 0x33) << 2);
+          v = ((v >> 4) & 0x0F) | ((v & 0x0F) << 4);
+
+          tmp[i] = v;
+        }
+      data = tmp.get ();
+    }
+
   streamsize octets = std::min (ctx_.octets_per_line () - partial_size_, n);
 
   {                             // continue with stashed octets

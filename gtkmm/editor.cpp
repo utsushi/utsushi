@@ -646,6 +646,8 @@ editor::set (const std::string& key, const value& v)
       toggle t = (value ("Automatic") == new_v);
       (*opts_)["magick/automatic-scan-area"] = t;
       if (t) new_v = value ("Maximum");
+      if (opts_->count ("device/overscan"))
+        (*opts_)["device/overscan"] = t;
     }
 
   try

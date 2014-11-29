@@ -551,7 +551,7 @@ dialog::on_device_changed (utsushi::scanner::ptr idev)
       )
     {
       option::map::ptr opts (make_shared< option::map > ());
-      if (HAVE_libMagickPP)
+      if (HAVE_MAGICK_PP)
         {
           opts->add_options ()
             ("deskew", toggle (),
@@ -559,7 +559,7 @@ dialog::on_device_changed (utsushi::scanner::ptr idev)
              N_("Deskew"));
         }
 
-      if (HAVE_libMagickPP
+      if (HAVE_MAGICK_PP
           && idevice_->options ()->count ("scan-area"))
         {
           constraint::ptr c ((*idevice_->options ())["scan-area"]

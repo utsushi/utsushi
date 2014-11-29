@@ -239,7 +239,13 @@ magick::arguments (const context& ctx)
           /**/ if (ctx_.is_rgb ())
             argv += " rgb:-";
           else
-            argv += " gray:-";
+            {
+              if (HAVE_GRAPHICS_MAGICK
+                  && bilevel_)
+                argv += " mono:-";
+              else
+                argv += " gray:-";
+            }
         }
       else
         {
@@ -252,7 +258,13 @@ magick::arguments (const context& ctx)
       /**/ if (ctx_.is_rgb ())
         argv += " rgb:-";
       else
-        argv += " gray:-";
+        {
+          if (HAVE_GRAPHICS_MAGICK
+              && bilevel_)
+            argv += " mono:-";
+          else
+            argv += " gray:-";
+        }
     }
 
   return argv;

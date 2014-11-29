@@ -29,3 +29,6 @@
 #ifndef HAVE___ATTRIBUTE__
 #define __attribute__(attr)
 #endif
+
+#define HAVE_MAGICK     (HAVE_GRAPHICS_MAGICK    || HAVE_IMAGE_MAGICK)
+#define HAVE_MAGICK_PP  (HAVE_GRAPHICS_MAGICK_PP || HAVE_IMAGE_MAGICK_PP)
