@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.0.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2014-10-20 06:26+0000\n"
+"POT-Creation-Date: 2014-11-21 00:54+0000\n"
 "PO-Revision-Date: 2014-08-18 15:47+0900\n"
 "Last-Translator: AVASYS CORPORATION\n"
 "Language-Team: Japanese\n"
@@ -713,7 +713,7 @@ msgstr "名前を付けて保存"
 msgid "Untitled"
 msgstr "無題"
 
-#: gtkmm/dialog.cpp:478 src/scan-cli.cpp:984
+#: gtkmm/dialog.cpp:478 src/scan-cli.cpp:991
 #, boost-format
 msgid "conversion from %1% to %2% is not supported"
 msgstr "%1% から %2% への変換はサポートしていません"
@@ -772,11 +772,11 @@ msgstr "その他"
 msgid "Application"
 msgstr "アプリケーション"
 
-#: gtkmm/editor.cpp:657
+#: gtkmm/editor.cpp:659
 msgid "Restoring previous value"
 msgstr "元の設定に戻します"
 
-#: gtkmm/editor.cpp:660
+#: gtkmm/editor.cpp:662
 msgid "The selected combination of values is not supported."
 msgstr "選択した設定の組み合わせはサポートしていません。"
 
@@ -1045,15 +1045,15 @@ msgstr "画像加工オプション"
 msgid "cannot write TIFF to tty or pipe"
 msgstr ""
 
-#: outputs/tiff.cpp:234
+#: outputs/tiff.cpp:252
 msgid "unsupported colour space"
 msgstr "サポートしていないカラースペース"
 
-#: outputs/tiff.cpp:239
+#: outputs/tiff.cpp:257
 msgid "unsupported bit depth"
 msgstr "サポートしていない色数"
 
-#: sane/backend.cpp:1011
+#: sane/backend.cpp:1024
 msgid ""
 "The current locale settings are not supported by the standard C++ library "
 "used by this application.  This is most likely caused by a misconfigured "
@@ -1070,7 +1070,7 @@ msgstr ""
 "いの環境のロケールの設定とアプリケーションが使用しているC++ライブラリーのロ"
 "ケールのサポート状況を確認して下さい。"
 
-#: sane/backend.cpp:1035
+#: sane/backend.cpp:1048
 msgid "library initialization failed"
 msgstr "ライブラリーの初期化に失敗しました"
 
@@ -1079,7 +1079,7 @@ msgstr "ライブラリーの初期化に失敗しました"
 msgid "Unknown SANE status code %d"
 msgstr "不明なSANEのステータスコード %d"
 
-#: sane/handle.cpp:1243
+#: sane/handle.cpp:1262
 msgid ""
 "SANE API specification violation\n"
 "The option number count has to be the first option."
@@ -1087,7 +1087,7 @@ msgstr ""
 "SANE API の仕様違反\n"
 "オプション番号数は最初のオプションでなければなりません。"
 
-#: sane/handle.cpp:1415
+#: sane/handle.cpp:1434
 msgid ""
 "SANE API specification violation\n"
 "Option names must start with a lower-case ASCII character."
@@ -1234,17 +1234,17 @@ msgstr ""
 "す。\n"
 "例えば、'--duplex'オプションはADFを選択していないときに無視されます。\n"
 
-#: src/scan-cli.cpp:757
+#: src/scan-cli.cpp:764
 #, boost-format
 msgid "cannot infer image format from file extension: '%1%'"
 msgstr "拡張子 '%1%' からファイル形式を判別できません"
 
-#: src/scan-cli.cpp:778
+#: src/scan-cli.cpp:785
 #, boost-format
 msgid "unsupported image format: '%1%'"
 msgstr "'%1%' はサポートされていない画像形式です"
 
-#: src/scan-cli.cpp:830
+#: src/scan-cli.cpp:837
 #, boost-format
 msgid "%1% does not support multi-image files"
 msgstr "%1% は複数画像をサポートしていません"

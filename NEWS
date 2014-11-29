@@ -1,6 +1,23 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.8.2                                             (2014-11-18)
+----------------------------------------------------------------------
+ * make software-based autocrop/deskew support buildable against both
+   ImageMagick and GraphicsMagick.  This allows binary package builds
+   to avoid misbehaving ImageMagick versions.
+ * fixes a crash in the command-line interface when both autocrop and
+   deskew are requested
+ * fixes monochrome scanning when used with GraphicsMagick
+
+----------------------------------------------------------------------
+utsushi-0.8.1                                             (2014-11-06)
+----------------------------------------------------------------------
+ ! never released to the general public
+ * fixes clipping of the top and bottom corners when autocropping is
+   enabled.  Affects the DS-510, DS-520 and DS-560.
+
+----------------------------------------------------------------------
 utsushi-0.8.0                                             (2014-10-17)
 ----------------------------------------------------------------------
  * adds driver support for the DS-520

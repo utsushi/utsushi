@@ -501,7 +501,7 @@ handle::handle(const scanner::info& info)
       || idev_->model () == "DS-560"
       )
     {
-      if (HAVE_libMagickPP
+      if (HAVE_MAGICK_PP
           && idev_->options ()->count ("scan-area"))
         {
           using utsushi::value;
@@ -528,7 +528,7 @@ handle::handle(const scanner::info& info)
       // "software" namespace without actually having to be a member
       // of that namespace (which is used by the image_skip filter
       // below as well).
-      if (HAVE_libMagickPP)
+      if (HAVE_MAGICK_PP)
         {
           opt_.add_options ()
             ("software-deskew", toggle (),
@@ -1026,6 +1026,8 @@ handle::end_scan_sequence ()
 streamsize
 handle::marker ()
 {
+  static bool revert_overscan = false;
+
   /**/ if (  !cache_
            || traits::eos () == last_marker_
            || traits::eof () == last_marker_)
@@ -1074,6 +1076,15 @@ handle::marker ()
       if (emulating_automatic_scan_area_
           && do_automatic_scan_area_)
         {
+          if (opt_.count (option_prefix / "overscan"))
+            {
+              toggle t = value (opt_[option_prefix / "overscan"]);
+              if (!t)
+                {
+                  opt_[option_prefix / "overscan"] = toggle (true);
+                  revert_overscan = true;
+                }
+            }
           autocrop = make_shared< _flt_::autocrop > ();
         }
       if (autocrop) force_extent = false;
@@ -1200,6 +1211,14 @@ handle::marker ()
 
       pump_->connect (boost::bind (on_notify, cache, _1, _2));
       pump_->start (str);
+    }
+  else
+    {
+      if (revert_overscan)
+        {
+          opt_[option_prefix / "overscan"] = toggle (false);
+          revert_overscan = false;
+        }
     }
 
   streamsize rv = traits::eof ();

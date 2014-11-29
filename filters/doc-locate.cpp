@@ -18,6 +18,28 @@
 //  You ought to have received a copy of the GNU General Public License
 //  along with this package.  If not, see <http://www.gnu.org/licenses/>.
 
+#ifdef HAVE_CONFIG_H
+#include <config.h>
+#endif
+
+//  Guard against preprocessor symbol confusion.  We only care about the
+//  C++ API here, not about any command line utilities.
+#ifdef HAVE_GRAPHICS_MAGICK
+#undef HAVE_GRAPHICS_MAGICK
+#endif
+#ifdef HAVE_IMAGE_MAGICK
+#undef HAVE_IMAGE_MAGICK
+#endif
+
+//  Guard against possible mixups by preferring GraphicsMagick in case
+//  both are available.
+#if HAVE_GRAPHICS_MAGICK_PP
+#if HAVE_IMAGE_MAGICK_PP
+#undef  HAVE_IMAGE_MAGICK_PP
+#define HAVE_IMAGE_MAGICK_PP 0
+#endif
+#endif
+
 #include <Magick++.h>
 
 #include <cmath>
@@ -27,6 +49,12 @@
 #include <iostream>
 #include <limits>
 #include <sstream>
+
+#if HAVE_GRAPHICS_MAGICK_PP
+#ifndef QuantumRange
+#define QuantumRange ((Quantum) ((2 << QuantumDepth) - 1))
+#endif
+#endif
 
 namespace {
 
@@ -67,6 +95,33 @@ thumbnail (const Magick::Image& image, double fuzz = -1)
   Magick::Geometry trimmed_size (rv.columns (), rv.rows ());
   Magick::Geometry thumbed_size ("20%");
 
+#if HAVE_GRAPHICS_MAGICK_PP
+#if MagickLibVersion >= 0x151200
+  rv.thumbnail (thumbed_size);
+#else  /* use an inlined backport */
+  {
+    MagickLib::Image         *newImage;
+    MagickLib::ExceptionInfo  exceptionInfo;
+
+    long x = 0;
+    long y = 0;
+    unsigned long width  = rv.columns();
+    unsigned long height = rv.rows();
+
+    MagickLib::GetMagickGeometry
+      (static_cast< std::string > (thumbed_size).c_str (),
+       &x, &y,
+       &width, &height);
+
+    MagickLib::GetExceptionInfo (&exceptionInfo);
+    newImage = MagickLib::ThumbnailImage (rv.image(), width, height,
+                                         &exceptionInfo );
+    rv.replaceImage (newImage);
+
+    Magick::throwException (exceptionInfo);
+  }
+#endif
+#else  /* HAVE_IMAGE_MAGICK_PP */
 #if MagickLibVersion >= 0x689
   rv.thumbnail (thumbed_size);
 #else  /* use an inlined backport */
@@ -102,6 +157,7 @@ thumbnail (const Magick::Image& image, double fuzz = -1)
     Magick::throwException (*exceptionInfo);
     MagickCore::DestroyExceptionInfo (exceptionInfo);
   }
+#endif
 #endif
   rv.page (trimmed_size);
 
@@ -198,15 +254,17 @@ public:
     clone.rotate (deskew_angle ());
 
     Magick::Geometry rv = bbox (clone);
-    if (clone.page ().xNegative ())
-      rv.xOff (rv.xOff () - clone.page ().xOff());
-    else
-      rv.xOff (rv.xOff () + clone.page ().xOff());
-    if (clone.page ().yNegative ())
-      rv.yOff (rv.yOff () - clone.page ().yOff());
-    else
-      rv.yOff (rv.yOff () + clone.page ().yOff());
-
+    if (HAVE_IMAGE_MAGICK_PP)
+    {
+      if (clone.page ().xNegative ())
+        rv.xOff (rv.xOff () - clone.page ().xOff());
+      else
+        rv.xOff (rv.xOff () + clone.page ().xOff());
+      if (clone.page ().yNegative ())
+        rv.yOff (rv.yOff () - clone.page ().yOff());
+      else
+        rv.yOff (rv.yOff () + clone.page ().yOff());
+    }
     return scale (rv);
   }
 
@@ -502,6 +560,27 @@ deskew (Magick::Image& image, const locator& loc)
   // TODO set background to scanner background color
 
   image.rotate (loc.deskew_angle ());
+#if HAVE_GRAPHICS_MAGICK_PP
+  {
+    MagickLib::Image         *newImage;
+    MagickLib::ExceptionInfo  exceptionInfo;
+    MagickLib::RectangleInfo  geometry;
+
+    MagickLib::SetGeometry(image.image (), &geometry);
+    geometry.width  = cols;
+    geometry.height = rows;
+    geometry.x -= (image.image()->columns  - cols) / 2;
+    geometry.y -= (image.image()->rows     - rows) / 2;
+
+    image.modifyImage ();
+    MagickLib::GetExceptionInfo (&exceptionInfo);
+    newImage = MagickLib::ExtentImage (image.image (), &geometry,
+                                       &exceptionInfo);
+    image.replaceImage (newImage);
+
+    Magick::throwException (exceptionInfo);
+  }
+#else  /* HAVE_IMAGE_MAGICK_PP */
 #if MagickLibVersion >= 0x659
   image.extent (Magick::Geometry (cols, rows),
                 Magick::CenterGravity);
@@ -531,9 +610,30 @@ deskew (Magick::Image& image, const locator& loc)
     MagickCore::DestroyExceptionInfo (exceptionInfo);
   }
 #endif
+#endif
 
   // TODO set background to bottom background color
 
+#if HAVE_GRAPHICS_MAGICK_PP
+  {
+    MagickLib::Image         *newImage;
+    MagickLib::ExceptionInfo  exceptionInfo;
+    MagickLib::RectangleInfo  geometry;
+
+    MagickLib::SetGeometry(image.image (), &geometry);
+    geometry.width  = width;
+    geometry.height = height;
+
+    image.modifyImage ();
+
+    MagickLib::GetExceptionInfo (&exceptionInfo);
+    newImage = MagickLib::ExtentImage (image.image (), &geometry,
+                                       &exceptionInfo);
+    image.replaceImage (newImage);
+
+    Magick::throwException (exceptionInfo);
+  }
+#else  /* we HAVE_IMAGE_MAGICK_PP */
 #if MagickLibVersion >= 0x659
   image.extent (Magick::Geometry (width, height),
                 Magick::NorthGravity);
@@ -558,6 +658,7 @@ deskew (Magick::Image& image, const locator& loc)
     Magick::throwException (*exceptionInfo);
     MagickCore::DestroyExceptionInfo (exceptionInfo);
   }
+#endif
 #endif
 }
 

@@ -849,7 +849,20 @@ sane_read (SANE_Handle handle, SANE_Byte *buffer, SANE_Int max_length,
           && 1 == h->get_context ().comps ())
         {
           for (SANE_Int i = 0; i < *length; ++i, ++buffer)
-            *buffer = ~*buffer;
+            {
+              *buffer = ~*buffer;
+
+              if (HAVE_GRAPHICS_MAGICK)
+                {
+                  octet v = *buffer;
+
+                  v = ((v >> 1) & 0x55) | ((v & 0x55) << 1);
+                  v = ((v >> 2) & 0x33) | ((v & 0x33) << 2);
+                  v = ((v >> 4) & 0x0F) | ((v & 0x0F) << 4);
+
+                  *buffer = v;
+                }
+            }
         }
 
       log::brief

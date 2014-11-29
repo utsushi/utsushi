@@ -611,7 +611,7 @@ main (int argc, char *argv[])
           || device->model () == "DS-560"
           )
         {
-          if (HAVE_libMagickPP
+          if (HAVE_MAGICK_PP
               && device->options ()->count ("scan-area"))
             {
               constraint::ptr c ((*device->options ())["scan-area"]
@@ -624,7 +624,7 @@ main (int argc, char *argv[])
                 }
             }
 
-          if (HAVE_libMagickPP)
+          if (HAVE_MAGICK_PP)
             {
               add_opts
                 .add_options ()
@@ -712,13 +712,20 @@ main (int argc, char *argv[])
           dev_vm.erase ("scan-area");
           po::variable_value v (std::string ("Maximum"), false);
           dev_vm.insert (std::make_pair ("scan-area", v));
+
+          if (dev_vm.count ("overscan"))
+            {
+              dev_vm.erase ("overscan");
+              po::variable_value v (true, false);
+              dev_vm.insert (std::make_pair ("overscan", v));
+            }
         }
 
       filter::ptr deskew;
-      if (!autocrop             // autocrop already deskews
-          && add_vm.count ("deskew"))
+      if (add_vm.count ("deskew"))
         {
-          if (add_vm["deskew"].as< bool > ())
+          if (!autocrop         // autocrop already deskews
+              && add_vm["deskew"].as< bool > ())
             deskew = make_shared< _flt_::deskew > ();
           add_vm.erase ("deskew");
         }

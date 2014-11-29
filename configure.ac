@@ -23,7 +23,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.62)
-AC_INIT([Utsushi], [0.8.0],
+AC_INIT([Utsushi], [0.8.2],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -99,6 +99,12 @@ AC_ARG_WITH(magick,
      somewhat more functionality.]),
   [],
   [with_magick=check])
+AC_ARG_WITH(magick-pp,
+  AS_HELP_STRING([--with-magick-pp],
+    [include autocrop and deskew support @<:@check@:>@.
+     Both the GraphicsMagick and ImageMagick C++ libraries are supported.]),
+  [],
+  [with_magick_pp=check])
 
 AC_ARG_WITH(tiff,
   AS_HELP_STRING([--with-tiff],
@@ -191,14 +197,14 @@ AC_DEFINE([HAVE_LIBUSB_LEGACY],
   [0], [define to 1 if libusb-0.1 is available])
 AC_DEFINE([HAVE_LT_DLADVISE],
   [0], [Define to 1 if your libltdl supports lt_dladvise_* API.])
-AC_DEFINE([HAVE_MAGICK],
-  [0], [Define to 1 if GraphicsMagick or ImageMagick is available])
 AC_DEFINE([HAVE_GRAPHICS_MAGICK],
   [0], [Define to 1 if GraphicsMagick is available])
+AC_DEFINE([HAVE_GRAPHICS_MAGICK_PP],
+  [0], [Define to 1 if GraphicsMagick's C++ API is usable])
 AC_DEFINE([HAVE_IMAGE_MAGICK],
   [0], [Define to 1 if ImageMagick is available])
-AC_DEFINE([HAVE_libMagickPP],
-  [0], [Define to 1 if ImageMagick's Magick++ API is usable])
+AC_DEFINE([HAVE_IMAGE_MAGICK_PP],
+  [0], [Define to 1 if ImageMagick's C++ API is usable])
 AC_DEFINE([MAGICK_CONVERT],
   [], [Define to an appropriate command-line invocation for convert])
 
@@ -359,49 +365,66 @@ AS_IF([test xyes != "x$with_legacy_usb"],
 AM_CONDITIONAL([have_libusb], [test x != "x$LIBUSB_LIBS"])
 AM_CONDITIONAL([have_libusb_legacy], [test x != "x$LIBUSB_LEGACY_LIBS"])
 
+AS_IF([test xno != "x$with_magick_pp"],
+   AS_CASE("x$with_magick_pp",
+     [xGraphicsMagick],
+       [PKG_CHECK_MODULES([LIBMAGICK_PP], [GraphicsMagick++],
+          [AC_DEFINE([HAVE_GRAPHICS_MAGICK_PP], [1])])
+       ],
+     [xImageMagick],
+       [PKG_CHECK_MODULES([LIBMAGICK_PP], [Magick++ > 6.4.2],
+          [AC_DEFINE([HAVE_IMAGE_MAGICK_PP], [1])])
+       ],
+     [xyes|xcheck],
+       [PKG_CHECK_MODULES([LIBMAGICK_PP], [GraphicsMagick++],
+          [AC_DEFINE([HAVE_GRAPHICS_MAGICK_PP], [1])],
+          [PKG_CHECK_MODULES([LIBMAGICK_PP], [Magick++ > 6.4.2],
+             [AC_DEFINE([HAVE_IMAGE_MAGICK_PP], [1])],
+             [AS_IF([test xcheck != "x$with_magick_pp"],
+                [AC_MSG_ERROR([magick-pp required but not found])])
+             ])
+          ])
+       ],
+     [dnl default case
+      AC_MSG_ERROR([unknown value: --with-magick-pp=$with_magick_pp])
+     ]))
+AM_CONDITIONAL([have_libmagick_pp], [test x != "x$LIBMAGICK_PP_LIBS"])
+
 AS_IF([test xno != "x$with_magick"],
-  [PKG_CHECK_MODULES([libMagickPP], [Magick++ > 6.4.2],
-     [AC_DEFINE([HAVE_libMagickPP], [1])])
    AS_CASE("x$with_magick",
      [xGraphicsMagick],
        [AC_CHECK_PROGS([MAGICK_CONVERT], [gm])
         AS_IF([test xgm != x$MAGICK_CONVERT],
           [AC_MSG_ERROR([$with_magick requested but not found])])
+        AC_DEFINE([HAVE_GRAPHICS_MAGICK], [1])
+        MAGICK_CONVERT="gm convert"
        ],
      [xImageMagick],
        [AC_CHECK_PROGS([MAGICK_CONVERT], [convert])
         AS_IF([test xconvert != x$MAGICK_CONVERT],
           [AC_MSG_ERROR([$with_magick requested but not found])])
+        AC_DEFINE([HAVE_IMAGE_MAGICK], [1])
        ],
      [xyes|xcheck],
-       [AC_CHECK_PROGS([MAGICK_CONVERT], [convert gm])
-        AS_IF([test x == x$MAGICK_CONVERT],
-          [AS_IF([test xcheck != "x$with_magick"],
+       [AC_CHECK_PROGS([MAGICK_CONVERT], [gm convert])
+        AS_CASE(x$MAGICK_CONVERT,
+          [xgm],
+            [AC_DEFINE([HAVE_GRAPHICS_MAGICK], [1])
+             MAGICK_CONVERT="gm convert"
+            ],
+          [xconvert],
+            [AC_DEFINE([HAVE_IMAGE_MAGICK], [1])
+            ],
+          [dnl default case
+           AS_IF([test xcheck != "x$with_magick"],
              [AC_MSG_ERROR([magick required but not found])])
           ])
        ],
      [dnl default case
       AC_MSG_ERROR([unknown value: --with-magick=$with_magick])
-     ])])
-AS_CASE(x$MAGICK_CONVERT,
-  [xconvert],
-    [AC_DEFINE([HAVE_IMAGE_MAGICK], [1])
-    ],
-  [xgm],
-    [AC_DEFINE([HAVE_GRAPHICS_MAGICK], [1])
-     MAGICK_CONVERT="gm convert"
-    ])
-AS_IF([test x != "x$MAGICK_CONVERT"],
-  [AC_DEFINE([HAVE_MAGICK], [1])
-   AC_DEFINE_UNQUOTED([MAGICK_CONVERT], ["$MAGICK_CONVERT"])
-  ])
-AM_CONDITIONAL([have_image_magick],
-  [test xconvert = "x$MAGICK_CONVERT"])
-AM_CONDITIONAL([have_graphics_magick],
-  [test "xgm convert" = "x$MAGICK_CONVERT"])
-AM_CONDITIONAL([have_magick],
-  [test x != "x$MAGICK_CONVERT"])
-AM_CONDITIONAL([have_libMagickPP], [test x != "x$libMagickPP_LIBS"])
+     ]))
+AC_DEFINE_UNQUOTED([MAGICK_CONVERT], ["$MAGICK_CONVERT"])
+AM_CONDITIONAL([have_magick], [test x != "x$MAGICK_CONVERT"])
 
 AS_IF([test xno != "x$with_gtkmm"],
   [PKG_CHECK_MODULES([LIBGTKMM], [gtkmm-2.4 >= 2.20],
