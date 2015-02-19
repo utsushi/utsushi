@@ -1,6 +1,6 @@
 //  start-extended-scan.hpp -- to acquire image data
 //  Copyright (C) 2012  SEIKO EPSON CORPORATION
-//  Copyright (C) 2008  Olaf Meeuwissen
+//  Copyright (C) 2008, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -115,7 +115,7 @@ namespace _drv_ {
            as a part of the scan logic and operator++() will send the
            appropriate command at the first opportunity.
        */
-      bool cancel_requested (void) const;
+      bool is_cancel_requested (void) const;
 
       //!  \copybrief start_scan::cancel()
       /*!  \copydetails start_scan::cancel()

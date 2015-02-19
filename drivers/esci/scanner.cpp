@@ -1,5 +1,6 @@
 //  scanner.cpp -- API implementation for an ESC/I driver
 //  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -111,7 +112,7 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
   catch (const invalid_command& e)
     {
       log::brief
-        ("does not appear to be an ESC/I-2 device (%2%)")
+        ("does not appear to be an ESC/I-2 device (%1%)")
         % e.what ();
     }
   catch (const unknown_reply&)
@@ -140,7 +141,7 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
       catch (const invalid_command& e)
         {
           log::brief
-            ("does not appear to be an ESC/I device (%2%)")
+            ("does not appear to be an ESC/I device (%1%)")
             % e.what ();
         }
       catch (const unknown_reply&)
@@ -150,8 +151,11 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
       if (!sp) log::error ("not supported");
     }
 
-  sp->configure ();
-  rv = sp;
+  if (sp)
+    {
+      sp->configure ();
+      rv = sp;
+    }
 }
 
 } // extern "C"

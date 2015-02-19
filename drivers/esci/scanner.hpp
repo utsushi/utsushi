@@ -1,5 +1,6 @@
 //  scanner.hpp -- API implementation for an ESC/I driver
 //  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -79,6 +80,12 @@ protected:
   const matrix< double, 3 > profile_matrix_;
   const vector< double, 3 > gamma_exponent_;
 
+  //! Option values in effect during image acquisition
+  /*! Storing the option values in this variable at the beginning of
+   *  set_up_sequence() allows the implementation to assume that the
+   *  values are not modified via external means for the duration of
+   *  image acquisition.
+   */
   value::map val_;
 
   /*! Stores the option values in val_ and calls the helper functions

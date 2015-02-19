@@ -1,6 +1,6 @@
 //  get-scan-parameters.hpp -- settings for the next scan
 //  Copyright (C) 2012  SEIKO EPSON CORPORATION
-//  Copyright (C) 2008  Olaf Meeuwissen
+//  Copyright (C) 2008, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -38,7 +38,7 @@ namespace _drv_ {
                 check_blk_reply()?
      */
     class get_scan_parameters : public getter<FS,UPPER_S,64>
-                              , private scan_parameters
+                              , public scan_parameters
     {
     public:
       //!  \copybrief getter::getter
@@ -50,6 +50,8 @@ namespace _drv_ {
 
     protected:
       void check_blk_reply (void) const;
+
+      friend class set_scan_parameters;
     };
 
   } // namespace esci

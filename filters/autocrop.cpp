@@ -34,6 +34,8 @@ namespace _flt_ {
 
 using boost::lexical_cast;
 
+const streamsize PNM_HEADER_SIZE = 50;
+
 autocrop::autocrop ()
   : shell_pipe (run_time ().exec_file (run_time::pkg, "doc-locate"))
 {
@@ -116,6 +118,8 @@ autocrop::arguments (const context& ctx)
   argv += " " + lexical_cast< string > (lo_threshold_ / 100);
   argv += " " + lexical_cast< string > (hi_threshold_ / 100);
   argv += " crop";
+  argv += " " + lexical_cast< string > (ctx.octets_per_image ()
+                                        + PNM_HEADER_SIZE);
 
   return argv;
 }

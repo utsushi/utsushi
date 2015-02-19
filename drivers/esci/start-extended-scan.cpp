@@ -1,6 +1,6 @@
 //  start-extended-scan.cpp -- to acquire image data
 //  Copyright (C) 2012  SEIKO EPSON CORPORATION
-//  Copyright (C) 2009  Olaf Meeuwissen
+//  Copyright (C) 2009, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -85,7 +85,7 @@ namespace _drv_ {
     chunk
     start_extended_scan::operator++ (void)
     {
-      if (!more_chunks_()) return chunk ();
+      if (!more_chunks_() || cancelled_) return chunk ();
 
       chunk img;
 
@@ -111,7 +111,7 @@ namespace _drv_ {
 
           if (more_chunks_())
             {
-              if (cancel_requested ())
+              if (is_cancel_requested ())
                 cancel ();
 
               if (!do_cancel_)
@@ -161,7 +161,7 @@ namespace _drv_ {
     }
 
     bool
-    start_extended_scan::cancel_requested (void) const
+    start_extended_scan::is_cancel_requested (void) const
     {
       return 0x10 & error_code_;
     }

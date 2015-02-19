@@ -1,6 +1,6 @@
 //  scan-parameters.hpp -- settings for the next scan
 //  Copyright (C) 2012  SEIKO EPSON CORPORATION
-//  Copyright (C) 2008  Olaf Meeuwissen
+//  Copyright (C) 2008, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -24,6 +24,8 @@
 #ifndef drivers_esci_scan_parameters_hpp_
 #define drivers_esci_scan_parameters_hpp_
 
+#include <boost/operators.hpp>
+
 #include "bounding-box.hpp"
 #include "code-point.hpp"
 
@@ -41,7 +43,11 @@ namespace _drv_ {
      *   (boring) code and discrepancies between both %getter APIs.
      */
     class scan_parameters
+      : boost::equality_comparable< scan_parameters >
     {
+    public:
+      bool operator== (const scan_parameters& rhs) const;
+
     protected:
       scan_parameters (const byte mem[64]);
 
