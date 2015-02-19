@@ -112,16 +112,11 @@ using std::runtime_error;
       BOOST_THROW_EXCEPTION
         (runtime_error (_("no usable, matching device")));
 
-    libusb_clear_halt (handle_, ep_bulk_o_);
-    libusb_clear_halt (handle_, ep_bulk_i_);
-
     ++connexion_count_;
   }
 
   usb::~usb (void)
   {
-    libusb_clear_halt (handle_, ep_bulk_o_);
-    libusb_clear_halt (handle_, ep_bulk_i_);
     libusb_release_interface (handle_, if_);
     libusb_close (handle_);
 

@@ -219,7 +219,7 @@ magick::arguments (const context& ctx)
     }
 
   // Prevent GraphicsMagick from converting gray JPEG images to RGB
-  if (ctx.is_raster_image () && !ctx.is_rgb ())
+  if (HAVE_GRAPHICS_MAGICK && !ctx.is_rgb ())
     argv += " -colorspace gray";
 
   if (image_format_)

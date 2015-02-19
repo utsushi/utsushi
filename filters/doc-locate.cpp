@@ -42,6 +42,7 @@
 
 #include <Magick++.h>
 
+#include <cerrno>
 #include <cmath>
 #include <cstdlib>
 #include <cstring>
@@ -49,6 +50,11 @@
 #include <iostream>
 #include <limits>
 #include <sstream>
+
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 #if HAVE_GRAPHICS_MAGICK_PP
 #ifndef QuantumRange
@@ -681,7 +687,8 @@ main (int argc, char *argv[])
   if (3 > argc)
     {
       std::cerr
-        << "Usage: " << argv[0] << " lo hi [action [source [destination]]]\n"
+        << "Usage: " << argv[0]
+        << " lo hi [action [size [source [destination]]]]\n"
         << "\n"
         << "The program expects two threshold values bracketing the image's\n"
         << "background intensity.  Values should be in [0,1].\n"
@@ -696,6 +703,7 @@ main (int argc, char *argv[])
 
   double lo_threshold;
   double hi_threshold;
+  size_t data_size = 0;
 
   {
     std::stringstream ss;
@@ -722,6 +730,19 @@ main (int argc, char *argv[])
 
   const std::string action (argc > 3 ? argv[3] : "show");
 
+  if (argc > 4)
+    {
+      std::stringstream ss;
+
+      ss << argv[4];
+      ss >> data_size;
+      if (!ss.eof ())
+        {
+          std::cerr << "Invalid argument (" << argv[4] << ")\n";
+          exit (1);
+        }
+    }
+
   void (*process)(Magick::Image&, const locator&);
 
   /**/ if (action == "crop")   process = autocrop;
@@ -732,15 +753,58 @@ main (int argc, char *argv[])
       exit (EXIT_FAILURE);
     }
 
-  const char *input  = (argc > 4 ? argv[4] : "-");
-  const char *output = (argc > 5 ? argv[5] : "-");
+  const char *input  = (argc > 5 ? argv[5] : "-");
+  const char *output = (argc > 6 ? argv[6] : "-");
 
   Magick::InitializeMagick (*argv);
   Magick::Image original;
 
   try
     {
-      original.read (input);
+      char *data = NULL;
+      int fd = -1;
+
+      if (0 < data_size)
+        {
+          data = (char *) malloc (data_size);
+        }
+      if (data)
+        {
+          if (!strcmp (input, "-"))
+            fd = STDIN_FILENO;
+          else
+            fd = open (input, O_RDONLY);
+          if (-1 == fd)
+            {
+              free (data);
+              data = NULL;
+            }
+        }
+      if (data && 0 <= fd)
+        {
+          size_t cnt = 0;
+          size_t n;
+          do
+            {
+              n = read (fd, data + cnt, data_size - cnt);
+              if (0 < n) cnt += n;
+            }
+          while (0 < n
+                 || EINTR == errno || EAGAIN == errno || EWOULDBLOCK == errno);
+
+          if (-1 == close (fd))         // just warn about this
+            std::cerr << strerror (errno) << std::endl;
+
+          Magick::Blob blob;
+
+          blob.updateNoCopy (data, cnt, Magick::Blob::MallocAllocator);
+          // data is now owned by blob, do *not* free (data)
+          original.read (blob);
+        }
+      else
+        {
+          original.read (input);
+        }
 
       locator loc (original, lo_threshold, hi_threshold, fuzz);
 

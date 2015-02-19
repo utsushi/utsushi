@@ -1,5 +1,5 @@
 //  extended-scanner.cpp -- devices that handle extended commands
-//  Copyright (C) 2013  Olaf Meeuwissen
+//  Copyright (C) 2013, 2014  Olaf Meeuwissen
 //  Copyright (C) 2012  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+

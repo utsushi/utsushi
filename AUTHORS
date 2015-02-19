@@ -9,13 +9,15 @@ AVASYS CORPORATION <http://avasys.jp/>
     to the contrary below
 
 ----------------------------------------------------------------------
-Olaf Meeuwissen <olaf@member.fsf.org>
+Olaf Meeuwissen <paddy-hack@member.fsf.org>
 
   - designed and implemented the initial ESC-I/B protocol commands as
     well as the HAL and USB connexion support.
     Original code is available from `bzr branch lp:freerisci`.
   - created a project logo using the scanner icon (Andrew Fitzsimons)
     and Dejima Mincho font (Yoshiki Hayashi)
+  - aligned `extended_scanner` and `compound_scanner` implementations
+    See: https://github.com/utsushi/utsushi
 
 ----------------------------------------------------------------------
 Hartmut Kaiser
