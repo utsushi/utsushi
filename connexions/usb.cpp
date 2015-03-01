@@ -38,6 +38,7 @@
 namespace utsushi {
 namespace _cnx_ {
 
+#if  HAVE_LIBUSB
 #if !HAVE_LIBUSB_ERROR_NAME
 #include <sstream>
 #include <string>
@@ -50,6 +51,7 @@ libusb_error_name (int err)
   return os.str ();
 }
 #endif  /* !HAVE_LIBUSB_ERROR_NAME */
+#endif  /*  HAVE_LIBUSB */
 
 extern "C" {
 
