@@ -44,7 +44,9 @@
 #include "../filters/autocrop.hpp"
 #include "../filters/deskew.hpp"
 #include "../filters/image-skip.hpp"
+#if HAVE_LIBJPEG
 #include "../filters/jpeg.hpp"
+#endif
 #include "../filters/magick.hpp"
 #include "../filters/padding.hpp"
 #include "../filters/pnm.hpp"
@@ -1041,7 +1043,7 @@ handle::marker ()
       std::string xfer_fmt = idev_->get_context ().content_type ();
 
       /**/ if (xfer_raw == xfer_fmt) {}
-      else if (xfer_jpg == xfer_fmt) {}
+      else if (HAVE_LIBJPEG && xfer_jpg == xfer_fmt) {}
       else                      // bail as soon as possible
         {
           log::alert
@@ -1073,7 +1075,8 @@ handle::marker ()
       if (force_extent) force_extent = (width > 0 || height > 0);
 
       filter::ptr autocrop;
-      if (emulating_automatic_scan_area_
+      if (HAVE_MAGICK_PP
+          && emulating_automatic_scan_area_
           && do_automatic_scan_area_)
         {
           if (opt_.count (option_prefix / "overscan"))
@@ -1101,7 +1104,8 @@ handle::marker ()
         }
 
       filter::ptr deskew;
-      if (!autocrop && opt_.count ("software-deskew"))
+      if (HAVE_MAGICK_PP
+          && !autocrop && opt_.count ("software-deskew"))
         {
           toggle t = value ((opt_)["software-deskew"]);
           if (t)
@@ -1123,42 +1127,49 @@ handle::marker ()
       if (opt_.count (option_prefix / "enable-resampling"))
         resample = value (opt_[option_prefix / "enable-resampling"]);
 
-      filter::ptr magick (make_shared< _flt_::magick > ());
-
-      toggle bound = true;
-      quantity res_x  = -1.0;
-      quantity res_y  = -1.0;
-
-      std::string sw (resample ? "sw-" : "");
-      if (opt_.count (option_prefix / (sw + "resolution-x")))
+      filter::ptr magick;
+      if (HAVE_MAGICK)
         {
-          res_x = value (opt_[option_prefix / (sw + "resolution-x")]);
-          res_y = value (opt_[option_prefix / (sw + "resolution-y")]);
-        }
-      if (opt_.count (option_prefix / (sw + "resolution-bind")))
-        bound = value (opt_[option_prefix / (sw + "resolution-bind")]);
-
-      if (bound)
-        {
-          res_x = value (opt_[option_prefix / (sw + "resolution")]);
-          res_y = value (opt_[option_prefix / (sw + "resolution")]);
+          magick = make_shared< _flt_::magick > ();
         }
 
-      (*magick->options ())["resolution-x"] = res_x;
-      (*magick->options ())["resolution-y"] = res_y;
-      (*magick->options ())["force-extent"] = force_extent;
-      (*magick->options ())["width"]  = width;
-      (*magick->options ())["height"] = height;
+      if (magick)
+        {
+          toggle bound = true;
+          quantity res_x  = -1.0;
+          quantity res_y  = -1.0;
 
-      (*magick->options ())["bilevel"] = toggle (bilevel);
+          std::string sw (resample ? "sw-" : "");
+          if (opt_.count (option_prefix / (sw + "resolution-x")))
+            {
+              res_x = value (opt_[option_prefix / (sw + "resolution-x")]);
+              res_y = value (opt_[option_prefix / (sw + "resolution-y")]);
+            }
+          if (opt_.count (option_prefix / (sw + "resolution-bind")))
+            bound = value (opt_[option_prefix / (sw + "resolution-bind")]);
 
-      quantity thr = value (opt_[option_prefix / "threshold"]);
-      thr *= 100.0;
-      thr /= (dynamic_pointer_cast< range >
-              (opt_[option_prefix / "threshold"].constraint ()))->upper ();
-      (*magick->options ())["threshold"] = thr;
+          if (bound)
+            {
+              res_x = value (opt_[option_prefix / (sw + "resolution")]);
+              res_y = value (opt_[option_prefix / (sw + "resolution")]);
+            }
 
-      // keep magick filter's default format to generate image/x-raster
+          (*magick->options ())["resolution-x"] = res_x;
+          (*magick->options ())["resolution-y"] = res_y;
+          (*magick->options ())["force-extent"] = force_extent;
+          (*magick->options ())["width"]  = width;
+          (*magick->options ())["height"] = height;
+
+          (*magick->options ())["bilevel"] = toggle (bilevel);
+
+          quantity thr = value (opt_[option_prefix / "threshold"]);
+          thr *= 100.0;
+          thr /= (dynamic_pointer_cast< range >
+                  (opt_[option_prefix / "threshold"].constraint ()))->upper ();
+          (*magick->options ())["threshold"] = thr;
+
+          // keep magick filter's default format to generate image/x-raster
+      }
 
       toggle skip_blank = !bilevel; // \todo fix filter limitation
       quantity skip_thresh = -1.0;
@@ -1183,10 +1194,12 @@ handle::marker ()
         {
           str->push (make_shared< _flt_::padding > ());
         }
+#if HAVE_LIBJPEG
       else if (xfer_jpg == xfer_fmt)
         {
           str->push (make_shared< _flt_::jpeg::decompressor > ());
         }
+#endif
       else
         {
           log::alert
@@ -1202,7 +1215,7 @@ handle::marker ()
       str->push (make_shared< pnm > ());
       if (autocrop)   str->push (autocrop);
       if (deskew)     str->push (deskew);
-      str->push (magick);
+      if (magick)     str->push (magick);
 
       iocache::ptr cache (make_shared< iocache > ());
       str->push (odevice::ptr (cache));
