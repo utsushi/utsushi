@@ -35,7 +35,9 @@
 #include <utsushi/log.hpp>
 
 #include "preview.hpp"
+#if HAVE_LIBJPEG
 #include "../filters/jpeg.hpp"
+#endif
 #include "../filters/padding.hpp"
 #include "../filters/pnm.hpp"
 #include "../filters/threshold.hpp"
@@ -284,6 +286,7 @@ preview::on_refresh ()
           log::error ("Falling back to default threshold value");
         }
 
+#if HAVE_LIBJPEG
       filter::ptr jpeg_compress (make_shared< jpeg::compressor > ());
       try
         {
@@ -294,6 +297,7 @@ preview::on_refresh ()
         {
           log::error ("Falling back to default JPEG compression quality");
         }
+#endif
 
       stream_ = make_shared< stream > ();
       /**/ if (xfer_raw == xfer_fmt)
@@ -305,11 +309,18 @@ preview::on_refresh ()
         }
       else if (xfer_jpg == xfer_fmt)
         {
+#if HAVE_LIBJPEG
           stream_->push (make_shared< jpeg::decompressor > ());
           if (bilevel) stream_->push (threshold);
           if (force_extent)
             stream_->push (make_shared< bottom_padder > (width, height));
           stream_->push (make_shared< pnm > ());
+#else
+          if (bilevel)
+            log::alert ("bilevel JPEG preview not supported");
+          if (force_extent)
+            log::alert ("extent forcing support not implemented");
+#endif
         }
       else
         {
