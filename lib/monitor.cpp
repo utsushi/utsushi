@@ -45,7 +45,9 @@ extern "C" {                    // needed until libudev-150
 #include "utsushi/monitor.hpp"
 #include "utsushi/run-time.hpp"
 
+#if HAVE_LIBUDEV
 #include "udev.hpp"
+#endif
 
 namespace utsushi {
 
