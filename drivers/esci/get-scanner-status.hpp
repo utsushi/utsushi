@@ -1,5 +1,5 @@
 //  get-scanner-status.hpp -- query for device status
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -25,6 +25,8 @@
 #define drivers_esci_get_scanner_status_hpp_
 
 #include "getter.hpp"
+
+#include <utsushi/media.hpp>
 
 namespace utsushi {
 namespace _drv_ {
@@ -57,6 +59,15 @@ namespace _drv_ {
       /*!  \copydetails get_extended_status::device_type
        */
       uint8_t device_type (void) const;
+
+      //!  \copybrief get_extended_status::supports_size_detection
+      /*!  \copydetail get_extended_status::supports_size_detection
+       */
+      bool supports_size_detection (const source_value& source) const;
+
+      bool media_size_detected (const source_value& source) const;
+
+      media media_size (const source_value& source) const;
 
       //!  \copybrief get_extended_status::media_value
       /*!  \copydetails get_extended_status::media_value
@@ -119,6 +130,11 @@ namespace _drv_ {
        */
       bool adf_error (void) const;
 
+      //!  \copybrief get_extended_status::adf_double_feed
+      /*!  \copydetail get_extended_status::adf_double_feed
+       */
+      bool adf_double_feed (void) const;
+
       //!  \copybrief get_extended_status::adf_media_out
       /*!  \copydetails get_extended_status::adf_media_out
        */
@@ -133,6 +149,12 @@ namespace _drv_ {
       /*!  \copydetails get_extended_status::adf_cover_open
        */
       bool adf_cover_open (void) const;
+
+      //!  Indicates whether the ADF unit's tray is open.
+      /*!  If the tray is not closed, this function returns \c true.
+           The tray needs to be closed before the device can scan.
+       */
+      bool adf_tray_open (void) const;
 
       //!  \copybrief get_extended_status::adf_is_duplexing
       /*!  \copydetails get_extended_status::adf_is_duplexing
@@ -177,6 +199,23 @@ namespace _drv_ {
            select between primary and secondary transparency units.
        */
       bool tpu_lamp_error (const source_value& source = TPU1) const;
+
+      //!  Indicates whether the device has support for a holder.
+      bool has_holder_support (void) const;
+
+      //!  Tells whether a holder error was detected.
+      /*!  This returns true if the holder is empty or some other kind
+           of holder related error has occurred.
+       */
+      bool holder_error (void) const;
+
+      //!  Yields the type of holder detected.
+      /*!  A value of \c 0 indicates no holder was detected (assuming
+           that the device supports holders in the first place).
+
+           \sa has_holder_support()
+       */
+      byte holder_type (void) const;
 
     protected:
       //!  Implements \a source value checking.

@@ -1,5 +1,5 @@
 //  usb.hpp -- shuttle messages between software and USB device
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2011  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -57,7 +57,9 @@ namespace _cnx_ {
     virtual ~usb (void);
 
     virtual void send (const octet *message, streamsize size);
-    virtual void recv (      octet *message, streamsize size);
+    virtual void send (const octet *message, streamsize size, double timeout);
+    virtual void recv (octet *message, streamsize size);
+    virtual void recv (octet *message, streamsize size, double timeout);
 
   private:
     libusb_device_handle * usable_match_(const device_info::ptr& device,
@@ -89,7 +91,9 @@ namespace _cnx_ {
     virtual ~usb_legacy (void);
 
     virtual void send (const octet *message, streamsize size);
-    virtual void recv (      octet *message, streamsize size);
+    virtual void send (const octet *message, streamsize size, double timeout);
+    virtual void recv (octet *message, streamsize size);
+    virtual void recv (octet *message, streamsize size, double timeout);
 
   private:
     usb_dev_handle * usable_match_(const device_info::ptr& device,

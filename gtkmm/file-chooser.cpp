@@ -1,5 +1,5 @@
 //  file-chooser.cpp -- select where and how to save scan results
-//  Copyright (C) 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -315,8 +315,8 @@ file_chooser::on_response (int response_id)
     {
       if (!fs::exists (std::string (get_filename ()))) return;
 
-      message = format (_("A file name \"%1%\" already exists."
-                          "  Do you want to replace it?"));
+      message = format (_("The name \"%1%\" already exists.\n"
+                          "OK to overwrite this name using the new settings?"));
       details = format (_("The file already exists in \"%1%\"."
                           "  Replacing it will overwrite its contents."));
     }
@@ -371,7 +371,7 @@ file_chooser::on_file_type_changed ()
 
   if (l.empty ())
     {
-      expander_.set_label (_("File type"));
+      expander_.set_label (_("File Type"));
     }
   else
     {
@@ -483,7 +483,7 @@ file_chooser::common_ctor_logic_()
   file_type_.get_selection ()->signal_changed ()
     .connect (sigc::mem_fun (*this, &file_chooser::on_file_type_changed));
 
-  expander_.set_label (_("File type"));
+  expander_.set_label (_("File Type"));
   expander_.add (file_type_);
 
   single_file_.set_label (_("Save all images in a single file"));
@@ -613,7 +613,7 @@ file_chooser::on_name_change_(const std::string& name)
   if (!count (l.begin (), l.end (), get_current_extension ()))
     {
       s->unselect (it);
-      expander_.set_label (_("File type"));
+      expander_.set_label (_("File Type"));
     }
 
   // FIXME add filename sanity checking

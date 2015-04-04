@@ -1,5 +1,5 @@
 //  get-hardware-property.hpp -- probe additional capabilities
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -36,9 +36,6 @@ namespace _drv_ {
          and two sets of resolutions that should be used instead of
          the one from get_identity::resolutions.
 
-         \todo  Implement an accessor for the sensor type information
-                (bit 6 of byte at offset 2)
-
          \sa get_identity, x_resolutions(), y_resolutions()
      */
     class get_hardware_property : public buf_getter<ESC,LOWER_I>
@@ -62,6 +59,12 @@ namespace _drv_ {
        */
       bool is_cis (void) const;
 
+      //!  Yields the sensor's type.
+      /*!  What information this number provides is not clear.  The
+           documentation indicates that is is normally equal to one.
+       */
+      uint8_t sensor_type (void) const;
+
       //!  Yields the device's color sequence.
       /*!  It is unclear what the return value exactly refers to and
            how this information should be used.  It may indicate the
@@ -82,8 +85,8 @@ namespace _drv_ {
            not be located on the same scan line.  If that is the case,
            the base line spacing, combined with the base and actual
            scan resolution indicates where the color component values
-           of a single can be found.  The various values are related
-           as follows
+           of a single pixel can be found.  The various values are
+           related as follows
            \f[
            s_{actual} = s_{base} \times \frac{r_{actual}}{r_{base}}
            \f]

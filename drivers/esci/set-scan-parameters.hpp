@@ -1,5 +1,5 @@
 //  set-scan-parameters.hpp -- for the next scan
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -41,6 +41,9 @@ namespace _drv_ {
 
          \note  If the parameters were accepted, the zoom percentage
                 has been reset to the default (100%).
+
+         \note  After setting the scan parameters with this command the
+                scan has to be initiated with start_extended_scan.
 
          \sa get_scan_parameters
      */
@@ -84,13 +87,22 @@ namespace _drv_ {
       }
 
       //!  Sets the image area to scan.
-      /*!  None of the pixel values may exceed the return value of
-           get_extended_identity::max_scan_width().
+      /*!  The scan area width in pixels may not exceed the return
+           value of get_extended_identity::max_scan_width().
 
            When scanning at bit depths in the [1,4] range, the scan
            area's width must be a multiple of eight.
 
-           \sa set_scan_area
+           For devices that do page end detection, the requested scan
+           area height is only an upper limit.  The device will stop
+           producing image data when it detects the end of the page.
+           To find out how many scan lines were obtained, one should
+           get_scan_parameters::scan_area() after completion of the
+           scan.  In case the page end was detected before the scan
+           started, due to a large vertical offset for example, the
+           device will not obtain any image data.
+
+           \sa set_scan_area, get_extended_identity::detects_page_end()
        */
       set_scan_parameters& scan_area (bounding_box<uint32_t> a);
 
@@ -109,7 +121,21 @@ namespace _drv_ {
       set_scan_parameters& color_mode (byte mode);
 
       //!  Sets the number of scan lines per block.
-      /*!  \copydetails set_line_count
+      /*!  This setting can be used to control the size of the image
+           data chunks returned by start_standard_scan::operator++().
+
+           The default value is \c 0x00 which results in one line per
+           block.  The other values request blocks with the number of
+           lines equal to the parameter's numeric value.
+
+           \note  The last block may consist of less lines than set.
+           \note  When scanning in line sequence mode (see \c LINE_*
+                  \ref color_mode_value), the line count value should
+                  be a multiple of three.
+           \note  Unlike the start_standard_scan command, sending a
+                  start_extended_scan command does \e not clear the
+                  current value
+
            \sa set_line_count
        */
       set_scan_parameters& line_count (uint8_t value);
@@ -126,7 +152,7 @@ namespace _drv_ {
        */
       set_scan_parameters& scan_mode (byte mode);
 
-      //!  Changes the active option unit and its mode.
+      //!  Changes the active option unit and its mode of behaviour.
       /*!  \copydetails set_option_unit
            \sa set_option_unit
        */
@@ -191,11 +217,28 @@ namespace _drv_ {
            respective meanings are unknown.
            All other values are reserved.
 
-           The default value is 0x00.
+           The default value is 0x00.  Other values may be set when
+           get_extended_identity::supports_lamp_change() returns \c
+           true.
 
            There is no command to set this property independently.
        */
       set_scan_parameters& main_lamp_lighting_mode (byte mode);
+
+      //!  Controls the sensitivity of the double feed detector
+      /*!  Apart from turning this functionality completely off, it
+           can be set to one of ::SENSITIVITY_LO or ::SENSITIVITY_HI.
+
+           \sa get_extended_identity::adf_detects_double_feed(),
+               scan_parameters::double_feed_sensitivity(),
+               sensitivity_value
+       */
+      set_scan_parameters& double_feed_sensitivity (byte mode);
+
+      //!  Controls the quiet scan mode setting.
+      /*!  \sa quiet_mode_value
+       */
+      set_scan_parameters& quiet_mode (byte mode);
     };
 
   } // namespace esci

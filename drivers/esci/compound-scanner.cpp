@@ -1,5 +1,5 @@
 //  compound-scanner.cpp -- devices that handle compound commands
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -753,7 +753,7 @@ compound_scanner::configure ()
           ("calibrate", bind (do_mechanics, cnx_, ref (acquire_),
                               mech::ADF, mech::adf::CALB),
            _("Calibration"),
-           _("Calibrating ..."));
+           _("Calibrating..."));
       }
     if (caps_.can_clean ())
       {
@@ -761,7 +761,7 @@ compound_scanner::configure ()
           ("clean", bind (do_mechanics, cnx_, ref (acquire_),
                           mech::ADF, mech::adf::CLEN),
            _("Cleaning"),
-           _("Cleaning ..."));
+           _("Cleaning..."));
       }
     if (caps_.can_eject ())
       {
@@ -777,7 +777,7 @@ compound_scanner::configure ()
           ("load", bind (do_mechanics, cnx_, ref (acquire_),
                          mech::ADF, mech::adf::LOAD),
            _("Load"),
-           _("Loading ..."));
+           _("Loading..."));
       }
   }
 }
@@ -953,7 +953,7 @@ compound_scanner::set_up_hardware ()
     string doc_src = val_["doc-source"];
     quad   src     = quad ();
 
-    if (doc_src == "Flatbed")  src = psz::FB;
+    if (doc_src == "Document Table")  src = psz::FB;
     else if (doc_src == "ADF") src = psz::ADF;
 
     quad error = stat_.error (src);
@@ -964,7 +964,7 @@ compound_scanner::set_up_hardware ()
 
         BOOST_THROW_EXCEPTION
           (system_error
-           (token_to_error_code (src), create_message (src, error)));
+           (token_to_error_code (error), create_message (src, error)));
       }
   }
 
@@ -1071,7 +1071,7 @@ compound_scanner::set_up_doc_source ()
         {
           src_opts.push_back (adf::DFL1);
         }
-      else if (v == value ("Sensitive"))
+      else if (v == value ("Thin"))
         {
           src_opts.push_back (adf::DFL2);
         }
@@ -1095,9 +1095,9 @@ compound_scanner::set_up_doc_source ()
     {
       string src = val_["doc-source"];
 
-      if (src == "Flatbed")  parm_.fb  = src_opts;
+      if (src == "Document Table")  parm_.fb  = src_opts;
       else if (src == "ADF") parm_.adf = src_opts;
-      else if (src == "TPU") parm_.tpu = src_opts;
+      else if (src == "Transparency Unit") parm_.tpu = src_opts;
     }
   else                          // only one document source
     {
@@ -1550,7 +1550,7 @@ compound_scanner::probe_media_size_(const string& doc_source)
   quad src = quad();
   media size = media (length (), length ());
 
-  if (doc_source == "Flatbed")  src = psz::FB;
+  if (doc_source == "Document Table")  src = psz::FB;
   else if (doc_source == "ADF") src = psz::ADF;
 
   if (src)
@@ -2459,9 +2459,9 @@ compound_scanner::doc_source_options (const value& v)
 {
   using namespace code_token::parameter;
 
-  if (v == value ("Flatbed")) return doc_source_options (FB);
+  if (v == value ("Document Table")) return doc_source_options (FB);
   if (v == value ("ADF"))     return doc_source_options (ADF);
-  if (v == value ("TPU"))     return doc_source_options (TPU);
+  if (v == value ("Transparency Unit"))     return doc_source_options (TPU);
 
   return doc_source_options (quad ());
 }
@@ -2499,13 +2499,13 @@ compound_scanner::align_document (const string& doc_source,
       max_width  = info_.adf->area[0];
       max_height = info_.adf->area[1];
     }
-  if (doc_source == "Flatbed")
+  if (doc_source == "Document Table")
     {
       align = info_.flatbed->alignment;
       max_width  = info_.flatbed->area[0];
       max_height = info_.flatbed->area[1];
     }
-  if (doc_source == "TPU")
+  if (doc_source == "Transparency Unit")
     {
       // TPU has no alignment "attribute"
       max_width  = info_.tpu->area[0];
@@ -2926,14 +2926,20 @@ create_adf_message (const quad& what)
   using namespace code_token::reply::info;
 
   if (err::OPN  == what)
-    return _("Please close the ADF cover and try again.");
+    return _("The Automatic Document Feeder is open.\n"
+             "Please close it.");
   if (err::PJ   == what)
-    return _("Clear the ADF document jam and try again.");
+    return _("A paper jam occurred.\n"
+             "Open the Automatic Document Feeder and remove any paper.\n"
+             "If there are any documents loaded in the ADF, remove them"
+             " and load them again.");
   if (err::PE   == what)
-    return _("Please put your document in the ADF before scanning.");
+    return _("Please load the document(s) into the Automatic Document Feeder.");
   if (err::DFED == what)
-    return _("A multi page feed occurred in the ADF.\n"
-             "Clear the document feeder and try again.");
+    return _("A multi page feed occurred in the auto document feeder. "
+             "Open the cover, remove the documents, and then try again."
+             " If documents remain on the tray, remove them and then"
+             " reload them.");
   if (err::ERR  == what)
     return _("A fatal ADF error has occurred.\n"
              "Resolve the error condition and try again.  You may have "

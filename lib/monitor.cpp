@@ -1,6 +1,6 @@
 //  monitor.cpp -- available scanner devices
 //  Copyright (C) 2013  Olaf Meeuwissen
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -44,6 +44,8 @@ extern "C" {                    // needed until libudev-150
 #include "utsushi/log.hpp"
 #include "utsushi/monitor.hpp"
 #include "utsushi/run-time.hpp"
+
+#include "udev.hpp"
 
 namespace utsushi {
 
@@ -308,11 +310,36 @@ udev_device_get_children (struct udev *ctx, struct udev_device *dev)
   return result;
 }
 
+//! \todo  Further fine tune interface detection heuristics.
+static bool
+is_usb_scanner_maybe (struct udev_device *dev)
+{
+  // If a kernel driver is already taking care of the interface then
+  // we will not touch it.  Userland drivers are rather unlikely to be
+  // needed in this case.
+
+  if (udev_device_get_property_value (dev, "DRIVER"))
+    return false;
+
+  // Likely interface classes to encounter for MFPs and SPCs that are
+  // definitely *not* scanners.
+
+  if (udev_device_get_property_value (dev, "INTERFACE"))
+    {
+      int klass = 0;
+      udev_::get_sysattr (dev, "bInterfaceClass", klass);
+
+      if (0x07 == klass) return false; // printer
+      if (0x08 == klass) return false; // mass storage
+    }
+
+  return true;
+}
+
 //!  Picks up on SANE tagged scanner devices.
 /*!  This function filters on a dedicated property, normally specified
      in the SANE project's udev rules file.
 
-     \todo  Fine tune interface detection heuristics.
      \todo  Add support for non-USB subsystem devices.
      \todo  Beef up error checking/handling.
  */
@@ -359,12 +386,7 @@ add_sane_udev (std::set<scanner::info>& devices, const char *key,
               std::list<struct udev_device *>::iterator it;
               for (it = kids.begin (); kids.end () != it; ++it)
                 {
-                  //  This only works because there is no dedicated
-                  //  Linux kernel driver for scanner devices.  Of
-                  //  course, this will also pick up any other device
-                  //  without such a driver.
-
-                  if (!udev_device_get_property_value (*it, "DRIVER"))
+                  if (is_usb_scanner_maybe (*it))
                     {
                       const char *mdl =
                         udev_device_get_property_value (dev, "ID_MODEL");

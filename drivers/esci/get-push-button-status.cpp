@@ -1,5 +1,5 @@
 //  get-push-button-status.cpp -- to check for events
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -33,9 +33,35 @@ namespace _drv_ {
     {}
 
     byte
+    get_push_button_status::size_request (void) const
+    {
+      return dat_[0] >> 5;
+    }
+
+    bool
+    get_push_button_status::is_duplexing (void) const
+    {
+      return 0x10 & dat_[0];
+    }
+
+    byte
     get_push_button_status::status (void) const
     {
-      return dat_[0];
+      return 0x03 & dat_[0];
+    }
+
+    void
+    get_push_button_status::check_blk_reply (void) const
+    {
+      check_reserved_bits (dat_, 0, 0x0c);
+      if (0xe0 == (0xe0 & dat_[0]))     // reserved document size
+        {
+          log::brief ("%1$s: %2$s[%3$2u] = %4$02x")
+            % name ()
+            % "data"
+            % 0
+            % 0xe0;
+        }
     }
 
   } // namespace esci

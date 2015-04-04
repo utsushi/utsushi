@@ -1,5 +1,5 @@
 //  action.hpp -- template and derived ESC/I protocol commands
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -34,10 +34,10 @@ namespace _drv_ {
   namespace esci
   {
     //!  Device movers and shakers ;-)
-    /*!  A selected few single byte commands are available to directly
-         control hardware processes of the device (on the other side
-         of a connexion).  This template captures the implementation
-         of these commands.
+    /*!  A selected few commands are available to directly control
+         hardware processes of the device (on the other side of a
+         connexion).  This template captures the implementation of
+         these commands.
      */
     template <byte b1, byte b2 = 0x00, streamsize size = 1>
     class action : public command
@@ -95,7 +95,7 @@ namespace _drv_ {
          \note  This command is reserved for use by start_scan command
                 implementations.
          \note  When sent while the device is awaiting commands, this
-                command is ignored and does \e not generate a reply.
+                command may be ignored and \e not generate a reply.
      */
     typedef action<CAN> abort_scan;
 
@@ -119,8 +119,14 @@ namespace _drv_ {
     /*!  This command is only effective when the document feeder has
          been activated.  The device replies with an ACK in case the
          command was effective, a NAK otherwise.  The command ejects
-         the media that is inside the ADF unit.  If no media is present,
-         media is loaded first, then ejected.
+         the media that is inside the ADF unit.  This may refer to a
+         single sheet of media that was being scanned as well as the
+         whole stack of sheets that the user put in the feeder.  The
+         command may defer its reply until the last sheet has been
+         ejected.
+
+         Depending on the model, when no media is present, media is
+         loaded first, then ejected.
 
          The command should be sent after an ADF type scan has been
          cancelled.
@@ -131,12 +137,25 @@ namespace _drv_ {
                 ADF unit, this command should only be used to eject
                 media after cancellation.
 
+         \todo  Document auto-form-feed behaviour.
+
          \sa set_option_unit, set_scan_parameters::option_unit()
          \sa get_extended_identity::adf_is_page_type(),
              get_extended_status::adf_is_page_type()
          \sa abort_scan, end_of_transmission
      */
-    typedef action<FF>  eject_media;
+    class eject_media
+      : public action<FF>
+    {
+      void
+      operator>> (connexion& cnx)
+      {
+        cnx.send (cmd_, 1, 0);
+        cnx.recv (&rep_, 1, 0);
+
+        this->validate_reply ();
+      }
+    };
 
     //!  Fetch media for the next scan.
     /*!  This command is only effective with activated page type ADF

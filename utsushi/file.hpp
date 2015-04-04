@@ -1,5 +1,5 @@
 //  file.hpp -- based output devices
-//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -23,6 +23,7 @@
 
 #include "device.hpp"
 
+#include <cstddef>
 #include <fstream>
 #include <string>
 
@@ -134,6 +135,8 @@ protected:
 
   int fd_;
   int fd_flags_;
+
+  size_t count_;
 };
 
 }       // namespace utsushi

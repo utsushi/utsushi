@@ -1,5 +1,5 @@
 //  set-gamma-table.hpp -- tweak pixels to hardware characteristics
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -46,10 +46,27 @@ namespace _drv_ {
          appropriate intensity for the output hardware of choice.
          This command allows one to set a custom table.
 
+         \note  The table set with this command applies on top of the
+                gamma correction selected with set_gamma_correction.
+
          \note  The initialize command does \e not reset the gamma
-                table.  The default table corresponds to that of a
-                bi-level data scan for CRT devices with a default
-                brightness.
+                table.
+
+         \warning  When chaining command output as suggested in the
+                   operator<<() documentation, please be aware that
+                   something like
+                   \code
+                   cnx << esc_z (RED , 1.2) << esc_z (GREEN, 1.3)
+                       << esc_z (BLUE, 1.4);
+                   \endcode
+                   results in undefined behaviour.  Either send one
+                   command at a time, like so
+                   \code
+                   cnx << esc_z (RED  , 1.2);
+                   cnx << esc_z (GREEN, 1.3);
+                   cnx << esc_z (BLUE , 1.4);
+                   \endcode
+                   or use three different instances.
 
          \sa set_gamma_correction, set_brightness,
              http://en.wikipedia.org/wiki/Gamma_correction
@@ -85,6 +102,8 @@ namespace _drv_ {
       {
         BOOST_STATIC_ASSERT (is_floating_point<T>::value);
 
+        using std::pow;
+
         vector<T,256> v;
 
         for (size_t i = 0; i < v.size (); ++i)
@@ -103,6 +122,9 @@ namespace _drv_ {
                                    const vector<T,256>& table)
       {
         BOOST_STATIC_ASSERT (is_floating_point<T>::value);
+
+        using std::max;
+        using std::min;
 
         vector<uint8_t,256> v;
 

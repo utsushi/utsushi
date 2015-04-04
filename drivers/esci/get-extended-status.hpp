@@ -1,5 +1,5 @@
 //  get-extended-status.hpp -- query for device status
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -82,10 +82,16 @@ namespace _drv_ {
        */
       uint8_t device_type (void) const;
 
+      //!  Tells whether a \a source may be able to detect media size.
+      /*!  If this function returns \c true, media_value() can be used
+           to find out what size the device detected.
+       */
+      bool supports_size_detection (const source_value& source) const;
+
       //!  Yields the detected media value for a \a source.
       /*!  Some devices can detect media sizes on the fly.  When that
            is the case this function returns a non-zero value.  Note,
-           however, that may still return ::UNKNOWN when it encounters
+           however, that that may still return ::UNKNOWN when it sees
            odd-sized media.
 
            \sa ::media_value
@@ -93,7 +99,9 @@ namespace _drv_ {
       uint16_t media_value (const source_value& source) const;
 
       //!  Tells whether the device is a flatbed type scanner.
-      /*!  If \c true, the device's main source is the flatbed.
+      /*!  If \c true, the device's main source is the flatbed.  In
+           case the function returns \c false it is a holder type
+           scanner.
        */
       bool is_flatbed_type (void) const;
       //!  Tells whether the device has a lid type option unit.
@@ -170,6 +178,14 @@ namespace _drv_ {
            really an error.
        */
       bool adf_error (void) const;
+      //!  Indicates whether the ADF unit detected a double feed error.
+      /*!  If \c true, the ADF unit suspects more than a single sheet
+           entered the unit.
+
+           \sa set_scan_parameters::double_feed_sensitivity(),
+               scan_parameters::double_feed_sensitivity()
+       */
+      bool adf_double_feed (void) const;
       //!  Indicates whether the ADF unit ran out of media.
       /*!  If \c true, the ADF unit can no longer load media and the
            device stops scanning.

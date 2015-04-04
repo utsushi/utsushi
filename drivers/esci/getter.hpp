@@ -1,5 +1,5 @@
 //  getter.hpp -- command template for ESC/I protocol commands
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -174,9 +174,8 @@ namespace _drv_ {
       //!  Runs a command on the other end of a connexion.
       /*!  This override extends the parent class' implementation and
            requests an additional reply.  The reply size is computed
-           from the primary reply (handled by the parent class) and a
-           suitable buffer will be (re)allocated before the additional
-           reply is requested.
+           from the primary reply and a suitably sized buffer will be
+           (re)allocated before the additional reply is requested.
        */
       void
       operator>> (connexion& cnx)
@@ -210,7 +209,10 @@ namespace _drv_ {
 
       //!  Tells whether the device detected a fatal error.
       /*!  When this function returns \c true something has gone very
-           wrong.
+           wrong.  The get_extended_status API may be useful in trying
+           to find out more precisely what went wrong.  For a device
+           that supports_extended_commands() get_scanner_status may be
+           a better choice though.
 
            \sa start_scan::detected_fatal_error()
        */
@@ -238,7 +240,7 @@ namespace _drv_ {
       /*!  While the query indicates whether there is an option unit,
            it can not tell which kind.  This information may be had
            via the get_extended_status command and, if supported, the
-           request_scanner_status command.
+           get_scanner_status command.
 
            Known option units include automatic document feeders (ADF,
            both simplex and duplex) and transparency units (TPU).

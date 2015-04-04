@@ -1,5 +1,5 @@
 //  get-extended-identity.hpp -- probe for capabilities
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -107,12 +107,14 @@ namespace _drv_ {
       uint32_t max_resolution (void) const;
 
       //!  Reports the maximum scan width.
-      /*!  The value is believed to be in pixels.
+      /*!  The value is in pixels.
        */
       uint32_t max_scan_width (void) const;
 
       //!  \copybrief get_extended_status::scan_area
       /*!  Use the base_resolution() to convert to an area in inches.
+
+           \note  ::TPU1 applies to infra-red scans as well.
        */
       bounding_box<uint32_t>
       scan_area (const source_value& source = MAIN) const;
@@ -149,6 +151,8 @@ namespace _drv_ {
 
       //!  Tells whether the TPU supports IR scanning.
       /*!  \sa set_scan_parameters::option_unit()
+
+           \todo rename to tpu_has_IR_mode or tpu_has_IR_support
        */
       bool tpu_is_IR_type (void) const;
 
@@ -167,6 +171,21 @@ namespace _drv_ {
        */
       bool has_energy_savings_setter (void) const;
 
+      bool adf_is_auto_form_feeder (void) const;
+
+      //! \copybrief get_extended_status::adf_detects_double_feed
+      /*! \copydetails get_extended_status::adf_detects_double_feed
+       */
+      bool adf_detects_double_feed (void) const;
+
+      bool supports_auto_power_off (void) const;
+
+      bool supports_quiet_mode (void) const;
+
+      bool supports_authentication (void) const;
+
+      bool supports_compound_commands (void) const;
+
       //!  Yields the bit depth for an \a io direction.
       /*!  In the ::OUTPUT direction this is the maximum bit depth
            that can be requested by the driver.
@@ -174,6 +193,14 @@ namespace _drv_ {
            \sa set_scan_parameters::bit_depth()
        */
       byte bit_depth (const io_direction& io) const;
+
+      //!  Tells how documents are aligned on the ADF
+      /*!  Scan area computations should take this information into
+           account when available.
+
+           \sa alignment_value
+       */
+      byte document_alignment (void) const;
 
     protected:
       void check_blk_reply (void) const;

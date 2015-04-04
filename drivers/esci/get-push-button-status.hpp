@@ -1,5 +1,5 @@
 //  get-push-button-status.hpp -- to check for events
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -28,7 +28,7 @@ namespace _drv_ {
   namespace esci
   {
     //!  Check for button push events.
-    /*!  A number of devices have one or more button that can be used
+    /*!  A number of devices have one or more buttons that can be used
          to scan in different ways.  After a button has been pushed,
          button status can be retrieved through this command.
 
@@ -39,6 +39,8 @@ namespace _drv_ {
          as they happen.  This command only seems to support detection
          of the last push event, without any information as to when it
          happened.
+
+         \todo  Add support for document sizes
 
          \sa get_extended_status::has_push_button(),
              get_extended_identity::has_push_button()
@@ -51,12 +53,33 @@ namespace _drv_ {
        */
       get_push_button_status (bool pedantic = false);
 
+      //!  Yields the device side requested scan area.
+      /*!  When scanning via the push of a button, it may be possible
+           to indicate the size of the document to the driver.  This
+           query returns that size.  A value of ::SIZE_REQ_CUSTOM is
+           returned when the device does not indicate any size.  In
+           this case the driver's scan area options should be used to
+           set the scan area.
+
+           \sa size_request_value
+       */
+      byte size_request (void) const;
+
+      //!  Tells whether the device will scan in duplex mode.
+      /*!  \sa get_extended_status::adf_is_duplexing(),
+               get_scanner_status::is_duplexing()
+       */
+      bool is_duplexing (void) const;
+
       //!  Yields the status of the most recent push event.
       /*!  A return value of \c 0x00 indicates no buttons were pushed.
            Values up to \c 0x03 are documented but their interpretation
            is not known.
        */
       byte status (void) const;
+
+    protected:
+      void check_blk_reply (void) const;
     };
 
   } // namespace esci

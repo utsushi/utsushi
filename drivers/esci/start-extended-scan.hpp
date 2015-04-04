@@ -1,5 +1,5 @@
 //  start-extended-scan.hpp -- to acquire image data
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -96,7 +96,8 @@ namespace _drv_ {
 
       //!  Tells whether a page end was detected during a scan.
       /*!  Some devices can detect the end of a page while scanning.
-           When they do, this function returns \c true.
+           When they have detected an end of page, this function
+           returns \c true.
 
            \note  Although seemingly similar, this is \e not the same
                   as start_standard_scan::is_at_area_end().
@@ -158,6 +159,8 @@ namespace _drv_ {
        */
       virtual void scrub_error_code_(void);
     };
+
+    //! \todo  Choose one of start_ext_scan_alloc and start_ext_scan_reuse
 
     class start_ext_scan_alloc : public start_extended_scan
     {

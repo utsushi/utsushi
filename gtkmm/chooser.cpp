@@ -1,5 +1,5 @@
 //  chooser.cpp -- for scanner device selection and maintenance actions
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -213,7 +213,7 @@ chooser::create_device (const std::set<scanner::info>& devices,
            ((format (_("Cannot access %1%\n(%2%)\n%3%"))
              % name
              % udi
-             % why
+             % _(why)
              ).str ()));
       }
   }

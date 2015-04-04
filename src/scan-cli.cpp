@@ -1,5 +1,5 @@
 //  scan-cli.cpp -- command-line interface based scan utility
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -610,11 +610,8 @@ main (int argc, char *argv[])
 
       bool emulating_automatic_scan_area = false;
 
-      if (   device->model () == "DS-40"
-          || device->model () == "DS-510"
-          || device->model () == "DS-520"
-          || device->model () == "DS-560"
-          )
+      if (   device->options ()->count ("lo-threshold")
+          && device->options ()->count ("hi-threshold"))
         {
           if (HAVE_MAGICK_PP
               && device->options ()->count ("scan-area"))
@@ -901,13 +898,8 @@ main (int argc, char *argv[])
 
       if (autocrop)
         {
-          (*autocrop->options ())["lo-threshold"] = 60.2;
-          (*autocrop->options ())["hi-threshold"] = 79.3;
-          if (device->model () == "DS-40")
-            {
-              (*autocrop->options ())["lo-threshold"] = 12.1;
-              (*autocrop->options ())["hi-threshold"] = 25.4;
-            }
+          (*autocrop->options ())["lo-threshold"] = value (om["lo-threshold"]);
+          (*autocrop->options ())["hi-threshold"] = value (om["hi-threshold"]);
         }
 
       /* deskew has been instantiated earlier if necessary
@@ -916,13 +908,8 @@ main (int argc, char *argv[])
 
       if (deskew)
         {
-          (*deskew->options ())["lo-threshold"] = 60.2;
-          (*deskew->options ())["hi-threshold"] = 79.3;
-          if (device->model () == "DS-40")
-            {
-              (*deskew->options ())["lo-threshold"] = 12.1;
-              (*deskew->options ())["hi-threshold"] = 25.4;
-            }
+          (*deskew->options ())["lo-threshold"] = value (om["lo-threshold"]);
+          (*deskew->options ())["hi-threshold"] = value (om["hi-threshold"]);
         }
 
       toggle resample = false;
@@ -971,6 +958,20 @@ main (int argc, char *argv[])
           (*magick->options ())["threshold"] = thr;
 
           (*magick->options ())["image-format"] = fmt;
+      }
+
+      {
+        toggle sw_color_correction = false;
+        if (om.count ("sw-color-correction"))
+          {
+            sw_color_correction = value (om["sw-color-correction"]);
+            for (int i = 1; sw_color_correction && i <= 9; ++i)
+              {
+                key k ("cct-" + boost::lexical_cast< std::string > (i));
+                (*magick->options ())[k] = value (om[k]);
+              }
+          }
+        (*magick->options ())["color-correction"] = sw_color_correction;
       }
 
       toggle skip_blank = !bilevel; // \todo fix filter limitation

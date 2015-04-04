@@ -1,5 +1,5 @@
 //  get-extended-identity.cpp -- probe for capabilities
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -158,6 +158,42 @@ namespace _drv_ {
       return 0x02 & blk_[45];
     }
 
+    bool
+    get_extended_identity::adf_is_auto_form_feeder (void) const
+    {
+      return 0x04 & blk_[45];
+    }
+
+    bool
+    get_extended_identity::adf_detects_double_feed (void) const
+    {
+      return 0x08 & blk_[45];
+    }
+
+    bool
+    get_extended_identity::supports_auto_power_off (void) const
+    {
+      return 0x10 & blk_[45];
+    }
+
+    bool
+    get_extended_identity::supports_quiet_mode (void) const
+    {
+      return 0x20 & blk_[45];
+    }
+
+    bool
+    get_extended_identity::supports_authentication (void) const
+    {
+      return 0x40 & blk_[45];
+    }
+
+    bool
+    get_extended_identity::supports_compound_commands (void) const
+    {
+      return 0x80 & blk_[45];
+    }
+
     byte
     get_extended_identity::bit_depth (const io_direction& io) const
     {
@@ -169,13 +205,18 @@ namespace _drv_ {
       BOOST_THROW_EXCEPTION (logic_error ("unsupported io_direction"));
     }
 
+    byte
+    get_extended_identity::document_alignment (void) const
+    {
+      return 0x03 & blk_[76];
+    }
+
     void
     get_extended_identity::check_blk_reply (void) const
     {
       check_reserved_bits (blk_,  2, 0xff);
       check_reserved_bits (blk_,  3, 0xff);
-      check_reserved_bits (blk_, 45, 0xfc);
-      check_reserved_bits (blk_, 76, 0xff);
+      check_reserved_bits (blk_, 76, 0xfc);
       check_reserved_bits (blk_, 77, 0xff);
       check_reserved_bits (blk_, 78, 0xff);
       check_reserved_bits (blk_, 79, 0xff);

@@ -1,5 +1,5 @@
 //  start-scan.hpp -- to acquire image data
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -64,7 +64,10 @@ namespace _drv_ {
 
       //!  Tells whether the device detected a fatal error.
       /*!  When this function returns \c true something has gone very
-           wrong.
+           wrong.  The get_extended_status API may be useful in trying
+           to find out more precisely what went wrong.  For a device
+           that supports_extended_commands() get_scanner_status may be
+           a better choice though.
 
            \sa buf_getter::detected_fatal_error()
        */

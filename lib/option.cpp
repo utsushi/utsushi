@@ -1,5 +1,5 @@
 //  option.cpp -- configurable settings in recursive property maps
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -454,6 +454,16 @@ option::map::insert (const utsushi::key& name_space, const option::map& om)
     }
 
   if (parent_) parent_->insert (name_space_ / name_space, om);
+}
+
+void
+option::map::remove (const utsushi::key& k)
+{
+  values_.erase (k);
+  constraints_.erase (k);
+  descriptors_.erase (k);
+
+  if (parent_) parent_->remove (name_space_ / k);
 }
 
 void

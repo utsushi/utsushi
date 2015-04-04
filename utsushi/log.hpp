@@ -120,15 +120,23 @@ public:
       , thread_id_(this_thread::get_id ())                              \
       , fmt_(fmt), arg_(0), cnt_(fmt_->num_args_), dumped_(false)       \
     { clear_exception_bits (); }                                        \
-    basic_message (const type& fmt, bool)                               \
-      : arg_(0), cnt_(format_type (fmt).num_args_), dumped_(false)      \
-    {}                                                                  \
     /**/
 
     //  Declare constructors for variously typed format specs
     expand_ctor (format_type);
     expand_ctor (string_type);
     expand_ctor (char_type *);
+
+    //  Overloads that only perform argument count checking
+    basic_message (const format_type& fmt, bool)
+      : arg_(fmt.cur_arg_), cnt_(fmt.num_args_), dumped_(false)
+    {}
+    basic_message (const string_type& fmt, bool)
+      : arg_(0), cnt_(format_type (fmt).num_args_), dumped_(false)
+    {}
+    basic_message (const char_type *& fmt, bool)
+      : arg_(0), cnt_(format_type (fmt).num_args_), dumped_(false)
+    {}
 
 #undef expand_ctor
 

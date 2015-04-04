@@ -1,5 +1,5 @@
 //  scan-parameters.hpp -- settings for the next scan
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -125,6 +125,13 @@ namespace _drv_ {
        */
       byte main_lamp_lighting_mode (void) const;
 
+      byte double_feed_sensitivity (void) const;
+
+      //!  Yields the current quiet scan mode setting.
+      /*!  \sa set_scan_parameters::quiet_mode()
+       */
+      byte quiet_mode (void) const;
+
     private:
       const byte *const mem_;   //!<  owner's parameter memory area
     };
@@ -156,6 +163,8 @@ namespace _drv_ {
   using scan_parameters::gamma_correction;           \
   using scan_parameters::color_correction;           \
   using scan_parameters::main_lamp_lighting_mode;    \
+  using scan_parameters::double_feed_sensitivity;    \
+  using scan_parameters::quiet_mode;                 \
   /**/
 
   } // namespace esci

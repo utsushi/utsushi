@@ -1,5 +1,5 @@
 //  get-extended-status.cpp -- query for device status
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -45,13 +45,19 @@ namespace _drv_ {
       return to_string (dat_ + 26, 16);
     }
 
+    bool
+    get_extended_status::supports_size_detection (const source_value& source) const
+    {
+      return 0x0000 != media_value (source);
+    }
+
     uint16_t
     get_extended_status::media_value (const source_value& source) const
     {
       /**/ if (MAIN == source)
-        return to_uint16_t (blk_ + 16);
-      else if (ADF  == source)
         return to_uint16_t (blk_ + 18);
+      else if (ADF  == source)
+        return to_uint16_t (blk_ + 16);
 
       BOOST_THROW_EXCEPTION (domain_error ("unsupported source"));
     }
@@ -153,6 +159,12 @@ namespace _drv_ {
     }
 
     bool
+    get_extended_status::adf_double_feed (void) const
+    {
+      return 0x10 & dat_[1];
+    }
+
+    bool
     get_extended_status::adf_media_out (void) const
     {
       return 0x08 & dat_[1];
@@ -221,7 +233,6 @@ namespace _drv_ {
     void
     get_extended_status::check_data_block (void) const
     {
-      check_reserved_bits (dat_,  1, 0x10);
       check_reserved_bits (dat_,  6, 0x1d);
       check_reserved_bits (dat_, 11, 0x11);
       check_reserved_bits (dat_, 17, 0x02);

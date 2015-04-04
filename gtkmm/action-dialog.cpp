@@ -1,5 +1,5 @@
 //  action-dialog.cpp -- controls to trigger device maintenance
-//  Copyright (C) 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -236,7 +236,7 @@ action_dialog::on_action (Gtk::Button *button, std::string key,
 
       if (spinner)              // display a separate dialog
         {
-          Gtk::MessageDialog dlg (*this, msg, false, Gtk::MESSAGE_ERROR);
+          Gtk::MessageDialog dlg (*this, _(msg), false, Gtk::MESSAGE_ERROR);
           dlg.run ();
         }
       else                      // override info icon
@@ -244,7 +244,7 @@ action_dialog::on_action (Gtk::Button *button, std::string key,
           Gtk::Image *img = new Gtk::Image (Gtk::Stock::DIALOG_ERROR,
                                             Gtk::ICON_SIZE_DIALOG);
           dlg.set_image (*Gtk::manage (img));
-          dlg.set_message (msg);
+          dlg.set_message (_(msg));
         }
     }
   else if (ar.rc)

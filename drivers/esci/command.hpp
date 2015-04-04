@@ -1,5 +1,5 @@
 //  command.hpp -- ESC/I protocol commands
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -96,6 +96,14 @@ namespace _drv_ {
          \li \c FS_X   \ref scanner_control
          \li \c FS_Y   \ref scanner_inquiry
          \li \c PF     \ref load_media
+
+         \todo  Implement ESC_[ and ESC_].  The latter is identical to
+                ESC_) in terms of logic.  The former needs to send an
+                additional 40 byte data block with credentials (a 20
+                byte username and a 20 byte SHA-1 hash of a string
+                that concatenates the username and password).  A 0xc0
+                return value indicates permission denied, the other
+                values are the same as for ESC_(.
 
          These commands can usefully be divided into four groups and
          this is reflected in their names:

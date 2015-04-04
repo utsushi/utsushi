@@ -1,5 +1,5 @@
 //  get-focus-position.hpp -- relative to the glass plate
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -30,6 +30,13 @@ namespace _drv_ {
     //!  Find out where the focus is.
     /*!  This command can always be used (with \c B# level scanners),
          irrespective of focussing support.
+
+         \note  The initialize command does not reset the focus.
+
+         \todo  Find out how auto-focus supporting devices behave.  The
+                documentation implies that such devices start the focus
+                adjustment process when this command is sent.  Then what
+                is the use of ::FOCUS_AUTO with set_focus_position?
 
          \sa timeout_value, set_focus_position
      */

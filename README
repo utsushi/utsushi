@@ -1,7 +1,7 @@
 
   Utsushi - Next Generation Image Acquisition
 
-  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 
 
   SUMMARY
@@ -70,6 +70,10 @@ USING THE SOFTWARE
       - DS-50000
       - DS-60000
       - DS-70000
+      - L220/L360 Series
+      - L365/L366 Series
+      - L455 Series
+      - L565 Series
       - PX-M7050 Series
       - PX-M7050FX Series
       - WF-8510/8590 Series
