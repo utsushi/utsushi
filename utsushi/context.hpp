@@ -1,5 +1,5 @@
 //  context.hpp -- in which to interpret octets in streams
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -128,11 +128,6 @@ protected:
 // highly experimental API from here on ...
 public:
   typedef shared_ptr< context > ptr;
-
-  context (const size_type& width  ,
-           const size_type& height ,
-           const short& comps      ,
-           const short& depth      );
 
   short     comps  () const;
 };

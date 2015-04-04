@@ -1,5 +1,5 @@
 //  udev.hpp -- OO wrapper around bits and pieces of the libudev API
-//  Copyright (C) 2013, 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -25,6 +25,7 @@ extern "C" {                    // needed until libudev-150
 #include <libudev.h>
 }
 
+#include <ios>
 #include <string>
 
 #include "utsushi/cstdint.hpp"
@@ -55,6 +56,25 @@ public:
 private:
   struct udev_device *dev_;
 };
+
+// Convenience API
+
+//! Find a property's \a value by \a name for a given \a device
+/*! If the \a device does not advertise the property, its parent will
+ *  be queried and so on until the root of the device hierarchy.  The
+ *  \a value is only modified if a matching property is found.
+ */
+void get_property (struct udev_device *device,
+                   const std::string& name, std::string& value);
+
+//! Find a system attribute's \a value by \a name for a given \a device
+/*! If the \a device does not advertise the attribute, its parent will
+ *  be queried and so on until the root of the device hierarchy.  The
+ *  \a value is only modified if a matching attribute is found.
+ */
+void get_sysattr (struct udev_device *device,
+                  const std::string& name, int& value,
+                  std::ios_base& (radix)(std::ios_base&) = std::hex);
 
 }       // namespace udev_
 

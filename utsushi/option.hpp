@@ -1,5 +1,5 @@
 //  option.hpp -- configurable settings in recursive property maps
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -169,6 +169,7 @@ protected:
   void insert (const option::map& om);
   void insert (const option::map& om, value::map& vm);
   void insert (const utsushi::key& name_space, const option::map& om);
+  void remove (const utsushi::key& k);
   void remove (const option::map& om, value::map& vm);
   void remove (const utsushi::key& name_space, const option::map& om);
   void relink (const option::map& submap);

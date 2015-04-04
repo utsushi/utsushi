@@ -1,5 +1,5 @@
 //  handle.cpp -- for a SANE scanner object
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -495,11 +495,8 @@ handle::handle(const scanner::info& info)
      attributes ())
     ;
 
-  if (   idev_->model () == "DS-40"
-      || idev_->model () == "DS-510"
-      || idev_->model () == "DS-520"
-      || idev_->model () == "DS-560"
-      )
+  if (   idev_->options ()->count ("lo-threshold")
+      && idev_->options ()->count ("hi-threshold"))
     {
       if (HAVE_MAGICK_PP
           && idev_->options ()->count ("scan-area"))
@@ -1091,13 +1088,8 @@ handle::marker ()
 
       if (autocrop)
         {
-          (*autocrop->options ())["lo-threshold"] = 60.2;
-          (*autocrop->options ())["hi-threshold"] = 79.3;
-          if (idev_->model () == "DS-40")
-            {
-              (*autocrop->options ())["lo-threshold"] = 12.1;
-              (*autocrop->options ())["hi-threshold"] = 25.4;
-            }
+          (*autocrop->options ())["lo-threshold"] = value (opt_[option_prefix / "lo-threshold"]);
+          (*autocrop->options ())["hi-threshold"] = value (opt_[option_prefix / "hi-threshold"]);
         }
 
       filter::ptr deskew;
@@ -1110,13 +1102,8 @@ handle::marker ()
 
       if (deskew)
         {
-          (*deskew->options ())["lo-threshold"] = 60.2;
-          (*deskew->options ())["hi-threshold"] = 79.3;
-          if (idev_->model () == "DS-40")
-            {
-              (*deskew->options ())["lo-threshold"] = 12.1;
-              (*deskew->options ())["hi-threshold"] = 25.4;
-            }
+          (*deskew->options ())["lo-threshold"] = value (opt_[option_prefix / "lo-threshold"]);
+          (*deskew->options ())["hi-threshold"] = value (opt_[option_prefix / "hi-threshold"]);
         }
 
       toggle resample = false;
@@ -1159,6 +1146,21 @@ handle::marker ()
       (*magick->options ())["threshold"] = thr;
 
       // keep magick filter's default format to generate image/x-raster
+
+      {
+        toggle sw_color_correction = false;
+        if (opt_.count (option_prefix / "sw-color-correction"))
+        {
+          sw_color_correction =
+            value (opt_[option_prefix / "sw-color-correction"]);
+          for (int i = 1; sw_color_correction && i <= 9; ++i)
+            {
+              key k ("cct-" + boost::lexical_cast< std::string > (i));
+              (*magick->options ())[k] = value (opt_[option_prefix / k]);
+            }
+        }
+      (*magick->options ())["color-correction"] = sw_color_correction;
+    }
 
       toggle skip_blank = !bilevel; // \todo fix filter limitation
       quantity skip_thresh = -1.0;

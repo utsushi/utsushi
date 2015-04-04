@@ -1,5 +1,5 @@
 //  get-scan-parameters.cpp -- settings for the next scan
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -39,7 +39,10 @@ namespace _drv_ {
     void
     get_scan_parameters::check_blk_reply (void) const
     {
-      for (streamsize i = 39; i < 64; ++i)
+      check_reserved_bits (blk_, 39, 0xfc);
+      check_reserved_bits (blk_, 40, 0xff);
+      check_reserved_bits (blk_, 41, 0xfc);
+      for (streamsize i = 42; i < 64; ++i)
         {
           check_reserved_bits (blk_, i, 0xff);
         }

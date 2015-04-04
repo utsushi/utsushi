@@ -1,5 +1,5 @@
 //  preview.cpp -- display/control images before final acquisition
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -329,7 +329,7 @@ preview::on_refresh ()
     {
       log::error (e.what ());
 
-      Gtk::MessageDialog dialog (e.what (), false,
+      Gtk::MessageDialog dialog (_(e.what ()), false,
                                  Gtk::MESSAGE_WARNING);
       dialog.set_keep_above ();
       dialog.run ();

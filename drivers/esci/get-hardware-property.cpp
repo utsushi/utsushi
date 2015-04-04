@@ -1,5 +1,5 @@
 //  get-hardware-property.cpp -- probe additional capabilities
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -45,6 +45,12 @@ namespace _drv_ {
     get_hardware_property::is_cis (void) const
     {
       return !(0x80 & dat_[2]);
+    }
+
+    uint8_t
+    get_hardware_property::sensor_type (void) const
+    {
+      return 0x40 & dat_[2];
     }
 
     color_value

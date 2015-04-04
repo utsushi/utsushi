@@ -1,5 +1,5 @@
 //  doc-locate.cpp -- post-process images based on document location
-//  Copyright (C) 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION

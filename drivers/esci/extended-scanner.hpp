@@ -1,6 +1,6 @@
 //  extended-scanner.hpp -- devices that handle extended commands
 //  Copyright (C) 2013  Olaf Meeuwissen
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -74,6 +74,30 @@ protected:
   void set_up_threshold ();
   void set_up_transfer_size ();
 
+  bool validate (const value::map& vm) const;
+  void finalize (const value::map& vm);
+
+  option::map& doc_source_options (const value& v);
+  const option::map& doc_source_options (const value& v) const;
+
+  void configure_doc_source_options ();
+  void add_scan_area_options (option::map& opts, const source_value& src);
+
+  media probe_media_size_(const string& doc_source);
+  void  update_scan_area_(const media& size, value::map& vm) const;
+  void  align_document (const string& doc_source,
+                        quantity& tl_x, quantity& tl_y,
+                        quantity& br_x, quantity& br_y) const;
+
+  uint32_t get_pixel_alignment ();
+  uint32_t clip_to_physical_scan_area_width (uint32_t tl_x, uint32_t br_x);
+  uint32_t clip_to_max_pixel_width (uint32_t tl_x, uint32_t br_x);
+
+  void configure_color_correction ();
+
+  void lock_scanner ();
+  void unlock_scanner ();
+
 private:
   const get_extended_identity caps_;
   const get_scan_parameters   defs_;
@@ -88,6 +112,18 @@ private:
   streamsize offset_;
 
   sig_atomic_t cancelled_;      //!< \todo Move to base class
+
+  int  images_started_;
+
+  option::map flatbed_;
+  option::map adf_;
+  option::map tpu_;
+
+  context::size_type pixel_width () const;
+  context::size_type pixel_height () const;
+  context::_pxl_type_ pixel_type () const;
+
+  bool locked_;
 };
 
 }       // namespace driver

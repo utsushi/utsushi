@@ -1,5 +1,5 @@
 //  setter.hpp -- template and derived ESC/I protocol commands
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -38,7 +38,7 @@ namespace _drv_ {
          device (on the other end of the connexion) precisely what and
          how to acquire image data.  This covers such basic things as
          the resolution and scan area as well as more advanced things
-         like gamma correction and auto area segmentation.
+         like gamma correction and automatic area segmentation.
 
          Note, however, that not all protocol variants support all of
          the setter commands.
@@ -189,10 +189,15 @@ namespace _drv_ {
          in which to use the source.  Known source/mode combinations
          have been defined as \ref option_value's.
 
-         The default value is DISABLED.  This selects the device's
+         The default value is ::MAIN_BODY.  This selects the device's
          \e main scan source.  For most devices this will be the
-         flatbed but other main scan sources exist (most obviously for
-         those devices that do not have a flatbed).
+         flatbed but other main scan sources may exist (most obviously
+         for those devices that do not have a flatbed).
+
+         \note  After this command has been processed, the scan area
+                is reset to the maximum available with the current
+                resolution and zoom settings.  It is best sent before
+                set_resolution, set_zoom and set_scan_area.
 
          \sa option_value
      */
@@ -246,7 +251,7 @@ namespace _drv_ {
     typedef sim_setter<ESC,UPPER_Q> set_sharpness;
 
     //!  Adjust the brightness.
-    /*!  This settings controls the interpretation of the predefined
+    /*!  This setting controls the interpretation of the predefined
          gamma tables.  It makes images look lighter/darker depending
          on the value that has been set.
 
@@ -260,7 +265,7 @@ namespace _drv_ {
 
     //!  Set a gamma table.
     /*!  This setting controls which gamma table is in effect.  Use
-         set_gamma_table to set a custom table.
+         set_gamma_table to set or change a \c CUSTOM_GAMMA_* table.
 
          \sa gamma_table_value
      */
@@ -268,7 +273,10 @@ namespace _drv_ {
 
     //!  Set a color matrix.
     /*!  This setting selects the color matrix to be used.  Use the
-         set_color_matrix command to set a custom matrix.
+         set_color_matrix command to set or change a ::USER_DEFINED
+         matrix.
+
+         \note  The color matrix is not applied to monochrome scans.
 
          \sa color_matrix_value
      */
@@ -279,7 +287,8 @@ namespace _drv_ {
          pattern.  It only has an effect for bi-level and quad-level
          scans, that is, at bit depths of 1 and 2.
 
-         Use set_dither_pattern to set a custom dither pattern.
+         Use set_dither_pattern to set or change a \c CUSTOM_DITHER_*
+         pattern.
 
          \todo  Document the dependencies between the cross-referenced
                 settings?  There are about seven settings that affect
@@ -301,7 +310,7 @@ namespace _drv_ {
          value.
 
          \note  This setting is ignored when using a bit depth larger
-                than 1, using BI_LEVEL with \ref set_halftone_processing,
+                than 1, using ::BI_LEVEL \ref halftone_dither_value,
                 or doing a scan for negative film.
 
          \sa set_bit_depth, set_threshold, set_film_type
@@ -371,18 +380,21 @@ namespace _drv_ {
          should be used to check what setting is in use.
 
          \note  The set_scan_area command should be run \e before one
-                requests auto-focus.
+                requests auto-focus.  This implies that set_option,
+                set_resolution and set_zoom should be too.
 
          \note  There is no documented way to determine what kind of
                 focussing support a device has.
 
          \todo  Find out what is up with the scan area setting when
-                requesting auto-focus (and this is supported).
+                requesting auto-focus (and this is supported).  It
+                seems that the value of the height of the scan area
+                becomes 1 and cannot be relied upon.
      */
     typedef sim_setter<ESC,LOWER_P> set_focus_position;
 
     //!  Set the timeout until switching to energy savings mode.
-    /*!  The default timeout value is 15 minutes.
+    /*!  The default timeout value is 15 minutes, ::TIMEOUT_015.
 
          \note  The device may switch to energy savings mode as much as
                 one minute \e before the value set with this command.

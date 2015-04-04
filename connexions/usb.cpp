@@ -1,5 +1,5 @@
 //  usb.cpp -- shuttle messages between software and USB device
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2011  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -131,12 +131,18 @@ using std::runtime_error;
   void
   usb::send (const octet *message, streamsize size)
   {
+    return send (message, size, 0.001 * default_timeout_);
+  }
+
+  void
+  usb::send (const octet *message, streamsize size, double timeout)
+  {
     unsigned char *buf = reinterpret_cast<unsigned char *>
       (const_cast<octet *> (message));
 
     int transferred;
     int err = libusb_bulk_transfer (handle_, ep_bulk_o_, buf, size,
-                                    &transferred, default_timeout_);
+                                    &transferred, 1000 * timeout);
 
     if (LIBUSB_ERROR_PIPE == err)
       err = libusb_clear_halt (handle_, ep_bulk_o_);
@@ -150,13 +156,19 @@ using std::runtime_error;
   }
 
   void
-  usb::recv (      octet *message, streamsize size)
+  usb::recv (octet *message, streamsize size)
+  {
+    return recv (message, size, 0.001 * default_timeout_);
+  }
+
+  void
+  usb::recv (octet *message, streamsize size, double timeout)
   {
     unsigned char *buf = reinterpret_cast<unsigned char *> (message);
 
     int transferred;
     int err = libusb_bulk_transfer (handle_, ep_bulk_i_, buf, size,
-                                    &transferred, default_timeout_);
+                                    &transferred, 1000 * timeout);
 
     if (LIBUSB_ERROR_PIPE == err)
       err = libusb_clear_halt (handle_, ep_bulk_i_);

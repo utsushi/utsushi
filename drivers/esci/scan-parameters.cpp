@@ -1,5 +1,5 @@
 //  scan-parameters.cpp -- settings for the next scan
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -149,6 +149,18 @@ namespace _drv_ {
     scan_parameters::main_lamp_lighting_mode (void) const
     {
       return mem_[38];
+    }
+
+    byte
+    scan_parameters::double_feed_sensitivity (void) const
+    {
+      return mem_[39];
+    }
+
+    byte
+    scan_parameters::quiet_mode (void) const
+    {
+      return mem_[41];
     }
 
   } // namespace esci

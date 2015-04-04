@@ -1,5 +1,5 @@
 dnl  configure.ac -- an autoconf template for configure
-dnl  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+dnl  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 dnl
 dnl  License: GPL-3.0+
 dnl  Author : AVASYS CORPORATION
@@ -23,7 +23,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.62)
-AC_INIT([Utsushi], [0.8.3],
+AC_INIT([Utsushi], [0.9.0],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -189,8 +189,6 @@ AC_DEFINE([HAVE_LIBUSB_GET_PORT_NUMBER],
   [0], [define to 1 if libusb_get_port_number() is available])
 AC_DEFINE([HAVE_LIBUSB_LEGACY],
   [0], [define to 1 if libusb-0.1 is available])
-AC_DEFINE([HAVE_LT_DLADVISE],
-  [0], [Define to 1 if your libltdl supports lt_dladvise_* API.])
 AC_DEFINE([HAVE_GRAPHICS_MAGICK],
   [0], [Define to 1 if GraphicsMagick is available])
 AC_DEFINE([HAVE_GRAPHICS_MAGICK_PP],
@@ -204,7 +202,7 @@ AC_DEFINE([MAGICK_CONVERT],
 
 dnl  checks for programs, modules and libraries
 
-AM_INIT_AUTOMAKE([1.11 gnu tar-ustar -Wall -Werror std-options nostdinc subdir-objects])
+AM_INIT_AUTOMAKE([1.11.2 gnu tar-ustar -Wall -Werror std-options nostdinc subdir-objects])
 AM_MAINTAINER_MODE([enable])
 m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 
@@ -218,6 +216,7 @@ AS_IF([test xno != x$enable_code_coverage],
      ],
      [AC_MSG_ERROR([code coverage support requires a GNU C/C++ compiler])])
   ])
+AM_PROG_AR
 
 PKG_PROG_PKG_CONFIG
 
@@ -487,9 +486,9 @@ AS_IF([test xno != "x$with_sane"],
     ])])
 AM_CONDITIONAL([WITH_SANE], [test x != "x$sane_version"])
 AM_CONDITIONAL([enable_sane_config], [test xyes = "x$enable_sane_config"])
-AC_SUBST(SANE_MAJOR, `echo $sane_version | awk -F. '{print $1}'`)
-AC_SUBST(SANE_MINOR, `echo $sane_version | awk -F. '{print $2}'`)
-AC_SUBST(SANE_REVISION, `echo $sane_version | awk -F. '{print $3}'`)
+AC_SUBST(SANE_MAJOR, `echo $sane_version | $AWK -F. '{print $1}'`)
+AC_SUBST(SANE_MINOR, `echo $sane_version | $AWK -F. '{print $2}'`)
+AC_SUBST(SANE_REVISION, `echo $sane_version | $AWK -F. '{print $3}'`)
 AC_SUBST(SANE_BACKENDDIR, $sane_backenddir)
 AC_SUBST(SANE_SYSCONFDIR, $sane_sysconfdir)
 
@@ -586,24 +585,6 @@ AS_IF([test xyes != "x$with_legacy_usb"],
    LDFLAGS="$save_LDFLAGS"
    CFLAGS="$save_CFLAGS"],
   [true])
-
-AS_IF([test xyes != "x$with_included_ltdl"],
-  [save_CFLAGS="$CFLAGS"
-   save_LDFLAGS="$LDFLAGS"
-   CFLAGS="$CFLAGS $LTDLINCL"
-   LDFLAGS="$LDFLAGS $LIBLTDL"
-   AC_CHECK_LIB([ltdl], [lt_dladvise_preload],
-     [AC_DEFINE([HAVE_LT_DLADVISE], [1])],
-     [AC_MSG_WARN([installed libltdl is old])])
-   LDFLAGS="$save_LDFLAGS"
-   CFLAGS="$save_CFLAGS"],
-  [AC_MSG_CHECKING([for lt_dladvise_preload in $srcdir/$lt_ltdl_dir/ltdl.h])
-   AS_IF([grep lt_dladvise_preload $srcdir/$lt_ltdl_dir/ltdl.h >/dev/null 2>&1],
-     [AC_DEFINE([HAVE_LT_DLADVISE], [1])
-      AC_MSG_RESULT([yes])
-     ],
-     [AC_MSG_RESULT([no])])
-  ])
 
 AC_CHECK_FUNCS_ONCE(sigaction)
 

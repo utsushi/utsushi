@@ -1,5 +1,5 @@
 //  constant.hpp -- ESC/I protocol constants
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -66,7 +66,7 @@ namespace _drv_ {
          The device will reply with a NAK in case one tries to select
          unavailable option units or unsupported modes.  Capability
          information is available via the various member functions of
-         get_scanner_status or get_extended_status.
+         get_extended_status or get_extended_identity.
 
          \note  Values larger than 0x02 may not be supported by the
                 ::set_option_unit command and only be accessible via
@@ -154,8 +154,9 @@ namespace _drv_ {
 
     //!  Documented gamma table settings.
     /*!  The various values select canned gamma tables for the intended
-         output device.  The two \c CUSTOM_GAMMA_* values select one of
-         the (separately defined) custom gamma tables.
+         output device.  The two \c CUSTOM_GAMMA_* values select a base
+         on top of which the (separately defined) custom gamma table is
+         applied.
 
          \sa set_gamma_table
      */
@@ -165,8 +166,8 @@ namespace _drv_ {
       HI_DENSITY_PRINT  = 0x00,
       LO_DENSITY_PRINT  = 0x10,
       HI_CONTRAST_PRINT = 0x20,
-      CUSTOM_GAMMA_A    = 0x03,
-      CUSTOM_GAMMA_B    = 0x04,
+      CUSTOM_GAMMA_A    = 0x03,         //!< for a base gamma value of 1.0
+      CUSTOM_GAMMA_B    = 0x04,         //!< for a base gamma value of 1.8
     };
 
     //!  Documented color matrix settings.
@@ -211,10 +212,17 @@ namespace _drv_ {
       HI_SPEED     = 0x01,
     };
 
+    //!  Symbolic names for the documented quiet scan modes.
+    enum quiet_mode_value {
+      QUIET_DEFAULT  = 0x00,    //!< use current setting without change
+      QUIET_MODE_OFF = 0x01,
+      QUIET_MODE_ON  = 0x02,
+    };
+
     //!  Symbolic names for the documented film types.
     enum film_type_value {
       POSITIVE_FILM = 0x00,
-      NEGATIVE_FILM = 0x01,
+      NEGATIVE_FILM = 0x01,     //!< cannot be used with ::TPU_IR_1
     };
 
     //!  Symbolic names for the documented focus positions.
@@ -232,6 +240,8 @@ namespace _drv_ {
 
     //!  Symbolic names for the documented timeout periods.
     /*!  The numbers in the symbolic names are times in minutes.
+
+         \sa  set_energy_saving_time
      */
     enum timeout_value {
       TIMEOUT_015 = 0x00,
@@ -241,6 +251,21 @@ namespace _drv_ {
       TIMEOUT_120 = 0x04,
       TIMEOUT_180 = 0x05,
       TIMEOUT_240 = 0x06,
+    };
+
+    //!  Symbolic names for the document alignment positions.
+    /*!  This information can be used to adjust scan areas when only
+         their widths and heights are provided.  This may happen with
+         detected document sizes or when providing users an option to
+         specify scan areas in terms of well-known paper sizes.
+
+         \sa get_extended_identity::document_alignment(), media_value
+     */
+    enum alignment_value {
+      ALIGNMENT_UNKNOWN = 0x00,
+      ALIGNMENT_LEFT    = 0x01,
+      ALIGNMENT_CENTER  = 0x02,
+      ALIGNMENT_RIGHT   = 0x03,
     };
 
     //!  Auto-detectable media sizes.
@@ -271,6 +296,40 @@ namespace _drv_ {
       EXH = 0x0400,             //!<  US executive, landscape
       UNK = 0x0100,             //!<  none of the above
       UNKNOWN = UNK             //!<  none of the above
+    };
+
+    //!  Push button size request values.
+    /*!  The push button status may include information on the scan
+         area that the user wants to scan.  These are the documented
+         size request values.  When ::SIZE_REQ_CUSTOM is indicated,
+         there was no user preference indicated on the device side.
+         In that case the driver should use the size set via its own
+         scan area options.
+
+         \note  A value of 7 is possible but not yet documented.
+         \note  It is not clear what orientation is to be used.
+         \note  It is not clear what standard the B4 value refers to.
+
+         \sa get_push_button_status::size_request()
+     */
+    enum size_request_value {
+      SIZE_REQ_CUSTOM   = 0,    //!<  no preference from device side
+      SIZE_REQ_A4       = 1,    //!<  ISO A4
+      SIZE_REQ_LETTER   = 2,    //!<  US letter (ANSI A)
+      SIZE_REQ_LEGAL    = 3,    //!<  US legal
+      SIZE_REQ_B4       = 4,
+      SIZE_REQ_A3       = 5,    //!<  ISO A3
+      SIZE_REQ_TABLOID  = 6,    //!<  US tabloid (ANSI B)
+    };
+
+    //!  Symbolic names for the documented sensitivity values.
+    /*!  \sa scan_parameters::double_feed_sensitivity(),
+             set_scan_parameters::double_feed_sensitivity(byte)
+     */
+    enum sensitivity_value {
+      SENSITIVITY_OFF = 0x00,
+      SENSITIVITY_LO  = 0x01,
+      SENSITIVITY_HI  = 0x02,
     };
 
   } // namespace esci

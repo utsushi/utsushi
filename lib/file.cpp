@@ -1,5 +1,5 @@
 //  file.cpp -- based output devices
-//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -258,6 +258,7 @@ file_odevice::write (const octet *data, streamsize n)
 void
 file_odevice::bos (const context& ctx)
 {
+  count_ = 0;
   if (!generator_)
     {
       open ();
@@ -281,6 +282,7 @@ file_odevice::eoi (const context& ctx)
     {
       close ();
     }
+  ++count_;
 }
 
 void
@@ -288,6 +290,17 @@ file_odevice::eos (const context& ctx)
 {
   if (!generator_)
     {
+      if (0 == count_)
+        {
+          log::alert
+            ("removing %1% because no images were produced")
+            % filename_;
+
+          if (-1 == remove (filename_.c_str ()))
+            {
+              log::alert (strerror (errno));
+            }
+        }
       close ();
     }
 }

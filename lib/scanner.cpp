@@ -1,5 +1,5 @@
 //  scanner.cpp -- interface and support classes
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -70,34 +70,30 @@ scanner::create (connexion::ptr cnx, const scanner::info& info)
   scanner_factory factory = 0;
   std::string error (_("driver not found"));
 
-# if (HAVE_LT_DLADVISE)
+  log::brief ("looking for preloaded '%1%' driver")
+    % info.driver ();
+
+  lt_dladvise advice;
+  lt_dladvise_init (&advice);
+  lt_dladvise_preload (&advice);
+  lt_dladvise_ext (&advice);
+
+  handle = lt_dlopenadvise (plugin.c_str (), advice);
+
+  if (handle)
     {
-      log::brief ("looking for preloaded '%1%' driver")
-        % info.driver ();
-
-      lt_dladvise advice;
-      lt_dladvise_init (&advice);
-      lt_dladvise_preload (&advice);
-      lt_dladvise_ext (&advice);
-
-      handle = lt_dlopenadvise (plugin.c_str (), advice);
-
-      if (handle)
+      factory = get_scanner_factory (handle);
+      if (factory)
         {
-          factory = get_scanner_factory (handle);
-          if (factory)
-            {
-              log::brief ("using preloaded '%1%' driver")
-                % info.driver ();
-            }
-          else
-            {
-              lt_dlclose (handle);
-            }
+          log::brief ("using preloaded '%1%' driver")
+            % info.driver ();
         }
-      lt_dladvise_destroy (&advice);
+      else
+        {
+          lt_dlclose (handle);
+        }
     }
-# endif /* HAVE_LT_DLADVISE */
+  lt_dladvise_destroy (&advice);
 
   if (!factory) {               // trawl the file system
     run_time rt;

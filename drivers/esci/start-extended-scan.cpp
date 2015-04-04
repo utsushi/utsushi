@@ -1,5 +1,5 @@
 //  start-extended-scan.cpp -- to acquire image data
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -64,6 +64,10 @@ namespace _drv_ {
     void
     start_extended_scan::operator>> (connexion& cnx)
     {
+      cancelled_ = false;
+      do_cancel_ = false;
+      do_at_end_ = false;
+
       cnx_ = &cnx;
       cnx_->send (cmd_, sizeof (cmd_) / sizeof (*cmd_));
       cnx_->recv (blk_, sizeof (blk_) / sizeof (*blk_));
@@ -197,7 +201,7 @@ namespace _drv_ {
 
       if (this->pedantic_)
         {
-          check_reserved_bits (this->blk_, 1, 0x01, "info");
+          check_reserved_bits (this->blk_, 1, 0x2d, "info");
         }
     }
 
@@ -209,7 +213,7 @@ namespace _drv_ {
           check_reserved_bits (&this->error_code_, 0,
                                reserved_error_code_bits_, "errc");
         }
-      error_code_ &= reserved_error_code_bits_;
+      error_code_ &= ~reserved_error_code_bits_;
 
       if (pedantic_ && ~error_code_mask_ & error_code_)
         {

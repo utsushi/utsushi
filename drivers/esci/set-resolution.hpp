@@ -1,5 +1,5 @@
 //  set-resolution.hpp -- for the next scans
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -39,10 +39,9 @@ namespace _drv_ {
          is acceptable or not is not documented.
 
          Devices with a \c B# command level (where \c # is a single
-         digit) are documented to support any resolutions between 50
+         digit) are documented to support all resolutions between 50
          pixels per inch and their maximum resolution, as reported by
-         the get_identity command.  The documented default resolution
-         for such devices is 100 pixels per inch in both directions.
+         the get_identity command.
 
          Devices with a \c D# command level only support setting of
          values that are reported by the get_hardware_property.  It

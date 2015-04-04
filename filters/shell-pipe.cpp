@@ -1,5 +1,5 @@
 //  shell-pipe.cpp -- outsource filtering to a command-line utility
-//  Copyright (C) 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -76,7 +76,7 @@ log_process_exit_(const std::string& cmd, const siginfo_t& info)
         % cmd % info.si_pid % info.si_status;
       break;
     default:
-      log::error ("%1% exited (pid: %2%, code: %3)")
+      log::error ("%1% exited (pid: %2%, code: %3%)")
         % cmd % info.si_pid % info.si_code;
     }
 }
@@ -262,6 +262,8 @@ shell_pipe::exec_process_(const context& ctx)
 
   if (0 == process_)            // child process
     {
+      setpgid (0, 0);           // prevent signal propagation
+
       close (in[1]);            // unused pipe ends
       close (out[0]);
       close (err[0]);
@@ -288,6 +290,8 @@ shell_pipe::exec_process_(const context& ctx)
     }
   else                          // parent process
     {
+      setpgid (process_, 0);    // prevent signal propagation
+
       close (in[0]);            // unused pipe ends
       close (out[1]);
       close (err[1]);
@@ -305,7 +309,6 @@ shell_pipe::exec_process_(const context& ctx)
   return traits::boi ();
 }
 
-// \todo Read any waiting error messages from \a efd and log them
 traits::int_type
 shell_pipe::reap_process_()
 {

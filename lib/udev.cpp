@@ -1,5 +1,5 @@
 //  udev.cpp -- OO wrapper around bits and pieces of the libudev API
-//  Copyright (C) 2013, 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -35,15 +35,8 @@
 
 namespace udev_ {
 
-namespace {
-
-//! Find a property's \a value by \a name for a given \a device
-/*! If the \a device does not advertise the property, its parent will
- *  be queried and so on until the root of the device hierarchy.  The
- *  \a value is only modified if a matching property is found.
- */
 void
-get_property_(struct udev_device *device,
+get_property (struct udev_device *device,
               const std::string& name, std::string& value)
 {
   struct udev_device *p (device);
@@ -59,15 +52,10 @@ get_property_(struct udev_device *device,
   value = rv;
 }
 
-//! Find a system attribute's \a value by \a name for a given \a device
-/*! If the \a device does not advertise the attribute, its parent will
- *  be queried and so on until the root of the device hierarchy.  The
- *  \a value is only modified if a matching attribute is found.
- */
 void
-get_sysattr_(struct udev_device *device,
+get_sysattr (struct udev_device *device,
              const std::string& name, int& value,
-             std::ios_base& (radix)(std::ios_base&) = std::hex)
+             std::ios_base& (radix)(std::ios_base&))
 {
   struct udev_device *p (device);
   const char *rv (nullptr);
@@ -82,6 +70,8 @@ get_sysattr_(struct udev_device *device,
   std::stringstream ss (rv);
   ss >> radix >> value;
 }
+
+namespace {
 
 //! Handle to udev config file content, needed by all udev API calls
 struct udev *ctx_(nullptr);
@@ -139,7 +129,7 @@ uint16_t
 device::usb_vendor_id () const
 {
   int id;
-  get_sysattr_(dev_, "idVendor", id);
+  get_sysattr (dev_, "idVendor", id);
   return id;
 }
 
@@ -147,7 +137,7 @@ uint16_t
 device::usb_product_id () const
 {
   int id;
-  get_sysattr_(dev_, "idProduct", id);
+  get_sysattr (dev_, "idProduct", id);
   return id;
 }
 
@@ -155,7 +145,7 @@ std::string
 device::usb_serial () const
 {
   std::string s;
-  get_property_(dev_, "ID_SERIAL_SHORT", s);
+  get_property (dev_, "ID_SERIAL_SHORT", s);
   return s;
 }
 
@@ -163,7 +153,7 @@ uint8_t
 device::usb_configuration () const
 {
   int i = 1;
-  get_sysattr_(dev_, "bConfigurationValue", i);
+  get_sysattr (dev_, "bConfigurationValue", i);
   return i;
 }
 
@@ -171,7 +161,7 @@ uint8_t
 device::usb_interface () const
 {
   int i = 0;
-  get_sysattr_(dev_, "bInterfaceNumber", i);
+  get_sysattr (dev_, "bInterfaceNumber", i);
   return i;
 }
 
@@ -179,7 +169,7 @@ uint8_t
 device::usb_bus_number () const
 {
   int i = 0;
-  get_sysattr_(dev_, "busnum", i, std::dec);
+  get_sysattr (dev_, "busnum", i, std::dec);
   return i;
 }
 
@@ -187,7 +177,7 @@ uint8_t
 device::usb_port_number () const
 {
   int i = 0;
-  get_sysattr_(dev_, "devpath", i, std::dec);
+  get_sysattr (dev_, "devpath", i, std::dec);
   return i;
 }
 
@@ -195,7 +185,7 @@ uint8_t
 device::usb_device_address () const
 {
   int i = 0;
-  get_sysattr_(dev_, "devnum", i, std::dec);
+  get_sysattr (dev_, "devnum", i, std::dec);
   return i;
 }
 

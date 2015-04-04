@@ -1,5 +1,5 @@
 //  vector.hpp -- class template
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -56,6 +56,7 @@ namespace esci {
       this->assign (t);
     }
 
+    using typename base::size_type;
     using base::operator=;
 
     bool operator== (const vector& v) const

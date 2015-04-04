@@ -1,5 +1,5 @@
 //  connexion.hpp -- transport messages between software and device
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -44,7 +44,11 @@ public:
   virtual ~connexion () {}
 
   virtual void send (const octet *message, streamsize size) = 0;
-  virtual void recv (      octet *message, streamsize size) = 0;
+  virtual void send (const octet *message, streamsize size,
+                     double timeout) = 0;
+  virtual void recv (octet *message, streamsize size) = 0;
+  virtual void recv (octet *message, streamsize size,
+                     double timeout) = 0;
 
   static connexion::ptr create (const std::string& type,
                                 const std::string& path);
@@ -87,7 +91,9 @@ public:
   virtual ~connexion ();
 
   virtual void send (const octet *message, streamsize size);
-  virtual void recv (      octet *message, streamsize size);
+  virtual void send (const octet *message, streamsize size, double timeout);
+  virtual void recv (octet *message, streamsize size);
+  virtual void recv (octet *message, streamsize size, double timeout);
 
 protected:
   bool connect_();
@@ -105,6 +111,8 @@ protected:
   std::string name_;
 
   uint32_t id_;
+
+  static int default_timeout_;
 };
 
 }       // namespace ipc
@@ -119,7 +127,9 @@ public:
   decorator (ptr instance);
 
   virtual void send (const octet *message, streamsize size);
-  virtual void recv (      octet *message, streamsize size);
+  virtual void send (const octet *message, streamsize size, double timeout);
+  virtual void recv (octet *message, streamsize size);
+  virtual void recv (octet *message, streamsize size, double timeout);
 
   virtual option::map::ptr options ();
 

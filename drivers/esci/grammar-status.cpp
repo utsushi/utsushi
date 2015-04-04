@@ -1,5 +1,5 @@
 //  grammar-status.cpp -- component instantiations
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -50,6 +50,7 @@ namespace esci {
 // media dimensions should be for certain media types independent of
 // whatever the various standards dictate.
 
+//! \todo Extract and merge with get-scanner-status.ccp code
 namespace {
 
   using utsushi::length;

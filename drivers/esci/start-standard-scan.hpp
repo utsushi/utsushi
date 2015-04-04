@@ -1,5 +1,5 @@
 //  start-standard-scan.hpp -- to acquire image data
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -99,7 +99,12 @@ namespace _drv_ {
       //!  Tells whether the scan area has been processed completely.
       /*!  When this function returns \c true after operator++() has
            returned an empty chunk, all image data has been acquired
-           and passed on to the caller.
+           for the current page and passed on to the caller.
+
+           When scanning in color page sequence mode, ::PAGE_GRB or
+           ::PAGE_RGB, three pages make up a single image.  In that
+           case this function should return \c true three times for
+           a complete and valid image.
 
            \note  Although seemingly similar, this is \e not the same
                   as start_extended_scan::is_at_page_end().

@@ -1,5 +1,5 @@
 //  connexion.cpp -- transport messages between software and device
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2011  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -153,9 +153,9 @@ set_timeout (int socket, double t_sec)
 {
   if (0 > socket) return;
 
-  struct timespec t;
+  struct timeval t;
   t.tv_sec  =  t_sec;
-  t.tv_nsec = (t_sec - t.tv_sec) * 1000000000;
+  t.tv_usec = (t_sec - t.tv_sec) * 1000000;
 
   errno = 0;
   if (0 > setsockopt (socket, SOL_SOCKET, SO_RCVTIMEO, &t, sizeof (t)))
@@ -184,6 +184,8 @@ streamsize write (int fd, const void *buf, streamsize count);
 streamsize read  (int fd,       void *buf, streamsize count);
 
 }       // namespace
+
+int connexion::default_timeout_ = 30 * seconds;
 
 /*! \todo Make retry_count and delay_time configurable
  *  \todo Allow for searching in multiple locations
@@ -273,7 +275,7 @@ connexion::connexion (const std::string& type, const std::string& path)
             {
               id_ = hdr.token ();
               log::brief ("opened ipc::connexion to: %1%") % path;
-              set_timeout (socket_, 30 * seconds);
+              set_timeout (socket_, default_timeout_);
               return;
             }
           msg = "error receiving";
@@ -307,19 +309,33 @@ connexion::~connexion ()
 void
 connexion::send (const octet *message, streamsize size)
 {
+  return send (message, size, default_timeout_);
+}
+
+void
+connexion::send (const octet *message, streamsize size, double timeout)
+{
   header hdr;
   hdr.token (id_);
   hdr.size (size);
+  set_timeout (socket_, timeout);
   send_message_(hdr, message);
 }
 
 void
 connexion::recv (octet *message, streamsize size)
 {
+  return recv (message, size, default_timeout_);
+}
+
+void
+connexion::recv (octet *message, streamsize size, double timeout)
+{
   header hdr;
   hdr.token (id_);
   octet *reply = nullptr;
 
+  set_timeout (socket_, timeout);
   recv_message_(hdr, reply);
 
   if (!hdr.error () && size == hdr.size ())
@@ -658,9 +674,23 @@ decorator<connexion>::send (const octet *message, streamsize size)
 }
 
 void
+decorator<connexion>::send (const octet *message, streamsize size,
+                            double timeout)
+{
+  instance_->send (message, size, timeout);
+}
+
+void
 decorator<connexion>::recv (octet *message, streamsize size)
 {
   instance_->recv (message, size);
+}
+
+void
+decorator<connexion>::recv (octet *message, streamsize size,
+                            double timeout)
+{
+  instance_->recv (message, size, timeout);
 }
 
 option::map::ptr

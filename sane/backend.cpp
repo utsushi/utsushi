@@ -1,5 +1,5 @@
 //  backend.cpp -- implementation of the SANE utsushi backend
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2007  EPSON AVASYS CORPORATION
 //
 //  License: GPL-3.0+
@@ -266,17 +266,26 @@ exception_to_sane_status (const runtime_error& e)
   std::string msg (_(e.what ()));
 
   if (0 >= msg.compare
-      (_("Please put your document in the ADF before scanning.")))
+      (_("Please load the document(s) into the Automatic Document Feeder.")))
     return SANE_STATUS_NO_DOCS;
 
-  if (0 >= msg.compare (_("Clear the ADF document jam and try again.")))
+  if (0 >= msg.compare
+      (_("A paper jam occurred.\n"
+         "Open the Automatic Document Feeder and remove any paper.\n"
+         "If there are any documents loaded in the ADF, remove them"
+         " and load them again.")))
     return SANE_STATUS_JAMMED;
 
-  if (0 >= msg.compare (_("A multi page feed occurred in the ADF.\n"
-                          "Clear the document feeder and try again.")))
+  if (0 >= msg.compare
+      (_("A multi page feed occurred in the auto document feeder. "
+         "Open the cover, remove the documents, and then try again."
+         " If documents remain on the tray, remove them and then"
+         " reload them.")))
     return SANE_STATUS_JAMMED;
 
-  if (0 >= msg.compare (_("Please close the ADF cover and try again.")))
+  if (0 >= msg.compare
+      (_("The Automatic Document Feeder is open.\n"
+         "Please close it.")))
     return SANE_STATUS_COVER_OPEN;
 
   return SANE_STATUS_IO_ERROR;

@@ -1,5 +1,5 @@
 //  scanner.cpp -- API implementation for an ESC/I driver
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -29,7 +29,7 @@
 #include "compound-scanner.hpp"
 #include "compound-tweaks.hpp"
 #include "extended-scanner.hpp"
-#include "get-identity.hpp"
+#include "getter.hpp"
 #include "scanner.hpp"
 #include "scanner-inquiry.hpp"
 
@@ -124,10 +124,10 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
     {
       try
         {
-          get_identity ESC_I;
+          get_status ESC_F;
 
-          *cnx << ESC_I;
-          if (ESC_I.supports_extended_commands ())
+          *cnx << ESC_F;
+          if (ESC_F.supports_extended_commands ())
             {
               sp = make_shared< extended_scanner > (cnx);
             }

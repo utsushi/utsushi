@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--  dialog-alt.glade :: user interface definition
-      Copyright (C) 2012  SEIKO EPSON CORPORATION
+      Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 
       License: GPL-3.0+
       Author : AVASYS CORPORATION
@@ -26,7 +26,7 @@
         <child>
           <object class="GtkAction" id="scan">
             <property name="stock-id">gtk-execute</property>
-            <property name="label" translatable="yes">_Scan</property>
+            <property name="label" translatable="yes">Scan</property>
           </object>
         </child>
         <child>
@@ -36,7 +36,7 @@
         </child>
         <child>
           <object class="GtkAction" id="expand">
-            <property name="label" translatable="yes">_Details:</property>
+            <property name="label" translatable="yes">Details:</property>
           </object>
         </child>
       </object>
@@ -64,7 +64,7 @@
         <child>
           <object class="GtkAction" id="refresh">
             <property name="stock-id">gtk-refresh</property>
-            <property name="tooltip" translatable="yes">Refresh</property>
+            <property name="tooltip" translatable="yes">Preview</property>
           </object>
           <accelerator key="r" modifiers="GDK_CONTROL_MASK"/>
         </child>
@@ -275,7 +275,7 @@ Active tags indicate the kind of settings that are relevant to the user's task a
         <child>
           <object class="GtkButton" id="scan-button">
             <property name="visible">True</property>
-            <property name="label" translatable="yes">_Scan</property>
+            <property name="label" translatable="yes">Scan</property>
             <property name="use-underline">True</property>
           </object>
         </child>

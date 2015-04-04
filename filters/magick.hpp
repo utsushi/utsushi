@@ -1,5 +1,5 @@
 //  magick.hpp -- touches applied to your image data
-//  Copyright (C) 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -52,6 +52,9 @@ protected:
   double height_;
 
   string image_format_;
+
+  bool color_correction_;
+  double cct_[9];
 };
 
 }       // namespace _flt_

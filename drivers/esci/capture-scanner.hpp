@@ -1,5 +1,5 @@
 //  capture-scanner.hpp -- gain exclusive device access
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -40,6 +40,8 @@ namespace _drv_ {
 
          If another user has already obtained exclusive access when
          sending this command, a device_busy exception will result.
+
+         \todo  Document timeout behaviour.
 
          \sa release_scanner
      */

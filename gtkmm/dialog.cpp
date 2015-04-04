@@ -1,5 +1,5 @@
 //  dialog.cpp -- to acquire image data
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -261,7 +261,7 @@ dialog::on_scan_update (traits::int_type c)
 void
 dialog::on_scan (void)
 {
-  file_chooser dialog (*this, _("Save As"));
+  file_chooser dialog (*this, _("Save As..."));
 
   fs::path default_name (std::string (_("Untitled")) + ".pdf");
   fs::path default_path (fs::current_path () / default_name);
@@ -372,13 +372,8 @@ dialog::on_scan (void)
 
     if (autocrop)
       {
-        (*autocrop->options ())["lo-threshold"] = 60.2;
-        (*autocrop->options ())["hi-threshold"] = 79.3;
-        if (idevice_->model () == "DS-40")
-          {
-            (*autocrop->options ())["lo-threshold"] = 12.1;
-            (*autocrop->options ())["hi-threshold"] = 25.4;
-          }
+        (*autocrop->options ())["lo-threshold"] = value ((*opts_)["device/lo-threshold"]);
+        (*autocrop->options ())["hi-threshold"] = value ((*opts_)["device/hi-threshold"]);
       }
 
     filter::ptr deskew;
@@ -391,13 +386,8 @@ dialog::on_scan (void)
 
     if (deskew)
       {
-        (*deskew->options ())["lo-threshold"] = 60.2;
-        (*deskew->options ())["hi-threshold"] = 79.3;
-        if (idevice_->model () == "DS-40")
-          {
-            (*deskew->options ())["lo-threshold"] = 12.1;
-            (*deskew->options ())["hi-threshold"] = 25.4;
-          }
+        (*deskew->options ())["lo-threshold"] = value ((*opts_)["device/lo-threshold"]);
+        (*deskew->options ())["hi-threshold"] = value ((*opts_)["device/hi-threshold"]);
       }
 
     toggle resample = false;
@@ -440,6 +430,20 @@ dialog::on_scan (void)
     (*magick->options ())["threshold"] = thr;
 
     (*magick->options ())["image-format"] = fmt;
+
+    {
+      toggle sw_color_correction = false;
+      if (opts_->count ("device/sw-color-correction"))
+        {
+          sw_color_correction = value ((*opts_)["device/sw-color-correction"]);
+          for (int i = 1; sw_color_correction && i <= 9; ++i)
+            {
+              key k ("cct-" + boost::lexical_cast< std::string > (i));
+              (*magick->options ())[k] = value ((*opts_)["device"/k]);
+            }
+        }
+      (*magick->options ())["color-correction"] = sw_color_correction;
+    }
 
     toggle skip_blank = !bilevel; // \todo fix filter limitation
     quantity skip_thresh = -1.0;
@@ -544,11 +548,8 @@ dialog::on_device_changed (utsushi::scanner::ptr idev)
   opts_->add_option_map () ("device", idevice_->options ());
   _flt_::image_skip skip;
   opts_->add_option_map () ("blank-skip", skip.options ());
-  if (   idevice_->model () == "DS-40"
-      || idevice_->model () == "DS-510"
-      || idevice_->model () == "DS-520"
-      || idevice_->model () == "DS-560"
-      )
+  if (   idevice_->options ()->count ("lo-threshold")
+      && idevice_->options ()->count ("hi-threshold"))
     {
       option::map::ptr opts (make_shared< option::map > ());
       if (HAVE_MAGICK_PP)

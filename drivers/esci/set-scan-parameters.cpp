@@ -1,5 +1,5 @@
 //  set-scan-parameters.cpp -- for the next scan
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008, 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -220,6 +220,24 @@ namespace _drv_ {
     {
       rep_ = 0;
       dat_[38] = mode;
+
+      return *this;
+    }
+
+    set_scan_parameters&
+    set_scan_parameters::double_feed_sensitivity (byte mode)
+    {
+      rep_ = 0;
+      dat_[39] = mode;
+
+      return *this;
+    }
+
+    set_scan_parameters&
+    set_scan_parameters::quiet_mode (byte mode)
+    {
+      rep_ = 0;
+      dat_[41] = mode;
 
       return *this;
     }

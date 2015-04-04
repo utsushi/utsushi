@@ -1,5 +1,5 @@
 //  context.cpp -- in which to interpret octets in streams
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -299,31 +299,6 @@ context::check_pixel_type_() const
     default:
       BOOST_THROW_EXCEPTION (BAD_PIXEL_TYPE);
     }
-}
-
-context::context (const size_type& width, const size_type& height,
-                  const short& comps, const short& depth)
-  : content_type_(DEFAULT_CONTENT_TYPE)
-  , height_(height)
-  , width_(width)
-  , h_padding_(0)
-  , w_padding_(0)
-  , x_resolution_(0)
-  , y_resolution_(0)
-  , octets_seen_(0)
-{
-  if (3 == comps) {
-    if (8 == depth) pixel_type_ = RGB8;
-    else if (16 == depth) pixel_type_ = RGB16;
-    else BOOST_THROW_EXCEPTION (BAD_PIXEL_TYPE);
-  }
-  else if (1 == comps) {
-    if (8 == depth) pixel_type_ = GRAY8;
-    else if (16 == depth) pixel_type_ = GRAY16;
-    else if (1 == depth) pixel_type_ = MONO;
-    else BOOST_THROW_EXCEPTION (BAD_PIXEL_TYPE);
-  }
-  else BOOST_THROW_EXCEPTION (BAD_PIXEL_TYPE);
 }
 
 short

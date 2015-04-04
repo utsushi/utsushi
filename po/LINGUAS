@@ -1,5 +1,5 @@
 #  LINGUAS -- list of available languages
-#  Copyright (C) 2012  SEIKO EPSON CORPORATION
+#  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 #
 #  License: GPL-3.0+
 #  Author : AVASYS CORPORATION
@@ -18,4 +18,16 @@
 #  You ought to have received a copy of the GNU General Public License
 #  along with this package.  If not, see <http://www.gnu.org/licenses/>.
 
+de
+es
+es_MX
+fr
+it
 ja
+ko
+nl
+pt
+pt_BR
+ru
+zh_CN
+zh_TW

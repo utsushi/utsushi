@@ -1,5 +1,5 @@
 //  compound-tweaks.cpp -- address model specific issues
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -120,6 +120,12 @@ DS_40::configure ()
   // FIXME disable workaround for limitations mentioned in #1098
   descriptors_["enable-resampling"]->active (false);
   descriptors_["enable-resampling"]->read_only (true);
+
+  // autocrop/deskew parameter
+  add_options ()
+    ("lo-threshold", quantity (12.1))
+    ("hi-threshold", quantity (25.4))
+    ;
 }
 
 DS_5x0::DS_5x0 (const connexion::ptr& cnx)
@@ -198,6 +204,12 @@ DS_5x0::configure ()
   // FIXME disable workaround for limitations mentioned in #1098
   descriptors_["enable-resampling"]->active (false);
   descriptors_["enable-resampling"]->read_only (true);
+
+  // autocrop/deskew parameter
+  add_options ()
+    ("lo-threshold", quantity (60.2))
+    ("hi-threshold", quantity (79.3))
+    ;
 }
 
 DS_760_860::DS_760_860 (const connexion::ptr& cnx)

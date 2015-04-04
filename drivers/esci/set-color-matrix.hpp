@@ -1,5 +1,5 @@
 //  set-color-matrix.hpp -- tweak pixel component values
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -64,13 +64,12 @@ namespace _drv_ {
          towards zero and their magnitude ranges from 0 to 3 31/32
          (= 3.96875).
 
-         \note  The color matrix is only used when \ref
-                set_color_correction has been set to use a custom
-                matrix.
+         \note  The matrix is only used when \ref set_color_correction
+                has been set to use a ::USER_DEFINED matrix.
 
          \note  The initialize command does \e not reset the color
                 matrix.  In order to use the default matrix select
-                the matrix for color CRT displays with the \ref
+                the matrix for a color ::CRT_DISPLAY with the \ref
                 set_color_correction command.
 
          \sa set_color_correction

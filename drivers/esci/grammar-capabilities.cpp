@@ -1,5 +1,5 @@
 //  grammar-capabilities.cpp -- component instantiations
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -312,8 +312,8 @@ capabilities::document_sources (const quad& default_value) const
   std::set< std::string > s;
 
   if (adf) s.insert (N_("ADF"));
-  if (tpu) s.insert (N_("TPU"));
-  if (fb ) s.insert (N_("Flatbed"));
+  if (tpu) s.insert (N_("Transparency Unit"));
+  if (fb ) s.insert (N_("Document Table"));
 
   if (s.empty ()) return constraint::ptr ();
 
@@ -322,8 +322,8 @@ capabilities::document_sources (const quad& default_value) const
   switch (default_value)
     {
     case ADF: default_source = N_("ADF"); break;
-    case TPU: default_source = N_("TPU"); break;
-    case FB : default_source = N_("Flatbed"); break;
+    case TPU: default_source = N_("Transparency Unit"); break;
+    case FB : default_source = N_("Document Table"); break;
     default:
       default_source = *s.begin ();
     }
@@ -351,7 +351,7 @@ capabilities::double_feed () const
 
       s -> alternative (N_("Off"))
         -> alternative (N_("Normal"))
-        -> alternative (N_("Sensitive"))
+        -> alternative (N_("Thin"))
         -> default_value (s->front ());
 
       return s;

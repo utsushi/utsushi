@@ -1,5 +1,5 @@
 //  initialize.hpp -- (or reset) scanner settings
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -34,11 +34,11 @@ namespace _drv_ {
     /*!  This command returns the device (on the other end of the
          connexion) to a well-defined, but model specific!, state.
          The command resets all scan parameters to their default
-         value.  Exceptions to this rule are the gamma table and the
-         color matrices, but their use is disabled by default.  That
-         is, while the custom gamma table and color matrices remain
-         loaded, they will no longer be selected after running this
-         command.
+         value.  Exceptions to this rule are the gamma tables, color
+         matrices and dither patterns, but their use is disabled by
+         default.  That is, while custom gamma tables, color matrices
+         and dither patterns remain loaded, they will no longer be
+         applied after running this command.
 
          This command does not clear the media values last detected
          in the get_scanner_status and get_extended_status commands.

@@ -1,5 +1,5 @@
 //  get-identity.hpp -- probe for basic capabilities
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -44,7 +44,7 @@ namespace _drv_ {
          the command_level().
 
          The final five bytes encode the scan_area().  The first byte
-         is always an \c A and the remaining two pair encode the scan
+         is always an \c A and the remaining two pairs encode the scan
          area's maximum main and sub dimensions in pixels.  Each pair
          starts with the least significant byte.  The main dimension
          is normally the shorter and aligned with the orientation of

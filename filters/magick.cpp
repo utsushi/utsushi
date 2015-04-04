@@ -1,5 +1,5 @@
 //  magick.cpp -- touches applied to your image data
-//  Copyright (C) 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -22,15 +22,38 @@
 #include <config.h>
 #endif
 
+//  Guard against preprocessor symbol confusion.  We only care about the
+//  command line utilities here, not about any C++ API.
+#ifdef HAVE_GRAPHICS_MAGICK_PP
+#undef HAVE_GRAPHICS_MAGICK_PP
+#endif
+#ifdef HAVE_IMAGE_MAGICK_PP
+#undef HAVE_IMAGE_MAGICK_PP
+#endif
+
+//  Guard against possible mixups by preferring GraphicsMagick in case
+//  both are available.
+#if HAVE_GRAPHICS_MAGICK
+#if HAVE_IMAGE_MAGICK
+#undef  HAVE_IMAGE_MAGICK
+#define HAVE_IMAGE_MAGICK 0
+#endif
+#endif
+
 #include "magick.hpp"
 
 #include <utsushi/i18n.hpp>
 #include <utsushi/range.hpp>
 #include <utsushi/store.hpp>
+#include <utsushi/log.hpp>
 
 #include <boost/lexical_cast.hpp>
 
+#include <cerrno>
 #include <cstdlib>
+#include <cstring>
+
+#include <stdio.h>
 
 namespace {
 
@@ -45,6 +68,33 @@ geom_(context::size_type width, context::size_type height)
   return (lexical_cast< string > (width)
           + 'x'
           + lexical_cast< string > (height));
+}
+
+bool
+image_magick_version_before_(const char *cutoff)
+{
+  FILE *fp = popen (MAGICK_CONVERT " -version"
+                    "| awk '/^Version:/{print $3}'", "r");
+  int errc = errno;
+
+  if (fp)
+    {
+      char  buf[80];
+      char *version = fgets (buf, sizeof (buf), fp);
+      errc = errno;
+
+      fclose (fp);
+
+      if (version)
+        {
+          log::debug (format ("using ImageMagick-%1%") % version);
+          return (0 > strverscmp (version, cutoff));
+        }
+    }
+
+  log::alert (format ("failed to get ImageMagick version: %1%")
+              % strerror (errc));
+  return false;
 }
 
 }       // namespace
@@ -75,7 +125,15 @@ magick::magick ()
                       -> alternative ("TIFF")
                       -> alternative ("PDF")
                       -> default_value (string ())))
+    ("color-correction", toggle (false))
     ;
+
+  for (size_t i = 0; i < sizeof (cct_) / sizeof (*cct_); ++i)
+    {
+      key k ("cct-" + lexical_cast< std::string > (i+1));
+      option_->add_options ()
+        (k, quantity ());
+    }
 }
 
 void
@@ -87,6 +145,16 @@ magick::freeze_options ()
 
     quantity thr = value ((*option_)["threshold"]);
     threshold_ = thr.amount< double > ();
+
+    toggle c = value ((*option_)["color-correction"]);
+    color_correction_ = c;
+
+    for (size_t i = 0; i < sizeof (cct_) / sizeof (*cct_); ++i)
+      {
+        key k ("cct-" + boost::lexical_cast< std::string > (i+1));
+        quantity q = value ((*option_)[k]);
+        cct_[i] = q.amount< double > ();
+      }
   }
 
   quantity x_res = value ((*option_)["resolution-x"]);
@@ -203,6 +271,20 @@ magick::arguments (const context& ctx)
   if (force_extent_)
     argv += " -extent " + geom_(width_  * x_resolution_,
                                 height_ * y_resolution_);
+
+  if (color_correction_)
+    {
+      if (HAVE_IMAGE_MAGICK
+          && !image_magick_version_before_("6.6.1-0"))
+        argv += " -color-matrix";
+      else
+        argv += " -recolor";
+
+      argv += " \"";
+      for (size_t i = 0; i < sizeof (cct_) / sizeof (*cct_); ++i)
+        argv += lexical_cast< string > (cct_[i]) + " ";
+      argv += "\"";
+    }
 
   if (bilevel_)
     {
