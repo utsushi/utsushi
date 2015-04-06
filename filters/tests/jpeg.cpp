@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_SUITE (compressor);
 
 BOOST_FIXTURE_TEST_CASE (mediatype, fixture)
 {
-  rawmem_idevice dev (context (32, 32, 3, 8));
+  rawmem_idevice dev (context (32, 32));
   idevice& idev (dev);
 
   stream str;
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_SUITE (decompressor);
 
 BOOST_FIXTURE_TEST_CASE (mediatype, fixture)
 {
-  rawmem_idevice dev (context (32, 32, 3, 8));
+  rawmem_idevice dev (context (32, 32));
   idevice& idev (dev);
 
   stream str;

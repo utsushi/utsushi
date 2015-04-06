@@ -55,7 +55,7 @@ struct fixture
 
 BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
 {
-  context ctx (32, 48, 3, 8);
+  context ctx (32, 48);
   shared_ptr<setmem_idevice::generator> gen
     = make_shared< const_generator > (0x50);
 
