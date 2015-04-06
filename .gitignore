@@ -84,6 +84,8 @@ Makefile.in
 /src/version
 
 #  Project specific stuff
+/drivers/esci/data/DS-520.dat
+/drivers/esci/data/DS-560.dat
 /drivers/esci/data/DS-60000.dat
 /drivers/esci/data/DS-6500.dat
 /drivers/esci/data/DS-760.dat
