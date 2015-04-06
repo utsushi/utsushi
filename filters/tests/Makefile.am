@@ -72,3 +72,9 @@ EXTRA_DIST += data/A4-max-x-max.jpg
 CLEANFILES  =
 
 include $(top_srcdir)/include/boost-test.am
+
+if enable_code_coverage
+CLEANFILES += ../pdf/*.gcno
+CLEANFILES += ../pdf/*.gcda
+CLEANFILES += ../pdf/*.gcov
+endif

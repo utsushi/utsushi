@@ -82,3 +82,9 @@ EXTRA_DIST  = value.hpp
 CLEANFILES  =
 
 include $(top_srcdir)/include/boost-test.am
+
+if enable_code_coverage
+CLEANFILES += ../../outputs/*.gcno
+CLEANFILES += ../../outputs/*.gcda
+CLEANFILES += ../../outputs/*.gcov
+endif
