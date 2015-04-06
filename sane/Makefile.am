@@ -68,7 +68,7 @@ AM_CPPFLAGS += -DSANE_MINOR=$(SANE_MINOR)
 
 BUILT_SOURCES = $(srcdir)/sane-api.sym
 
-sane-api.sym: $(srcdir)/backend.hpp
+$(srcdir)/sane-api.sym: $(srcdir)/backend.hpp
 	$(AWK) '/^#define sane_/{ print $$2 }' $< \
 	    | sed '/_$$/d' \
 	    | sed -n 'p; s/sane_/sane_$(BACKEND_NAME)_/p' > $@
