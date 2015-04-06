@@ -81,6 +81,8 @@ libflt_all_la_SOURCES   += deskew.cpp
 libflt_all_la_SOURCES   += deskew.hpp
 endif				# have_libmagick_pp
 
+AM_INSTALLCHECK_STD_OPTIONS_EXEMPT = doc-locate
+
 pdf_filter  =
 pdf_filter += pdf.cpp
 pdf_filter += pdf.hpp
