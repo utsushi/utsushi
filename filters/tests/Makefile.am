@@ -33,9 +33,9 @@ check_PROGRAMS += threshold.utr
 check_PROGRAMS += image-skip.utr
 check_PROGRAMS += shell-pipe.utr
 
-#if have_magick
+if have_magick
 check_PROGRAMS += magick.utr
-#endif
+endif
 
 LDADD  = ../libflt-all.la
 LDADD += ../../lib/libutsushi.la $(LIBUTSUSHI_LIBS)
