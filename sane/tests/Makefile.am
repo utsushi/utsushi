@@ -35,6 +35,9 @@ check_PROGRAMS += $(test_runners)
 AM_CPPFLAGS += -DBACKEND_NAME=$(BACKEND_NAME)
 AM_LDFLAGS  += ../libsane-$(BACKEND_NAME).la
 
+AM_CPPFLAGS += $(INCLTDL)
+AM_LDFLAGS  += $(LIBLTDL)
+
 LDADD  = ../../lib/libutsushi.la $(LIBUTSUSHI_LIBS)
 ##  FIXME: drop when filters have been turned into proper plugins
 LDADD += ../../filters/libflt-all.la
