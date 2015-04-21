@@ -1,5 +1,6 @@
 ##  Makefile.am -- an automake template for Makefile.in
 ##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+##  Copyright (C) 2015  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -64,7 +65,6 @@ pkglib_LTLIBRARIES = libutsushi.la
 libutsushi_la_LIBADD   = $(LIBUTSUSHI_LIBS)
 libutsushi_la_LIBADD  += $(LIBLTDL)
 libutsushi_la_LIBADD  += $(LTLIBINTL)
-libutsushi_la_LIBADD  += $(LIBHAL_LIBS)
 libutsushi_la_LIBADD  += $(LIBUDEV_LIBS)
 libutsushi_la_SOURCES  = connexion.cpp
 libutsushi_la_SOURCES += device-info.cpp
@@ -77,11 +77,6 @@ libutsushi_la_SOURCES += scanner.cpp
 libutsushi_la_SOURCES += $(streams)
 libutsushi_la_SOURCES += $(settings)
 libutsushi_la_SOURCES += $(outputs)
-
-if have_libhal
-libutsushi_la_SOURCES += hal.cpp
-libutsushi_la_SOURCES += hal.hpp
-endif
 
 if have_libtiff
 libutsushi_la_LIBADD  += $(LIBTIFF_LIBS)
@@ -102,7 +97,6 @@ AM_CPPFLAGS += -DPKGDATADIR="\"$(pkgdatadir)\""
 AM_CPPFLAGS += -DLOCALEDIR="\"$(localedir)\""
 AM_CPPFLAGS += -DPKGSYSCONFDIR="\"$(pkgsysconfdir)\""
 AM_CPPFLAGS += -DPKGCONFFILE="\"$(PACKAGE_TARNAME).conf\""
-AM_CXXFLAGS += $(LIBHAL_CFLAGS)
 AM_CXXFLAGS += $(LIBUDEV_CFLAGS)
 ## FIXME: remove once the USB connexion has become a proper plugin
 AM_CXXFLAGS += $(LIBUSB_CFLAGS)

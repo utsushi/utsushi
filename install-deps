@@ -1,6 +1,6 @@
 #! /bin/sh
 #  install-deps -- needed for developer and/or maintainer builds
-#  Copyright (C) 2013  Olaf Meeuwissen
+#  Copyright (C) 2013, 2015  Olaf Meeuwissen
 #  Copyright (C) 2012  AVASYS CORPORATION
 #
 #  License: GPL-3.0+
@@ -147,7 +147,6 @@ case "$PKG_MGR" in
             pkg_list="$pkg_list libbz2-dev"
         fi
         #  Needed for device detection
-        pkg_list="$pkg_list libhal-dev"
         pkg_list="$pkg_list libudev-dev"
         #  Needed to enable optional components
         pkg_list="$pkg_list libusb-1.0-0-dev"
@@ -174,8 +173,6 @@ case "$PKG_MGR" in
         #  Needed for software metrics collection purposes
         has xsltproc    || pkg_list="$pkg_list xsltproc"
         has ohcount     || pkg_list="$pkg_list ohcount"
-        #  Needed at run-time (if libhal-dev support is used)
-        has lshal       || pkg_list="$pkg_list hal"
 
         sudo apt-get -qy install $pkg_list
         ;;

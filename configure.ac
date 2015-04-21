@@ -1,6 +1,6 @@
 dnl  configure.ac -- an autoconf template for configure
 dnl  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
-dnl  Copyright (C) 2013, 2014  Olaf Meeuwissen
+dnl  Copyright (C) 2013-2015  Olaf Meeuwissen
 dnl
 dnl  License: GPL-3.0+
 dnl  Author : AVASYS CORPORATION
@@ -176,8 +176,6 @@ dnl  preprocessor symbols for optional/conditional code
 
 AC_DEFINE([HAVE_LIBGTKMM],
   [0], [Define to 1 if the gtkmm library is available])
-AC_DEFINE([HAVE_LIBHAL],
-  [0], [Define to 1 if the HAL library is available])
 AC_DEFINE([HAVE_LIBJPEG],
   [0], [define to 1 if a JPEG library is available])
 AC_DEFINE([HAVE_LIBMAGIC],
@@ -342,10 +340,6 @@ AC_PATH_PROG([PDFLATEX], [pdflatex])
 AM_CONDITIONAL([have_pdflatex], [test x != x$PDFLATEX])
 
                                 dnl  modules for optional functionality
-PKG_CHECK_MODULES([LIBHAL], [hal],
-  [AC_DEFINE([HAVE_LIBHAL], [1])],
-  [false])
-AM_CONDITIONAL([have_libhal], [test x != "x$LIBHAL_LIBS"])
 PKG_CHECK_MODULES([LIBUDEV], [libudev],
   [AC_DEFINE([HAVE_LIBUDEV], [1])],
   [false])
