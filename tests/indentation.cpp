@@ -1,5 +1,6 @@
 //  indentation.cpp -- conformance test suite
 //  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION

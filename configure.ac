@@ -1,5 +1,6 @@
 dnl  configure.ac -- an autoconf template for configure
 dnl  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
+dnl  Copyright (C) 2013, 2014  Olaf Meeuwissen
 dnl
 dnl  License: GPL-3.0+
 dnl  Author : AVASYS CORPORATION

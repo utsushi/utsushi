@@ -1,6 +1,7 @@
 #! /bin/sh
 #  boost-test-report -- accumulator for matching reports
 #  Copyright (C) 2012  AVASYS CORPORATION
+#  Copyright (C) 2013  Olaf Meeuwissen
 #
 #  License: GPL-3.0+
 #  Author : Olaf Meeuwissen

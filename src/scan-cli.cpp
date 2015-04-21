@@ -1,6 +1,6 @@
 //  scan-cli.cpp -- command-line interface based scan utility
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
-//  Copyright (C) 2013  Olaf Meeuwissen
+//  Copyright (C) 2013, 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION

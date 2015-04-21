@@ -1,5 +1,6 @@
 //  dialog.cpp -- to acquire image data
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
+//  Copyright (C) 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION

@@ -1,5 +1,6 @@
 //  jpeg.cpp -- unit tests for the JPEG filter implementation
 //  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION

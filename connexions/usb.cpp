@@ -1,6 +1,6 @@
 //  usb.cpp -- shuttle messages between software and USB device
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
-//  Copyright (C) 2011  Olaf Meeuwissen
+//  Copyright (C) 2011, 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
