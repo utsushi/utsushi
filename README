@@ -2,6 +2,7 @@
   Utsushi - Next Generation Image Acquisition
 
   Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
+  Copyright (C) 2015  Olaf Meeuwissen
 
 
   SUMMARY
@@ -91,7 +92,6 @@ BUILDING/INSTALLING FROM SOURCE
     --enable-udev-config
     --with-gtkmm
     --with-included-boost
-    --with-legacy-usb
     --with-jpeg
     --with-magick
     --with-sane

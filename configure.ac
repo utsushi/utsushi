@@ -143,12 +143,6 @@ AC_ARG_WITH(included-boost,
   [],
   [with_included_boost=check])
 
-AC_ARG_WITH([legacy-usb],
-  AS_HELP_STRING([--with-legacy-usb],
-    [force use of legacy USB library for USB connexion support @<:@no@:>@]),
-  [],
-  [with_legacy_usb=no])
-
 AC_ARG_ENABLE(udev-config,
   AS_HELP_STRING([--enable-udev-config],
     [integrate udev activated device set up @<:@yes@:>@.
@@ -192,8 +186,6 @@ AC_DEFINE([HAVE_LIBUSB_ERROR_NAME],
   [0], [define to 1 if libusb_error_name() is available])
 AC_DEFINE([HAVE_LIBUSB_GET_PORT_NUMBER],
   [0], [define to 1 if libusb_get_port_number() is available])
-AC_DEFINE([HAVE_LIBUSB_LEGACY],
-  [0], [define to 1 if libusb-0.1 is available])
 AC_DEFINE([HAVE_GRAPHICS_MAGICK],
   [0], [Define to 1 if GraphicsMagick is available])
 AC_DEFINE([HAVE_GRAPHICS_MAGICK_PP],
@@ -344,20 +336,12 @@ PKG_CHECK_MODULES([LIBUDEV], [libudev],
   [AC_DEFINE([HAVE_LIBUDEV], [1])],
   [false])
 AM_CONDITIONAL([have_libudev], [test x != "x$LIBUDEV_LIBS"])
-AS_IF([test xyes != "x$with_legacy_usb"],
+AS_IF([test xno != "x$with_usb"],
   [PKG_CHECK_MODULES([LIBUSB], [libusb-1.0],
     [AC_DEFINE([HAVE_LIBUSB], [1])],
-    [PKG_CHECK_MODULES([LIBUSB_LEGACY], [libusb],
-      [AC_DEFINE([HAVE_LIBUSB_LEGACY], [1])],
-      [true])
-    ])
-  ],
-  [PKG_CHECK_MODULES([LIBUSB_LEGACY], [libusb],
-    [AC_DEFINE([HAVE_LIBUSB_LEGACY], [1])],
-    [AC_MSG_ERROR([legacy USB library (libusb-0.1) not found])])
+    [true])
   ])
 AM_CONDITIONAL([have_libusb], [test x != "x$LIBUSB_LIBS"])
-AM_CONDITIONAL([have_libusb_legacy], [test x != "x$LIBUSB_LEGACY_LIBS"])
 
 AS_IF([test xno != "x$with_magick_pp"],
    AS_CASE("x$with_magick_pp",
@@ -574,7 +558,7 @@ AC_CHECK_LIB([magic], [magic_open],
   ])
 AM_CONDITIONAL([have_libmagic], [test x != "x$LIBMAGIC_LIBS"])
 
-AS_IF([test xyes != "x$with_legacy_usb"],
+AS_IF([test xno != "x$with_usb"],
   [save_CFLAGS="$CFLAGS"
    save_LDFLAGS="$LDFLAGS"
    CFLAGS="$CFLAGS $LIBUSB_CFLAGS"
