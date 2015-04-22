@@ -218,7 +218,7 @@ AM_PROG_AR
 PKG_PROG_PKG_CONFIG
 
 AM_GNU_GETTEXT([external])      dnl  i18n support
-AM_GNU_GETTEXT_VERSION([0.17])
+AM_GNU_GETTEXT_VERSION([0.19.3])
 AM_XGETTEXT_OPTION([--boost])
 AC_DEFINE_UNQUOTED([DEFAULT_TEXT_DOMAIN], ["$PACKAGE"],
   [Define to the default text domain for message translation.])
