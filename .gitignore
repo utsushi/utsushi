@@ -1,4 +1,5 @@
 #  .gitignore -- patterns for automatically generated and/or updated stuff
+#  Copyright (C) 2015  SEIKO EPSON CORPORATION
 #  Copyright (C) 2013-2015  Olaf Meeuwissen
 #
 #  License: GPL-3.0+
@@ -91,10 +92,10 @@ Makefile.in
 /drivers/esci/data/DS-760.dat
 /drivers/esci/data/PX-M7050FX.dat
 /drivers/esci/verify
+/filters/doc-locate
 /gtkmm/about.xml
 /lib/tag.cpp
 /lib/tests/ipc-cnx
 /sane/sane-api.sym
-/tests/uncrustify.cfg
 /tests/vc-dist-files
 /utsushi/tag.hpp

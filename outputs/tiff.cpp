@@ -1,5 +1,5 @@
 //  tiff.cpp -- TIFF image file format support
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -74,7 +74,7 @@ handle_error (const char *module, const char *fmt, va_list ap)
   scoped_array< char > buf (new char[sz + 1]);
 
   vsnprintf (buf.get (), sz + 1, fmt, ap);
-  log::fatal (format ("%1%: %2%") % module % buf.get ());
+  log::fatal ("%1%: %2%") % module % buf.get ();
 
   tiff_odevice::err_msg = buf.get ();
 }
@@ -86,7 +86,7 @@ handle_warning (const char *module, const char *fmt, va_list ap)
   scoped_array< char > buf (new char[sz + 1]);
 
   vsnprintf (buf.get (), sz + 1, fmt, ap);
-  log::alert (format ("%1%: %2%") % module % buf.get ());
+  log::alert ("%1%: %2%") % module % buf.get ();
 }
 
 }       // namespace

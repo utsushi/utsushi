@@ -29,6 +29,9 @@
 
 #include <boost/throw_exception.hpp>
 
+#include <gdkmm/cursor.h>
+#include <gdkmm/general.h>
+
 #include <gtkmm/action.h>
 #include <gtkmm/messagedialog.h>
 
@@ -222,6 +225,13 @@ preview::on_area_updated (int x, int y, int width, int height)
 void
 preview::on_refresh ()
 {
+  value resampling;
+  try {
+    resampling = (*control_)["enable-resampling"];
+    (*control_)["enable-resampling"] = toggle (false);
+  }
+  catch (const std::out_of_range&){}
+
   value resolution;
   try {
     option opt ((*control_)["resolution"]);
@@ -334,8 +344,21 @@ preview::on_refresh ()
         }
       stream_->push (odevice::ptr (odevice_));
 
-      *idevice_ | *stream_;
-      scale ();
+      Glib::RefPtr< Gdk::Window > window = get_window ();
+      if (window)
+        {
+          window->set_cursor (Gdk::Cursor (Gdk::WATCH));
+          Gdk::flush ();
+        }
+      try {
+        *idevice_ | *stream_;
+        scale ();
+      }
+      catch (...) {
+        if (window) window->set_cursor ();
+        throw;
+      }
+      if (window) window->set_cursor ();
     }
   catch (const runtime_error& e)
     {
@@ -363,6 +386,10 @@ preview::on_refresh ()
   if (value () != resolution)
     {
       (*control_)["resolution"] = resolution;
+    }
+  if (value () != resampling)
+    {
+      (*control_)["enable-resampling"] = resampling;
     }
 }
 

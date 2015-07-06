@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.9.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2015-03-19 02:05+0000\n"
+"POT-Creation-Date: 2015-06-19 01:54+0000\n"
 "PO-Revision-Date: 2015-03-18 21:12+0900\n"
 "Last-Translator: AVASYS CORPORATION\n"
 "Language-Team: Japanese\n"
@@ -30,11 +30,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: connexions/usb.cpp:96
+#: connexions/usb.cpp:94
 msgid "unable to initialise USB support"
 msgstr "USBの初期化ができません"
 
-#: connexions/usb.cpp:113 connexions/usb.cpp:366
+#: connexions/usb.cpp:111
 msgid "no usable, matching device"
 msgstr "使用可能なデバイスがありません"
 
@@ -312,7 +312,7 @@ msgid "Crop Adjustment"
 msgstr "切り出し位置調整"
 
 #: drivers/esci/compound-scanner.cpp:2404 gtkmm/dialog.cpp:560
-#: sane/handle.cpp:533 src/scan-cli.cpp:629
+#: sane/handle.cpp:536 src/scan-cli.cpp:629
 msgid "Deskew"
 msgstr "傾き補正"
 
@@ -1109,11 +1109,11 @@ msgstr ""
 msgid "cannot add option::map to self"
 msgstr "自分自身を option::map に追加することはできません"
 
-#: lib/pump.cpp:83
+#: lib/pump.cpp:85
 msgid "Acquire image data asynchronously"
 msgstr "イメージデータを非同期的に取得する"
 
-#: lib/pump.cpp:84
+#: lib/pump.cpp:86
 msgid ""
 "When true, image acquisition will proceed independently from the rest of the "
 "program.  Normally, this would be what you want because it keeps the program "
@@ -1124,11 +1124,11 @@ msgid ""
 "means when this option is set to false."
 msgstr ""
 
-#: lib/pump.cpp:100
+#: lib/pump.cpp:102
 msgid "no image data source"
 msgstr "イメージデータソースなし"
 
-#: lib/pump.cpp:108
+#: lib/pump.cpp:110
 msgid "no output destination"
 msgstr "出力の宛先なし"
 
@@ -1232,7 +1232,7 @@ msgstr "ライブラリーの初期化に失敗しました"
 msgid "Unknown SANE status code %d"
 msgstr "不明なSANEのステータスコード %d"
 
-#: sane/handle.cpp:1264
+#: sane/handle.cpp:1267
 msgid ""
 "SANE API specification violation\n"
 "The option number count has to be the first option."
@@ -1240,7 +1240,7 @@ msgstr ""
 "SANE API の仕様違反\n"
 "オプション番号数は最初のオプションでなければなりません。"
 
-#: sane/handle.cpp:1436
+#: sane/handle.cpp:1439
 msgid ""
 "SANE API specification violation\n"
 "Option names must start with a lower-case ASCII character."

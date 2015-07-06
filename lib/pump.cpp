@@ -46,6 +46,8 @@ using std::invalid_argument;
 class bucket
 {
 public:
+  typedef shared_ptr< bucket > ptr;
+
   octet *data_;
   union {
     streamsize size_;
@@ -127,12 +129,12 @@ public:
   streamsize process_data (output::ptr optr);
 
   streamsize acquire_image (input::ptr iptr);
-  shared_ptr< bucket > process_image (output::ptr optr);
+  bucket::ptr process_image (output::ptr optr);
 
-  shared_ptr< bucket > make_bucket (streamsize size);
+  bucket::ptr make_bucket (streamsize size);
 
-  shared_ptr< bucket > pop ();
-  void push (shared_ptr< bucket > bp);
+  bucket::ptr pop ();
+  void push (bucket::ptr bp);
 
   void mark (traits::int_type c, const context& ctx);
 
@@ -145,9 +147,9 @@ public:
   thread *acquire_;
   thread *process_;
 
-  volatile sig_atomic_t have_bucket_;
+  std::deque< bucket::ptr >::size_type have_bucket_;
 
-  std::deque< shared_ptr< bucket > > brigade_;
+  std::deque< bucket::ptr > brigade_;
   mutex brigade_mutex_;
   condition_variable not_empty_;
 
@@ -307,7 +309,7 @@ pump::impl::process_data (output::ptr optr)
 {
   try
     {
-      shared_ptr< bucket > bp = pop ();
+      bucket::ptr bp = pop ();
       if (traits::bos () != bp->mark_)
         {
           optr->mark (traits::eof (), context ());
@@ -343,7 +345,7 @@ pump::impl::acquire_image (input::ptr iptr)
   if (traits::boi () != n) return n;
 
   const streamsize buffer_size = iptr->buffer_size ();
-  shared_ptr< bucket > bp;
+  bucket::ptr bp;
 
   mark (traits::boi (), iptr->get_context ());
 
@@ -361,10 +363,10 @@ pump::impl::acquire_image (input::ptr iptr)
   return n;
 }
 
-shared_ptr< bucket >            // write part of operator>>
+bucket::ptr            // write part of operator>>
 pump::impl::process_image (output::ptr optr)
 {
-  shared_ptr< bucket > bp = pop ();
+  bucket::ptr bp = pop ();
   if (traits::boi () != bp->mark_) return bp;
 
   optr->mark (traits::boi (), bp->ctx_);
@@ -386,37 +388,42 @@ pump::impl::process_image (output::ptr optr)
   return bp;
 }
 
-shared_ptr< bucket >
+bucket::ptr
 pump::impl::make_bucket (streamsize size)
 {
-  shared_ptr< bucket > rv;
+  bucket::ptr rv;
 
-  try
+  while (!rv)
     {
-      rv = make_shared< bucket > (size);
-    }
-  catch (const std::bad_alloc&)
-    {}
-
-  while (have_bucket_ && !rv)
-    {
-      this_thread::yield ();
       try
         {
           rv = make_shared< bucket > (size);
         }
       catch (const std::bad_alloc&)
-        {}
-    }
-  if (!rv) throw std::bad_alloc ();
+        {
+          bool retry_alloc;
+          {
+            lock_guard< mutex > lock (brigade_mutex_);
 
+            retry_alloc = have_bucket_;
+          }
+          if (retry_alloc)
+            {
+              this_thread::yield ();
+            }
+          else
+            {
+              throw;
+            }
+        }
+    }
   return rv;
 }
 
-shared_ptr< bucket >
+bucket::ptr
 pump::impl::pop ()
 {
-  shared_ptr< bucket > bp;
+  bucket::ptr bp;
 
   {
     unique_lock< mutex > lock (brigade_mutex_);
@@ -426,20 +433,20 @@ pump::impl::pop ()
 
     bp = brigade_.front ();
     brigade_.pop_front ();
+    --have_bucket_;
   }
-  --have_bucket_;
 
   return bp;
 }
 
 void
-pump::impl::push (shared_ptr< bucket > bp)
+pump::impl::push (bucket::ptr bp)
 {
   {
     lock_guard< mutex > lock (brigade_mutex_);
     brigade_.push_back (bp);
+    ++have_bucket_;
   }
-  ++have_bucket_;
   not_empty_.notify_one ();
 }
 

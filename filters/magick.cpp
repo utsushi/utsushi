@@ -87,13 +87,13 @@ image_magick_version_before_(const char *cutoff)
 
       if (version)
         {
-          log::debug (format ("using ImageMagick-%1%") % version);
+          log::debug ("using ImageMagick-%1%") % version;
           return (0 > strverscmp (version, cutoff));
         }
     }
 
-  log::alert (format ("failed to get ImageMagick version: %1%")
-              % strerror (errc));
+  log::alert ("failed to get ImageMagick version: %1%")
+              % strerror (errc);
   return false;
 }
 

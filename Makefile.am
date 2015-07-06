@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 ##  Copyright (C) 2013  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
@@ -48,6 +48,7 @@ EXTRA_DIST += tools/boost-test-report.xsl
 EXTRA_DIST += tools/include-boost-src
 EXTRA_DIST += upstream/include/no_attribute_directive.hpp
 EXTRA_DIST += upstream/tools/vc-list-files
+EXTRA_DIST += .gitignore
 
 ##  Conform AC_CONFIG_MACRO_DIR in configure.ac.
 
