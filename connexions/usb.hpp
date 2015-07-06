@@ -1,6 +1,6 @@
 //  usb.hpp -- shuttle messages between software and USB device
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
-//  Copyright (C) 2011  Olaf Meeuwissen
+//  Copyright (C) 2011, 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -26,10 +26,6 @@
 
 #if HAVE_LIBUSB
 #include <libusb.h>
-#endif
-
-#if HAVE_LIBUSB_LEGACY
-#include <usb.h>
 #endif
 
 #include <string>
@@ -80,37 +76,6 @@ namespace _cnx_ {
   };
 
 #endif  /* HAVE_LIBUSB */
-
-#if HAVE_LIBUSB_LEGACY
-
-  class usb_legacy : public connexion
-  {
-  public:
-    usb_legacy (const device_info::ptr& device);
-
-    virtual ~usb_legacy (void);
-
-    virtual void send (const octet *message, streamsize size);
-    virtual void send (const octet *message, streamsize size, double timeout);
-    virtual void recv (octet *message, streamsize size);
-    virtual void recv (octet *message, streamsize size, double timeout);
-
-  private:
-    usb_dev_handle * usable_match_(const device_info::ptr& device,
-                                   struct usb_device *dev);
-    bool set_bulk_endpoints_(struct usb_device *dev);
-
-    usb_dev_handle *handle_;
-    int cfg_;
-    int if_;
-    int ep_bulk_i_;
-    int ep_bulk_o_;
-
-    static bool is_initialised_;
-    static int  default_timeout_;
-  };
-
-#endif  /* HAVE_LIBUSB_LEGACY */
 
 } // namespace _cnx_
 } // namespace utsushi

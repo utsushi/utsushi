@@ -1,9 +1,11 @@
 #! /bin/sh
 #  bootstrap -- clean checkouts to a point where `./configure` succeeds
 #  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+#  Copyright (C) 2013  Olaf Meeuwissen
 #
 #  License: GPL-3.0+
 #  Author : AVASYS CORPORATION
+#  Author : Olaf Meeuwissen
 #
 #  This file is part of the 'Utsushi' package.
 #  This package is free software: you can redistribute it and/or modify
@@ -264,5 +266,12 @@ fi
 ])
 EOF
 autoreconf                      # sync build infra-structure
+
+#  Make sure the top-level config.h and its dependencies can be found
+#  when we `./configure --with-included-ltdl`.
+
+echo 'AM_CPPFLAGS += -I$(top_builddir)' >> "$aux_dir/ltdl/Makefile.am"
+echo 'AM_CPPFLAGS += -I$(top_srcdir)'   >> "$aux_dir/ltdl/Makefile.am"
+${AUTOMAKE} "$aux_dir/ltdl/Makefile"
 
 exit

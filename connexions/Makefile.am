@@ -1,5 +1,6 @@
 ##  Makefile.am -- an automake template for Makefile.in
 ##  Copyright (C) 2012  SEIKO EPSON CORPORATION
+##  Copyright (C) 2015  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -32,10 +33,8 @@ connexionlib_LTLIBRARIES += libcnx-hexdump.la
 libcnx_usb_la_CPPFLAGS  = $(AM_CPPFLAGS)
 libcnx_usb_la_CXXFLAGS  = $(AM_CXXFLAGS)
 libcnx_usb_la_CXXFLAGS += $(LIBUSB_CFLAGS)
-libcnx_usb_la_CXXFLAGS += $(LIBUSB_LEGACY_CFLAGS)
 libcnx_usb_la_LDFLAGS   = $(connexion_ldflags) libcnx_usb_LTX_factory
 libcnx_usb_la_LIBADD    = $(LIBUSB_LIBS)
-libcnx_usb_la_LIBADD   += $(LIBUSB_LEGACY_LIBS)
 libcnx_usb_la_LIBADD   += ../lib/libutsushi.la
 libcnx_usb_la_SOURCES   = usb.cpp
 libcnx_usb_la_SOURCES  += usb.hpp

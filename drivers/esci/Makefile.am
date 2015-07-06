@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 ##  Copyright (C) 2009  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+

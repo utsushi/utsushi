@@ -49,8 +49,10 @@ ATTRS{idProduct}=="08cc", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="08d1", ENV{utsushi_driver}="esci"
 #  L365/L366 Series
 ATTRS{idProduct}=="08d2", ENV{utsushi_driver}="esci"
-#  L565 Series
+#  L565/L566 Series
 ATTRS{idProduct}=="08d3", ENV{utsushi_driver}="esci"
+#  L655 Series
+ATTRS{idProduct}=="1101", ENV{utsushi_driver}="esci"
 
 #  Give scanner users read/write permissions on the device.
 ENV{utsushi_driver}=="esci", MODE="0666", OWNER="root", GROUP="root"

@@ -1,9 +1,24 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.10.0                                            (2015-06-19)
+----------------------------------------------------------------------
+ * adds support for the L655 Series
+ * documents support for the L566 Series
+ * speeds up the GUI's preview for selected models
+ * removes build support for HAL and libusb-0
+
+----------------------------------------------------------------------
+utsushi-0.9.1                                             (2015-06-19)
+----------------------------------------------------------------------
+ ! never released to the general public
+ * fixes threading issues that could lead to segmentation faults and
+   program hangs
+
+----------------------------------------------------------------------
 utsushi-0.9.0                                             (2015-03-18)
 ----------------------------------------------------------------------
- * add driver support for the L220/L360 Series, the L365/L366 Series,
+ * adds driver support for the L220/L360 Series, the L365/L366 Series,
    the L455 Series, and the L565 Series
  * adds translations for twelve new languages: Brazilian Portuguese,
    Chinese (both Simplified and Traditional), Dutch, French, German,

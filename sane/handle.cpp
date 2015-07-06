@@ -216,8 +216,8 @@ public:
     {
       lock_guard< mutex > lock (mutex_);
       brigade_.push_back (bp);
+      ++have_bucket_;
     }
-    ++have_bucket_;
     not_empty_.notify_one ();
 
     return bp->size_;
@@ -229,12 +229,12 @@ public:
     {
       lock_guard< mutex > lock (mutex_);
       brigade_.push_back (bp);
-    }
-    ++have_bucket_;
-    not_empty_.notify_one ();
+      ++have_bucket_;
 
-    odevice::last_marker_ = bp->mark_;
-    odevice::ctx_         = bp->ctx_;
+      odevice::last_marker_ = bp->mark_;
+      odevice::ctx_         = bp->ctx_;
+    }
+    not_empty_.notify_one ();
   }
 
 protected:
@@ -365,8 +365,8 @@ protected:
     {
       lock_guard< mutex > lock (mutex_);
       brigade_.pop_front ();
+      --have_bucket_;
     }
-    --have_bucket_;
 
     if (traits::is_marker (bp->mark_))
       {
@@ -382,66 +382,69 @@ protected:
       }
   }
 
-  bucket::ptr nothrow_make_shared_bucket (streamsize size)
-  {
-    bucket::ptr bp;
-
-    try
-      {
-        bp = make_shared< bucket > (size);
-      }
-    catch (const std::bad_alloc&)
-      {
-      }
-
-    return bp;
-  }
-
-  bucket::ptr nothrow_make_shared_bucket (const context& ctx,
-                                          streamsize marker)
-  {
-    bucket::ptr bp;
-
-    try
-      {
-        bp = make_shared< bucket > (ctx, marker);
-      }
-    catch (const std::bad_alloc&)
-      {
-      }
-
-    return bp;
-  }
-
   bucket::ptr make_bucket (streamsize size)
   {
-    bucket::ptr bp (nothrow_make_shared_bucket (size));
+    bucket::ptr bp;
 
-    while (have_bucket_ && !bp)
+    while (!bp)
       {
-        this_thread::yield ();
-        bp = nothrow_make_shared_bucket (size);
-      }
-    if (!bp) throw std::bad_alloc ();
+        try
+          {
+            bp = make_shared< bucket > (size);
+          }
+        catch (const std::bad_alloc&)
+          {
+            bool retry_alloc;
+            {
+              lock_guard< mutex > lock (mutex_);
 
+              retry_alloc = have_bucket_;
+            }
+            if (retry_alloc)
+              {
+                this_thread::yield ();
+              }
+            else
+              {
+                throw;
+              }
+          }
+      }
     return bp;
   }
 
   bucket::ptr make_bucket (const context& ctx, streamsize marker)
   {
-    bucket::ptr bp (nothrow_make_shared_bucket (ctx, marker));
+    bucket::ptr bp;
 
-    while (have_bucket_ && !bp)
+    while (!bp)
       {
-        this_thread::yield ();
-        bp = nothrow_make_shared_bucket (ctx, marker);
-      }
-    if (!bp) throw std::bad_alloc ();
+        try
+          {
+            bp = make_shared< bucket > (ctx, marker);
+          }
+        catch (const std::bad_alloc&)
+          {
+            bool retry_alloc;
+            {
+              lock_guard< mutex > lock (mutex_);
 
+              retry_alloc = have_bucket_;
+            }
+            if (retry_alloc)
+              {
+                this_thread::yield ();
+              }
+            else
+              {
+                throw;
+              }
+          }
+      }
     return bp;
   }
 
-  volatile sig_atomic_t have_bucket_;
+  std::deque< bucket::ptr >::size_type have_bucket_;
 
   std::deque< bucket::ptr > brigade_;
   mutable mutex mutex_;

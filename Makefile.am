@@ -1,5 +1,6 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
+##  Copyright (C) 2013  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -47,13 +48,14 @@ EXTRA_DIST += tools/boost-test-report.xsl
 EXTRA_DIST += tools/include-boost-src
 EXTRA_DIST += upstream/include/no_attribute_directive.hpp
 EXTRA_DIST += upstream/tools/vc-list-files
+EXTRA_DIST += .gitignore
 
 ##  Conform AC_CONFIG_MACRO_DIR in configure.ac.
 
 ACLOCAL_AMFLAGS = -I upstream/aclocal
 
 ##  Make sure that we exercise building of the distributed sources to
-##  their maximum extent without requiring any special privileges.
+##  their maximum extent.
 
 DISTCHECK_CONFIGURE_FLAGS  = --with-included-ltdl
 DISTCHECK_CONFIGURE_FLAGS += --with-gtkmm
@@ -61,10 +63,15 @@ DISTCHECK_CONFIGURE_FLAGS += --with-sane
 DISTCHECK_CONFIGURE_FLAGS += --with-magick
 DISTCHECK_CONFIGURE_FLAGS += --with-jpeg
 DISTCHECK_CONFIGURE_FLAGS += --with-tiff
-DISTCHECK_CONFIGURE_FLAGS += --disable-sane-config
-DISTCHECK_CONFIGURE_FLAGS += --disable-udev-config
 DISTCHECK_CONFIGURE_FLAGS += --enable-test-reports
 DISTCHECK_CONFIGURE_FLAGS += --enable-code-coverage
+
+##  Unprivileged users will not be able to install the SANE component
+##  or integrate with the udev activated device set up.  That should
+##  not prevent them from running a distcheck.
+
+DISTCHECK_CONFIGURE_FLAGS += --disable-sane-config
+DISTCHECK_CONFIGURE_FLAGS += --disable-udev-config
 
 ##  API header files
 

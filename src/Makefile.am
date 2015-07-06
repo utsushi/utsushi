@@ -1,5 +1,6 @@
 ##  Makefile.am -- an automake template for Makefile.in
 ##  Copyright (C) 2012  SEIKO EPSON CORPORATION
+##  Copyright (C) 2015  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -39,7 +40,6 @@ AM_DEFAULT_SOURCE_EXT = .cpp
 
 ## FIXME: remove once the USB connexion has become a proper plugin
 AM_CXXFLAGS += $(LIBUSB_CFLAGS)
-AM_CXXFLAGS += $(LIBUSB_LEGACY_CFLAGS)
 AM_LDFLAGS  += $(BOOST_LDFLAGS)
 
 LDADD  = ../lib/libutsushi.la $(LIBUTSUSHI_LIBS)

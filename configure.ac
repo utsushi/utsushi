@@ -1,5 +1,6 @@
 dnl  configure.ac -- an autoconf template for configure
 dnl  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
+dnl  Copyright (C) 2015  Olaf Meeuwissen
 dnl
 dnl  License: GPL-3.0+
 dnl  Author : AVASYS CORPORATION
@@ -23,7 +24,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.62)
-AC_INIT([Utsushi], [0.9.0],
+AC_INIT([Utsushi], [0.10.0],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -142,12 +143,6 @@ AC_ARG_WITH(included-boost,
   [],
   [with_included_boost=check])
 
-AC_ARG_WITH([legacy-usb],
-  AS_HELP_STRING([--with-legacy-usb],
-    [force use of legacy USB library for USB connexion support @<:@no@:>@]),
-  [],
-  [with_legacy_usb=no])
-
 AC_ARG_ENABLE(udev-config,
   AS_HELP_STRING([--enable-udev-config],
     [integrate udev activated device set up @<:@yes@:>@.
@@ -169,8 +164,6 @@ dnl  preprocessor symbols for optional/conditional code
 
 AC_DEFINE([HAVE_LIBGTKMM],
   [0], [Define to 1 if the gtkmm library is available])
-AC_DEFINE([HAVE_LIBHAL],
-  [0], [Define to 1 if the HAL library is available])
 AC_DEFINE([HAVE_LIBJPEG],
   [0], [define to 1 if a JPEG library is available])
 AC_DEFINE([HAVE_LIBMAGIC],
@@ -187,8 +180,6 @@ AC_DEFINE([HAVE_LIBUSB_ERROR_NAME],
   [0], [define to 1 if libusb_error_name() is available])
 AC_DEFINE([HAVE_LIBUSB_GET_PORT_NUMBER],
   [0], [define to 1 if libusb_get_port_number() is available])
-AC_DEFINE([HAVE_LIBUSB_LEGACY],
-  [0], [define to 1 if libusb-0.1 is available])
 AC_DEFINE([HAVE_GRAPHICS_MAGICK],
   [0], [Define to 1 if GraphicsMagick is available])
 AC_DEFINE([HAVE_GRAPHICS_MAGICK_PP],
@@ -221,7 +212,7 @@ AM_PROG_AR
 PKG_PROG_PKG_CONFIG
 
 AM_GNU_GETTEXT([external])      dnl  i18n support
-AM_GNU_GETTEXT_VERSION([0.17])
+AM_GNU_GETTEXT_VERSION([0.19.3])
 AM_XGETTEXT_OPTION([--boost])
 AC_DEFINE_UNQUOTED([DEFAULT_TEXT_DOMAIN], ["$PACKAGE"],
   [Define to the default text domain for message translation.])
@@ -335,28 +326,16 @@ AC_PATH_PROG([PDFLATEX], [pdflatex])
 AM_CONDITIONAL([have_pdflatex], [test x != x$PDFLATEX])
 
                                 dnl  modules for optional functionality
-PKG_CHECK_MODULES([LIBHAL], [hal],
-  [AC_DEFINE([HAVE_LIBHAL], [1])],
-  [false])
-AM_CONDITIONAL([have_libhal], [test x != "x$LIBHAL_LIBS"])
 PKG_CHECK_MODULES([LIBUDEV], [libudev],
   [AC_DEFINE([HAVE_LIBUDEV], [1])],
   [false])
 AM_CONDITIONAL([have_libudev], [test x != "x$LIBUDEV_LIBS"])
-AS_IF([test xyes != "x$with_legacy_usb"],
+AS_IF([test xno != "x$with_usb"],
   [PKG_CHECK_MODULES([LIBUSB], [libusb-1.0],
     [AC_DEFINE([HAVE_LIBUSB], [1])],
-    [PKG_CHECK_MODULES([LIBUSB_LEGACY], [libusb],
-      [AC_DEFINE([HAVE_LIBUSB_LEGACY], [1])],
-      [true])
-    ])
-  ],
-  [PKG_CHECK_MODULES([LIBUSB_LEGACY], [libusb],
-    [AC_DEFINE([HAVE_LIBUSB_LEGACY], [1])],
-    [AC_MSG_ERROR([legacy USB library (libusb-0.1) not found])])
+    [true])
   ])
 AM_CONDITIONAL([have_libusb], [test x != "x$LIBUSB_LIBS"])
-AM_CONDITIONAL([have_libusb_legacy], [test x != "x$LIBUSB_LEGACY_LIBS"])
 
 AS_IF([test xno != "x$with_magick_pp"],
    AS_CASE("x$with_magick_pp",
@@ -573,7 +552,7 @@ AC_CHECK_LIB([magic], [magic_open],
   ])
 AM_CONDITIONAL([have_libmagic], [test x != "x$LIBMAGIC_LIBS"])
 
-AS_IF([test xyes != "x$with_legacy_usb"],
+AS_IF([test xno != "x$with_usb"],
   [save_CFLAGS="$CFLAGS"
    save_LDFLAGS="$LDFLAGS"
    CFLAGS="$CFLAGS $LIBUSB_CFLAGS"

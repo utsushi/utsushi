@@ -2,6 +2,7 @@
   Utsushi - Next Generation Image Acquisition
 
   Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
+  Copyright (C) 2015  Olaf Meeuwissen
 
 
   SUMMARY
@@ -73,7 +74,8 @@ USING THE SOFTWARE
       - L220/L360 Series
       - L365/L366 Series
       - L455 Series
-      - L565 Series
+      - L565/L566 Series
+      - L655 Series
       - PX-M7050 Series
       - PX-M7050FX Series
       - WF-8510/8590 Series
@@ -91,7 +93,6 @@ BUILDING/INSTALLING FROM SOURCE
     --enable-udev-config
     --with-gtkmm
     --with-included-boost
-    --with-legacy-usb
     --with-jpeg
     --with-magick
     --with-sane

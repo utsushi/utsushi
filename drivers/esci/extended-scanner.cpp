@@ -1221,8 +1221,8 @@ extended_scanner::probe_media_size_(const string& doc_source)
   else
     {
       log::error
-        (format ("media size probing for %1% not implemented")
-         % doc_source);
+        ("media size probing for %1% not implemented")
+        % doc_source;
       return size;
     }
 
@@ -1393,7 +1393,8 @@ extended_scanner::configure_color_correction ()
       mat[2][1] = -0.1485;
       mat[2][2] =  1.1372;
     }
-  else if (caps_.product_name () == "PID 08D3")
+  else if (   caps_.product_name () == "PID 08D3"
+           || caps_.product_name () == "PID 1101")
     {
       mat[0][0] =  1.0782;
       mat[0][1] =  0.0135;

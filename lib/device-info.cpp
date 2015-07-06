@@ -1,5 +1,6 @@
 //  device-info.cpp -- abstraction layer
 //  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -27,9 +28,6 @@
 #if HAVE_LIBUDEV
 #include "udev.hpp"
 #endif
-#if HAVE_LIBHAL
-#include "hal.hpp"
-#endif
 
 namespace utsushi {
 
@@ -40,9 +38,6 @@ device_info::create (const std::string& interface, const std::string& path)
 
 #if HAVE_LIBUDEV
   if (!rv) rv = make_shared< udev_::device > (interface, path);
-#endif
-#if HAVE_LIBHAL
-  if (!rv) rv = make_shared< HAL::device > (interface, path);
 #endif
 
   return rv;
