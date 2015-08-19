@@ -1,6 +1,7 @@
 //  monitor.cpp -- available scanner devices
 //  Copyright (C) 2013, 2015  Olaf Meeuwissen
 //  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013, 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -327,6 +328,17 @@ is_usb_scanner_maybe (struct udev_device *dev)
 
       if (0x07 == klass) return false; // printer
       if (0x08 == klass) return false; // mass storage
+    }
+
+  // The scanner function is on interface 0 for EPSON devices.
+
+  int vendor = 0;
+  udev_::get_sysattr (dev, "idVendor", vendor);
+  if (0x04b8 == vendor)
+    {
+      int interface = 0;
+      udev_::get_sysattr (dev, "bInterfaceNumber", interface);
+      return (0 == interface);
     }
 
   return true;

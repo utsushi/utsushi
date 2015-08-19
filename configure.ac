@@ -24,7 +24,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.62)
-AC_INIT([Utsushi], [0.10.0],
+AC_INIT([Utsushi], [0.11.0],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -494,6 +494,9 @@ AS_IF([test xno == x$cross_compiling],
   ])
 AM_CONDITIONAL([enable_udev_config], [test xyes = "x$enable_udev_config"])
 AC_SUBST(UDEV_SYSCONFDIR, $udev_sysconfdir)
+
+AC_CHECK_PROGS([UNCRUSTIFY], [uncrustify])
+AM_CONDITIONAL([enable_uncrustify_test], [test x != "x$UNCRUSTIFY"])
 
 dnl  checks for header files
 

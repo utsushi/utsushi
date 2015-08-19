@@ -52,9 +52,8 @@ libsane___BACKEND_NAME__la_SOURCES += device.hpp
 libsane___BACKEND_NAME__la_SOURCES += value.cpp
 libsane___BACKEND_NAME__la_SOURCES += value.hpp
 libsane___BACKEND_NAME__la_SOURCES += log.hpp
-libsane___BACKEND_NAME__la_SOURCES += sane-api.sym
 libsane___BACKEND_NAME__la_LDFLAGS  = -export-dynamic
-libsane___BACKEND_NAME__la_LDFLAGS += -export-symbols $(srcdir)/sane-api.sym
+libsane___BACKEND_NAME__la_LDFLAGS += -export-symbols sane-api.sym
 libsane___BACKEND_NAME__la_LDFLAGS += -version-number $(SANE_VERSION)
 libsane___BACKEND_NAME__la_LDFLAGS += -weak libsane
 libsane___BACKEND_NAME__la_LIBADD   = ../lib/libutsushi.la
@@ -62,14 +61,13 @@ libsane___BACKEND_NAME__la_LIBADD   = ../lib/libutsushi.la
 libsane___BACKEND_NAME__la_LIBADD  += ../filters/libflt-all.la
 ##  FIXME: drop when connexions have been turned into proper plugins
 libsane___BACKEND_NAME__la_LIBADD  += ../connexions/libcnx-usb.la
+EXTRA_libsane___BACKEND_NAME__la_DEPENDENCIES  = sane-api.sym
 
 AM_CPPFLAGS += -DBACKEND_NAME=$(BACKEND_NAME)
 AM_CPPFLAGS += -DSANE_MAJOR=$(SANE_MAJOR)
 AM_CPPFLAGS += -DSANE_MINOR=$(SANE_MINOR)
 
-BUILT_SOURCES = $(srcdir)/sane-api.sym
-
-$(srcdir)/sane-api.sym: $(srcdir)/backend.hpp
+sane-api.sym: $(srcdir)/backend.hpp
 	$(AWK) '/^#define sane_/{ print $$2 }' $< \
 	    | sed '/_$$/d' \
 	    | sed -n 'p; s/sane_/sane_$(BACKEND_NAME)_/p' > $@

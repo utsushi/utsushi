@@ -27,11 +27,13 @@ TESTS  = setter.utr
 TESTS += grammar-formats.utr
 TESTS += grammar.utr
 TESTS += grammar-mechanics.utr
+TESTS += udev-rules.utr
 
 check_PROGRAMS  = setter.utr
 check_PROGRAMS += grammar-formats.utr
 check_PROGRAMS += grammar.utr
 check_PROGRAMS += grammar-mechanics.utr
+check_PROGRAMS += udev-rules.utr
 
 AM_CPPFLAGS += -DESCI_GRAMMAR_TRACE=1
 AM_LDFLAGS  += $(BOOST_LDFLAGS)
@@ -44,6 +46,9 @@ setter_utr_LDADD    = $(LDADD) ../../../connexions/libcnx-usb.la
 grammar_formats_utr_LDADD   += ../../../connexions/libcnx-usb.la
 grammar_utr_LDADD           += ../../../connexions/libcnx-usb.la
 grammar_mechanics_utr_LDADD  = $(LDADD) ../../../connexions/libcnx-usb.la
+udev_rules_utr_LDADD  = $(BOOST_UNIT_TEST_FRAMEWORK_LIB)
+udev_rules_utr_LDADD += $(BOOST_FILESYSTEM_LIB)
+udev_rules_utr_LDADD += $(BOOST_REGEX_LIB)
 
 endif
 

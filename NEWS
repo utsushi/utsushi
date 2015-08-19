@@ -1,10 +1,17 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.11.0                                            (2015-07-24)
+----------------------------------------------------------------------
+ * adds driver support for the XP-220 Series, the XP-235 Series, the
+   XP-332 335 Series, the XP-432 435 Series, the XP-530 Series, the
+   XP-630 Series, the XP-830 Series, and the XP-960 Series
+
+----------------------------------------------------------------------
 utsushi-0.10.0                                            (2015-06-19)
 ----------------------------------------------------------------------
- * adds support for the L655 Series
- * documents support for the L566 Series
+ * adds driver support for the L655 Series
+ * documents driver support for the L566 Series
  * speeds up the GUI's preview for selected models
  * removes build support for HAL and libusb-0
 
@@ -52,7 +59,7 @@ utsushi-0.8.1                                             (2014-11-06)
 ----------------------------------------------------------------------
  ! never released to the general public
  * fixes clipping of the top and bottom corners when autocropping is
-   enabled.  Affects the DS-510, DS-520 and DS-560.
+   enabled.  Affects the DS-510, DS-520, and DS-560.
 
 ----------------------------------------------------------------------
 utsushi-0.8.0                                             (2014-10-17)
@@ -64,8 +71,8 @@ utsushi-0.8.0                                             (2014-10-17)
 ----------------------------------------------------------------------
 utsushi-0.7.0                                             (2014-08-06)
 ----------------------------------------------------------------------
- * adds driver support for the PX-M7050 Series, PX-M7050FX Series,
-   WF-8510/8590 Series and WF-R8590 Series
+ * adds driver support for the PX-M7050 Series, the PX-M7050FX Series,
+   the WF-8510/8590 Series, and the WF-R8590 Series
  * improves the GUI's file selection dialog
  * adds support for file name patterns, e.g. "Untitled-%03i.png"
 
@@ -82,7 +89,7 @@ utsushi-0.6.0                                             (2014-04-23)
 ----------------------------------------------------------------------
 utsushi-0.5.0                                             (2014-02-05)
 ----------------------------------------------------------------------
- * adds driver support for the DS-560, DS-760 and DS-860
+ * adds driver support for the DS-560, DS-760, and DS-860
  * adds software emulated resolutions for smoother control with DS-510
    and DS-560 devices
  * renames the '--match-height' option to '--force-extent'
