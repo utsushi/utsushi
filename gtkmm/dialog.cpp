@@ -1,5 +1,6 @@
 //  dialog.cpp -- to acquire image data
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
+//  Copyright (C) 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -46,12 +47,16 @@
 #include "../filters/deskew.hpp"
 #include "../filters/g3fax.hpp"
 #include "../filters/image-skip.hpp"
+#if HAVE_LIBJPEG
 #include "../filters/jpeg.hpp"
+#endif
 #include "../filters/magick.hpp"
 #include "../filters/padding.hpp"
 #include "../filters/pdf.hpp"
 #include "../filters/pnm.hpp"
+#if HAVE_LIBTIFF
 #include "../outputs/tiff.hpp"
+#endif
 
 #include "action-dialog.hpp"
 #include "chooser.hpp"
@@ -283,12 +288,12 @@ dialog::on_scan (void)
   std::string fmt;
 
   /**/ if (".pnm"  == ext) fmt = "PNM";
-  else if (".png"  == ext) fmt = "PNG";
-  else if (".jpg"  == ext) fmt = "JPEG";
-  else if (".jpeg" == ext) fmt = "JPEG";
+  else if (HAVE_MAGICK  && ".png"  == ext) fmt = "PNG";
+  else if (HAVE_LIBJPEG && ".jpg"  == ext) fmt = "JPEG";
+  else if (HAVE_LIBJPEG && ".jpeg" == ext) fmt = "JPEG";
   else if (".pdf"  == ext) fmt = "PDF";
-  else if (".tif"  == ext) fmt = "TIFF";
-  else if (".tiff" == ext) fmt = "TIFF";
+  else if (HAVE_LIBTIFF && ".tif"  == ext) fmt = "TIFF";
+  else if (HAVE_LIBTIFF && ".tiff" == ext) fmt = "TIFF";
   else
     {
       BOOST_THROW_EXCEPTION
@@ -302,11 +307,14 @@ dialog::on_scan (void)
 
   if (!gen)                     // single file
     {
+#if HAVE_LIBTIFF
       /**/ if ("TIFF" == fmt)
         {
           odev = make_shared< _out_::tiff_odevice > (path);
         }
-      else if ("PDF" == fmt
+      else
+#endif
+      /**/ if ("PDF" == fmt
                || idevice_->is_single_image ())
         {
           odev = make_shared< file_odevice > (path);
@@ -319,11 +327,13 @@ dialog::on_scan (void)
     }
   else                          // file per image
     {
+#if HAVE_LIBTIFF
       if ("TIFF" == fmt)
         {
           odev = make_shared< _out_::tiff_odevice > (gen);
         }
       else
+#endif
         {
           odev = make_shared< file_odevice > (gen);
         }
@@ -362,7 +372,8 @@ dialog::on_scan (void)
     if (force_extent) force_extent = (width > 0 || height > 0);
 
     filter::ptr autocrop;
-    if (opts_->count ("magick/automatic-scan-area"))
+    if (HAVE_MAGICK_PP
+        && opts_->count ("magick/automatic-scan-area"))
       {
         toggle t = value ((*opts_)["magick/automatic-scan-area"]);
         if (t)
@@ -377,7 +388,8 @@ dialog::on_scan (void)
       }
 
     filter::ptr deskew;
-    if (!autocrop && opts_->count ("magick/deskew"))
+    if (HAVE_MAGICK_PP
+        && !autocrop && opts_->count ("magick/deskew"))
       {
         toggle t = value ((*opts_)["magick/deskew"]);
         if (t)
@@ -394,42 +406,49 @@ dialog::on_scan (void)
     if (opts_->count ("device/enable-resampling"))
       resample = value ((*opts_)["device/enable-resampling"]);
 
-    filter::ptr magick (make_shared< _flt_::magick > ());
-
-    toggle bound = true;
-    quantity res_x  = -1.0;
-    quantity res_y  = -1.0;
-
-    std::string sw (resample ? "device/sw-" : "device/");
-    if (opts_->count (sw + "resolution-x"))
+    filter::ptr magick;
+    if (HAVE_MAGICK)
       {
-        res_x = value ((*opts_)[sw + "resolution-x"]);
-        res_y = value ((*opts_)[sw + "resolution-y"]);
-      }
-    if (opts_->count (sw + "resolution-bind"))
-      bound = value ((*opts_)[sw + "resolution-bind"]);
-
-    if (bound)
-      {
-        res_x = value ((*opts_)[sw + "resolution"]);
-        res_y = value ((*opts_)[sw + "resolution"]);
+        magick = make_shared< _flt_::magick > ();
       }
 
-    (*magick->options ())["resolution-x"] = res_x;
-    (*magick->options ())["resolution-y"] = res_y;
-    (*magick->options ())["force-extent"] = force_extent;
-    (*magick->options ())["width"]  = width;
-    (*magick->options ())["height"] = height;
+    if (magick)
+      {
+        toggle bound = true;
+        quantity res_x  = -1.0;
+        quantity res_y  = -1.0;
 
-    (*magick->options ())["bilevel"] = toggle (bilevel);
+        std::string sw (resample ? "device/sw-" : "device/");
+        if (opts_->count (sw + "resolution-x"))
+          {
+            res_x = value ((*opts_)[sw + "resolution-x"]);
+            res_y = value ((*opts_)[sw + "resolution-y"]);
+          }
+        if (opts_->count (sw + "resolution-bind"))
+          bound = value ((*opts_)[sw + "resolution-bind"]);
 
-    quantity thr = value ((*opts_)["device/threshold"]);
-    thr *= 100.0;
-    thr /= (dynamic_pointer_cast< range >
-            ((*opts_)["device/threshold"].constraint ()))->upper ();
-    (*magick->options ())["threshold"] = thr;
+        if (bound)
+          {
+            res_x = value ((*opts_)[sw + "resolution"]);
+            res_y = value ((*opts_)[sw + "resolution"]);
+          }
 
-    (*magick->options ())["image-format"] = fmt;
+        (*magick->options ())["resolution-x"] = res_x;
+        (*magick->options ())["resolution-y"] = res_y;
+        (*magick->options ())["force-extent"] = force_extent;
+        (*magick->options ())["width"]  = width;
+        (*magick->options ())["height"] = height;
+
+        (*magick->options ())["bilevel"] = toggle (bilevel);
+
+        quantity thr = value ((*opts_)["device/threshold"]);
+        thr *= 100.0;
+        thr /= (dynamic_pointer_cast< range >
+                ((*opts_)["device/threshold"].constraint ()))->upper ();
+        (*magick->options ())["threshold"] = thr;
+
+        (*magick->options ())["image-format"] = fmt;
+      }
 
     {
       toggle sw_color_correction = false;
@@ -468,10 +487,12 @@ dialog::on_scan (void)
       {
         str->push (make_shared< padding > ());
       }
+#if HAVE_LIBJPEG
     else if (xfer_jpg == xfer_fmt)
       {
         str->push (make_shared< jpeg::decompressor> ());
       }
+#endif
     else
       {
         log::alert
@@ -489,7 +510,7 @@ dialog::on_scan (void)
     str->push (make_shared< pnm > ());
     if (autocrop)   str->push (autocrop);
     if (deskew)     str->push (deskew);
-    str->push (magick);
+    if (magick)     str->push (magick);
 
     if ("PDF" == fmt)
       {

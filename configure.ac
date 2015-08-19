@@ -1,6 +1,6 @@
 dnl  configure.ac -- an autoconf template for configure
 dnl  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
-dnl  Copyright (C) 2015  Olaf Meeuwissen
+dnl  Copyright (C) 2013-2015  Olaf Meeuwissen
 dnl
 dnl  License: GPL-3.0+
 dnl  Author : AVASYS CORPORATION
@@ -24,7 +24,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.62)
-AC_INIT([Utsushi], [0.10.0],
+AC_INIT([Utsushi], [0.11.0],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -159,6 +159,12 @@ AC_ARG_WITH(udev-confdir,
      where your udev configuration directory is.]),
   [],
   [with_udev_confdir=guess])
+AC_ARG_WITH(download-dir,
+  AS_HELP_STRING([--with-download-dir@<:@=ABS_DIR@:>@],
+    [where to cache upstream source downloads @<:@/path/to/upstream/downloads@:>@.
+     Distributable creation may include upstream sources in a way that depends
+     on our own distributed sources.  For that to work as intended, it attempts
+     to download upstream archives into this location.]))
 
 dnl  preprocessor symbols for optional/conditional code
 
@@ -231,7 +237,7 @@ AM_CONDITIONAL([with_static_enabled], [test xyes = x$enable_static])
 
                                 dnl  cross-platform C++ extensions
 AS_IF([test xyes != x$with_included_boost],
-  [AX_BOOST_BASE([1.46],
+  [AX_BOOST_BASE([1.49.0],
      [AX_BOOST_SYSTEM
       AX_BOOST_FILESYSTEM
       AX_BOOST_IOSTREAMS
@@ -489,6 +495,9 @@ AS_IF([test xno == x$cross_compiling],
 AM_CONDITIONAL([enable_udev_config], [test xyes = "x$enable_udev_config"])
 AC_SUBST(UDEV_SYSCONFDIR, $udev_sysconfdir)
 
+AC_CHECK_PROGS([UNCRUSTIFY], [uncrustify])
+AM_CONDITIONAL([enable_uncrustify_test], [test x != "x$UNCRUSTIFY"])
+
 dnl  checks for header files
 
 dnl  checks for typedefs, structures, and compiler characteristics
@@ -598,6 +607,10 @@ AS_IF([test xyes = x$ac_cv_cxx_compiler_gnu],
 
 AC_SUBST([AM_CXXFLAGS], ["-Wall $gcc_AWARE $code_coverage_cxxflags"])
 AC_SUBST([AM_LDFLAGS], [""])
+
+AS_IF([test x = "x$with_download_dir"],
+  [with_download_dir=$am_aux_dir/downloads])
+AC_SUBST(DOWNLOAD_DIR, $with_download_dir)
 
 AC_CONFIG_FILES([
   Makefile

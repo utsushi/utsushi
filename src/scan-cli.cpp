@@ -1,5 +1,6 @@
 //  scan-cli.cpp -- command-line interface based scan utility
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013, 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -65,12 +66,16 @@
 #include "../filters/deskew.hpp"
 #include "../filters/g3fax.hpp"
 #include "../filters/image-skip.hpp"
+#if HAVE_LIBJPEG
 #include "../filters/jpeg.hpp"
+#endif
 #include "../filters/padding.hpp"
 #include "../filters/pdf.hpp"
 #include "../filters/pnm.hpp"
 #include "../filters/magick.hpp"
+#if HAVE_LIBTIFF
 #include "../outputs/tiff.hpp"
+#endif
 
 namespace fs = boost::filesystem;
 namespace po = boost::program_options;
@@ -149,37 +154,27 @@ scanner::ptr
 create (const std::string& udi, bool debug)
 {
   monitor mon;
-  monitor::const_iterator it;
-
-  if (!udi.empty ())
-    {
-      it = mon.find (udi);
-      if (it != mon.end () && !it->is_driver_set ())
-        {
-          BOOST_THROW_EXCEPTION
-            (runtime_error (_("device found but has no driver")));
-        }
-    }
-  else
-    {
-      it = std::find_if (mon.begin (), mon.end (),
-                         boost::bind (&scanner::info::is_driver_set, _1));
-    }
+  monitor::const_iterator it (mon.find (udi));
 
   if (it == mon.end ())
     {
-      std::string msg;
-
       if (!udi.empty ())
         {
-          format fmt (_("cannot find '%1%'"));
-          msg = (fmt % udi).str ();
+          BOOST_THROW_EXCEPTION
+            (runtime_error ((format (_("%1%: not found")) % udi).str ()));
         }
       else
         {
-          msg = _("no devices available");
+          BOOST_THROW_EXCEPTION
+            (runtime_error (_("no usable devices available")));
         }
-      BOOST_THROW_EXCEPTION (runtime_error (msg));
+    }
+
+  if (!it->is_driver_set ())
+    {
+      BOOST_THROW_EXCEPTION
+        (runtime_error ((format (_("%1%: found but has no driver"))
+                         % udi).str ()));
     }
 
   connexion::ptr cnx (connexion::create (it->connexion (), it->path ()));
@@ -529,7 +524,8 @@ main (int argc, char *argv[])
            "PNM, PNG, JPEG, PDF, TIFF "
            "or one of the device supported transfer-formats.  "
            "The explicitly mentioned types are normally inferred from"
-           " the output file name."))
+           " the output file name.  Some require additional libraries"
+           " at build-time in order to be available."))
         ;
 
       po::options_description cmd_line;
@@ -557,6 +553,12 @@ main (int argc, char *argv[])
           udi.clear ();
         }
 
+      if (udi.empty ())
+        {
+          monitor mon;
+          udi = mon.default_device ();
+        }
+
       if (rt.count ("help"))
         {
           // FIXME clarify the command-line API
@@ -565,10 +567,14 @@ main (int argc, char *argv[])
                     << cmd_opts
                     << "\n";
 
-          monitor mon;
-
-          if (udi.empty () && mon.empty ())
+          if (udi.empty ())
             return EXIT_SUCCESS;
+        }
+
+      if (udi.empty ())
+        {
+          std::cerr << _("no usable devices available");
+          return EXIT_FAILURE;
         }
 
       scanner::ptr device (create (udi, cmd_vm.count ("debug")));
@@ -702,7 +708,8 @@ main (int argc, char *argv[])
       // handling
 
       filter::ptr autocrop;
-      if (emulating_automatic_scan_area
+      if (HAVE_MAGICK_PP
+          && emulating_automatic_scan_area
           && (dev_vm["scan-area"].as< string > () == "Automatic"))
         {
           autocrop = make_shared< _flt_::autocrop > ();
@@ -719,7 +726,8 @@ main (int argc, char *argv[])
         }
 
       filter::ptr deskew;
-      if (add_vm.count ("deskew"))
+      if (HAVE_MAGICK_PP
+          && add_vm.count ("deskew"))
         {
           if (!autocrop         // autocrop already deskews
               && add_vm["deskew"].as< bool > ())
@@ -749,12 +757,12 @@ main (int argc, char *argv[])
           fs::path path (uri);
 
           /**/ if (".pnm"  == path.extension ()) fmt = "PNM";
-          else if (".png"  == path.extension ()) fmt = "PNG";
-          else if (".jpg"  == path.extension ()) fmt = "JPEG";
-          else if (".jpeg" == path.extension ()) fmt = "JPEG";
+          else if (HAVE_MAGICK  && ".png"  == path.extension ()) fmt = "PNG";
+          else if (HAVE_LIBJPEG && ".jpg"  == path.extension ()) fmt = "JPEG";
+          else if (HAVE_LIBJPEG && ".jpeg" == path.extension ()) fmt = "JPEG";
           else if (".pdf"  == path.extension ()) fmt = "PDF";
-          else if (".tif"  == path.extension ()) fmt = "TIFF";
-          else if (".tiff" == path.extension ()) fmt = "TIFF";
+          else if (HAVE_LIBTIFF && ".tif"  == path.extension ()) fmt = "TIFF";
+          else if (HAVE_LIBTIFF && ".tiff" == path.extension ()) fmt = "TIFF";
           else
             {
               std::cerr <<
@@ -771,10 +779,10 @@ main (int argc, char *argv[])
       fs::path ext;
 
       /**/ if ("PNM"  == fmt) ext = ".pnm";
-      else if ("PNG"  == fmt) ext = ".png";
-      else if ("JPEG" == fmt) ext = ".jpeg";
+      else if (HAVE_MAGICK  && "PNG"  == fmt) ext = ".png";
+      else if (HAVE_LIBJPEG && "JPEG" == fmt) ext = ".jpeg";
       else if ("PDF"  == fmt) ext = ".pdf";
-      else if ("TIFF" == fmt) ext = ".tiff";
+      else if (HAVE_LIBTIFF && "TIFF" == fmt) ext = ".tiff";
       else if ("ASIS" == fmt) ;        // for troubleshooting purposes
       else
         {
@@ -791,8 +799,8 @@ main (int argc, char *argv[])
 
           if (ext != path.extension ())
             {
-              /**/ if ("JPEG" == fmt && ".jpg" == path.extension ());
-              else if ("TIFF" == fmt && ".tif" == path.extension ());
+              /**/ if (HAVE_LIBJPEG && "JPEG" == fmt && ".jpg" == path.extension ());
+              else if (HAVE_LIBTIFF && "TIFF" == fmt && ".tif" == path.extension ());
               else
                 {
                   log::alert
@@ -818,11 +826,14 @@ main (int argc, char *argv[])
 
       if (!gen)                 // single file (or standard output)
         {
+#if HAVE_LIBTIFF
           /**/ if ("TIFF" == fmt)
             {
               odev = make_shared< _out_::tiff_odevice > (uri);
             }
-          else if ("PDF" == fmt
+          else
+#endif
+          /**/ if ("PDF" == fmt
                    || stdout == uri
                    || device->is_single_image ())
             {
@@ -839,11 +850,13 @@ main (int argc, char *argv[])
         }
       else                      // file per image
         {
+#if HAVE_LIBTIFF
           if ("TIFF" == fmt)
             {
               odev = make_shared< _out_::tiff_odevice > (gen);
             }
           else
+#endif
             {
               odev = make_shared< file_odevice > (gen);
             }
@@ -904,42 +917,49 @@ main (int argc, char *argv[])
       if (om.count ("enable-resampling"))
         resample = value (om["enable-resampling"]);
 
-      filter::ptr magick (make_shared< _flt_::magick > ());
-
-      toggle bound = true;
-      quantity res_x  = -1.0;
-      quantity res_y  = -1.0;
-
-      std::string sw (resample ? "sw-" : "");
-      if (om.count (sw + "resolution-x"))
+      filter::ptr magick;
+      if (HAVE_MAGICK)
         {
-          res_x = value (om[sw + "resolution-x"]);
-          res_y = value (om[sw + "resolution-y"]);
-        }
-      if (om.count (sw + "resolution-bind"))
-        bound = value (om[sw + "resolution-bind"]);
-
-      if (bound)
-        {
-          res_x = value (om[sw + "resolution"]);
-          res_y = value (om[sw + "resolution"]);
+          magick = (make_shared< _flt_::magick > ());
         }
 
-      (*magick->options ())["resolution-x"] = res_x;
-      (*magick->options ())["resolution-y"] = res_y;
-      (*magick->options ())["force-extent"] = force_extent;
-      (*magick->options ())["width"]  = width;
-      (*magick->options ())["height"] = height;
+      if (magick)
+        {
+          toggle bound = true;
+          quantity res_x  = -1.0;
+          quantity res_y  = -1.0;
 
-      (*magick->options ())["bilevel"] = toggle (bilevel);
+          std::string sw (resample ? "sw-" : "");
+          if (om.count (sw + "resolution-x"))
+            {
+              res_x = value (om[sw + "resolution-x"]);
+              res_y = value (om[sw + "resolution-y"]);
+            }
+          if (om.count (sw + "resolution-bind"))
+            bound = value (om[sw + "resolution-bind"]);
 
-      quantity thr = value (om["threshold"]);
-      thr *= 100.0;
-      thr /= (dynamic_pointer_cast< range >
-              (om["threshold"].constraint ()))->upper ();
-      (*magick->options ())["threshold"] = thr;
+          if (bound)
+            {
+              res_x = value (om[sw + "resolution"]);
+              res_y = value (om[sw + "resolution"]);
+            }
 
-      (*magick->options ())["image-format"] = fmt;
+          (*magick->options ())["resolution-x"] = res_x;
+          (*magick->options ())["resolution-y"] = res_y;
+          (*magick->options ())["force-extent"] = force_extent;
+          (*magick->options ())["width"]  = width;
+          (*magick->options ())["height"] = height;
+
+          (*magick->options ())["bilevel"] = toggle (bilevel);
+
+          quantity thr = value (om["threshold"]);
+          thr *= 100.0;
+          thr /= (dynamic_pointer_cast< range >
+                  (om["threshold"].constraint ()))->upper ();
+          (*magick->options ())["threshold"] = thr;
+
+          (*magick->options ())["image-format"] = fmt;
+      }
 
       {
         toggle sw_color_correction = false;
@@ -977,10 +997,12 @@ main (int argc, char *argv[])
         {
           str->push (make_shared< padding > ());
         }
+#if HAVE_LIBJPEG
       else if (xfer_jpg == xfer_fmt)
         {
           str->push (make_shared< jpeg::decompressor > ());
         }
+#endif
       else
         {
           log::alert
@@ -1001,7 +1023,7 @@ main (int argc, char *argv[])
           str->push (make_shared< pnm > ());
           if (autocrop)   str->push (autocrop);
           if (deskew)     str->push (deskew);
-          str->push (magick);
+          if (magick)     str->push (magick);
 
           if ("PDF" == fmt)
             {

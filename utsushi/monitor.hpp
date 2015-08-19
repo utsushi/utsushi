@@ -1,4 +1,5 @@
 //  monitor.hpp -- available scanner devices
+//  Copyright (C) 2013  Olaf Meeuwissen
 //  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
@@ -23,6 +24,7 @@
 
 #include <istream>
 #include <set>
+#include <string>
 
 #include "option.hpp"
 #include "scanner.hpp"
@@ -47,6 +49,17 @@ public:
   typedef container_type::const_iterator const_iterator;
 
   monitor ();
+
+  //! Obtain an UDI for a \e usable default device
+  /*! A usable device is one that is not only recognised as an image
+   *  acquisition device but also has a supporting @PACKAGE_TARNAME@
+   *  driver at its disposition.
+   *
+   *  If no such device is available, an empty string is returned.
+   *  Repeated invocations of this function may return different
+   *  values as devices (dis)appear.
+   */
+  std::string default_device () const;
 
   const_iterator begin () const;
   const_iterator end () const;

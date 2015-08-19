@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.9.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2015-06-19 01:54+0000\n"
+"POT-Creation-Date: 2015-07-30 00:47+0000\n"
 "PO-Revision-Date: 2015-03-18 21:12+0900\n"
 "Last-Translator: AVASYS CORPORATION\n"
 "Language-Team: Japanese\n"
@@ -30,11 +30,11 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: connexions/usb.cpp:94
+#: connexions/usb.cpp:96
 msgid "unable to initialise USB support"
 msgstr "USBの初期化ができません"
 
-#: connexions/usb.cpp:111
+#: connexions/usb.cpp:113
 msgid "no usable, matching device"
 msgstr "使用可能なデバイスがありません"
 
@@ -311,8 +311,8 @@ msgstr "切り出し"
 msgid "Crop Adjustment"
 msgstr "切り出し位置調整"
 
-#: drivers/esci/compound-scanner.cpp:2404 gtkmm/dialog.cpp:560
-#: sane/handle.cpp:536 src/scan-cli.cpp:629
+#: drivers/esci/compound-scanner.cpp:2404 gtkmm/dialog.cpp:581
+#: sane/handle.cpp:539 src/scan-cli.cpp:635
 msgid "Deskew"
 msgstr "傾き補正"
 
@@ -854,19 +854,19 @@ msgstr ""
 msgid "gtk-refresh"
 msgstr ""
 
-#: gtkmm/dialog.cpp:84
+#: gtkmm/dialog.cpp:89
 msgid "Dialog specification requires a 'uimanager'"
 msgstr "ダイアログの指定には'uimanager'が必要です"
 
-#: gtkmm/dialog.cpp:264
+#: gtkmm/dialog.cpp:269
 msgid "Save As..."
 msgstr "名前を付けて保存..."
 
-#: gtkmm/dialog.cpp:266
+#: gtkmm/dialog.cpp:271
 msgid "Untitled"
 msgstr "無題"
 
-#: gtkmm/dialog.cpp:482 src/scan-cli.cpp:992
+#: gtkmm/dialog.cpp:503 src/scan-cli.cpp:1014
 #, boost-format
 msgid "conversion from %1% to %2% is not supported"
 msgstr "%1% から %2% への変換はサポートしていません"
@@ -1206,7 +1206,7 @@ msgstr "サポートしていないカラースペース"
 msgid "unsupported bit depth"
 msgstr "サポートしていない色数"
 
-#: sane/backend.cpp:1033
+#: sane/backend.cpp:1029
 msgid ""
 "The current locale settings are not supported by the standard C++ library "
 "used by this application.  This is most likely caused by a misconfigured "
@@ -1223,7 +1223,7 @@ msgstr ""
 "いの環境のロケールの設定とアプリケーションが使用しているC++ライブラリーのロ"
 "ケールのサポート状況を確認して下さい。"
 
-#: sane/backend.cpp:1057
+#: sane/backend.cpp:1053
 msgid "library initialization failed"
 msgstr "ライブラリーの初期化に失敗しました"
 
@@ -1232,7 +1232,7 @@ msgstr "ライブラリーの初期化に失敗しました"
 msgid "Unknown SANE status code %d"
 msgstr "不明なSANEのステータスコード %d"
 
-#: sane/handle.cpp:1267
+#: sane/handle.cpp:1281
 msgid ""
 "SANE API specification violation\n"
 "The option number count has to be the first option."
@@ -1240,7 +1240,7 @@ msgstr ""
 "SANE API の仕様違反\n"
 "オプション番号数は最初のオプションでなければなりません。"
 
-#: sane/handle.cpp:1439
+#: sane/handle.cpp:1453
 msgid ""
 "SANE API specification violation\n"
 "Option names must start with a lower-case ASCII character."
@@ -1288,25 +1288,27 @@ msgstr "適切なツールで画像を取得"
 msgid "next generation image acquisition"
 msgstr "次世代の画像取得ユーティリティ"
 
-#: src/scan-cli.cpp:160
-msgid "device found but has no driver"
-msgstr "デバイスに対応したドライバーがありません"
+#: src/scan-cli.cpp:164
+#, fuzzy, boost-format
+msgid "%1%: not found"
+msgstr "%1%: サポートしていません"
 
-#: src/scan-cli.cpp:175
-#, boost-format
-msgid "cannot find '%1%'"
-msgstr "'%1%'が見つかりません"
-
-#: src/scan-cli.cpp:180
-msgid "no devices available"
+#: src/scan-cli.cpp:169 src/scan-cli.cpp:576
+#, fuzzy
+msgid "no usable devices available"
 msgstr "利用可能なデバイスが存在しません"
 
-#: src/scan-cli.cpp:195
+#: src/scan-cli.cpp:176
+#, fuzzy, boost-format
+msgid "%1%: found but has no driver"
+msgstr "デバイスに対応したドライバーがありません"
+
+#: src/scan-cli.cpp:190
 #, boost-format
 msgid "%1%: not supported"
 msgstr "%1%: サポートしていません"
 
-#: src/scan-cli.cpp:240
+#: src/scan-cli.cpp:235
 #, boost-format
 msgid ""
 "%1%\n"
@@ -1315,12 +1317,12 @@ msgstr ""
 "%1%\n"
 "指定可能な値: %2%"
 
-#: src/scan-cli.cpp:247
+#: src/scan-cli.cpp:242
 #, boost-format
 msgid "Allowed values: %1%"
 msgstr "指定可能な値: %1%"
 
-#: src/scan-cli.cpp:420
+#: src/scan-cli.cpp:415
 #, boost-format
 msgid ""
 "option parser internal inconsistency\n"
@@ -1329,38 +1331,40 @@ msgstr ""
 "オプションパーサーの内部不一致エラー\n"
 "  キー = %1%"
 
-#: src/scan-cli.cpp:506
+#: src/scan-cli.cpp:501
 msgid "image acquisition device to use"
 msgstr "使用する画像取得デバイス"
 
-#: src/scan-cli.cpp:508
+#: src/scan-cli.cpp:503
 msgid "output destination to use"
 msgstr "使用する出力先"
 
-#: src/scan-cli.cpp:522 src/scan-gtkmm.cpp:73
+#: src/scan-cli.cpp:517 src/scan-gtkmm.cpp:73
 msgid "Utility options"
 msgstr "ユーティリティオプション"
 
-#: src/scan-cli.cpp:525
+#: src/scan-cli.cpp:520
 msgid "log device I/O in hexdump format"
 msgstr "デバイスとの入出力を16進ダンプでログ出力する"
 
-#: src/scan-cli.cpp:528
+#: src/scan-cli.cpp:523
+#, fuzzy
 msgid ""
 "output image format\n"
 "PNM, PNG, JPEG, PDF, TIFF or one of the device supported transfer-formats.  "
 "The explicitly mentioned types are normally inferred from the output file "
-"name."
+"name.  Some require additional libraries at build-time in order to be "
+"available."
 msgstr ""
 "出力画像形式\n"
 "PNM、PNG、JPEG、PDF、TIFF、またはデバイスがサポートしている転送形式。\n"
 "上記の画像形式は通常出力ファイル名から自動的に判断されます。"
 
-#: src/scan-cli.cpp:579
+#: src/scan-cli.cpp:585
 msgid "Device actions"
 msgstr "デバイスアクション"
 
-#: src/scan-cli.cpp:589
+#: src/scan-cli.cpp:595
 msgid ""
 "Only perform the actions given on the command-line.  Do not perform image "
 "acquisition."
@@ -1368,15 +1372,15 @@ msgstr ""
 "コマンドラインで指定されたアクションのみを実行する。画像取得処理は実行しな"
 "い。"
 
-#: src/scan-cli.cpp:595
+#: src/scan-cli.cpp:601
 msgid "Device options"
 msgstr "デバイスオプション"
 
-#: src/scan-cli.cpp:597
+#: src/scan-cli.cpp:603
 msgid "Add-on options"
 msgstr "アドオンオプション"
 
-#: src/scan-cli.cpp:653
+#: src/scan-cli.cpp:659
 msgid ""
 "Note: device options may be ignored if their prerequisites are not "
 "satisfied.\n"
@@ -1387,17 +1391,17 @@ msgstr ""
 "す。\n"
 "例えば、'--duplex'オプションはADFを選択していないときに無視されます。\n"
 
-#: src/scan-cli.cpp:761
+#: src/scan-cli.cpp:769
 #, boost-format
 msgid "cannot infer image format from file extension: '%1%'"
 msgstr "拡張子 '%1%' からファイル形式を判別できません"
 
-#: src/scan-cli.cpp:782
+#: src/scan-cli.cpp:790
 #, boost-format
 msgid "unsupported image format: '%1%'"
 msgstr "'%1%' はサポートされていない画像形式です"
 
-#: src/scan-cli.cpp:834
+#: src/scan-cli.cpp:845
 #, boost-format
 msgid "%1% does not support multi-image files"
 msgstr "%1% は複数画像をサポートしていません"
@@ -1434,6 +1438,9 @@ msgstr "適切なユーティリティで画像を取得する"
 #: src/version.cpp:52
 msgid "display version information for a command"
 msgstr "コマンドのバージョン情報を表示する"
+
+#~ msgid "cannot find '%1%'"
+#~ msgstr "'%1%'が見つかりません"
 
 #~ msgid "Flatbed"
 #~ msgstr "原稿台"

@@ -1,5 +1,6 @@
 ##  Makefile.am -- an automake template for Makefile.in
 ##  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+##  Copyright (C) 2013, 2015  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -33,9 +34,9 @@ check_PROGRAMS += threshold.utr
 check_PROGRAMS += image-skip.utr
 check_PROGRAMS += shell-pipe.utr
 
-#if have_magick
+if have_magick
 check_PROGRAMS += magick.utr
-#endif
+endif
 
 LDADD  = ../libflt-all.la
 LDADD += ../../lib/libutsushi.la $(LIBUTSUSHI_LIBS)
@@ -72,3 +73,9 @@ EXTRA_DIST += data/A4-max-x-max.jpg
 CLEANFILES  =
 
 include $(top_srcdir)/include/boost-test.am
+
+if enable_code_coverage
+CLEANFILES += ../pdf/*.gcno
+CLEANFILES += ../pdf/*.gcda
+CLEANFILES += ../pdf/*.gcov
+endif

@@ -1,5 +1,6 @@
 //  pdf.cpp -- unit tests for the PDF filter implementation
 //  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -55,7 +56,7 @@ struct fixture
 
 BOOST_FIXTURE_TEST_CASE (test_magic, fixture)
 {
-  context ctx (32, 48, 3, 8);
+  context ctx (32, 48);
   shared_ptr<setmem_idevice::generator> gen
     = make_shared< const_generator > (0x50);
 

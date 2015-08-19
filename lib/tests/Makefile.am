@@ -1,5 +1,6 @@
 ##  Makefile.am -- an automake template for Makefile.in
 ##  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+##  Copyright (C) 2015  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -82,3 +83,9 @@ EXTRA_DIST  = value.hpp
 CLEANFILES  =
 
 include $(top_srcdir)/include/boost-test.am
+
+if enable_code_coverage
+CLEANFILES += ../../outputs/*.gcno
+CLEANFILES += ../../outputs/*.gcda
+CLEANFILES += ../../outputs/*.gcov
+endif

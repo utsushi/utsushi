@@ -1378,10 +1378,15 @@ extended_scanner::configure_color_correction ()
 
   matrix< double, 3 > mat;
 
-  if (   caps_.product_name () == "PID 08C2"
+  if (   caps_.product_name () == "PID 08C0"
+      || caps_.product_name () == "PID 08C2"
       || caps_.product_name () == "PID 08D1"
       || caps_.product_name () == "PID 08D2"
-    )
+      || caps_.product_name () == "PID 08D3"
+      || caps_.product_name () == "PID 1101"
+      || caps_.product_name () == "PID 1102"
+      || caps_.product_name () == "PID 1103"
+      || caps_.product_name () == "PID 1104")
     {
       mat[0][0] =  1.0782;
       mat[0][1] =  0.0135;
@@ -1393,18 +1398,19 @@ extended_scanner::configure_color_correction ()
       mat[2][1] = -0.1485;
       mat[2][2] =  1.1372;
     }
-  else if (   caps_.product_name () == "PID 08D3"
-           || caps_.product_name () == "PID 1101")
+  else if (   caps_.product_name () == "PID 1109"
+           || caps_.product_name () == "PID 110B"
+           || caps_.product_name () == "PID 110C")
     {
-      mat[0][0] =  1.0782;
-      mat[0][1] =  0.0135;
-      mat[0][2] = -0.0917;
-      mat[1][0] =  0.0206;
-      mat[1][1] =  1.0983;
-      mat[1][2] = -0.1189;
-      mat[2][0] =  0.0113;
-      mat[2][1] = -0.1485;
-      mat[2][2] =  1.1372;
+      mat[0][0] =  1.0567;
+      mat[0][1] =  0.0415;
+      mat[0][2] = -0.0982;
+      mat[1][0] =  0.0289;
+      mat[1][1] =  1.1112;
+      mat[1][2] = -0.1401;
+      mat[2][0] =  0.0193;
+      mat[2][1] = -0.2250;
+      mat[2][2] =  1.2057;
     }
   else
     {

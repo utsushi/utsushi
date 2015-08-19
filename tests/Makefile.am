@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012, 2014, 2015  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -28,7 +28,9 @@ TESTS_ENVIRONMENT =
 TESTS = $(check_PROGRAMS)
 
 check_PROGRAMS  =
+if enable_uncrustify_test
 check_PROGRAMS += indentation.utr
+endif
 
 AM_CPPFLAGS += -DSHELL="\"/bin/sh\""
 AM_LDFLAGS  += $(BOOST_LDFLAGS)

@@ -1,8 +1,7 @@
 #! /bin/sh
 #  install-deps -- needed for developer and/or maintainer builds
-#  Copyright (C) 2013  Olaf Meeuwissen
+#  Copyright (C) 2013, 2015  Olaf Meeuwissen
 #  Copyright (C) 2012  AVASYS CORPORATION
-#  Copyright (C) 2015  Olaf Meeuwissen
 #
 #  License: GPL-3.0+
 #  Author : Olaf Meeuwissen

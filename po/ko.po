@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.9.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2015-06-19 01:54+0000\n"
+"POT-Creation-Date: 2015-07-30 00:47+0000\n"
 "PO-Revision-Date: 2015-01-26 16:34+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Korean\n"
@@ -31,11 +31,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 1.7.3\n"
 
-#: connexions/usb.cpp:94
+#: connexions/usb.cpp:96
 msgid "unable to initialise USB support"
 msgstr ""
 
-#: connexions/usb.cpp:111
+#: connexions/usb.cpp:113
 msgid "no usable, matching device"
 msgstr ""
 
@@ -300,8 +300,8 @@ msgstr "자르기"
 msgid "Crop Adjustment"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2404 gtkmm/dialog.cpp:560
-#: sane/handle.cpp:536 src/scan-cli.cpp:629
+#: drivers/esci/compound-scanner.cpp:2404 gtkmm/dialog.cpp:581
+#: sane/handle.cpp:539 src/scan-cli.cpp:635
 msgid "Deskew"
 msgstr "기울임"
 
@@ -838,19 +838,19 @@ msgstr ""
 msgid "gtk-refresh"
 msgstr ""
 
-#: gtkmm/dialog.cpp:84
+#: gtkmm/dialog.cpp:89
 msgid "Dialog specification requires a 'uimanager'"
 msgstr ""
 
-#: gtkmm/dialog.cpp:264
+#: gtkmm/dialog.cpp:269
 msgid "Save As..."
 msgstr "다른 이름으로 저장..."
 
-#: gtkmm/dialog.cpp:266
+#: gtkmm/dialog.cpp:271
 msgid "Untitled"
 msgstr "무제"
 
-#: gtkmm/dialog.cpp:482 src/scan-cli.cpp:992
+#: gtkmm/dialog.cpp:503 src/scan-cli.cpp:1014
 #, boost-format
 msgid "conversion from %1% to %2% is not supported"
 msgstr "%1%에서 %2%(으)로의 변환이 지원되지 않음"
@@ -1189,7 +1189,7 @@ msgstr ""
 msgid "unsupported bit depth"
 msgstr ""
 
-#: sane/backend.cpp:1033
+#: sane/backend.cpp:1029
 msgid ""
 "The current locale settings are not supported by the standard C++ library "
 "used by this application.  This is most likely caused by a misconfigured "
@@ -1199,7 +1199,7 @@ msgid ""
 "locale support of the C++ library used by the application."
 msgstr ""
 
-#: sane/backend.cpp:1057
+#: sane/backend.cpp:1053
 msgid "library initialization failed"
 msgstr ""
 
@@ -1208,13 +1208,13 @@ msgstr ""
 msgid "Unknown SANE status code %d"
 msgstr ""
 
-#: sane/handle.cpp:1267
+#: sane/handle.cpp:1281
 msgid ""
 "SANE API specification violation\n"
 "The option number count has to be the first option."
 msgstr ""
 
-#: sane/handle.cpp:1439
+#: sane/handle.cpp:1453
 msgid ""
 "SANE API specification violation\n"
 "Option names must start with a lower-case ASCII character."
@@ -1260,86 +1260,88 @@ msgstr ""
 msgid "next generation image acquisition"
 msgstr ""
 
-#: src/scan-cli.cpp:160
-msgid "device found but has no driver"
-msgstr ""
-
-#: src/scan-cli.cpp:175
+#: src/scan-cli.cpp:164
 #, boost-format
-msgid "cannot find '%1%'"
+msgid "%1%: not found"
 msgstr ""
 
-#: src/scan-cli.cpp:180
-msgid "no devices available"
+#: src/scan-cli.cpp:169 src/scan-cli.cpp:576
+msgid "no usable devices available"
 msgstr ""
 
-#: src/scan-cli.cpp:195
+#: src/scan-cli.cpp:176
+#, boost-format
+msgid "%1%: found but has no driver"
+msgstr ""
+
+#: src/scan-cli.cpp:190
 #, boost-format
 msgid "%1%: not supported"
 msgstr ""
 
-#: src/scan-cli.cpp:240
+#: src/scan-cli.cpp:235
 #, boost-format
 msgid ""
 "%1%\n"
 "Allowed values: %2%"
 msgstr ""
 
-#: src/scan-cli.cpp:247
+#: src/scan-cli.cpp:242
 #, boost-format
 msgid "Allowed values: %1%"
 msgstr ""
 
-#: src/scan-cli.cpp:420
+#: src/scan-cli.cpp:415
 #, boost-format
 msgid ""
 "option parser internal inconsistency\n"
 "  key = %1%"
 msgstr ""
 
-#: src/scan-cli.cpp:506
+#: src/scan-cli.cpp:501
 msgid "image acquisition device to use"
 msgstr ""
 
-#: src/scan-cli.cpp:508
+#: src/scan-cli.cpp:503
 msgid "output destination to use"
 msgstr ""
 
-#: src/scan-cli.cpp:522 src/scan-gtkmm.cpp:73
+#: src/scan-cli.cpp:517 src/scan-gtkmm.cpp:73
 msgid "Utility options"
 msgstr ""
 
-#: src/scan-cli.cpp:525
+#: src/scan-cli.cpp:520
 msgid "log device I/O in hexdump format"
 msgstr ""
 
-#: src/scan-cli.cpp:528
+#: src/scan-cli.cpp:523
 msgid ""
 "output image format\n"
 "PNM, PNG, JPEG, PDF, TIFF or one of the device supported transfer-formats.  "
 "The explicitly mentioned types are normally inferred from the output file "
-"name."
+"name.  Some require additional libraries at build-time in order to be "
+"available."
 msgstr ""
 
-#: src/scan-cli.cpp:579
+#: src/scan-cli.cpp:585
 msgid "Device actions"
 msgstr ""
 
-#: src/scan-cli.cpp:589
+#: src/scan-cli.cpp:595
 msgid ""
 "Only perform the actions given on the command-line.  Do not perform image "
 "acquisition."
 msgstr ""
 
-#: src/scan-cli.cpp:595
+#: src/scan-cli.cpp:601
 msgid "Device options"
 msgstr ""
 
-#: src/scan-cli.cpp:597
+#: src/scan-cli.cpp:603
 msgid "Add-on options"
 msgstr ""
 
-#: src/scan-cli.cpp:653
+#: src/scan-cli.cpp:659
 msgid ""
 "Note: device options may be ignored if their prerequisites are not "
 "satisfied.\n"
@@ -1347,17 +1349,17 @@ msgid ""
 "example.\n"
 msgstr ""
 
-#: src/scan-cli.cpp:761
+#: src/scan-cli.cpp:769
 #, boost-format
 msgid "cannot infer image format from file extension: '%1%'"
 msgstr ""
 
-#: src/scan-cli.cpp:782
+#: src/scan-cli.cpp:790
 #, boost-format
 msgid "unsupported image format: '%1%'"
 msgstr ""
 
-#: src/scan-cli.cpp:834
+#: src/scan-cli.cpp:845
 #, boost-format
 msgid "%1% does not support multi-image files"
 msgstr ""

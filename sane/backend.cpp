@@ -1,5 +1,6 @@
 //  backend.cpp -- implementation of the SANE utsushi backend
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013  Olaf Meeuwissen
 //  Copyright (C) 2007  EPSON AVASYS CORPORATION
 //
 //  License: GPL-3.0+
@@ -43,7 +44,6 @@
 #include <stdexcept>
 #include <string>
 
-#include <boost/bind.hpp>
 #include <boost/preprocessor/stringize.hpp>
 #include <boost/static_assert.hpp>
 
@@ -539,35 +539,31 @@ sane_open (SANE_String_Const device_name, SANE_Handle *handle)
 
       std::string udi (device_name ? device_name : "");
       monitor mon;
-      monitor::const_iterator it;
 
-      if (!udi.empty ())
+      if (udi.empty ())
         {
-          it = mon.find (udi);
-          if (it != mon.end () && !it->is_driver_set ())
-            {
-              log::alert ("%1%: device found but has no driver") % fn_name;
-              return SANE_STATUS_UNSUPPORTED;
-            }
+          udi = mon.default_device ();
         }
-      else
-        {
-          log::trace ("%1%: looking for a device with driver") % fn_name;
-          it = std::find_if (mon.begin (), mon.end (),
-                             boost::bind (&scanner::info::is_driver_set, _1));
-        }
+
+      monitor::const_iterator it (mon.find (udi));
 
       if (it == mon.end ())
         {
           if (!udi.empty ())
             {
-              log::error ("%1%: cannot find '%2%'") % fn_name % udi;
+              log::error ("%1%: '%2%' not found") % fn_name % udi;
             }
           else
             {
-              log::error ("%1%: no devices available") % fn_name;
+              log::error ("%1%: no usable devices available") % fn_name;
             }
           return SANE_STATUS_INVAL;
+        }
+
+      if (!it->is_driver_set ())
+        {
+          log::alert ("%1%: '%2%' found but has no driver") % fn_name % udi;
+          return SANE_STATUS_UNSUPPORTED;
         }
 
       try

@@ -1,5 +1,6 @@
 //  jpeg.cpp -- unit tests for the JPEG filter implementation
 //  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -105,7 +106,7 @@ BOOST_AUTO_TEST_SUITE (compressor);
 
 BOOST_FIXTURE_TEST_CASE (mediatype, fixture)
 {
-  rawmem_idevice dev (context (32, 32, 3, 8));
+  rawmem_idevice dev (context (32, 32));
   idevice& idev (dev);
 
   stream str;
@@ -123,7 +124,7 @@ BOOST_AUTO_TEST_SUITE (decompressor);
 
 BOOST_FIXTURE_TEST_CASE (mediatype, fixture)
 {
-  rawmem_idevice dev (context (32, 32, 3, 8));
+  rawmem_idevice dev (context (32, 32));
   idevice& idev (dev);
 
   stream str;

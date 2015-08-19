@@ -1,5 +1,6 @@
 ##  Makefile.am -- an automake template for Makefile.in
 ##  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+##  Copyright (C) 2015  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
 ##  Author : AVASYS CORPORATION
@@ -80,6 +81,8 @@ libflt_all_la_SOURCES   += autocrop.hpp
 libflt_all_la_SOURCES   += deskew.cpp
 libflt_all_la_SOURCES   += deskew.hpp
 endif				# have_libmagick_pp
+
+AM_INSTALLCHECK_STD_OPTIONS_EXEMPT = doc-locate
 
 pdf_filter  =
 pdf_filter += pdf.cpp
