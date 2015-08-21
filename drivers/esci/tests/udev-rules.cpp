@@ -44,7 +44,7 @@ struct fixture
   {
     bfs::path path (getenv ("srcdir"));
     path /= "..";
-    path /= "utsush-esci.rules";
+    path /= "utsushi-esci.rules";
 
     file.open (path);
 
