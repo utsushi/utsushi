@@ -1,5 +1,4 @@
 //  monitor.cpp -- available scanner devices
-//  Copyright (C) 2013, 2015  Olaf Meeuwissen
 //  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2013, 2015  Olaf Meeuwissen
 //
