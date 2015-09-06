@@ -1,0 +1,237 @@
+;;;  utsushi.desc                               -*- emacs-lisp -*- (sort of)
+;;;  Copyright (C) 2015  Olaf Meeuwissen
+;;;
+;;;  License: GPL-3.0+
+;;;  Author : Olaf Meeuwissen
+;;;
+;;;  This file is part of the 'Utsushi' package.
+;;;  This package is free software: you can redistribute it and/or modify
+;;;  it under the terms of the GNU General Public License as published by
+;;;  the Free Software Foundation, either version 3 of the License or, at
+;;;  your option, any later version.
+;;;
+;;;    This program is distributed in the hope that it will be useful,
+;;;    but WITHOUT ANY WARRANTY; without even the implied warranty of
+;;;    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;;;    GNU General Public License for more details.
+;;;
+;;;  You ought to have received a copy of the GNU General Public License
+;;;  along with this package.  If not, see <http://www.gnu.org/licenses/>.
+
+;;  Backend data
+;;
+:backend "utsushi"
+:url     "https://github.com/utsushi/utsushi"
+
+;;  Device and manufacturer information.
+;;
+:devicetype :scanner
+:mfg        "EPSON"
+:url        "http://www.epson.com/"
+
+;;  List of EPSON scanners and all-in-ones.
+
+:model     "DS-40"
+:interface "USB"
+:usbid     "0x04b8" "0x0152"
+:status    :good
+
+:model     "DS-510"
+:interface "USB"
+:usbid     "0x04b8" "0x014c"
+:status    :good
+
+:model     "DS-520"
+:interface "USB"
+:usbid     "0x04b8" "0x0154"
+:status    :good
+
+:model     "DS-560"
+:interface "USB"
+:usbid     "0x04b8" "0x0150"
+:status    :good
+
+:model     "DS-760"
+:interface "USB"
+:usbid     "0x04b8" "0x014d"
+:status    :good
+
+:model     "DS-860"
+:interface "USB"
+:usbid     "0x04b8" "0x014d"
+:status    :good
+
+:model     "DS-5500"
+:interface "USB"
+:usbid     "0x04b8" "0x0145"
+:status    :good
+
+:model     "DS-6500"
+:interface "USB"
+:usbid     "0x04b8" "0x0145"
+:status    :good
+
+:model     "DS-7500"
+:interface "USB"
+:usbid     "0x04b8" "0x0145"
+:status    :good
+
+:model     "DS-50000"
+:interface "USB"
+:usbid     "0x04b8" "0x0146"
+:status    :good
+
+:model     "DS-60000"
+:interface "USB"
+:usbid     "0x04b8" "0x0146"
+:status    :good
+
+:model     "DS-70000"
+:interface "USB"
+:usbid     "0x04b8" "0x0146"
+:status    :good
+
+:model     "ET-2500"
+:interface "USB"
+:usbid     "0x04b8" "0x1105"
+:status    :good
+
+:model     "ET-2550"
+:interface "USB"
+:usbid     "0x04b8" "0x1106"
+:status    :good
+
+:model     "ET-4500"
+:interface "USB"
+:usbid     "0x04b8" "0x1107"
+:status    :good
+
+:model     "ET-4550"
+:interface "USB"
+:usbid     "0x04b8" "0x1101"
+:status    :good
+
+:model     "L220"
+:interface "USB"
+:usbid     "0x04b8" "0x08d1"
+:status    :good
+
+:model     "L360"
+:interface "USB"
+:usbid     "0x04b8" "0x08d1"
+:status    :good
+
+:model     "L365"
+:interface "USB"
+:usbid     "0x04b8" "0x08d2"
+:status    :good
+
+:model     "L366"
+:interface "USB"
+:usbid     "0x04b8" "0x08d2"
+:status    :good
+
+:model     "L455"
+:interface "USB"
+:usbid     "0x04b8" "0x08c2"
+:status    :good
+
+:model     "L565"
+:interface "USB"
+:usbid     "0x04b8" "0x08d3"
+:status    :good
+
+:model     "L566"
+:interface "USB"
+:usbid     "0x04b8" "0x08d3"
+:status    :good
+
+:model     "L655"
+:interface "USB"
+:usbid     "0x04b8" "0x1101"
+:status    :good
+
+:model     "PX-M860F"
+:interface "USB"
+:usbid     "0x04b8" "0x08ce"
+:status    :good
+
+:model     "PX-M7050"
+:interface "USB"
+:usbid     "0x04b8" "0x08bc"
+:status    :good
+
+:model     "PX-M7050FX"
+:interface "USB"
+:usbid     "0x04b8" "0x08cc"
+:status    :good
+
+:model     "WF-8510"
+:interface "USB"
+:usbid     "0x04b8" "0x08bc"
+:status    :good
+
+:model     "WF-8590"
+:interface "USB"
+:usbid     "0x04b8" "0x08bc"
+:status    :good
+
+:model     "WF-R8590"
+:interface "USB"
+:usbid     "0x04b8" "0x08cc"
+:status    :good
+
+:model     "XP-220"
+:interface "USB"
+:usbid     "0x04b8" "0x08c0"
+:status    :good
+
+:model     "XP-230"
+:interface "USB"
+:usbid     "0x04b8" "0x1102"
+:status    :good
+
+:model     "XP-235"
+:interface "USB"
+:usbid     "0x04b8" "0x1102"
+:status    :good
+
+:model     "XP-322"
+:interface "USB"
+:usbid     "0x04b8" "0x1103"
+:status    :good
+
+:model     "XP-335"
+:interface "USB"
+:usbid     "0x04b8" "0x1103"
+:status    :good
+
+:model     "XP-430"
+:interface "USB"
+:usbid     "0x04b8" "0x1104"
+:status    :good
+
+:model     "XP-432"
+:interface "USB"
+:usbid     "0x04b8" "0x1104"
+:status    :good
+
+:model     "XP-435"
+:interface "USB"
+:usbid     "0x04b8" "0x1104"
+:status    :good
+
+:model     "XP-530"
+:interface "USB"
+:usbid     "0x04b8" "0x110c"
+:status    :good
+
+:model     "XP-830"
+:interface "USB"
+:usbid     "0x04b8" "0x110b"
+:status    :good
+
+:model     "XP-960"
+:interface "USB"
+:usbid     "0x04b8" "0x1109"
+:status    :good
