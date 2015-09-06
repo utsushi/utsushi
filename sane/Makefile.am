@@ -29,6 +29,8 @@ EXTRA_DIST =
 BACKEND_NAME = utsushi
 SANE_VERSION = $(SANE_MAJOR):$(SANE_MINOR):$(SANE_REVISION)
 
+EXTRA_DIST  += utsushi.desc
+
 ##  Install below $(pkglibdir) rather than in $(SANE_BACKENDDIR) to
 ##  support scenarios that configure for installation in a writable
 ##  location but lack write support to the SANE locations, e.g. for
