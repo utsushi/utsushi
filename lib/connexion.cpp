@@ -238,8 +238,21 @@ connexion::connexion (const std::string& type, const std::string& path)
 
   if (0 != access (name_.c_str (), F_OK | X_OK))
     {
-      BOOST_THROW_EXCEPTION
-        (runtime_error ((format ("%1%: not executable") % name_).str ()));
+      fs::path path (fs::path (PKGLIBEXECDIR)
+                     .remove_filename () // == PACKAGE_TARNAME
+                     .remove_filename () // host-system triplet?
+                     );
+      if (   path.filename () == "lib"
+          || path.filename () == "lib64"
+          || path.filename () == "libexec")
+        {
+          path /= PACKAGE_TARNAME;
+          name_ = (path / type).string ();
+        }
+
+      if (0 != access (name_.c_str (), F_OK | X_OK))
+        BOOST_THROW_EXCEPTION
+          (runtime_error ((format ("%1%: not executable") % name_).str ()));
     }
 
   if (!fork_())

@@ -1,5 +1,5 @@
 #  POTFILES.in -- list of files containing translatable strings
-#  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+#  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 #
 #  License: GPL-3.0+
 #  Author : AVASYS CORPORATION
@@ -36,7 +36,6 @@ drivers/esci/extended-scanner.cpp
 drivers/esci/grammar-capabilities.cpp
 filters/image-skip.cpp
 filters/jpeg.cpp
-filters/lut.cpp
 filters/padding.cpp
 filters/pdf/object.cpp
 filters/pdf/writer.cpp

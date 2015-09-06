@@ -61,6 +61,9 @@ Makefile.in
 #  Unit test runners and reports
 *-report.xml
 *.utr
+*.utr.log
+*.utr.trs
+test-suite.log
 
 #  Source archives
 /utsushi-*.tar.gz

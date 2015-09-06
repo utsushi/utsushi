@@ -293,7 +293,7 @@ file_chooser::on_response (int response_id)
           tbd.set_secondary_text
             ((format (_("Please save to PDF or TIFF if you want a single"
                         " file.  If you prefer the %1% image format, use"
-                        " a filename such as 'Untitled-%%3i.%2%'."))
+                        " a filename such as 'Untitled-%%3i%2%'."))
               % fmt % get_current_extension ()).str ());
 
           if (dynamic_cast< Gtk::Window * > (this))
