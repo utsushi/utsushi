@@ -69,6 +69,9 @@ namespace sane {
 
 //! Keep backend options separate from frontend options
 static const utsushi::key option_prefix ("device");
+static const std::string magick_prefix ("magick");
+static const std::string filter_prefix ("filter");
+static const std::string action_prefix ("action");
 
 //! Well-known SANE option names
 /*! Although the well-known option names are defined in the SANE API
@@ -528,13 +531,13 @@ handle::handle(const scanner::info& info)
       // An utsushi::key normally uses a '/' to separate namespaces
       // but SANE does not allow those.  We already map the '/' to a
       // '-', so using a '-' here will make it appear to be in the
-      // "software" namespace without actually having to be a member
+      // filter_prefix namespace without actually having to be a member
       // of that namespace (which is used by the image_skip filter
       // below as well).
       if (HAVE_MAGICK_PP)
         {
           opt_.add_options ()
-            ("software-deskew", toggle (),
+            (filter_prefix + "-deskew", toggle (),
              attributes (tag::enhancement)(level::standard),
              N_("Deskew"));
         }
@@ -542,12 +545,12 @@ handle::handle(const scanner::info& info)
 
   opt_.add_option_map ()
     (option_prefix, idev_->options ())
-    ("action", idev_->actions ())
+    (action_prefix, idev_->actions ())
     ;
 
   image_skip flt;
   opt_.add_option_map ()
-    ("software", flt.options ())
+    (filter_prefix, flt.options ())
     ;
 
   sod_.reserve (opt_.size ());
@@ -1101,9 +1104,9 @@ handle::marker ()
 
       filter::ptr deskew;
       if (HAVE_MAGICK_PP
-          && !autocrop && opt_.count ("software-deskew"))
+          && !autocrop && opt_.count (filter_prefix + "-deskew"))
         {
-          toggle t = value ((opt_)["software-deskew"]);
+          toggle t = value ((opt_)[filter_prefix + "-deskew"]);
           if (t)
             deskew = make_shared< _flt_::deskew > ();
         }
@@ -1183,7 +1186,7 @@ handle::marker ()
       try
         {
           (*blank_skip->options ())["blank-threshold"]
-            = value (opt_["software/blank-threshold"]);
+            = value (opt_[key (filter_prefix) / "blank-threshold"]);
           skip_thresh = value ((*blank_skip->options ())["blank-threshold"]);
         }
       catch (const std::out_of_range&)
@@ -1400,8 +1403,9 @@ struct match_key
 /*! Any utsushi::key characters that are not allowed are converted to
  *  an ASCII dash (\c 0x2D).  Keys matching a well-known SANE option
  *  are converted to the corresponding SANE option descriptor name (as
- *  defined in Sec. 4.5 of the specification).  Matching is performed
- *  against the end of the utsushi::key.
+ *  defined in Sec. 4.5 of the specification).  Several other keys may
+ *  be converted in a similar way to provide more meaningful command
+ *  line options.
  */
 static
 std::string
@@ -1410,10 +1414,13 @@ sanitize_(const utsushi::key& k)
   if (k == name::num_options)
     return k;
 
-  std::string rv (k);
+  // SANE API sanctioned ASCII characters for option names
+
+  static const std::string lower_case ("abcdefghijklmnopqrstuvwxyz");
+  static const std::string dash_digit ("-0123456789");
 
   static const std::list< xlate::mapping >
-    well_known = boost::assign::list_of
+    dictionary = boost::assign::list_of
     (xlate::resolution)
     (xlate::preview)
     (xlate::tl_x)
@@ -1433,18 +1440,43 @@ sanitize_(const utsushi::key& k)
     (xlate::sw_resolution_bind)
     ;
 
-  BOOST_FOREACH (xlate::mapping entry, well_known)
+  std::string rv (k);
+
+  BOOST_FOREACH (xlate::mapping entry, dictionary)
     {
-      if (k == option_prefix / entry.first)
+      /**/ if (k == option_prefix / entry.first)
         {
           rv = entry.second;
         }
+      else if (k == entry.first)
+        {
+          rv = entry.second;
+        }
+      else if (0 == rv.find (std::string (option_prefix)))
+        {
+          std::string tmp (rv.substr (std::string (option_prefix).size () + 1));
+          if (0 == tmp.find_first_of (lower_case))
+            rv = tmp;
+        }
+      else if (0 == rv.find (filter_prefix))
+        {
+          std::string tmp (rv.substr (filter_prefix.size () + 1));
+          if (0 == tmp.find_first_of (lower_case))
+            rv = tmp;
+        }
+      else if (0 == rv.find (magick_prefix))
+        {
+          std::string tmp (rv.substr (magick_prefix.size () + 1));
+          if (0 == tmp.find_first_of (lower_case))
+            rv = tmp;
+        }
+      else if (0 == rv.find (action_prefix))
+        {
+          std::string tmp (rv.substr (action_prefix.size () + 1));
+          if (0 == tmp.find_first_of (lower_case))
+            rv = tmp;
+        }
     }
-
-  // SANE API sanctioned ASCII characters for option names
-
-  static const std::string lower_case ("abcdefghijklmnopqrstuvwxyz");
-  static const std::string dash_digit ("-0123456789");
 
   if (0 != rv.find_first_of (lower_case))
     {
@@ -1497,6 +1529,11 @@ handle::option_descriptor::option_descriptor (const option& visitor)
     {
       if (!visitor.is_at(level::standard))
         cap |= SANE_CAP_ADVANCED;
+    }
+  if (   0 == std::string (orig_key).find (filter_prefix)
+      || 0 == std::string (orig_key).find (magick_prefix))
+    {
+      cap |= SANE_CAP_EMULATED;
     }
   if (name::is_resolution (sane_key))
     {

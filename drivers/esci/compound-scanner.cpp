@@ -2549,6 +2549,7 @@ map_(std::string product)
 
   if ("PID 08BC" == product) product = "PX-M7050";
   if ("PID 08CC" == product) product = "PX-M7050FX";
+  if ("PID 08CE" == product) product = "PX-M860F";
 
   if (rt.running_in_place ())
     product.insert (0, "data/");

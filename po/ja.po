@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.9.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2015-07-30 00:47+0000\n"
+"POT-Creation-Date: 2015-08-31 04:12+0000\n"
 "PO-Revision-Date: 2015-03-18 21:12+0900\n"
 "Last-Translator: AVASYS CORPORATION\n"
 "Language-Team: Japanese\n"
@@ -75,11 +75,11 @@ msgid "Maintenance failed"
 msgstr "メンテナンスに失敗しました。"
 
 #: drivers/esci/compound-scanner.cpp:530
-#: drivers/esci/extended-scanner.cpp:1147
+#: drivers/esci/extended-scanner.cpp:1149
 msgid "Document Source"
 msgstr "取り込み装置"
 
-#: drivers/esci/compound-scanner.cpp:544 drivers/esci/extended-scanner.cpp:289
+#: drivers/esci/compound-scanner.cpp:544 drivers/esci/extended-scanner.cpp:291
 msgid "Image Type"
 msgstr "イメージタイプ"
 
@@ -87,7 +87,7 @@ msgstr "イメージタイプ"
 msgid "Dropout"
 msgstr "ドロップアウト"
 
-#: drivers/esci/compound-scanner.cpp:570 drivers/esci/extended-scanner.cpp:420
+#: drivers/esci/compound-scanner.cpp:570 drivers/esci/extended-scanner.cpp:422
 msgid "Transfer Format"
 msgstr "転送形式"
 
@@ -103,22 +103,21 @@ msgstr ""
 msgid "JPEG Quality"
 msgstr "JPEG画質"
 
-#: drivers/esci/compound-scanner.cpp:598 drivers/esci/extended-scanner.cpp:352
+#: drivers/esci/compound-scanner.cpp:598 drivers/esci/extended-scanner.cpp:354
 #: filters/threshold.cpp:49
 msgid "Threshold"
 msgstr "しきい値"
 
-#: drivers/esci/compound-scanner.cpp:611 drivers/esci/extended-scanner.cpp:323
+#: drivers/esci/compound-scanner.cpp:611 drivers/esci/extended-scanner.cpp:325
 msgid "Gamma"
 msgstr "ガンマ"
 
-#: drivers/esci/compound-scanner.cpp:628 drivers/esci/extended-scanner.cpp:384
-#: drivers/esci/extended-scanner.cpp:395 filters/lut.cpp:129
+#: drivers/esci/compound-scanner.cpp:628 drivers/esci/extended-scanner.cpp:386
+#: drivers/esci/extended-scanner.cpp:397
 msgid "Brightness"
 msgstr "明るさ"
 
-#: drivers/esci/compound-scanner.cpp:635 drivers/esci/extended-scanner.cpp:404
-#: filters/lut.cpp:138
+#: drivers/esci/compound-scanner.cpp:635 drivers/esci/extended-scanner.cpp:406
 msgid "Contrast"
 msgstr "コントラスト"
 
@@ -216,7 +215,7 @@ msgstr ""
 "領域は、%1%×%2%よりも大きくする必要があります。"
 
 #: drivers/esci/compound-scanner.cpp:2031
-#: drivers/esci/extended-scanner.cpp:1109
+#: drivers/esci/extended-scanner.cpp:1111
 msgid "Duplex"
 msgstr "両面"
 
@@ -237,7 +236,7 @@ msgstr "水平解像度と垂直解像度を連動させる"
 #: drivers/esci/compound-scanner.cpp:2209
 #: drivers/esci/compound-scanner.cpp:2244
 #: drivers/esci/compound-scanner.cpp:2279
-#: drivers/esci/extended-scanner.cpp:278
+#: drivers/esci/extended-scanner.cpp:280
 msgid "Resolution"
 msgstr "解像度"
 
@@ -269,37 +268,37 @@ msgstr ""
 "していない解像度は画像処理によって実現します。"
 
 #: drivers/esci/compound-scanner.cpp:2304
-#: drivers/esci/extended-scanner.cpp:1166
+#: drivers/esci/extended-scanner.cpp:1168
 msgid "Manual"
 msgstr "手動"
 
 #: drivers/esci/compound-scanner.cpp:2305
-#: drivers/esci/extended-scanner.cpp:1167
+#: drivers/esci/extended-scanner.cpp:1169
 msgid "Maximum"
 msgstr "最大"
 
 #: drivers/esci/compound-scanner.cpp:2314
-#: drivers/esci/extended-scanner.cpp:1176
+#: drivers/esci/extended-scanner.cpp:1178
 msgid "Scan Area"
 msgstr "取り込み領域"
 
 #: drivers/esci/compound-scanner.cpp:2322
-#: drivers/esci/extended-scanner.cpp:1184
+#: drivers/esci/extended-scanner.cpp:1186
 msgid "Top Left X"
 msgstr "左上 X"
 
 #: drivers/esci/compound-scanner.cpp:2330
-#: drivers/esci/extended-scanner.cpp:1200
+#: drivers/esci/extended-scanner.cpp:1202
 msgid "Top Left Y"
 msgstr "左上 Y"
 
 #: drivers/esci/compound-scanner.cpp:2338
-#: drivers/esci/extended-scanner.cpp:1192
+#: drivers/esci/extended-scanner.cpp:1194
 msgid "Bottom Right X"
 msgstr "右下 X"
 
 #: drivers/esci/compound-scanner.cpp:2346
-#: drivers/esci/extended-scanner.cpp:1208
+#: drivers/esci/extended-scanner.cpp:1210
 msgid "Bottom Right Y"
 msgstr "右下 Y"
 
@@ -312,7 +311,7 @@ msgid "Crop Adjustment"
 msgstr "切り出し位置調整"
 
 #: drivers/esci/compound-scanner.cpp:2404 gtkmm/dialog.cpp:581
-#: sane/handle.cpp:539 src/scan-cli.cpp:635
+#: sane/handle.cpp:542 src/scan-cli.cpp:635
 msgid "Deskew"
 msgstr "傾き補正"
 
@@ -321,11 +320,11 @@ msgid "Overscan"
 msgstr "オーバースキャン"
 
 #: drivers/esci/compound-scanner.cpp:2454
-#: drivers/esci/extended-scanner.cpp:1080
+#: drivers/esci/extended-scanner.cpp:1082
 msgid "internal error: no document source"
 msgstr "内部エラー: 取り込み装置がありません"
 
-#: drivers/esci/compound-scanner.cpp:2835
+#: drivers/esci/compound-scanner.cpp:2836
 msgid ""
 "Authentication is required.\n"
 "Unfortunately, this version of the driver does not support authentication "
@@ -334,13 +333,13 @@ msgstr ""
 "認証が求められました。\n"
 "このバージョンのドライバーは認証をサポートしていません。"
 
-#: drivers/esci/compound-scanner.cpp:2839
+#: drivers/esci/compound-scanner.cpp:2840
 #, boost-format
 msgid "Unknown device error: %1%/%2%"
 msgstr "不明なデバイスのエラー: %1%/%2%"
 
-#: drivers/esci/compound-scanner.cpp:2929
-#: drivers/esci/extended-scanner.cpp:205 sane/backend.cpp:287
+#: drivers/esci/compound-scanner.cpp:2930
+#: drivers/esci/extended-scanner.cpp:206 sane/backend.cpp:287
 msgid ""
 "The Automatic Document Feeder is open.\n"
 "Please close it."
@@ -348,8 +347,8 @@ msgstr ""
 "ADFまたはADFのカバーが開いています。\n"
 "ADFまたはADFのカバーを閉じてください。"
 
-#: drivers/esci/compound-scanner.cpp:2932
-#: drivers/esci/extended-scanner.cpp:200 sane/backend.cpp:273
+#: drivers/esci/compound-scanner.cpp:2933
+#: drivers/esci/extended-scanner.cpp:201 sane/backend.cpp:273
 msgid ""
 "A paper jam occurred.\n"
 "Open the Automatic Document Feeder and remove any paper.\n"
@@ -360,13 +359,13 @@ msgstr ""
 "また、ADFトレイに原稿がある場合は、カバーを閉じた後、原稿をセットし直してくだ"
 "さい。"
 
-#: drivers/esci/compound-scanner.cpp:2937
-#: drivers/esci/extended-scanner.cpp:198 sane/backend.cpp:269
+#: drivers/esci/compound-scanner.cpp:2938
+#: drivers/esci/extended-scanner.cpp:199 sane/backend.cpp:269
 msgid "Please load the document(s) into the Automatic Document Feeder."
 msgstr "ADFに原稿をセットしてください。"
 
-#: drivers/esci/compound-scanner.cpp:2939
-#: drivers/esci/extended-scanner.cpp:208 sane/backend.cpp:280
+#: drivers/esci/compound-scanner.cpp:2940
+#: drivers/esci/extended-scanner.cpp:209 sane/backend.cpp:280
 msgid ""
 "A multi page feed occurred in the auto document feeder. Open the cover, "
 "remove the documents, and then try again. If documents remain on the tray, "
@@ -376,8 +375,8 @@ msgstr ""
 "稿を取り除き、再度スキャンしてください。トレイに原稿があるときは、カバーを閉"
 "じてから原稿をセットし直してください。"
 
-#: drivers/esci/compound-scanner.cpp:2944
-#: drivers/esci/extended-scanner.cpp:213
+#: drivers/esci/compound-scanner.cpp:2945
+#: drivers/esci/extended-scanner.cpp:214
 msgid ""
 "A fatal ADF error has occurred.\n"
 "Resolve the error condition and try again.  You may have to restart the scan "
@@ -387,12 +386,12 @@ msgstr ""
 "エラーの状態を解決して、再試行してください。スキャンするためにスキャンダイア"
 "ログまたはアプリケーションを再起動する必要があります。"
 
-#: drivers/esci/compound-scanner.cpp:2958
+#: drivers/esci/compound-scanner.cpp:2959
 msgid "A fatal error has occurred"
 msgstr "予期せぬエラーが発生しました。"
 
 #: drivers/esci/compound-tweaks.cpp:112 drivers/esci/compound-tweaks.cpp:196
-#: drivers/esci/extended-scanner.cpp:293
+#: drivers/esci/extended-scanner.cpp:295
 msgid "Speed"
 msgstr "速度優先"
 
@@ -434,124 +433,124 @@ msgstr "デバイスが使用中または使用できない状態です"
 msgid "protocol error"
 msgstr "プロトコルエラーが発生しました"
 
-#: drivers/esci/extended-scanner.cpp:84
+#: drivers/esci/extended-scanner.cpp:85
 msgid "Positive Film"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:85
+#: drivers/esci/extended-scanner.cpp:86
 msgid "Negative Film"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:100
+#: drivers/esci/extended-scanner.cpp:101
 msgid "Bi-level CRT"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:101
+#: drivers/esci/extended-scanner.cpp:102
 msgid "Multi-level CRT"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:102
+#: drivers/esci/extended-scanner.cpp:103
 msgid "High Density Print"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:103
+#: drivers/esci/extended-scanner.cpp:104
 msgid "Low Density Print"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:104
+#: drivers/esci/extended-scanner.cpp:105
 msgid "High Contrast Print"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:105
+#: drivers/esci/extended-scanner.cpp:106
 msgid "Custom (Base Gamma = 1.0"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:106
+#: drivers/esci/extended-scanner.cpp:107
 msgid "Custom (Base Gamma = 1.8"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:121
+#: drivers/esci/extended-scanner.cpp:122
 #: drivers/esci/grammar-capabilities.cpp:246
 #: drivers/esci/grammar-capabilities.cpp:385
 msgid "None"
 msgstr "なし"
 
-#: drivers/esci/extended-scanner.cpp:123
+#: drivers/esci/extended-scanner.cpp:124
 msgid "Dot Matrix Printer"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:124
+#: drivers/esci/extended-scanner.cpp:125
 msgid "Thermal Printer"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:125
+#: drivers/esci/extended-scanner.cpp:126
 msgid "Inkjet Printer"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:126
+#: drivers/esci/extended-scanner.cpp:127
 msgid "CRT Display"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:141
+#: drivers/esci/extended-scanner.cpp:142
 msgid "Bi-level"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:142
+#: drivers/esci/extended-scanner.cpp:143
 msgid "Text Enhanced"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:143
+#: drivers/esci/extended-scanner.cpp:144
 msgid "Hard Tone"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:144
+#: drivers/esci/extended-scanner.cpp:145
 msgid "Soft Tone"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:145
+#: drivers/esci/extended-scanner.cpp:146
 msgid "Net Screen"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:146
+#: drivers/esci/extended-scanner.cpp:147
 msgid "Bayer 4x4"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:147
+#: drivers/esci/extended-scanner.cpp:148
 msgid "Spiral 4x4"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:148
+#: drivers/esci/extended-scanner.cpp:149
 msgid "Net Screen 4x4"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:149
+#: drivers/esci/extended-scanner.cpp:150
 msgid "Net Screen 8x4"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:191
+#: drivers/esci/extended-scanner.cpp:192
 msgid "Unknown device error"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:284
+#: drivers/esci/extended-scanner.cpp:286
 #: drivers/esci/grammar-capabilities.cpp:565
 msgid "Gray (1 bit)"
 msgstr "モノクロ"
 
-#: drivers/esci/extended-scanner.cpp:285
+#: drivers/esci/extended-scanner.cpp:287
 #: drivers/esci/grammar-capabilities.cpp:566
 msgid "Gray (8 bit)"
 msgstr "グレー（8 bit）"
 
-#: drivers/esci/extended-scanner.cpp:286
+#: drivers/esci/extended-scanner.cpp:288
 #: drivers/esci/grammar-capabilities.cpp:563
 msgid "Color (8 bit)"
 msgstr "カラー（8 bit）"
 
-#: drivers/esci/extended-scanner.cpp:300
+#: drivers/esci/extended-scanner.cpp:302
 msgid "Line Count"
 msgstr "ラインカウント"
 
-#: drivers/esci/extended-scanner.cpp:301
+#: drivers/esci/extended-scanner.cpp:303
 msgid ""
 "Specify how many scan lines to move from the device to the software in one "
 "transfer.  Note that 0 will use the maximum usable value.  Values larger "
@@ -561,81 +560,81 @@ msgstr ""
 "した場合、設定可能な最大値が使われます。設定可能な最大値よりも大きな値を指定"
 "した場合も最大値が使われます。"
 
-#: drivers/esci/extended-scanner.cpp:315
+#: drivers/esci/extended-scanner.cpp:317
 msgid "Gamma Correction"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:332
+#: drivers/esci/extended-scanner.cpp:334
 msgid "Color Correction"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:340
+#: drivers/esci/extended-scanner.cpp:342
 msgid "Auto Area Segmentation"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:341
+#: drivers/esci/extended-scanner.cpp:343
 msgid "Threshold text regions and apply half-toning to photo/image areas."
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:362
+#: drivers/esci/extended-scanner.cpp:364
 msgid "Dither Pattern"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:372
+#: drivers/esci/extended-scanner.cpp:374
 msgid "Sharpness"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:373
+#: drivers/esci/extended-scanner.cpp:375
 msgid ""
 "Emphasize the edges in an image more by choosing a larger value, less by "
 "selecting a smaller value."
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:385
+#: drivers/esci/extended-scanner.cpp:387
 msgid ""
 "Make images look lighter with a larger value or darker with a smaller value."
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:411
+#: drivers/esci/extended-scanner.cpp:413
 msgid "Mirror"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:442
+#: drivers/esci/extended-scanner.cpp:444
 msgid "esci::extended_scanner(): internal inconsistency"
 msgstr "esci::extended_scanner(): 内部不一致エラー"
 
-#: drivers/esci/extended-scanner.cpp:1096
+#: drivers/esci/extended-scanner.cpp:1098
 #: drivers/esci/grammar-capabilities.cpp:316
 #: drivers/esci/grammar-capabilities.cpp:326
 msgid "Document Table"
 msgstr "原稿台"
 
-#: drivers/esci/extended-scanner.cpp:1102
+#: drivers/esci/extended-scanner.cpp:1104
 #: drivers/esci/grammar-capabilities.cpp:314
 #: drivers/esci/grammar-capabilities.cpp:324
 msgid "ADF"
 msgstr "ADF"
 
-#: drivers/esci/extended-scanner.cpp:1121
+#: drivers/esci/extended-scanner.cpp:1123
 msgid "Primary TPU"
 msgstr "透過原稿ユニット 1"
 
-#: drivers/esci/extended-scanner.cpp:1122
+#: drivers/esci/extended-scanner.cpp:1124
 msgid "Secondary TPU"
 msgstr "透過原稿ユニット 2"
 
-#: drivers/esci/extended-scanner.cpp:1126
+#: drivers/esci/extended-scanner.cpp:1128
 #: drivers/esci/grammar-capabilities.cpp:315
 #: drivers/esci/grammar-capabilities.cpp:325
 msgid "Transparency Unit"
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:1135
+#: drivers/esci/extended-scanner.cpp:1137
 #, fuzzy
 msgid "Film Type"
 msgstr "イメージタイプ"
 
-#: drivers/esci/extended-scanner.cpp:1169
+#: drivers/esci/extended-scanner.cpp:1171
 msgid "Automatic"
 msgstr ""
 
@@ -722,18 +721,6 @@ msgstr "バッファーサイズ"
 #: filters/jpeg.cpp:252
 msgid "Image Quality"
 msgstr "画質"
-
-#: filters/lut.cpp:102
-msgid "lut filter supports 8 or 16 bit only."
-msgstr "LUTフィルターは8bitもしくは16bitのみ対応しています"
-
-#: filters/lut.cpp:130
-msgid "Change brightness of the acquired image."
-msgstr "デバイスから取得した画像の明るさを変更します"
-
-#: filters/lut.cpp:139
-msgid "Change contrast of the acquired image."
-msgstr "デバイスから取得した画像のコントラストを変更します"
 
 #: filters/padding.cpp:102
 msgid "padding only works with raster images of known size"
@@ -951,10 +938,10 @@ msgstr "%1% 形式では複数画像を一つのファイルに保存できま�
 #, boost-format
 msgid ""
 "Please save to PDF or TIFF if you want a single file.  If you prefer the %1% "
-"image format, use a filename such as 'Untitled-%%3i.%2%'."
+"image format, use a filename such as 'Untitled-%%3i%2%'."
 msgstr ""
 "一つのファイルに保存したい場合は、PDFかTIFFを選択してください。もしも %1% 画"
-"像形式を使用したい場合は、ファイル名を '無題-%%3i.%2%' のように指定してくださ"
+"像形式を使用したい場合は、ファイル名を '無題-%%3i%2%' のように指定してくださ"
 "い。"
 
 #: gtkmm/file-chooser.cpp:318
@@ -1232,7 +1219,7 @@ msgstr "ライブラリーの初期化に失敗しました"
 msgid "Unknown SANE status code %d"
 msgstr "不明なSANEのステータスコード %d"
 
-#: sane/handle.cpp:1281
+#: sane/handle.cpp:1284
 msgid ""
 "SANE API specification violation\n"
 "The option number count has to be the first option."
@@ -1240,7 +1227,7 @@ msgstr ""
 "SANE API の仕様違反\n"
 "オプション番号数は最初のオプションでなければなりません。"
 
-#: sane/handle.cpp:1453
+#: sane/handle.cpp:1485
 msgid ""
 "SANE API specification violation\n"
 "Option names must start with a lower-case ASCII character."
@@ -1439,33 +1426,11 @@ msgstr "適切なユーティリティで画像を取得する"
 msgid "display version information for a command"
 msgstr "コマンドのバージョン情報を表示する"
 
-#~ msgid "cannot find '%1%'"
-#~ msgstr "'%1%'が見つかりません"
+#~ msgid "Change brightness of the acquired image."
+#~ msgstr "デバイスから取得した画像の明るさを変更します"
 
-#~ msgid "Flatbed"
-#~ msgstr "原稿台"
-
-#~ msgid "TPU"
-#~ msgstr "透過原稿ユニット"
-
-#~ msgid "Sensitive"
-#~ msgstr "薄い"
-
-#~ msgid "Please close the ADF cover and try again."
-#~ msgstr "ADFのカバーを閉じて、再試行してください。"
-
-#~ msgid "Clear the ADF document jam and try again."
-#~ msgstr "ADFに詰まった原稿を取り除き、再試行してください。"
-
-#~ msgid "Please put your document in the ADF before scanning."
-#~ msgstr "ADFに原稿をセットしてからスキャンしてください。"
-
-#~ msgid ""
-#~ "A multi page feed occurred in the ADF.\n"
-#~ "Clear the document feeder and try again."
-#~ msgstr ""
-#~ "ADFで用紙が重なって給紙されました。\n"
-#~ "カバーを開けて原稿を取り除き、再試行してください。"
+#~ msgid "Change contrast of the acquired image."
+#~ msgstr "デバイスから取得した画像のコントラストを変更します"
 
 #~ msgid "Text/Line Art"
 #~ msgstr "文字/線画"
@@ -1476,17 +1441,11 @@ msgstr "コマンドのバージョン情報を表示する"
 #~ msgid "Color"
 #~ msgstr "カラー"
 
+#~ msgid "Mode"
+#~ msgstr "モード"
+
 #~ msgid "ADF - Single-sided"
 #~ msgstr "ADF片面"
 
 #~ msgid "ADF - Double-sided"
 #~ msgstr "ADF両面"
-
-#~ msgid "Refresh"
-#~ msgstr "更新"
-
-#~ msgid ""
-#~ "These files already exist in \"%1%\".  Replacing them may overwrite their "
-#~ "contents."
-#~ msgstr ""
-#~ "\"%1%\" にファイルが既に存在しています。すべての内容を上書きします。"

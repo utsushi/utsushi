@@ -29,7 +29,6 @@ TESTS = $(check_PROGRAMS)
 check_PROGRAMS  =
 check_PROGRAMS += padding.utr
 check_PROGRAMS += pnm.utr
-check_PROGRAMS += lut.utr
 check_PROGRAMS += threshold.utr
 check_PROGRAMS += image-skip.utr
 check_PROGRAMS += shell-pipe.utr

@@ -54,7 +54,7 @@ DERIVED_COMPOUND_(compound_scanner, DS_760_860,);
 DERIVED_COMPOUND_(compound_scanner, DS_xxx00,);
 DERIVED_COMPOUND_(DS_xxx00, DS_x500,);
 DERIVED_COMPOUND_(DS_xxx00, DS_x0000,);
-DERIVED_COMPOUND_(compound_scanner, PX_M7050,);
+DERIVED_COMPOUND_(compound_scanner, PX_Mxxx0,);
 
 }       // namespace esci
 }       // namespace _drv_

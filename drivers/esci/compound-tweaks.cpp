@@ -314,7 +314,7 @@ DS_x0000::DS_x0000 (const connexion::ptr& cnx)
   mat[2][2] =  1.3745;
 }
 
-PX_M7050::PX_M7050 (const connexion::ptr& cnx)
+PX_Mxxx0::PX_Mxxx0 (const connexion::ptr& cnx)
   : compound_scanner (cnx)
 {
   information&  info (const_cast< information& > (info_));
@@ -329,13 +329,16 @@ PX_M7050::PX_M7050 (const connexion::ptr& cnx)
     std::string product;
     if ("PID 08BC" == info.product_name ()) product = "PX-M7050";
     if ("PID 08CC" == info.product_name ()) product = "PX-M7050FX";
+    if ("PID 08CE" == info.product_name ()) product = "PX-M860F";
     if (!product.empty ())
       info.product.assign (product.begin (), product.end ());
   }
 
   // Disable 300dpi vertical resolution for performance reasons.
   // Acquiring at 400dpi is faster for some reason.
-  if (caps.rss)
+  if ((   info.product_name () == "PX-M7050"
+       || info.product_name () == "PX-M7050FX")
+       && caps.rss)
     {
       try
         {

@@ -26,6 +26,7 @@
 #include <time.h>
 
 #include <boost/assign/list_inserter.hpp>
+#include <boost/assign/list_of.hpp>
 #include <boost/bimap.hpp>
 #include <boost/foreach.hpp>
 #include <boost/numeric/conversion/cast.hpp>
@@ -247,6 +248,7 @@ extended_scanner::extended_scanner (const connexion::ptr& cnx)
   , defs_(true)
   , acquire_(true)
   , stat_(true)
+  , read_back_(true)
   , cancelled_(false)
   , locked_(false)
 {
@@ -1378,52 +1380,50 @@ extended_scanner::configure_color_correction ()
 
   matrix< double, 3 > mat;
 
-  if (   caps_.product_name () == "PID 08C0"
-      || caps_.product_name () == "PID 08C2"
-      || caps_.product_name () == "PID 08D1"
-      || caps_.product_name () == "PID 08D2"
-      || caps_.product_name () == "PID 08D3"
-      || caps_.product_name () == "PID 1101"
-      || caps_.product_name () == "PID 1102"
-      || caps_.product_name () == "PID 1103"
-      || caps_.product_name () == "PID 1104")
-    {
-      mat[0][0] =  1.0782;
-      mat[0][1] =  0.0135;
-      mat[0][2] = -0.0917;
-      mat[1][0] =  0.0206;
-      mat[1][1] =  1.0983;
-      mat[1][2] = -0.1189;
-      mat[2][0] =  0.0113;
-      mat[2][1] = -0.1485;
-      mat[2][2] =  1.1372;
-    }
-  else if (   caps_.product_name () == "PID 1109"
-           || caps_.product_name () == "PID 110B"
-           || caps_.product_name () == "PID 110C")
-    {
-      mat[0][0] =  1.0567;
-      mat[0][1] =  0.0415;
-      mat[0][2] = -0.0982;
-      mat[1][0] =  0.0289;
-      mat[1][1] =  1.1112;
-      mat[1][2] = -0.1401;
-      mat[2][0] =  0.0193;
-      mat[2][1] = -0.2250;
-      mat[2][2] =  1.2057;
-    }
-  else
-    {
-      mat[0][0] = 1.0;
-      mat[0][1] = 0.0;
-      mat[0][2] = 0.0;
-      mat[1][0] = 0.0;
-      mat[1][1] = 1.0;
-      mat[1][2] = 0.0;
-      mat[2][0] = 0.0;
-      mat[2][1] = 0.0;
-      mat[2][2] = 1.0;
-    }
+  mat[0][0] = 1.0;  mat[0][1] = 0.0;  mat[0][2] = 0.0;
+  mat[1][0] = 0.0;  mat[1][1] = 1.0;  mat[1][2] = 0.0;
+  mat[2][0] = 0.0;  mat[2][1] = 0.0;  mat[2][2] = 1.0;
+
+  static const matrix< double, 3 > unit_matrix = mat;
+
+  mat[0][0] =  1.0782;  mat[0][1] =  0.0135;  mat[0][2] = -0.0917;
+  mat[1][0] =  0.0206;  mat[1][1] =  1.0983;  mat[1][2] = -0.1189;
+  mat[2][0] =  0.0113;  mat[2][1] = -0.1485;  mat[2][2] =  1.1372;
+
+  static const matrix< double, 3 > profile_matrix_1 = mat;
+
+  mat[0][0] =  1.0567;  mat[0][1] =  0.0415;  mat[0][2] = -0.0982;
+  mat[1][0] =  0.0289;  mat[1][1] =  1.1112;  mat[1][2] = -0.1401;
+  mat[2][0] =  0.0193;  mat[2][1] = -0.2250;  mat[2][2] =  1.2057;
+
+  static const matrix< double, 3 > profile_matrix_2 = mat;
+
+  static const std::map< std::string, const matrix< double, 3 > >
+    profile_matrix = boost::assign::map_list_of
+    ("PID 08C0", profile_matrix_1)
+    ("PID 08C2", profile_matrix_1)
+    ("PID 08D1", profile_matrix_1)
+    ("PID 08D2", profile_matrix_1)
+    ("PID 08D3", profile_matrix_1)
+    ("PID 1101", profile_matrix_1)
+    ("PID 1102", profile_matrix_1)
+    ("PID 1103", profile_matrix_1)
+    ("PID 1104", profile_matrix_1)
+    ("PID 1105", profile_matrix_1)
+    ("PID 1106", profile_matrix_1)
+    ("PID 1107", profile_matrix_1)
+    //
+    ("PID 1109", profile_matrix_2)
+    ("PID 110B", profile_matrix_2)
+    ("PID 110C", profile_matrix_2)
+    ;
+
+  try {
+    mat = profile_matrix.at (caps_.product_name ());
+  }
+  catch (const std::out_of_range&) {
+    mat = unit_matrix;
+  }
 
   add_options ()
     ("cct-1", quantity (mat[0][0]))

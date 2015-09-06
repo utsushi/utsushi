@@ -196,6 +196,7 @@ driverdata_DATA += data/DS-60000.dat
 driverdata_DATA += data/DS-70000.dat
 driverdata_DATA += data/PX-M7050.dat
 driverdata_DATA += data/PX-M7050FX.dat
+driverdata_DATA += data/PX-M860F.dat
 
 EXTRA_DIST += $(driverdata_DATA)
 
