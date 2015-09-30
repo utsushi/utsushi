@@ -42,7 +42,7 @@ LDADD += $(BOOST_REGEX_LIB)
 
 ##  Create all test inputs before running any of the tests.
 
-all-local: $(indent_config) vc-dist-files
+all-local: $(indent_config) $(srcdir)/vc-dist-files
 
 endif # enable_boost_unit_test_framework
 
@@ -67,30 +67,30 @@ vc_list_files = \
 ##  Note that files are listed relative to $(srcdir).
 
 distdir ?= $(srcdir)
-vc-dist-files:
+$(srcdir)/vc-dist-files:
 	-@top_srcdir=`echo $(top_srcdir) | sed 's|\\.|\\\\.|g'`; \
 	for file in `$(vc_list_files)`; do \
 	  file=`echo $$file | sed "s|^$$top_srcdir/|../|"`; \
 	  test -e $(distdir)/$$file \
 	    && echo $$file; \
-	done > $@.tmp
-	@if cmp $@ $@.tmp >/dev/null 2>&1; then \
-	  rm $@.tmp; \
+	done > $(@F).tmp
+	@if cmp $@ $(@F).tmp >/dev/null 2>&1; then \
+	  rm $(@F).tmp; \
 	else \
-	  if test -s $@.tmp; then \
-	    mv $@.tmp $@; \
+	  if test -s $(@F).tmp; then \
+	    mv $(@F).tmp $@; \
 	  else \
-	    rm $@.tmp; \
+	    rm $(@F).tmp; \
 	  fi; \
 	fi
 
-dist-hook: vc-dist-files
-	cp $< $(distdir)/$<
+dist-hook: $(srcdir)/vc-dist-files
+	cp $< $(distdir)/vc-dist-files
 
 clean-local:
 	-@test "$(srcdir)" != "$(builddir)" && rm vc-dist-files
 
-.PHONY: vc-dist-files
+.PHONY: $(srcdir)/vc-dist-files
 
 ##  C++ source code indentation policy
 

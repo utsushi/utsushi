@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.9.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2015-08-31 04:12+0000\n"
+"POT-Creation-Date: 2015-09-16 01:38+0000\n"
 "PO-Revision-Date: 2015-01-26 16:34+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Russian\n"
@@ -31,11 +31,11 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 1.7.3\n"
 
-#: connexions/usb.cpp:96
+#: connexions/usb.cpp:100
 msgid "unable to initialise USB support"
 msgstr ""
 
-#: connexions/usb.cpp:113
+#: connexions/usb.cpp:117
 msgid "no usable, matching device"
 msgstr ""
 
@@ -75,80 +75,80 @@ msgstr "Сбой извлечения"
 msgid "Maintenance failed"
 msgstr "Сбой техобслуживания"
 
-#: drivers/esci/compound-scanner.cpp:530
+#: drivers/esci/compound-scanner.cpp:524
 #: drivers/esci/extended-scanner.cpp:1149
 msgid "Document Source"
 msgstr "&Источник документа:"
 
-#: drivers/esci/compound-scanner.cpp:544 drivers/esci/extended-scanner.cpp:291
+#: drivers/esci/compound-scanner.cpp:538 drivers/esci/extended-scanner.cpp:291
 msgid "Image Type"
 msgstr "Тип изо&бражения:"
 
-#: drivers/esci/compound-scanner.cpp:557
+#: drivers/esci/compound-scanner.cpp:551
 msgid "Dropout"
 msgstr "Исключение"
 
-#: drivers/esci/compound-scanner.cpp:570 drivers/esci/extended-scanner.cpp:422
+#: drivers/esci/compound-scanner.cpp:564 drivers/esci/extended-scanner.cpp:422
 msgid "Transfer Format"
 msgstr "Формат передачи"
 
-#: drivers/esci/compound-scanner.cpp:571
+#: drivers/esci/compound-scanner.cpp:565
 msgid ""
 "Selecting a compressed format such as JPEG normally results in faster device "
 "side processing."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:585
+#: drivers/esci/compound-scanner.cpp:579
 msgid "JPEG Quality"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:598 drivers/esci/extended-scanner.cpp:354
+#: drivers/esci/compound-scanner.cpp:592 drivers/esci/extended-scanner.cpp:354
 #: filters/threshold.cpp:49
 msgid "Threshold"
 msgstr "Поро&г:"
 
-#: drivers/esci/compound-scanner.cpp:611 drivers/esci/extended-scanner.cpp:325
+#: drivers/esci/compound-scanner.cpp:605 drivers/esci/extended-scanner.cpp:325
 msgid "Gamma"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:628 drivers/esci/extended-scanner.cpp:386
+#: drivers/esci/compound-scanner.cpp:622 drivers/esci/extended-scanner.cpp:386
 #: drivers/esci/extended-scanner.cpp:397
 msgid "Brightness"
 msgstr "Яркость"
 
-#: drivers/esci/compound-scanner.cpp:635 drivers/esci/extended-scanner.cpp:406
+#: drivers/esci/compound-scanner.cpp:629 drivers/esci/extended-scanner.cpp:406
 msgid "Contrast"
 msgstr "Контрастность"
 
-#: drivers/esci/compound-scanner.cpp:649
+#: drivers/esci/compound-scanner.cpp:643
 msgid "Transfer Size"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:664
+#: drivers/esci/compound-scanner.cpp:658
 msgid "Border Fill"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:680
+#: drivers/esci/compound-scanner.cpp:674
 msgid "Left Border"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:685
+#: drivers/esci/compound-scanner.cpp:679
 msgid "Right Border"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:690
+#: drivers/esci/compound-scanner.cpp:684
 msgid "Top Border"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:695
+#: drivers/esci/compound-scanner.cpp:689
 msgid "Bottom Border"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:712
+#: drivers/esci/compound-scanner.cpp:706
 msgid "Force Extent"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:713
+#: drivers/esci/compound-scanner.cpp:707
 msgid ""
 "Force the image size to equal the user selected size.  Scanners may trim the "
 "image data to the detected size of the document.  This may result in images "
@@ -157,163 +157,163 @@ msgid ""
 "Note that this option may slow down application/driver side processing."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:741
+#: drivers/esci/compound-scanner.cpp:735
 msgid "esci::compound_scanner(): internal inconsistency"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:755
+#: drivers/esci/compound-scanner.cpp:749
 msgid "Calibration"
 msgstr "Калибровка"
 
-#: drivers/esci/compound-scanner.cpp:756
+#: drivers/esci/compound-scanner.cpp:750
 msgid "Calibrating..."
 msgstr "Калибровка..."
 
-#: drivers/esci/compound-scanner.cpp:763
+#: drivers/esci/compound-scanner.cpp:757
 msgid "Cleaning"
 msgstr "Очистка"
 
-#: drivers/esci/compound-scanner.cpp:764
+#: drivers/esci/compound-scanner.cpp:758
 msgid "Cleaning..."
 msgstr "Очистка..."
 
-#: drivers/esci/compound-scanner.cpp:771
+#: drivers/esci/compound-scanner.cpp:765
 msgid "Eject"
 msgstr "Извлечь"
 
-#: drivers/esci/compound-scanner.cpp:772
+#: drivers/esci/compound-scanner.cpp:766
 msgid "Ejecting ..."
 msgstr "Извлечение..."
 
-#: drivers/esci/compound-scanner.cpp:779
+#: drivers/esci/compound-scanner.cpp:773
 msgid "Load"
 msgstr "Загрузить"
 
-#: drivers/esci/compound-scanner.cpp:780
+#: drivers/esci/compound-scanner.cpp:774
 msgid "Loading..."
 msgstr "Загрузка..."
 
-#: drivers/esci/compound-scanner.cpp:1696
+#: drivers/esci/compound-scanner.cpp:1690
 #: drivers/esci/grammar-capabilities.cpp:444
 msgid "RAW"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:1752
+#: drivers/esci/compound-scanner.cpp:1746
 #, boost-format
 msgid ""
 "Scan area too small.\n"
 "The area needs to be larger than %1% by %2%."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2031
+#: drivers/esci/compound-scanner.cpp:2025
 #: drivers/esci/extended-scanner.cpp:1111
 msgid "Duplex"
 msgstr "Двусторонняя"
 
-#: drivers/esci/compound-scanner.cpp:2043
+#: drivers/esci/compound-scanner.cpp:2037
 msgid "Image Count"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2055
+#: drivers/esci/compound-scanner.cpp:2049
 msgid "Detect Double Feed"
 msgstr "Определять склеенные"
 
-#: drivers/esci/compound-scanner.cpp:2170
-#: drivers/esci/compound-scanner.cpp:2240
+#: drivers/esci/compound-scanner.cpp:2164
+#: drivers/esci/compound-scanner.cpp:2234
 msgid "Bind X and Y resolutions"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2174
-#: drivers/esci/compound-scanner.cpp:2209
-#: drivers/esci/compound-scanner.cpp:2244
-#: drivers/esci/compound-scanner.cpp:2279
+#: drivers/esci/compound-scanner.cpp:2168
+#: drivers/esci/compound-scanner.cpp:2203
+#: drivers/esci/compound-scanner.cpp:2238
+#: drivers/esci/compound-scanner.cpp:2273
 #: drivers/esci/extended-scanner.cpp:280
 msgid "Resolution"
 msgstr "Разрешение"
 
-#: drivers/esci/compound-scanner.cpp:2178
-#: drivers/esci/compound-scanner.cpp:2193
-#: drivers/esci/compound-scanner.cpp:2248
-#: drivers/esci/compound-scanner.cpp:2263
+#: drivers/esci/compound-scanner.cpp:2172
+#: drivers/esci/compound-scanner.cpp:2187
+#: drivers/esci/compound-scanner.cpp:2242
+#: drivers/esci/compound-scanner.cpp:2257
 msgid "X Resolution"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2182
-#: drivers/esci/compound-scanner.cpp:2197
-#: drivers/esci/compound-scanner.cpp:2252
-#: drivers/esci/compound-scanner.cpp:2267
+#: drivers/esci/compound-scanner.cpp:2176
+#: drivers/esci/compound-scanner.cpp:2191
+#: drivers/esci/compound-scanner.cpp:2246
+#: drivers/esci/compound-scanner.cpp:2261
 msgid "Y Resolution"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2227
+#: drivers/esci/compound-scanner.cpp:2221
 msgid "Enable Resampling"
 msgstr "Включить ресемплинг"
 
-#: drivers/esci/compound-scanner.cpp:2228
+#: drivers/esci/compound-scanner.cpp:2222
 msgid ""
 "This option provides the user with a wider range of supported resolutions.  "
 "Resolutions not supported by the hardware will be achieved through image "
 "processing methods."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2304
+#: drivers/esci/compound-scanner.cpp:2298
 #: drivers/esci/extended-scanner.cpp:1168
 msgid "Manual"
 msgstr "Ручной"
 
-#: drivers/esci/compound-scanner.cpp:2305
+#: drivers/esci/compound-scanner.cpp:2299
 #: drivers/esci/extended-scanner.cpp:1169
 msgid "Maximum"
 msgstr "Максимальное значение"
 
-#: drivers/esci/compound-scanner.cpp:2314
+#: drivers/esci/compound-scanner.cpp:2308
 #: drivers/esci/extended-scanner.cpp:1178
 msgid "Scan Area"
 msgstr "Сканировать область"
 
-#: drivers/esci/compound-scanner.cpp:2322
+#: drivers/esci/compound-scanner.cpp:2316
 #: drivers/esci/extended-scanner.cpp:1186
 msgid "Top Left X"
 msgstr "Вверху слева по оси X"
 
-#: drivers/esci/compound-scanner.cpp:2330
+#: drivers/esci/compound-scanner.cpp:2324
 #: drivers/esci/extended-scanner.cpp:1202
 msgid "Top Left Y"
 msgstr "Вверху слева по оси Y"
 
-#: drivers/esci/compound-scanner.cpp:2338
+#: drivers/esci/compound-scanner.cpp:2332
 #: drivers/esci/extended-scanner.cpp:1194
 msgid "Bottom Right X"
 msgstr "Внизу справа по оси X"
 
-#: drivers/esci/compound-scanner.cpp:2346
+#: drivers/esci/compound-scanner.cpp:2340
 #: drivers/esci/extended-scanner.cpp:1210
 msgid "Bottom Right Y"
 msgstr "Внизу справа по оси Y"
 
-#: drivers/esci/compound-scanner.cpp:2369
+#: drivers/esci/compound-scanner.cpp:2363
 msgid "Crop"
 msgstr "Обрезать"
 
-#: drivers/esci/compound-scanner.cpp:2380
+#: drivers/esci/compound-scanner.cpp:2374
 msgid "Crop Adjustment"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2404 gtkmm/dialog.cpp:581
+#: drivers/esci/compound-scanner.cpp:2398 gtkmm/dialog.cpp:581
 #: sane/handle.cpp:542 src/scan-cli.cpp:635
 msgid "Deskew"
 msgstr "Устранение перекоса"
 
-#: drivers/esci/compound-scanner.cpp:2432
+#: drivers/esci/compound-scanner.cpp:2426
 msgid "Overscan"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2454
+#: drivers/esci/compound-scanner.cpp:2448
 #: drivers/esci/extended-scanner.cpp:1082
 msgid "internal error: no document source"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2836
+#: drivers/esci/compound-scanner.cpp:2830
 msgid ""
 "Authentication is required.\n"
 "Unfortunately, this version of the driver does not support authentication "
@@ -322,12 +322,12 @@ msgstr ""
 "Требуется аутентификация.\n"
 "К сожалению, эта версия драйвера не поддерживает аутентификацию."
 
-#: drivers/esci/compound-scanner.cpp:2840
+#: drivers/esci/compound-scanner.cpp:2834
 #, boost-format
 msgid "Unknown device error: %1%/%2%"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2930
+#: drivers/esci/compound-scanner.cpp:2924
 #: drivers/esci/extended-scanner.cpp:206 sane/backend.cpp:287
 msgid ""
 "The Automatic Document Feeder is open.\n"
@@ -336,7 +336,7 @@ msgstr ""
 "Автоматический податчик документов открыт.\n"
 "Пожалуйста, закройте его."
 
-#: drivers/esci/compound-scanner.cpp:2933
+#: drivers/esci/compound-scanner.cpp:2927
 #: drivers/esci/extended-scanner.cpp:201 sane/backend.cpp:273
 msgid ""
 "A paper jam occurred.\n"
@@ -348,12 +348,12 @@ msgstr ""
 "бумагу.Если в автоматический податчик загружены документы, извлеките их и "
 "загрузите заново."
 
-#: drivers/esci/compound-scanner.cpp:2938
+#: drivers/esci/compound-scanner.cpp:2932
 #: drivers/esci/extended-scanner.cpp:199 sane/backend.cpp:269
 msgid "Please load the document(s) into the Automatic Document Feeder."
 msgstr "Пожалуйста, загрузите документы в автоматический податчик документов."
 
-#: drivers/esci/compound-scanner.cpp:2940
+#: drivers/esci/compound-scanner.cpp:2934
 #: drivers/esci/extended-scanner.cpp:209 sane/backend.cpp:280
 msgid ""
 "A multi page feed occurred in the auto document feeder. Open the cover, "
@@ -364,7 +364,7 @@ msgstr ""
 "выньте документы и повторите попытку. Если документы остаются в лотке, "
 "выньте их и положите заново."
 
-#: drivers/esci/compound-scanner.cpp:2945
+#: drivers/esci/compound-scanner.cpp:2939
 #: drivers/esci/extended-scanner.cpp:214
 msgid ""
 "A fatal ADF error has occurred.\n"
@@ -372,7 +372,7 @@ msgid ""
 "dialog or application in order to be able to scan."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2959
+#: drivers/esci/compound-scanner.cpp:2953
 msgid "A fatal error has occurred"
 msgstr ""
 
@@ -838,7 +838,7 @@ msgstr "Сохранить как..."
 msgid "Untitled"
 msgstr "Без названия"
 
-#: gtkmm/dialog.cpp:503 src/scan-cli.cpp:1014
+#: gtkmm/dialog.cpp:503 src/scan-cli.cpp:1015
 #, boost-format
 msgid "conversion from %1% to %2% is not supported"
 msgstr "Преобразование %1% в %2% не поддерживается"
@@ -1132,7 +1132,7 @@ msgstr ""
 msgid "driver not found"
 msgstr ""
 
-#: lib/scanner.cpp:159
+#: lib/scanner.cpp:153
 #, boost-format
 msgid "syntax error: invalid UDI '%1%'"
 msgstr ""

@@ -1375,16 +1375,7 @@ extended_scanner::configure_color_correction ()
   if (caps_.command_level () != "D7")
     return;
 
-  add_options ()
-    ("sw-color-correction", toggle (true));
-
   matrix< double, 3 > mat;
-
-  mat[0][0] = 1.0;  mat[0][1] = 0.0;  mat[0][2] = 0.0;
-  mat[1][0] = 0.0;  mat[1][1] = 1.0;  mat[1][2] = 0.0;
-  mat[2][0] = 0.0;  mat[2][1] = 0.0;  mat[2][2] = 1.0;
-
-  static const matrix< double, 3 > unit_matrix = mat;
 
   mat[0][0] =  1.0782;  mat[0][1] =  0.0135;  mat[0][2] = -0.0917;
   mat[1][0] =  0.0206;  mat[1][1] =  1.0983;  mat[1][2] = -0.1189;
@@ -1413,29 +1404,30 @@ extended_scanner::configure_color_correction ()
     ("PID 1106", profile_matrix_1)
     ("PID 1107", profile_matrix_1)
     //
+    ("PID 08CD", profile_matrix_2)
+    ("PID 1108", profile_matrix_2)
     ("PID 1109", profile_matrix_2)
+    ("PID 110A", profile_matrix_2)
     ("PID 110B", profile_matrix_2)
     ("PID 110C", profile_matrix_2)
     ;
 
   try {
     mat = profile_matrix.at (caps_.product_name ());
+    add_options ()
+      ("cct-1", quantity (mat[0][0]))
+      ("cct-2", quantity (mat[0][1]))
+      ("cct-3", quantity (mat[0][2]))
+      ("cct-4", quantity (mat[1][0]))
+      ("cct-5", quantity (mat[1][1]))
+      ("cct-6", quantity (mat[1][2]))
+      ("cct-7", quantity (mat[2][0]))
+      ("cct-8", quantity (mat[2][1]))
+      ("cct-9", quantity (mat[2][2]))
+      ("sw-color-correction", toggle (true))
+      ;
   }
-  catch (const std::out_of_range&) {
-    mat = unit_matrix;
-  }
-
-  add_options ()
-    ("cct-1", quantity (mat[0][0]))
-    ("cct-2", quantity (mat[0][1]))
-    ("cct-3", quantity (mat[0][2]))
-    ("cct-4", quantity (mat[1][0]))
-    ("cct-5", quantity (mat[1][1]))
-    ("cct-6", quantity (mat[1][2]))
-    ("cct-7", quantity (mat[2][0]))
-    ("cct-8", quantity (mat[2][1]))
-    ("cct-9", quantity (mat[2][2]))
-    ;
+  catch (const std::out_of_range&) {}
 }
 
 context::size_type

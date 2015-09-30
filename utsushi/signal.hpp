@@ -1,5 +1,5 @@
 //  signal.hpp -- wrapper for signal/slot support
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -35,4 +35,4 @@ using boost::signals2::signal;
 
 }       // namespace utsushi
 
-#endif  /* utsushi_shared_ptr_hpp_ */
+#endif  /* utsushi_signal_hpp_ */

@@ -1,5 +1,5 @@
 #  ltmain.sh.diff -- SANE backend library soname handling fixes
-#  Copyright (C) 2012  SEIKO EPSON CORPORATION
+#  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 #  Copyright (C) 2007  EPSON AVASYS CORPORATION
 #
 #  License: GPL-2.0+ (same as ltmain.sh)
@@ -93,7 +93,7 @@
    *-*-mingw | *-*-os2* | *-cegcc*)
      $ECHO "\
        if test -n \"\$lt_option_debug\"; then
-@@ -8118,10 +8180,46 @@
+@@ -8118,10 +8180,47 @@
  	fi
  	if test -z "$dlname"; then
  	  dlname=$soname
@@ -120,6 +120,7 @@
 +## may be helpful in identifying other soname patterns.
 +##
 +## Last versions checked: libtool-2.2.6b, sane-backends-1.0.21.
++## Last versions checked: libtool-2.4.2, sane-backends-1.0.24.
 +
 +	case $host in
 +	  *aix*)		# rumoured not to work ...

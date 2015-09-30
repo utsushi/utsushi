@@ -958,7 +958,8 @@ main (int argc, char *argv[])
                   (om["threshold"].constraint ()))->upper ();
           (*magick->options ())["threshold"] = thr;
 
-          (*magick->options ())["image-format"] = fmt;
+          if ("ASIS" != fmt)
+            (*magick->options ())["image-format"] = fmt;
       }
 
       {

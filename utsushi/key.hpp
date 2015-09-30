@@ -1,5 +1,5 @@
 //  key.hpp -- for use with settings and groups
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -53,4 +53,4 @@ private:
 
 }       // namespace utsushi
 
-#endif  /* utsushi_key_hpp */
+#endif  /* utsushi_key_hpp_ */

@@ -1,6 +1,6 @@
 #! /bin/sh
 #  bootstrap -- clean checkouts to a point where `./configure` succeeds
-#  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+#  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 #  Copyright (C) 2013, 2014  Olaf Meeuwissen
 #
 #  License: GPL-3.0+
@@ -227,7 +227,7 @@ fi
 #  we can fall back to our included Boost sources.
 #  Older versions did not support the ACTION-IF-[NOT-]FOUND API.
 
-serial=`awk '/^#serial/{ if ($2>23) print $2 }' $macro_dir/ax_boost_base.m4`
+serial=`awk '/^#serial/{ if ($2>25) print $2 }' $macro_dir/ax_boost_base.m4`
 if test -n "$serial"; then
     cat <<EOF >&2
 It seems there is a new AX_BOOST_BASE macro version out there.  The

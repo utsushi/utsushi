@@ -60,4 +60,4 @@ protected:
 }       // namespace _flt_
 }       // namespace utsushi
 
-#endif  /* !defined (filters_magick_hpp_) */
+#endif  /* filters_magick_hpp_ */

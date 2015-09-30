@@ -197,6 +197,7 @@ driverdata_DATA += data/DS-70000.dat
 driverdata_DATA += data/PX-M7050.dat
 driverdata_DATA += data/PX-M7050FX.dat
 driverdata_DATA += data/PX-M860F.dat
+driverdata_DATA += data/WF-6590.dat
 
 EXTRA_DIST += $(driverdata_DATA)
 
@@ -233,3 +234,6 @@ $(srcdir)/data/DS-60000.dat: $(srcdir)/data/DS-70000.dat
 
 $(srcdir)/data/PX-M7050FX.dat: $(srcdir)/data/PX-M7050.dat
 	sed -e 's,PID 08BC,PID 08CC,' $< > $@
+
+$(srcdir)/data/WF-6590.dat: $(srcdir)/data/PX-M860F.dat
+	sed -e 's,PID 08CE,PID 08CF,' $< > $@

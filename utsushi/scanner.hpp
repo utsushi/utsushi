@@ -1,5 +1,5 @@
 //  scanner.hpp -- interface and support classes
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -39,11 +39,6 @@ public:
 
   class info;
   static ptr create (connexion::ptr cnx, const scanner::info& info);
-
-  //! Get the scanner's firmware model name
-  /*! The default implementation returns the empty string.
-   */
-  virtual std::string model () const;
 
 protected:
   scanner (connexion::ptr cnx);

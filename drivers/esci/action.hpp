@@ -144,18 +144,7 @@ namespace _drv_ {
              get_extended_status::adf_is_page_type()
          \sa abort_scan, end_of_transmission
      */
-    class eject_media
-      : public action<FF>
-    {
-      void
-      operator>> (connexion& cnx)
-      {
-        cnx.send (cmd_, 1, 0);
-        cnx.recv (&rep_, 1, 0);
-
-        this->validate_reply ();
-      }
-    };
+    typedef action<FF>  eject_media;
 
     //!  Fetch media for the next scan.
     /*!  This command is only effective with activated page type ADF
