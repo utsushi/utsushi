@@ -506,12 +506,6 @@ compound_scanner::compound_scanner (const connexion::ptr& cnx)
     }
 }
 
-std::string
-compound_scanner::model () const
-{
-  return info_.product_name ();
-}
-
 void
 compound_scanner::configure ()
 {

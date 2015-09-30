@@ -1,5 +1,5 @@
 //  autocrop.hpp -- leaving only the (reoriented) scanned documents
-//  Copyright (C) 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -61,4 +61,4 @@ private:
 }       // namespace _flt_
 }       // namespace utsushi
 
-#endif  /* !defined (filters_autocrop_hpp_) */
+#endif  /* filters_autocrop_hpp_ */

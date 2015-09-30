@@ -1,5 +1,5 @@
 //  threshold.hpp -- apply a threshold to 8-bit grayscale data
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -58,4 +58,4 @@ protected:
 }       // namespace _flt_
 }       // namespace utsushi
 
-#endif  /* !defined (filters_threshold_hpp_) */
+#endif  /* filters_threshold_hpp_ */

@@ -330,6 +330,7 @@ PX_Mxxx0::PX_Mxxx0 (const connexion::ptr& cnx)
     if ("PID 08BC" == info.product_name ()) product = "PX-M7050";
     if ("PID 08CC" == info.product_name ()) product = "PX-M7050FX";
     if ("PID 08CE" == info.product_name ()) product = "PX-M860F";
+    if ("PID 08CF" == info.product_name ()) product = "WF-6590";
     if (!product.empty ())
       info.product.assign (product.begin (), product.end ());
   }

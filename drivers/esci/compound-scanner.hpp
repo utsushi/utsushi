@@ -1,5 +1,5 @@
 //  compound-scanner.hpp -- devices that handle compound commands
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -41,8 +41,6 @@ class compound_scanner : public scanner
 {
 public:
   compound_scanner (const connexion::ptr& cnx);
-
-  std::string model () const;
 
   void configure ();
 

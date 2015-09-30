@@ -47,8 +47,12 @@ ATTRS{idProduct}=="08c0", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="08c2", ENV{utsushi_driver}="esci"
 #  PX-M7050FX Series, WF-R8590 Series
 ATTRS{idProduct}=="08cc", ENV{utsushi_driver}="esci"
+#  PX-M840FX
+ATTRS{idProduct}=="08cd", ENV{utsushi_driver}="esci"
 #  PX-M860F
 ATTRS{idProduct}=="08ce", ENV{utsushi_driver}="esci"
+#  WF-6590 Series
+ATTRS{idProduct}=="08cf", ENV{utsushi_driver}="esci"
 #  L220/L360 Series
 ATTRS{idProduct}=="08d1", ENV{utsushi_driver}="esci"
 #  L365/L366 Series
@@ -69,8 +73,12 @@ ATTRS{idProduct}=="1105", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="1106", ENV{utsushi_driver}="esci"
 #  ET-4500 Series
 ATTRS{idProduct}=="1107", ENV{utsushi_driver}="esci"
-#  XP-960 Series
+#  EP-10VA Series
+ATTRS{idProduct}=="1108", ENV{utsushi_driver}="esci"
+#  XP-960 Series, EP-978A3 Series
 ATTRS{idProduct}=="1109", ENV{utsushi_driver}="esci"
+#  EP-808A Series
+ATTRS{idProduct}=="110a", ENV{utsushi_driver}="esci"
 #  XP-830 Series
 ATTRS{idProduct}=="110b", ENV{utsushi_driver}="esci"
 #  XP-530 Series, XP-630 Series

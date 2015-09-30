@@ -1,5 +1,5 @@
 //  image-skip.hpp -- conditionally suppress images in the output
-//  Copyright (C) 2013, 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -82,4 +82,4 @@ private:
 }       // namespace _flt_
 }       // namespace utsushi
 
-#endif  /* !defined (filters_image_skip_hpp_) */
+#endif  /* filters_image_skip_hpp_ */

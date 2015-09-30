@@ -83,7 +83,7 @@ image_magick_version_before_(const char *cutoff)
       char *version = fgets (buf, sizeof (buf), fp);
       errc = errno;
 
-      fclose (fp);
+      pclose (fp);
 
       if (version)
         {

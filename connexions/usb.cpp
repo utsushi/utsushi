@@ -75,8 +75,12 @@ using std::runtime_error;
 
 #if HAVE_LIBUSB
 
+  const int milliseconds =    1;
+  const int seconds      = 1000 * milliseconds;
+  const int minutes      =   60 * seconds;
+
   bool usb::is_initialised_  = false;
-  int  usb::default_timeout_ = 30000; // milliseconds
+  int  usb::default_timeout_ = 5 * minutes;
   libusb_context *usb::ctx_  = 0;
   int usb::connexion_count_  = 0;
 

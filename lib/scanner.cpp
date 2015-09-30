@@ -136,12 +136,6 @@ scanner::create (connexion::ptr cnx, const scanner::info& info)
   return rv;
 }
 
-std::string
-scanner::model () const
-{
-  return std::string ();
-}
-
 scanner::scanner (connexion::ptr cnx)
   : cnx_(cnx)
 {

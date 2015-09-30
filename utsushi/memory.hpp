@@ -1,5 +1,5 @@
 //  memory.hpp -- wrapper for managed memory pointers
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -75,4 +75,4 @@ struct null_deleter
 
 #undef NAMESPACE
 
-#endif  /* utsushi_shared_ptr_hpp_ */
+#endif  /* utsushi_memory_hpp_ */

@@ -1561,7 +1561,7 @@ handle::option_descriptor::option_descriptor (const option& visitor)
 
   if (constraint::ptr cp = visitor.constraint ())
     {
-      /**/ if (typeid (*cp.get ()) == typeid (constraint))
+      /**/ if (typeid (*cp.get ()) == typeid (utsushi::constraint))
         {
           // setting constrained on bounded value type
         }
