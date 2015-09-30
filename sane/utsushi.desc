@@ -91,6 +91,21 @@
 :usbid     "0x04b8" "0x0146"
 :status    :good
 
+:model     "EP-10VA"
+:interface "USB"
+:usbid     "0x04b8" "0x1108"
+:status    :good
+
+:model     "EP-808A"
+:interface "USB"
+:usbid     "0x04b8" "0x110a"
+:status    :good
+
+:model     "EP-978A3"
+:interface "USB"
+:usbid     "0x04b8" "0x1109"
+:status    :good
+
 :model     "ET-2500"
 :interface "USB"
 :usbid     "0x04b8" "0x1105"
@@ -151,6 +166,11 @@
 :usbid     "0x04b8" "0x1101"
 :status    :good
 
+:model     "PX-M840FX"
+:interface "USB"
+:usbid     "0x04b8" "0x08cd"
+:status    :good
+
 :model     "PX-M860F"
 :interface "USB"
 :usbid     "0x04b8" "0x08ce"
@@ -164,6 +184,11 @@
 :model     "PX-M7050FX"
 :interface "USB"
 :usbid     "0x04b8" "0x08cc"
+:status    :good
+
+:model     "WF-6590"
+:interface "USB"
+:usbid     "0x04b8" "0x08cf"
 :status    :good
 
 :model     "WF-8510"
