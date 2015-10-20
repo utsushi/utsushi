@@ -67,6 +67,15 @@ get_sysattr (struct udev_device *device,
     }
   if (!rv) return;
 
+  if ("devpath" == name)
+    {
+      const char *tmp;
+      tmp = strrchr (rv, '-');
+      if (tmp) rv = tmp + 1;
+      tmp = strrchr (rv, '.');
+      if (tmp) rv = tmp + 1;
+    }
+
   std::stringstream ss (rv);
   ss >> radix >> value;
 }
