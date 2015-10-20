@@ -192,7 +192,8 @@ using std::runtime_error;
       return NULL;
 
 #if HAVE_LIBUSB_GET_PORT_NUMBER
-    if (device->usb_port_number () != libusb_get_port_number (dev))
+    if (libusb_get_port_number (dev)
+        && device->usb_port_number () != libusb_get_port_number (dev))
       return NULL;
 #endif
 
