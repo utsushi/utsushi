@@ -26,9 +26,9 @@
 
 #include "utsushi/format.hpp"
 #include "utsushi/log.hpp"
+#include "utsushi/regex.hpp"
 
 #include <boost/filesystem.hpp>
-#include <boost/regex.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -54,10 +54,6 @@ path_generator::path_generator ()
 path_generator::path_generator (const std::string& pattern)
   : offset_(0)
 {
-  using boost::regex;
-  using boost::regex_match;
-  using boost::smatch;
-
   fs::path p (pattern);
   parent_ = p.parent_path ().string ();         // don't touch this
 

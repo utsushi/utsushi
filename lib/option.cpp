@@ -36,8 +36,6 @@
 using std::logic_error;
 using std::out_of_range;
 
-#define nullptr 0
-
 namespace utsushi {
 
 result_code::result_code ()
@@ -534,7 +532,7 @@ option::map::builder::builder (option::map& owner)
 
 const option::map::builder&
 option::map::builder::operator() (const utsushi::key& k,
-                                  boost::function< result_code () > f,
+                                  function< result_code () > f,
                                   const string& name,
                                   const string& text) const
 {

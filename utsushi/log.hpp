@@ -1,5 +1,5 @@
 //  log.hpp -- formatted messages based on priority and category
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -142,6 +142,16 @@ public:
 
     ~basic_message ()
     {
+      if (arg_ < cnt_) {
+        if (log::arg_count_checking) {
+          log::error ("log::message::too_few_args: %1% < %2%") % arg_ % cnt_;
+        }
+        for (int i = arg_; i < cnt_; /**/) {
+          std::basic_ostringstream <charT, traits> os;
+          os << "%" << ++i << "%";
+          *this % os.str ();
+        }
+      }
       basic_logger<charT, traits>::os_ << *this;
     }
 

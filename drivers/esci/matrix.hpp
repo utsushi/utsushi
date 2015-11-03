@@ -1,5 +1,5 @@
 //  matrix.hpp -- class template
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -22,9 +22,18 @@
 #define drivers_esci_matrix_hpp_
 
 #include <algorithm>
-#include <boost/bind.hpp>
+
+#include <utsushi/functional.hpp>
 
 #include "vector.hpp"
+
+#if __cplusplus >= 201103L
+#define NS(bind) std::bind
+#define NSPH(_1) std::placeholders::_1
+#else
+#define NS(bind) bind
+#define NSPH(_1) _1
+#endif
 
 namespace utsushi {
 namespace _drv_ {
@@ -50,14 +59,14 @@ namespace esci {
     matrix& operator*= (const T& t)
     {
       std::for_each (this->begin (), this->end (),
-                     boost::bind (&row::operator*=, _1, t));
+                     NS(bind) (&row::operator*=, NSPH(_1), t));
       return *this;
     }
 
     matrix& operator/= (const T& t)
     {
       std::for_each (this->begin (), this->end (),
-                     boost::bind (&row::operator/=, _1, t));
+                     NS(bind) (&row::operator/=, NSPH(_1), t));
       return *this;
     }
 
@@ -124,5 +133,12 @@ namespace esci {
 } // namespace esci
 } // namespace _drv_
 } // namespace utsushi
+
+#ifdef NS
+#undef NS
+#endif
+#ifdef NSPH
+#undef NSPH
+#endif
 
 #endif  /* drivers_esci_matrix_hpp_ */

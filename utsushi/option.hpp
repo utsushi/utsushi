@@ -27,12 +27,12 @@
 #include <typeinfo>
 #include <vector>
 
-#include <boost/function.hpp>
 #include <boost/operators.hpp>
 #include <boost/throw_exception.hpp>
 
 #include "constraint.hpp"
 #include "descriptor.hpp"
+#include "functional.hpp"
 #include "key.hpp"
 #include "memory.hpp"
 #include "value.hpp"
@@ -208,7 +208,7 @@ protected:
   container< utsushi::key, value::ptr > values_;
   container< utsushi::key, constraint::ptr > constraints_;
   container< utsushi::key, descriptor::ptr > descriptors_;
-  container< utsushi::key, boost::function< result_code () > > callbacks_;
+  container< utsushi::key, function< result_code () > > callbacks_;
   std::vector< restriction > restrictions_;
   std::map< utsushi::key, map::ptr > submaps_;
 
@@ -224,7 +224,7 @@ class option::map::builder
 public:
   builder (option::map& owner);
   const builder& operator() (const utsushi::key& k,
-                             boost::function< result_code () > f,
+                             function< result_code () > f,
                              const string& name,
                              const string& text = string ()) const;
   //! Creates a %value type constrained %option

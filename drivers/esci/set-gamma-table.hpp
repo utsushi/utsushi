@@ -27,7 +27,8 @@
 #include <stdexcept>
 
 #include <boost/static_assert.hpp>
-#include <boost/type_traits/is_floating_point.hpp>
+
+#include <utsushi/type-traits.hpp>
 
 #include "constant.hpp"
 #include "setter.hpp"
@@ -37,8 +38,6 @@ namespace utsushi {
 namespace _drv_ {
   namespace esci
   {
-    using boost::is_floating_point;
-
     //!  Tweak color intensities to match display hardware.
     /*!  The same pixel values do not always result in the same color
          intensity when displayed on different types of hardware.  A

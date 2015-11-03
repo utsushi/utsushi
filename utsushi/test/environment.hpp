@@ -1,5 +1,5 @@
 //  environment.hpp -- variable control during test execution
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -27,8 +27,16 @@
 #include <map>
 #include <set>
 
-#include <boost/bind.hpp>
-#include <boost/regex.hpp>
+#include <utsushi/functional.hpp>
+#include <utsushi/regex.hpp>
+
+#if __cplusplus >= 201103L
+#define NS(bind) std::bind
+#define NSPH(_1) std::placeholders::_1
+#else
+#define NS(bind) bind
+#define NSPH(_1) _1
+#endif
 
 extern "C" {
 extern char **environ;
@@ -52,7 +60,8 @@ namespace test {
  *  can be passed as well.  This works at no extra (implementation)
  *  cost courtesy of implicit conversion via \c std::string.
  *
- *  \note Users of this class need to link with Boost.Regex.
+ *  \note Users of this class need to link with Boost.Regex unless
+ *        compiling against C++11 or later.
  *
  *  \todo Make sure instances are destructed in the reverse order of
  *        their creation.  Out-of-order destruction gives rises to an
@@ -76,9 +85,9 @@ public:
   ~environment ()
   {
     std::for_each (vars_set_.begin (), vars_set_.end (),
-                   boost::bind (&environment::unsetenv_, this, _1));
+                   NS(bind) (&environment::unsetenv_, this, NSPH(_1)));
     std::for_each (mod_vars_.begin (), mod_vars_.end (),
-                   boost::bind (&environment::setenv_, this, _1));
+                   NS(bind) (&environment::setenv_, this, NSPH(_1)));
   }
 
   //! Get a pointer to the value of an %environment \a variable
@@ -127,15 +136,15 @@ protected:
   typedef std::set< std::string > env_var_set;
 
   void
-  clearenv_(const std::string& regex)
+  clearenv_(const std::string& regular_expression)
   {
-    boost::regex re (regex);
-    boost::cmatch var;
+    regex re (regular_expression);
+    cmatch var;
 
     char **p = environ;
     while (p && *p)
       {
-        if (boost::regex_match (*p, var, re))
+        if (regex_match (*p, var, re))
           {
             unsetenv (var[1]);
           }
@@ -167,6 +176,13 @@ protected:
   env_var_map mod_vars_;
   env_var_set vars_set_;
 };
+
+#ifdef NS
+#undef NS
+#endif
+#ifdef NSPH
+#undef NSPH
+#endif
 
 } // namespace test
 } // namespace utsushi

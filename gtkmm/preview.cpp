@@ -152,7 +152,7 @@ preview::set_sensitive ()
   Glib::RefPtr<Gtk::Action> a;
 
   a = ui_->get_action ("/preview/refresh");
-  if (a) { a->set_sensitive (idevice_); }
+  if (a) { a->set_sensitive (bool(idevice_)); }
   a = ui_->get_action ("/preview/zoom-in");
   if (a) { a->set_sensitive (pixbuf_ && (zoom_ < zoom_max_)); }
   a = ui_->get_action ("/preview/zoom-out");

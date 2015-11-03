@@ -26,7 +26,8 @@
 #include <algorithm>
 
 #include <boost/static_assert.hpp>
-#include <boost/type_traits/is_floating_point.hpp>
+
+#include <utsushi/type-traits.hpp>
 
 #include "matrix.hpp"
 #include "setter.hpp"
@@ -35,8 +36,6 @@ namespace utsushi {
 namespace _drv_ {
   namespace esci
   {
-    using boost::is_floating_point;
-
     //!  Tweak pixels to taste.
     /*!  A number of devices support color correction in hardware.
          You can influence the result of this process by setting a

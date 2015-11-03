@@ -1,5 +1,5 @@
 //  list.cpp -- available image acquisition devices
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -37,7 +37,6 @@ int
 main (int argc, char *argv[])
 {
   using boost::lambda::_1;
-  using boost::lambda::bind;
 
   try
     {
@@ -61,7 +60,7 @@ main (int argc, char *argv[])
 
       std::for_each (mon.begin (), mon.end (),
                      std::cout
-                     << bind (&utsushi::scanner::info::udi, _1) << "\n");
+                     << boost::lambda::bind (&utsushi::scanner::info::udi, _1) << "\n");
     }
   catch (std::exception& e)
     {

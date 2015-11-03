@@ -25,6 +25,7 @@
 #include "action-dialog.hpp"
 
 #include <utsushi/exception.hpp>
+#include <utsushi/functional.hpp>
 #include <utsushi/i18n.hpp>
 #include <utsushi/memory.hpp>
 #include <utsushi/thread.hpp>
@@ -39,13 +40,7 @@
 #include <gtkmm/stock.h>
 #include <gtkmm/widget.h>
 
-// FIXME move to a C++11 <functional> wrapper
-#include <boost/ref.hpp>
-using boost::ref;
-
 #include <string>
-
-#define nullptr 0
 
 namespace {
 

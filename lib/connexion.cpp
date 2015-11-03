@@ -46,8 +46,6 @@
 #include "utsushi/thread.hpp"
 #include "connexions/usb.hpp"
 
-#define nullptr (octet *) 0
-
 namespace fs = boost::filesystem;
 
 using std::runtime_error;

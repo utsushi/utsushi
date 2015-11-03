@@ -1,5 +1,5 @@
 //  compound.cpp -- protocol variant command base class implementation
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -24,11 +24,16 @@
 
 #include <time.h>
 
-#include <boost/bind.hpp>
 #include <boost/throw_exception.hpp>
 
 #include "compound.hpp"
 #include "exception.hpp"
+
+#if __cplusplus >= 201103L
+#define NS std
+#else
+#define NS boost
+#endif
 
 namespace utsushi {
 namespace _drv_ {
@@ -37,7 +42,6 @@ namespace esci {
 compound_base::~compound_base ()
 {
   namespace reply = code_token::reply;
-  using boost::bind;
 
   if (cnx_)
     {
@@ -145,14 +149,13 @@ compound_base::compound_base (bool pedantic)
   , par_blk_()
   , hdr_blk_(hdr_len_)
   , dat_blk_()
-  , dat_ref_(ref (dat_blk_))
-  , info_ref_(ref (info_))
-  , caps_ref_(ref (capa_))
-  , parm_ref_(ref (resa_))
-  , stat_ref_(ref (stat_))
+  , dat_ref_(NS::ref (dat_blk_))
+  , info_ref_(NS::ref (info_))
+  , caps_ref_(NS::ref (capa_))
+  , parm_ref_(NS::ref (resa_))
+  , stat_ref_(NS::ref (stat_))
 {
   namespace reply = code_token::reply;
-  using boost::bind;
 
   hook_[reply::FIN ] = bind (&compound_base::finish_hook_, this);
   hook_[reply::CAN ] = bind (&compound_base::noop_hook_, this);
@@ -191,11 +194,11 @@ compound_base::encode_request_block_(const quad& code, integer size)
   bool r = encode_.header_(std::back_inserter (req_blk_),
                            header (code, size));
 
-  dat_ref_ = ref (dat_blk_);
-  info_ref_ = ref (info_);
-  caps_ref_ = ref (capa_);
-  parm_ref_ = ref (resa_);
-  stat_ref_ = ref (stat_);
+  dat_ref_ = NS::ref (dat_blk_);
+  info_ref_ = NS::ref (info_);
+  caps_ref_ = NS::ref (capa_);
+  parm_ref_ = NS::ref (resa_);
+  stat_ref_ = NS::ref (stat_);
 
   if (r)
     {
@@ -290,7 +293,7 @@ compound_base::get (information& info)
 
   if (encode_request_block_(request::INFO))
     {
-      info_ref_ = ref (info);
+      info_ref_ = NS::ref (info);
     }
 
   return *this;
@@ -331,7 +334,7 @@ compound_base::get (capabilities& caps, bool flip_side_only)
                             ? request::CAPA
                             : request::CAPB))
     {
-      caps_ref_ = ref (caps);
+      caps_ref_ = NS::ref (caps);
     }
 
   return *this;
@@ -390,7 +393,7 @@ compound_base::get (parameters& parm, bool flip_side_only)
                             : request::RESB))
     {
       par_blk_.clear ();
-      parm_ref_ = ref (parm);
+      parm_ref_ = NS::ref (parm);
     }
 
   return *this;
@@ -425,7 +428,7 @@ compound_base::get (parameters& parm, const std::set< quad >& ts,
                                 ? request::RESA
                                 : request::RESB, par_blk_.size ()))
         {
-          parm_ref_ = ref (parm);
+          parm_ref_ = NS::ref (parm);
         }
     }
   else
@@ -508,7 +511,7 @@ compound_base::get (hardware_status& stat)
   if (encode_request_block_(request::STAT))
     {
       stat.clear ();            // hook may bypass updating of stat_ref_
-      stat_ref_ = ref (stat);
+      stat_ref_ = NS::ref (stat);
     }
 
   return *this;
@@ -563,7 +566,7 @@ compound_base::extension (const byte_buffer& request_payload,
 
   if (r)
     {
-      dat_ref_ = ref (reply_payload);
+      dat_ref_ = NS::ref (reply_payload);
       dat_ref_.get ().clear ();
     }
 
@@ -573,7 +576,7 @@ compound_base::extension (const byte_buffer& request_payload,
 void
 compound_base::extension_hook_()
 {
-  dat_ref_ = ref (dat_blk_);
+  dat_ref_ = NS::ref (dat_blk_);
 }
 
 void

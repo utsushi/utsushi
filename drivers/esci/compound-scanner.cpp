@@ -28,7 +28,6 @@
 #include <string>
 
 #include <boost/assert.hpp>
-#include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/foreach.hpp>
@@ -37,6 +36,7 @@
 
 #include <utsushi/constraint.hpp>
 #include <utsushi/exception.hpp>
+#include <utsushi/functional.hpp>
 #include <utsushi/i18n.hpp>
 #include <utsushi/media.hpp>
 #include <utsushi/range.hpp>
@@ -738,7 +738,6 @@ compound_scanner::configure ()
 
   {                             // add actions
     namespace mech = code_token::mechanic;
-    using boost::bind;
 
     // FIXME flaming hack alert, abusing text() for progress message
     if (caps_.can_calibrate ())
@@ -1529,7 +1528,7 @@ compound_scanner::enough_image_data_(const parameters& parm,
     }
 
   return (use_final_image_size_(parm)
-          ?  q.back ().pen
+          ? bool (q.back ().pen)
           : !q.empty ());
 }
 
@@ -1915,8 +1914,10 @@ compound_scanner::finalize (const value::map& vm)
 
                 if (final_vm.count ("sw-resolution-x")) // fallback
                   {
-                    q = std::max< quantity > (final_vm["sw-resolution-x"],
-                                              final_vm["sw-resolution-y"]);
+                    quantity x_res = final_vm["sw-resolution-x"];
+                    quantity y_res = final_vm["sw-resolution-y"];
+
+                    q = std::max< quantity > (x_res, y_res);
                   }
 
                 if (final_vm.count ("sw-resolution"))

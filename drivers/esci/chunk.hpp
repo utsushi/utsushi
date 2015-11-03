@@ -1,5 +1,5 @@
 //  chunk.hpp -- ESC/I protocol chunks
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -81,7 +81,7 @@ namespace _drv_ {
 
       operator bool () const
       {
-        return buffer_;
+        return bool(buffer_);
       }
     };
 

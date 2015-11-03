@@ -344,7 +344,11 @@ PX_Mxxx0::PX_Mxxx0 (const connexion::ptr& cnx)
       try
         {
           std::vector< integer >& v
+#if 105800 <= BOOST_VERSION
+            = boost::relaxed_get< std::vector< integer >& > (*caps.rss);
+#else
             = boost::get< std::vector< integer >& > (*caps.rss);
+#endif
           erase (v, 300);
         }
       catch (const boost::bad_get& e)

@@ -1,5 +1,5 @@
 //  monitor.cpp -- unit tests for the utsushi::monitor API
-//  Copyright (C) 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -31,8 +31,6 @@
 
 #include "utsushi/test/environment.hpp"
 #include "../run-time.ipp"
-
-#define nullptr 0
 
 namespace {
 

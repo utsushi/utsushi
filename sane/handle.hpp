@@ -1,5 +1,5 @@
 //  handle.hpp -- for a SANE scanner object
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -46,7 +46,6 @@ class handle
 {
 public:
   handle (const utsushi::scanner::info& info);
-  ~handle ();
 
   std::string name () const;
 
@@ -136,8 +135,13 @@ private:
     utsushi::string desc_;
     std::vector< utsushi::string > strings_;
 
-    option_descriptor () {}
+    option_descriptor ();
+    option_descriptor (const option_descriptor& od);
     option_descriptor (const utsushi::option& visitor);
+
+    ~option_descriptor ();
+
+    option_descriptor& operator= (const option_descriptor& rhs);
 
     bool operator== (const option_descriptor& rhs) const;
   };

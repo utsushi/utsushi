@@ -22,24 +22,29 @@
 #include <config.h>
 #endif
 
-#include <boost/bind.hpp>
 #include <boost/mpl/transform_view.hpp>
-#include <boost/ref.hpp>
 
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "utsushi/functional.hpp"
 #include "utsushi/option.hpp"
 #include "utsushi/range.hpp"
 #include "utsushi/store.hpp"
 
 #include "value.hpp"
 
+#if __cplusplus >= 201103L
+#define NS(bind) std::bind
+#define NSPH(_1) std::placeholders::_1
+#else
+#define NS(bind) bind
+#define NSPH(_1) _1
+#endif
+
 using namespace utsushi;
 namespace mpl = boost::mpl;
 using boost::mpl::_;
-using boost::bind;
-using boost::ref;
 
 BOOST_TEST_DONT_PRINT_LOG_VALUE (utsushi::option)
 
@@ -73,7 +78,7 @@ struct test_option_map_fixture
   {
     mpl::for_each
       < mpl::transform_view < test_type_list, bounded_type_fixture<_> > >
-      (bind< void > (setting_inserter (), ref (m), _1));
+      (NS(bind)< void > (setting_inserter (), ref (m), NSPH(_1)));
     BOOST_TEST_MESSAGE ("option::map.size () = " << m.size ());
   }
 };

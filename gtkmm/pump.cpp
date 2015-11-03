@@ -1,5 +1,5 @@
 //  pump.cpp -- move image data from a source to a sink
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -24,7 +24,7 @@
 
 #include <stdexcept>
 
-#include <boost/bind.hpp>
+#include <utsushi/functional.hpp>
 
 #include "pump.hpp"
 
@@ -129,19 +129,19 @@ void
 pump::connect_(io_direction d, typename device< IO >::ptr dev_ptr)
 {
   acq_marker_connection_[d] =
-    dev_ptr->connect_marker (boost::bind (&pump::on_marker_, this, d, _1));
+    dev_ptr->connect_marker (bind (&pump::on_marker_, this, d, _1));
   gui_marker_connection_[d] = gui_marker_dispatch_[d]
     .connect (sigc::bind (sigc::mem_fun (*this, &pump::signal_marker_), d));
 
   acq_update_connection_[d] =
-    dev_ptr->connect_update (boost::bind (&pump::on_update_, this, d, _1, _2));
+    dev_ptr->connect_update (bind (&pump::on_update_, this, d, _1, _2));
   gui_update_connection_[d] = gui_update_dispatch_[d]
     .connect (sigc::bind (sigc::mem_fun (*this, &pump::signal_update_), d));
 
   if (in == d)
     {
       acq_notify_connection_ =
-        this->connect (boost::bind (&pump::on_notify_, this, _1, _2));
+        this->connect (bind (&pump::on_notify_, this, _1, _2));
       gui_notify_connection_ = gui_notify_dispatch_
         .connect (sigc::mem_fun (*this, &pump::signal_notify_));
     }

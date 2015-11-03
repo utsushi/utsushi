@@ -110,13 +110,18 @@ test_headers += utsushi/test/tools.hpp
 test_headers += utsushi/test/memory.hpp
 test_headers += utsushi/test/null.hpp
 
-wrapper_headers  = utsushi/cstdint.hpp
+wrapper_headers  =
+wrapper_headers += utsushi/array.hpp
+wrapper_headers += utsushi/cstdint.hpp
 wrapper_headers += utsushi/condition-variable.hpp
 wrapper_headers += utsushi/format.hpp
+wrapper_headers += utsushi/functional.hpp
 wrapper_headers += utsushi/memory.hpp
 wrapper_headers += utsushi/mutex.hpp
+wrapper_headers += utsushi/regex.hpp
 wrapper_headers += utsushi/signal.hpp
 wrapper_headers += utsushi/thread.hpp
+wrapper_headers += utsushi/type-traits.hpp
 
 nobase_include_HEADERS  = $(pattern_headers)
 nobase_include_HEADERS += $(stream_headers)
