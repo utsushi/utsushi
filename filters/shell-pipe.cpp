@@ -39,7 +39,6 @@
 #include <unistd.h>
 
 #define SHELL "/bin/sh"
-#define nullptr NULL
 
 namespace {
 

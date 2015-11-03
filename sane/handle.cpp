@@ -29,12 +29,12 @@
 #include <typeinfo>
 
 #include <boost/assign/list_of.hpp>
-#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/optional.hpp>
 #include <boost/throw_exception.hpp>
 
 #include <utsushi/condition-variable.hpp>
+#include <utsushi/functional.hpp>
 #include <utsushi/memory.hpp>
 #include <utsushi/mutex.hpp>
 #include <utsushi/range.hpp>
@@ -170,8 +170,6 @@ namespace unit
 
 using std::logic_error;
 using namespace utsushi;
-
-#define nullptr 0
 
 class bucket                    // fixme: copies code in lib/pump.cpp
 {
@@ -652,36 +650,6 @@ handle::handle(const scanner::info& info)
         }
     }
   update_options (nullptr);
-}
-
-static void
-release (SANE_Option_Descriptor& sod)
-{
-  /**/ if (sod.constraint_type == SANE_CONSTRAINT_NONE)
-    {
-      return;
-    }
-  else if (sod.constraint_type == SANE_CONSTRAINT_RANGE)
-    {
-      delete sod.constraint.range;
-    }
-  else if (sod.constraint_type == SANE_CONSTRAINT_WORD_LIST)
-    {
-      delete [] sod.constraint.word_list;
-    }
-  else if (sod.constraint_type == SANE_CONSTRAINT_STRING_LIST)
-    {
-      delete [] sod.constraint.string_list;
-    }
-  else
-    {
-      log::error ("unknown constraint type");
-    }
-}
-
-handle::~handle ()
-{
-  std::for_each (sod_.begin (), sod_.end (), boost::bind (release, _1));
 }
 
 std::string
@@ -1231,7 +1199,7 @@ handle::marker ()
       cache_ = idevice::ptr (cache);
       iptr_ = cache_;
 
-      pump_->connect (boost::bind (on_notify, cache, _1, _2));
+      pump_->connect (bind (on_notify, cache, _1, _2));
       pump_->start (str);
     }
   else
@@ -1497,6 +1465,29 @@ sanitize_(const utsushi::key& k)
   return rv;
 }
 
+handle::option_descriptor::option_descriptor ()
+{
+  sane_key = sanitize_(orig_key);
+
+  name  = sane_key.c_str ();
+  title = name_.c_str ();
+  desc  = desc_.c_str ();
+
+  type = SANE_TYPE_GROUP;
+  unit = SANE_UNIT_NONE;
+  size = 0;
+  cap  = SANE_CAP_INACTIVE;
+
+  constraint_type  = SANE_CONSTRAINT_NONE;
+  constraint.range = nullptr;
+}
+
+handle::option_descriptor::option_descriptor (const handle::option_descriptor& od)
+{
+  constraint_type = SANE_CONSTRAINT_NONE;       // inspected by operator=
+  *this = od;
+}
+
 /*! \todo  Make sure SOD::title is a single line?
  *  \todo  Use \c '\\n' to separate paragraphs in SOD::desc
  *  \todo  Remove markup from SOD::title and SOD::desc
@@ -1505,11 +1496,11 @@ handle::option_descriptor::option_descriptor (const option& visitor)
 {
   orig_key = visitor.key ();
   sane_key = sanitize_(orig_key);
-  name_ = visitor.name ().c_str ();
+  name_ = visitor.name ();
   if (visitor.text ())
-    desc_  = visitor.text ().c_str ();
+    desc_  = visitor.text ();
   else
-    desc_ = visitor.name ().c_str ();
+    desc_ = visitor.name ();
 
   name  = sane_key.c_str ();
   title = name_.c_str ();
@@ -1644,6 +1635,104 @@ handle::option_descriptor::option_descriptor (const option& visitor)
       // somewhat limit the possibilities but never cause a violation;
       // setting can be added safely.
     }
+}
+
+handle::option_descriptor::~option_descriptor ()
+{
+  /**/ if (constraint_type == SANE_CONSTRAINT_NONE)
+    {
+    }
+  else if (constraint_type == SANE_CONSTRAINT_RANGE)
+    {
+      delete constraint.range;
+    }
+  else if (constraint_type == SANE_CONSTRAINT_WORD_LIST)
+    {
+      delete [] constraint.word_list;
+    }
+  else if (constraint_type == SANE_CONSTRAINT_STRING_LIST)
+    {
+      delete [] constraint.string_list;
+    }
+  else
+    {
+      log::error ("unknown constraint type");
+    }
+}
+
+handle::option_descriptor&
+handle::option_descriptor::operator= (const handle::option_descriptor& rhs)
+{
+  orig_key = rhs.orig_key;
+  sane_key = sanitize_(orig_key);
+  name_    = rhs.name_;
+  desc_    = rhs.desc_;
+  strings_ = rhs.strings_;
+
+  name  = sane_key.c_str ();
+  title = name_.c_str ();
+  desc  = desc_.c_str ();
+
+  type = rhs.type;
+  unit = rhs.unit;
+  size = rhs.size;
+  cap  = rhs.cap;
+
+  /**/ if (constraint_type == SANE_CONSTRAINT_NONE)
+    {
+    }
+  else if (constraint_type == SANE_CONSTRAINT_RANGE)
+    {
+      delete constraint.range;
+    }
+  else if (constraint_type == SANE_CONSTRAINT_WORD_LIST)
+    {
+      delete [] constraint.word_list;
+    }
+  else if (constraint_type == SANE_CONSTRAINT_STRING_LIST)
+    {
+      delete [] constraint.string_list;
+    }
+  else
+    {
+      log::error ("unknown constraint type");
+    }
+  constraint_type = rhs.constraint_type;
+  /**/ if (constraint_type == SANE_CONSTRAINT_NONE)
+    {
+      constraint.range = rhs.constraint.range;
+    }
+  else if (constraint_type == SANE_CONSTRAINT_RANGE)
+    {
+      SANE_Range *sr = new SANE_Range;
+      memcpy (sr, rhs.constraint.range, sizeof (*sr));
+      constraint.range = sr;
+    }
+  else if (constraint_type == SANE_CONSTRAINT_WORD_LIST)
+    {
+      size_t sz = 1 + rhs.constraint.word_list[0];
+      SANE_Word *sw = new SANE_Word[sz];
+      memcpy (sw, rhs.constraint.word_list, sz * sizeof (SANE_Word));
+      constraint.word_list = sw;
+    }
+  else if (constraint_type == SANE_CONSTRAINT_STRING_LIST)
+    {
+      SANE_String_Const *sl = new SANE_String_Const[strings_.size () + 1];
+
+      int i = 0;
+      std::vector< utsushi::string >::const_iterator it;
+      for (it = strings_.begin (); it != strings_.end (); ++i, ++it)
+        {
+          sl[i] = it->c_str ();
+        }
+      sl[i] = NULL;
+      constraint.string_list = sl;
+    }
+  else
+    {
+      log::error ("unknown constraint type");
+    }
+  return *this;
 }
 
 bool

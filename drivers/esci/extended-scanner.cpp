@@ -51,7 +51,6 @@
 #include "release-scanner.hpp"
 
 #define for_each BOOST_FOREACH
-#define nullptr 0
 
 namespace utsushi {
 namespace _drv_ {

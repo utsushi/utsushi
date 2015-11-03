@@ -1,5 +1,5 @@
 //  constraint.hpp -- imposable on utsushi::value objects
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -25,9 +25,9 @@
 #include <stdexcept>
 
 #include <boost/static_assert.hpp>
-#include <boost/type_traits.hpp>
 
 #include "memory.hpp"
+#include "type-traits.hpp"
 #include "value.hpp"
 
 namespace utsushi {
@@ -125,7 +125,7 @@ operator<< (std::ostream& os, const constraint& c)
 template <typename T>
 T * from (const T& t = T ())
 {
-  BOOST_STATIC_ASSERT ((boost::is_base_of< constraint, T >::value));
+  BOOST_STATIC_ASSERT ((is_base_of< constraint, T >::value));
 
   return new T (t);
 }

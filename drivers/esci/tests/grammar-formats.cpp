@@ -1,5 +1,5 @@
 //  grammar-formats.cpp -- unit tests for ESC/I grammar-formats API
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -27,7 +27,6 @@
 #include <sstream>
 #include <string>
 
-#include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
 #include <boost/integer_traits.hpp>
@@ -36,9 +35,18 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
 
+#include <utsushi/functional.hpp>
 #include <utsushi/test/tools.hpp>
 
 #include "../grammar-formats.hpp"
+
+#if __cplusplus >= 201103L
+#define NS(bind) std::bind
+#define NSPH(_1) std::placeholders::_1
+#else
+#define NS(bind) bind
+#define NSPH(_1) _1
+#endif
 
 namespace esci = utsushi::_drv_::esci;
 
@@ -258,8 +266,8 @@ init_test_runner ()
 
       is >> expect;
       std::transform (expect.begin (), expect.end (), expect.begin (),
-                      boost::bind (std::tolower< char >, _1,
-                                   std::locale::classic ()));
+                      NS(bind) (std::tolower< char >, NSPH(_1),
+                                std::locale::classic ()));
 
       /**/ if (expect == "pass") tc.expect = pass;
       else if (expect == "fail") tc.expect = fail;

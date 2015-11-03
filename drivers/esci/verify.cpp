@@ -1,4 +1,5 @@
 //  verify.cpp -- ESC/I protocol assumptions and specification compliance
+//  Copyright (C) 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2012-2014  AVASYS CORPORATION
 //
 //  License: GPL-3.0+
@@ -30,7 +31,6 @@
 #include <utility>
 #include <vector>
 
-#include <boost/bind.hpp>
 #include <boost/foreach.hpp>
 #include <boost/program_options.hpp>
 #include <boost/test/parameterized_test.hpp>
@@ -39,6 +39,7 @@
 
 #include <utsushi/connexion.hpp>
 #include <utsushi/format.hpp>
+#include <utsushi/functional.hpp>
 #include <utsushi/log.hpp>
 #include <utsushi/monitor.hpp>
 #include <utsushi/run-time.hpp>
@@ -88,7 +89,6 @@ public:
     , os_(&fb_)
   {
     namespace reply = code_token::reply;
-    using boost::bind;
 
     // Override base class hooks
     hook_[reply::INFO] = bind (&devdata_dumper::dump_hook_, this);
@@ -345,7 +345,7 @@ main (int argc, char *argv[])
       do
         {
           it = std::find_if (mon.begin (), mon.end (),
-                             boost::bind (&scanner::info::is_driver_set, _1));
+                             bind (&scanner::info::is_driver_set, _1));
         }
       while (it != mon.end () && "esci" != it->driver ());
     }

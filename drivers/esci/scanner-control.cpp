@@ -1,5 +1,5 @@
 //  scanner-control.cpp -- make the device do your bidding
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -22,7 +22,7 @@
 #include <config.h>
 #endif
 
-#include <boost/bind.hpp>
+#include <utsushi/functional.hpp>
 
 #include "scanner-control.hpp"
 
@@ -62,7 +62,6 @@ scanner_control::scanner_control (bool pedantic)
   , images_started_(0)
 {
   namespace reply = code_token::reply;
-  using boost::bind;
 
   // Override base class hooks
   hook_[reply::PARA] = bind (&scanner_control::set_parameters_hook_, this);

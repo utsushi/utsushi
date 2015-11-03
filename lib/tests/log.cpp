@@ -1,5 +1,5 @@
 //  log.cpp -- unit tests for the utsushi::log API
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -96,41 +96,31 @@ BOOST_FIXTURE_TEST_CASE (format_reuse_overflow, fixture)
 
 BOOST_FIXTURE_TEST_CASE (format_underflow, fixture)
 {
-  try
-    {
-      log::message fmt (log::FATAL, "%1% %2%");
+  log::message fmt (log::FATAL, "%1% %2%");
 
-      if (log::arg_count_checking)
-        {
-          BOOST_CHECK_THROW (s << fmt % 1, boost::io::too_few_args);
-        }
-      else
-        {
-          BOOST_CHECK_NO_THROW (s << fmt % 1);
-        }
+  if (log::arg_count_checking)
+    {
+      BOOST_CHECK_THROW (s << fmt % 1, boost::io::too_few_args);
     }
-  catch (const boost::io::too_few_args&)
-    {}
+  else
+    {
+      BOOST_CHECK_NO_THROW (s << fmt % 1);
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE (format_reuse_underflow, fixture)
 {
-  try
-    {
-      log::message fmt (log::FATAL, "%1% %2%");
+  log::message fmt (log::FATAL, "%1% %2%");
 
-      s << fmt % 1 % 2;
-      if (log::arg_count_checking)
-        {
-          BOOST_CHECK_THROW (s << fmt % 1, boost::io::too_few_args);
-        }
-      else
-        {
-          BOOST_CHECK_NO_THROW (s << fmt % 1);
-        }
+  s << fmt % 1 % 2;
+  if (log::arg_count_checking)
+    {
+      BOOST_CHECK_THROW (s << fmt % 1, boost::io::too_few_args);
     }
-  catch (const boost::io::too_few_args&)
-    {}
+  else
+    {
+      BOOST_CHECK_NO_THROW (s << fmt % 1);
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE (noisy_named_ctor_overflow, fixture)
@@ -151,21 +141,17 @@ BOOST_FIXTURE_TEST_CASE (noisy_named_ctor_overflow, fixture)
 BOOST_FIXTURE_TEST_CASE (noisy_named_ctor_underflow, fixture)
 {
   BOOST_REQUIRE (log::threshold >= log::ALERT);
-  try
-    {
-      log::message fmt (log::ALERT, "%1%");
 
-      if (log::arg_count_checking)
-        {
-          BOOST_CHECK_THROW (s << fmt, boost::io::too_few_args);
-        }
-      else
-        {
-          BOOST_CHECK_NO_THROW (s << fmt);
-        }
+  log::message fmt (log::ALERT, "%1%");
+
+  if (log::arg_count_checking)
+    {
+      BOOST_CHECK_THROW (s << fmt, boost::io::too_few_args);
     }
-  catch (const boost::io::too_few_args&)
-    {}
+  else
+    {
+      BOOST_CHECK_NO_THROW (s << fmt);
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE (quiet_named_ctor_overflow, fixture)
@@ -186,21 +172,17 @@ BOOST_FIXTURE_TEST_CASE (quiet_named_ctor_overflow, fixture)
 BOOST_FIXTURE_TEST_CASE (quiet_named_ctor_underflow, fixture)
 {
   BOOST_REQUIRE (log::threshold < log::TRACE);
-  try
-    {
-      log::message fmt (log::TRACE, "%1%");
 
-      if (log::arg_count_checking)
-        {
-          BOOST_CHECK_THROW (s << fmt, boost::io::too_few_args);
-        }
-      else
-        {
-          BOOST_CHECK_NO_THROW (s << fmt);
-        }
+  log::message fmt (log::TRACE, "%1%");
+
+  if (log::arg_count_checking)
+    {
+      BOOST_CHECK_THROW (s << fmt, boost::io::too_few_args);
     }
-  catch (const boost::io::too_few_args&)
-    {}
+  else
+    {
+      BOOST_CHECK_NO_THROW (s << fmt);
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE (quark_verbosity, fixture)

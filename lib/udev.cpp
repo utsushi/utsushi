@@ -31,7 +31,6 @@
 #include <boost/throw_exception.hpp>
 
 #include "udev.hpp"
-#define nullptr 0
 
 namespace udev_ {
 

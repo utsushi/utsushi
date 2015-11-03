@@ -37,8 +37,6 @@
 #include "utsushi/pump.hpp"
 #include "utsushi/thread.hpp"
 
-#define nullptr 0
-
 namespace utsushi {
 
 using std::invalid_argument;
@@ -204,6 +202,10 @@ pump::impl::start (input::ptr iptr, output::ptr optr,
       log::brief ("waiting for cancellation to complete");
       if (acquire_) acquire_->join ();
       is_cancelling_ = false;
+    }
+  else
+    {
+      if (acquire_) acquire_->detach ();
     }
 
   if (process_) process_->join ();

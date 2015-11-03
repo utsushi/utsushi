@@ -1,5 +1,5 @@
 //  buffer.hpp -- byte sequences for the ESC/I "compound" protocol
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -41,6 +41,7 @@ public:
   using typename base::const_reference;
   using typename base::reference;
   using typename base::size_type;
+  using typename base::value_type;
 
   basic_buffer ()
     : base ()

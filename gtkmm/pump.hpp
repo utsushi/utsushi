@@ -1,5 +1,5 @@
 //  pump.hpp -- move image octets from a source to a sink
-//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -39,7 +39,7 @@ class pump
   : public utsushi::pump
 {
 public:
-  typedef boost::shared_ptr< pump > ptr;
+  typedef shared_ptr< pump > ptr;
 
   pump (idevice::ptr idev);
 

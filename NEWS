@@ -1,6 +1,12 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.13.1                                            (2015-10-27)
+----------------------------------------------------------------------
+ * makes the code C++11 compatible
+ * fixes memory issues in the SANE backend
+
+----------------------------------------------------------------------
 utsushi-0.13.0                                            (2015-09-16)
 ----------------------------------------------------------------------
  * adds support for the EP-10VA Series, EP-808A Series, EP-978A3

@@ -1,5 +1,5 @@
 //  indentation.cpp -- conformance test suite
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
@@ -31,17 +31,19 @@
 #include <vector>
 
 #include <boost/filesystem.hpp>
-#include <boost/regex.hpp>
 
 #include <boost/test/unit_test.hpp>
 #include <boost/test/parameterized_test.hpp>
 
+#include "utsushi/regex.hpp"
 #include "utsushi/test/catch-system-errors.hpp"
 #include "utsushi/test/command-line.hpp"
 
 namespace fs = boost::filesystem;
 namespace ut = boost::unit_test;
 
+using utsushi::regex;
+using utsushi::regex_match;
 using utsushi::test::catch_system_errors_no;
 using utsushi::test::command_line;
 
@@ -75,9 +77,9 @@ static
 bool
 is_not_source_file (const fs::path& p)
 {
-  static const boost::regex re (".*\\.[chi]pp");
+  static const regex re (".*\\.[chi]pp");
 
-  return !boost::regex_match (p.string (), re);
+  return !regex_match (p.string (), re);
 }
 
 static

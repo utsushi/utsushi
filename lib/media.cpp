@@ -1,5 +1,5 @@
 //  media.cpp -- related properties
-//  Copyright (C) 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -32,8 +32,6 @@
 #include <boost/foreach.hpp>
 
 #include <map>
-
-#define nullptr 0
 
 namespace utsushi {
 

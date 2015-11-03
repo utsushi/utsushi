@@ -1,5 +1,5 @@
 /*  config-bot.h -- config.h dependent boiler plate
- *  Copyright (C) 2014  SEIKO EPSON CORPORATION
+ *  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
  *
  *  License: GPL-3.0+
  *  Author : AVASYS CORPORATION
@@ -32,3 +32,7 @@
 
 #define HAVE_MAGICK     (HAVE_GRAPHICS_MAGICK    || HAVE_IMAGE_MAGICK)
 #define HAVE_MAGICK_PP  (HAVE_GRAPHICS_MAGICK_PP || HAVE_IMAGE_MAGICK_PP)
+
+#if __cplusplus < 201103L
+#define nullptr 0
+#endif

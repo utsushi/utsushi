@@ -33,13 +33,13 @@ extern "C" {                    // needed until libudev-150
 #include <cstdlib>
 
 #include <boost/assert.hpp>
-#include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/regex.hpp>
 
+#include "utsushi/functional.hpp"
 #include "utsushi/log.hpp"
 #include "utsushi/monitor.hpp"
+#include "utsushi/regex.hpp"
 #include "utsushi/run-time.hpp"
 
 #if HAVE_LIBUDEV
@@ -49,9 +49,6 @@ extern "C" {                    // needed until libudev-150
 namespace utsushi {
 
 using boost::filesystem::exists;
-using boost::regex;
-using boost::regex_match;
-using boost::smatch;
 
 class monitor::impl
 {
@@ -77,7 +74,7 @@ monitor::default_device () const
 {
   const_iterator it =
     std::find_if (begin (), end (),
-                  boost::bind (&scanner::info::is_driver_set, _1));
+                  bind (&scanner::info::is_driver_set, _1));
 
   if (it != end ()) return it->udi ();
 
@@ -135,7 +132,7 @@ monitor::read (std::istream& istr)
                          "(\\.[[:alpha:]][[:alnum:]]*)*");
 
   const regex section ("[[:blank:]]*"
-                       "[[](" + key + ")[]]"
+                       "\\[(" + key + ")\\]"
                        "[[:blank:]]*");
 
   const regex key_val ("[[:blank:]]*"

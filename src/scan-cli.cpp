@@ -39,7 +39,6 @@
 #include <vector>
 
 #include <boost/any.hpp>
-#include <boost/bind.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 #include <boost/program_options.hpp>
@@ -89,7 +88,6 @@ using std::runtime_error;
 
 static int status = EXIT_SUCCESS;
 
-#define nullptr 0
 static pump *pptr (nullptr);
 
 static void

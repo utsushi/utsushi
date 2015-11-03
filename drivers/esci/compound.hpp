@@ -1,5 +1,5 @@
 //  compound.hpp -- protocol variant command base and templates
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -23,10 +23,8 @@
 
 #include <map>
 
-#include <boost/function.hpp>
-#include <boost/ref.hpp>
-
 #include <utsushi/connexion.hpp>
+#include <utsushi/functional.hpp>
 
 #include "buffer.hpp"
 #include "command.hpp"
@@ -35,9 +33,6 @@
 namespace utsushi {
 namespace _drv_ {
 namespace esci {
-
-  using boost::reference_wrapper;
-  using boost::ref;
 
 //! Common part of the scanner_* commands
 /*! The scanner control and inquiry commands have a great deal in
@@ -143,7 +138,7 @@ protected:
   reference_wrapper< hardware_status > stat_ref_;
 
   //! Collection of per request callbacks, indexed by reply code_token
-  std::map< quad, boost::function< void () > > hook_;
+  std::map< quad, function< void () > > hook_;
 
   //! Creates an optionally pedantic instance
   /*! A map with hook functions for use in operator>>() is initialized

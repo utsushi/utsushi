@@ -22,9 +22,10 @@
 #include <config.h>
 #endif
 
+#include <utsushi/regex.hpp>
+
 #include <boost/filesystem.hpp>
 #include <boost/filesystem/fstream.hpp>
-#include <boost/regex.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/throw_exception.hpp>
 
@@ -63,7 +64,7 @@ struct fixture
 
 BOOST_FIXTURE_TEST_CASE (lowercase_usb_product_ids, fixture)
 {
-  using namespace boost;
+  using namespace utsushi;
 
   regex re ("ATTRS\\{idProduct\\}==\"([0-9a-fA-F]{4})\"");
   smatch m;

@@ -30,11 +30,11 @@
 
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-#include <boost/regex.hpp>
 #include <boost/throw_exception.hpp>
 
 #include "utsushi/i18n.hpp"
 #include "utsushi/log.hpp"
+#include "utsushi/regex.hpp"
 
 #include "run-time.ipp"
 
@@ -349,10 +349,10 @@ struct run_time::impl::env_var_mapper
   std::string
   operator() (const std::string& env_var)
   {
-    static boost::regex re (PACKAGE_ENV_VAR_PREFIX "(.*)");
-    boost::smatch option;
+    static regex re (PACKAGE_ENV_VAR_PREFIX "(.*)");
+    smatch option;
 
-    if (boost::regex_match (env_var, option, re)
+    if (regex_match (env_var, option, re)
         && opts_.find_nothrow (option[1], exact))
       return option[1];
 

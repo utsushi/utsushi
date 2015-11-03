@@ -24,7 +24,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.62)
-AC_INIT([Utsushi], [0.13.0],
+AC_INIT([Utsushi], [0.13.1],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -419,7 +419,7 @@ AS_IF([test xno != "x$with_sane"],
     [AC_MSG_CHECKING([SANE version])
      sane_version="(unknown)"
      PKG_CHECK_EXISTS([sane-backends],          dnl  sane-backends >= 1.0.21
-       [sane_version=`$PKG_CONFIG --modversion sane-backends`
+       [sane_version=`$PKG_CONFIG --modversion sane-backends | sed 's/git//g'`
         sane_backenddir=`$PKG_CONFIG --variable libdir sane-backends`/sane
        ],
        [dnl  sane-backends >= 1.0.2

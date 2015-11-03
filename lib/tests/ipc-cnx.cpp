@@ -1,5 +1,5 @@
 //  ipc-cnx.cpp -- mock program for use by ipc::connexion unit tests
-//  Copyright (C) 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -108,7 +108,7 @@ main (int argc, char *argv[])
   addr.sin_addr.s_addr = htonl (INADDR_LOOPBACK);
 
   errno = 0;
-  int rv = bind (s, reinterpret_cast< sockaddr * > (&addr), sizeof (addr));
+  int rv = ::bind (s, reinterpret_cast< sockaddr * > (&addr), sizeof (addr));
   if (rv)
     {
       log::fatal ("bind: %1%") % strerror (errno);

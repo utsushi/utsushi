@@ -35,8 +35,6 @@
 
 #include "get-scanner-status.hpp"
 
-#define nullptr 0
-
 namespace utsushi {
 namespace _drv_ {
 namespace esci {

@@ -29,11 +29,11 @@
 #include <stdexcept>
 
 #include <boost/filesystem.hpp>
-#include <boost/regex.hpp>
 #include <boost/throw_exception.hpp>
 
 #include "utsushi/i18n.hpp"
 #include "utsushi/log.hpp"
+#include "utsushi/regex.hpp"
 #include "utsushi/run-time.hpp"
 #include "utsushi/scanner.hpp"
 
@@ -308,7 +308,6 @@ bool
 scanner::info::is_valid (const std::string& udi)
 {
   using std::string;
-  using boost::regex;
 
   if (3 > udi.length ())
     return false;

@@ -26,6 +26,7 @@
 
 #include <utsushi/format.hpp>
 #include <utsushi/i18n.hpp>
+#include <utsushi/regex.hpp>
 
 #include <gtkmm/box.h>
 #include <gtkmm/filefilter.h>
@@ -35,29 +36,25 @@
 
 #include <boost/assign/list_of.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/regex.hpp>
 
 #include <algorithm>
 #include <vector>
 
-#define nullptr NULL
-
 namespace fs = boost::filesystem;
 
 using boost::assign::list_of;
-using boost::regex;
-using boost::regex_match;
-using boost::smatch;
 
 using std::count;
 using std::vector;
 
 namespace {
 
+using utsushi::regex;
+
 const std::string default_extension_ = ".pdf";
 const std::string default_pattern_   = "-%i";
 
-const regex filename_re ("(([^%]|%[^i])*?)"        // non-greedy
+const regex filename_re ("(([^%]|%[^i])*?)"     // non-greedy
                          "(-*)"
                          "%0*([0-9]*)i"
                          "(([^%]|%[^i])*)");
@@ -452,27 +449,47 @@ file_chooser::common_ctor_logic_()
 
     r = *(types->append ());
     r[column->text] = _("JPEG");
+#if __cplusplus >= 201103L
+    l = {".jpeg", ".jpg"};
+#else
     l = list_of (".jpeg")(".jpg");
+#endif
     r[column->exts] = l;
 
     r = *(types->append ());
     r[column->text] = _("PDF");
+#if __cplusplus >= 201103L
+    l = {".pdf"};
+#else
     l = list_of (".pdf");
+#endif
     r[column->exts] = l;
 
     r = *(types->append ());
     r[column->text] = _("PNG");
+#if __cplusplus >= 201103L
+    l = {".png"};
+#else
     l = list_of (".png");
+#endif
     r[column->exts] = l;
 
     r = *(types->append ());
     r[column->text] = _("PNM");
+#if __cplusplus >= 201103L
+    l = {".pnm"};
+#else
     l = list_of (".pnm");
+#endif
     r[column->exts] = l;
 
     r = *(types->append ());
     r[column->text] = _("TIFF");
+#if __cplusplus >= 201103L
+    l = {".tiff", ".tif"};
+#else
     l = list_of (".tiff")(".tif");
+#endif
     r[column->exts] = l;
   }
 

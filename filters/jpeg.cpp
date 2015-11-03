@@ -1,5 +1,5 @@
 //  jpeg.cpp -- JPEG image format support
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -38,8 +38,6 @@
 #include <utsushi/range.hpp>
 
 #include "jpeg.hpp"
-
-#define nullptr 0
 
 using std::bad_alloc;
 using std::min;

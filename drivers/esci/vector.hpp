@@ -26,8 +26,9 @@
 #include <iostream>
 #include <numeric>
 
-#include <boost/array.hpp>
 #include <boost/operators.hpp>
+
+#include <utsushi/array.hpp>
 
 namespace utsushi {
 namespace _drv_ {
@@ -42,18 +43,18 @@ namespace esci {
    */
   template< typename T, std::size_t size_ >
   class vector
-    : protected boost::array< T, size_ >
+    : protected array< T, size_ >
     , boost::equality_comparable< vector< T, size_ >
     , boost::additive< vector< T, size_ >
     , boost::multiplicative< vector< T, size_ >, T
     > > >
   {
-    typedef boost::array< T, size_ > base;
+    typedef array< T, size_ > base;
 
   public:
     vector (const T& t = T())
     {
-      this->assign (t);
+      std::fill_n (this->begin (), size_, t);
     }
 
     using typename base::size_type;

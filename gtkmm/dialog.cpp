@@ -66,8 +66,6 @@
 #include "presets.hpp"
 #include "preview.hpp"
 
-#define nullptr 0
-
 namespace fs = boost::filesystem;
 
 namespace utsushi {
@@ -222,7 +220,7 @@ dialog::set_sensitive (void)
   Glib::RefPtr<Gtk::Action> a;
 
   a = ui_manager_->get_action ("/dialog/scan");
-  if (a) { a->set_sensitive (idevice_); }
+  if (a) { a->set_sensitive (bool(idevice_)); }
 }
 
 void

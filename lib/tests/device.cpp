@@ -1,5 +1,5 @@
 //  device.cpp -- unit tests for the utsushi::device API
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : AVASYS CORPORATION
@@ -29,6 +29,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "utsushi/device.hpp"
+#include "utsushi/functional.hpp"
 #include "utsushi/test/memory.hpp"
 #include "utsushi/test/null.hpp"
 
@@ -156,8 +157,8 @@ BOOST_AUTO_TEST_CASE (counting_images)
 
 BOOST_AUTO_TEST_CASE (counting_signals)
 {
-  idev.connect_marker (boost::ref (counter));
-  odev.connect_marker (boost::ref (counter));
+  idev.connect_marker (ref (counter));
+  odev.connect_marker (ref (counter));
 
   streamsize rv = idev | odev;
   BOOST_CHECK_EQUAL (traits::eos (), rv);
