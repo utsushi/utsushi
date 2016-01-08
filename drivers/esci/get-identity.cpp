@@ -1,9 +1,9 @@
 //  get-identity.cpp -- probe for basic capabilities
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2008  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //  Author : Olaf Meeuwissen
 //  Origin : FreeRISCI
 //

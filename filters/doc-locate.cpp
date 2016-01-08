@@ -2,7 +2,7 @@
 //  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -679,6 +679,12 @@ autocrop (Magick::Image& image, const locator& loc)
     }
 }
 
+void
+trim (Magick::Image& image, const locator& loc)
+{
+  image.colorFuzz (0);
+  image.trim ();
+}
 }       // namespace
 
 int
@@ -692,7 +698,7 @@ main (int argc, char *argv[])
         << "\n"
         << "The program expects two threshold values bracketing the image's\n"
         << "background intensity.  Values should be in [0,1].\n"
-        << "Supported actions are crop and deskew.\n"
+        << "Supported actions are crop, trim and deskew.\n"
         << "Source and destination image specifications are optional.  They\n"
         << "default to standard input and standard output.\n"
         ;
@@ -746,6 +752,7 @@ main (int argc, char *argv[])
   void (*process)(Magick::Image&, const locator&);
 
   /**/ if (action == "crop")   process = autocrop;
+  else if (action == "trim")   process = trim;
   else if (action == "deskew") process = deskew;
   else
     {

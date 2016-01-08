@@ -87,6 +87,7 @@ USING THE SOFTWARE
       - PX-M860F
       - PX-M7050 Series
       - PX-M7050FX Series
+      - WF-6530 Series
       - WF-6590 Series
       - WF-8510/8590 Series
       - WF-R8590 Series
@@ -101,6 +102,24 @@ USING THE SOFTWARE
       - XP-830 Series
       - XP-960 Series
 
+  NETWORK SUPPORT
+  ---------------
+    Most, if not all, of the above devices can be used via a network
+    connection.  If you want to do so with this software, install the
+    non-free "networkscan" plugin.  This plugin is available via the
+    EPSON Download Center[1].
+
+    [1] http://download.ebz.epson.net/dsc/search/01/search/?OSC=LX
+
+  OPTICAL CHARACTER RECOGNITION (OCR) SUPPORT
+  -------------------------------------------
+    There is also a non-free OCR Engine that can be used to provide
+    support for automatic document rotation.  The same functionality
+    is available with a recent enough version of Tesseract (3.03 or
+    later), however.
+
+    The non-free OCR Engine can be found at the EPSON Download Center
+    (see [1] above).
 
 BUILDING/INSTALLING FROM SOURCE
 ===============================

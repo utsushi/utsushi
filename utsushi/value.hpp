@@ -1,8 +1,8 @@
 //  value.hpp -- union-like construct for various kinds of settings
-//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify

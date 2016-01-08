@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -64,7 +64,7 @@ compound_base::operator>> (connexion& cnx)
     send_command_signature_(cnx);
 
   if (cnx_ != &cnx)
-    BOOST_THROW_EXCEPTION (logic_error (_("crossed wires")));
+    BOOST_THROW_EXCEPTION (logic_error ("crossed wires"));
 
   if (!request_.code)
     return;
@@ -298,7 +298,6 @@ compound_base::get (information& info)
 
   return *this;
 }
-
 
 compound_base&
 compound_base::get_information ()
@@ -559,7 +558,7 @@ compound_base::extension (const byte_buffer& request_payload,
 
   if (n >= sizeof (ext_) / sizeof (*ext_))
     BOOST_THROW_EXCEPTION
-      (domain_error (_("unknown extension designation")));
+      (domain_error ("unknown extension designation"));
 
   par_blk_ = request_payload;
   bool r = encode_request_block_(ext_[n], par_blk_.size ());
@@ -626,8 +625,8 @@ compound_base::is_ready_() const
 
   if (status_.is_in_use ())
     BOOST_THROW_EXCEPTION
-      (device_busy (_("The device is in use.  Please wait until the"
-                      " device becomes available, then try again.")));
+      (device_busy (SEC_("The device is in use.  Please wait until the"
+                         " device becomes available, then try again.")));
 
   return !(status_.is_busy ()
            || (status_.is_warming_up () && reply::MECH != reply_.code));

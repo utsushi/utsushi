@@ -1,9 +1,9 @@
 #  ltmain.sh.diff -- SANE backend library soname handling fixes
-#  Copyright (C) 2012  SEIKO EPSON CORPORATION
+#  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 #  Copyright (C) 2007  EPSON AVASYS CORPORATION
 #
 #  License: GPL-2.0+ (same as ltmain.sh)
-#  Author : AVASYS CORPORATION
+#  Author : EPSON AVASYS CORPORATION
 #
 #  Patch relative to: GNU libtool 2.2.6b Debian-2.2.6b-2
 

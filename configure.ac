@@ -3,7 +3,7 @@ dnl  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 dnl  Copyright (C) 2013-2015  Olaf Meeuwissen
 dnl
 dnl  License: GPL-3.0+
-dnl  Author : AVASYS CORPORATION
+dnl  Author : EPSON AVASYS CORPORATION
 dnl
 dnl  This file is part of the 'Utsushi' package.
 dnl  This package is free software: you can redistribute it and/or modify
@@ -24,7 +24,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.62)
-AC_INIT([Utsushi], [0.13.1],
+AC_INIT([Utsushi], [0.14.0],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -171,21 +171,21 @@ dnl  preprocessor symbols for optional/conditional code
 AC_DEFINE([HAVE_LIBGTKMM],
   [0], [Define to 1 if the gtkmm library is available])
 AC_DEFINE([HAVE_LIBJPEG],
-  [0], [define to 1 if a JPEG library is available])
+  [0], [Define to 1 if a JPEG library is available])
 AC_DEFINE([HAVE_LIBMAGIC],
-  [0], [define to 1 if libmagic is available])
+  [0], [Define to 1 if libmagic is available])
 AC_DEFINE([HAVE_LIBSANE],
   [0], [Define to 1 if the SANE library is available])
 AC_DEFINE([HAVE_LIBTIFF],
-  [0], [define to 1 if a TIFF library is available])
+  [0], [Define to 1 if a TIFF library is available])
 AC_DEFINE([HAVE_LIBUDEV],
   [0], [Define to 1 if the udev library is available])
 AC_DEFINE([HAVE_LIBUSB],
-  [0], [define to 1 if libusb-1.0 is available])
+  [0], [Define to 1 if libusb-1.0 is available])
 AC_DEFINE([HAVE_LIBUSB_ERROR_NAME],
-  [0], [define to 1 if libusb_error_name() is available])
+  [0], [Define to 1 if libusb_error_name() is available])
 AC_DEFINE([HAVE_LIBUSB_GET_PORT_NUMBER],
-  [0], [define to 1 if libusb_get_port_number() is available])
+  [0], [Define to 1 if libusb_get_port_number() is available])
 AC_DEFINE([HAVE_GRAPHICS_MAGICK],
   [0], [Define to 1 if GraphicsMagick is available])
 AC_DEFINE([HAVE_GRAPHICS_MAGICK_PP],
@@ -196,6 +196,8 @@ AC_DEFINE([HAVE_IMAGE_MAGICK_PP],
   [0], [Define to 1 if ImageMagick's C++ API is usable])
 AC_DEFINE([MAGICK_CONVERT],
   [], [Define to an appropriate command-line invocation for convert])
+AC_DEFINE([WITH_INCLUDED_BOOST],
+  [0], [Define to 1 if using the included Boost sources])
 
 dnl  checks for programs, modules and libraries
 
@@ -206,6 +208,11 @@ m4_ifdef([AM_SILENT_RULES], [AM_SILENT_RULES([yes])])
 AC_PROG_CC
 AC_OPENMP([C])
 AC_PROG_CXX
+AC_LANG_PUSH([C++])
+AC_MSG_CHECKING([standard compliance level of $CXX])
+AC_COMPUTE_INT([__cplusplus], [__cplusplus])
+AC_MSG_RESULT([${__cplusplus}L])
+AC_LANG_POP([C++])
 AS_IF([test xno != x$enable_code_coverage],
   [AS_IF([test xyes = x$ac_cv_cxx_compiler_gnu],
      [code_coverage_cxxflags="-fprofile-arcs -ftest-coverage"
@@ -242,8 +249,8 @@ AS_IF([test xyes != x$with_included_boost],
       AX_BOOST_FILESYSTEM
       AX_BOOST_IOSTREAMS
       AX_BOOST_PROGRAM_OPTIONS
-      AX_BOOST_REGEX
-      AX_BOOST_THREAD
+      AS_IF([test $__cplusplus -lt 201103], [AX_BOOST_REGEX])
+      AS_IF([test $__cplusplus -lt 201103], [AX_BOOST_THREAD])
       AX_BOOST_UNIT_TEST_FRAMEWORK
      ],
      [AS_IF([test -d $ac_aux_dir/boost],
@@ -296,6 +303,7 @@ AS_IF([test xyes = x$with_included_boost],
       AS_IF([test xyes = x$ac_cv_cxx_compiler_gnu],
         [BOOST_CPPFLAGS="-isystem \$(top_srcdir)/$aux_dir/boost"])
 
+      AC_DEFINE([WITH_INCLUDED_BOOST], [1])
      ],
      [AC_MSG_ERROR([install Boost libraries])
      ])
@@ -469,6 +477,8 @@ AS_IF([test xno != "x$with_sane"],
     [AS_IF([test xcheck != "x$with_sane"],
        [AC_MSG_ERROR([--with-sane was given but test for SANE failed])])
     ])])
+AS_IF([test x != "x$sane_version"],
+  [AC_DEFINE([HAVE_LIBSANE], [1])])
 AM_CONDITIONAL([WITH_SANE], [test x != "x$sane_version"])
 AM_CONDITIONAL([enable_sane_config], [test xyes = "x$enable_sane_config"])
 AC_SUBST(SANE_MAJOR, `echo $sane_version | $AWK -F. '{print $1}'`)

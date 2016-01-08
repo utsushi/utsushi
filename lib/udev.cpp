@@ -2,7 +2,7 @@
 //  Copyright (C) 2013-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -65,6 +65,15 @@ get_sysattr (struct udev_device *device,
       p  = udev_device_get_parent (p);
     }
   if (!rv) return;
+
+  if ("devpath" == name)
+    {
+      const char *tmp;
+      tmp = strrchr (rv, '-');
+      if (tmp) rv = tmp + 1;
+      tmp = strrchr (rv, '.');
+      if (tmp) rv = tmp + 1;
+    }
 
   std::stringstream ss (rv);
   ss >> radix >> value;

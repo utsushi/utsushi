@@ -1,8 +1,8 @@
 //  grammar-capabilities.hpp -- component rule declarations
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -65,6 +65,8 @@ struct capabilities
   utsushi::constraint::ptr document_sources (const quad& default_value) const;
   utsushi::constraint::ptr double_feed () const;
   utsushi::constraint::ptr dropouts () const;
+  quad get_dropout (const quad& gray, const string& color) const;
+  bool has_dropout (const quad& gray) const;
   utsushi::constraint::ptr formats (const boost::optional< quad >& default_value) const;
   utsushi::constraint::ptr gamma (const boost::optional< quad >& default_value) const;
   utsushi::constraint::ptr image_count (const boost::optional< integer >& default_value) const;

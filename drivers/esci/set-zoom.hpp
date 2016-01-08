@@ -1,9 +1,9 @@
 //  set-zoom.hpp -- for the next scans
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //  Author : Olaf Meeuwissen
 //  Origin : FreeRISCI
 //

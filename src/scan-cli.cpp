@@ -3,7 +3,7 @@
 //  Copyright (C) 2013, 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -72,6 +72,7 @@
 #include "../filters/pdf.hpp"
 #include "../filters/pnm.hpp"
 #include "../filters/magick.hpp"
+#include "../filters/reorient.hpp"
 #if HAVE_LIBTIFF
 #include "../outputs/tiff.hpp"
 #endif
@@ -159,19 +160,19 @@ create (const std::string& udi, bool debug)
       if (!udi.empty ())
         {
           BOOST_THROW_EXCEPTION
-            (runtime_error ((format (_("%1%: not found")) % udi).str ()));
+            (runtime_error ((format (CCB_("%1%: not found")) % udi).str ()));
         }
       else
         {
           BOOST_THROW_EXCEPTION
-            (runtime_error (_("no usable devices available")));
+            (runtime_error (CCB_("no usable devices available")));
         }
     }
 
   if (!it->is_driver_set ())
     {
       BOOST_THROW_EXCEPTION
-        (runtime_error ((format (_("%1%: found but has no driver"))
+        (runtime_error ((format (CCB_("%1%: found but has no driver"))
                          % udi).str ()));
     }
 
@@ -185,7 +186,7 @@ create (const std::string& udi, bool debug)
   if (rv) return rv;
 
   BOOST_THROW_EXCEPTION
-    (runtime_error ((format (_("%1%: not supported")) % udi).str ()));
+    (runtime_error ((format (CCB_("%1%: not supported")) % udi).str ()));
 }
 
 //! Convert a utsushi::option object into a Boost.Program_option
@@ -230,14 +231,14 @@ option_visitor::operator() (const T& t) const
     {
       if (!description.empty ())
         {
-          documentation = (format (_("%1%\n"
-                                     "Allowed values: %2%"))
+          documentation = (format (CCB_("%1%\n"
+                                        "Allowed values: %2%"))
                            % description
                            % *opt_.constraint ()).str ();
         }
       else
         {
-          documentation = (format (_("Allowed values: %1%"))
+          documentation = (format (CCB_("Allowed values: %1%"))
                            % *opt_.constraint ()).str ();
         }
     }
@@ -410,8 +411,8 @@ public:
       }
     else
       {
-        format fmt (_("option parser internal inconsistency\n"
-                      "  key = %1%"));
+        format fmt ("option parser internal inconsistency\n"
+                    "  key = %1%");
         BOOST_THROW_EXCEPTION (logic_error ((fmt % kv.first).str ()));
       }
   }
@@ -496,9 +497,9 @@ main (int argc, char *argv[])
       cmd_pos_opts
         .add_options ()
         ("UDI", (po::value< std::string > (&udi)),
-         _("image acquisition device to use"))
+         CCB_("image acquisition device to use"))
         ("URI", (po::value< std::string > (&uri)),
-         _("output destination to use"))
+         CCB_("output destination to use"))
         ;
 
       po::positional_options_description cmd_pos_args;
@@ -512,18 +513,18 @@ main (int argc, char *argv[])
       std::string fmt;
 
       po::variables_map cmd_vm;
-      po::options_description cmd_opts (_("Utility options"));
+      po::options_description cmd_opts (CCB_("Utility options"));
       cmd_opts
         .add_options ()
-        ("debug", _("log device I/O in hexdump format"))
+        ("debug", CCB_("log device I/O in hexdump format"))
         ("image-format", (po::value< std::string > (&fmt)
                           ->default_value ("PNM")),
-         _("output image format\n"
-           "PNM, PNG, JPEG, PDF, TIFF "
-           "or one of the device supported transfer-formats.  "
-           "The explicitly mentioned types are normally inferred from"
-           " the output file name.  Some require additional libraries"
-           " at build-time in order to be available."))
+         CCB_("output image format\n"
+              "PNM, PNG, JPEG, PDF, TIFF "
+              "or one of the device supported transfer-formats.  "
+              "The explicitly mentioned types are normally inferred from"
+              " the output file name.  Some require additional libraries"
+              " at build-time in order to be available."))
         ;
 
       po::options_description cmd_line;
@@ -571,7 +572,7 @@ main (int argc, char *argv[])
 
       if (udi.empty ())
         {
-          std::cerr << _("no usable devices available");
+          std::cerr << CCB_("no usable devices available");
           return EXIT_FAILURE;
         }
 
@@ -580,7 +581,7 @@ main (int argc, char *argv[])
       // Self-documenting device and add-on options
 
       po::variables_map act_vm;
-      po::options_description dev_acts (_("Device actions"));
+      po::options_description dev_acts (CCB_("Device actions"));
       std::for_each (device->actions ()->begin (),
                      device->actions ()->end (),
                      visit (dev_acts));
@@ -590,15 +591,15 @@ main (int argc, char *argv[])
           dev_acts
             .add_options ()
             ("dont-scan", po::bool_switch (),
-             _("Only perform the actions given on the command-line."
-               "  Do not perform image acquisition."))
+             CCB_("Only perform the actions given on the command-line."
+                  "  Do not perform image acquisition."))
             ;
         }
 
       po::variables_map dev_vm;
-      po::options_description dev_opts (_("Device options"));
+      po::options_description dev_opts (CCB_("Device options"));
       po::variables_map add_vm;
-      po::options_description add_opts (_("Add-on options"));
+      po::options_description add_opts (CCB_("Add-on options"));
 
       boost::optional< toggle > resampling;
       if (device->options ()->count ("enable-resampling"))
@@ -609,11 +610,11 @@ main (int argc, char *argv[])
 
       bool emulating_automatic_scan_area = false;
 
-      if (   device->options ()->count ("lo-threshold")
+      if (HAVE_MAGICK_PP
+          && device->options ()->count ("lo-threshold")
           && device->options ()->count ("hi-threshold"))
         {
-          if (HAVE_MAGICK_PP
-              && device->options ()->count ("scan-area"))
+          if (device->options ()->count ("scan-area"))
             {
               constraint::ptr c ((*device->options ())["scan-area"]
                                  .constraint ());
@@ -625,13 +626,31 @@ main (int argc, char *argv[])
                 }
             }
 
-          if (HAVE_MAGICK_PP)
+          if (!device->options ()->count ("deskew"))
             {
               add_opts
                 .add_options ()
                 ("deskew", po::bool_switch (),
-                 _("Deskew"))
+                 SEC_("Deskew"))
                 ;
+            }
+        }
+
+      filter::ptr magick;
+      if (HAVE_MAGICK)
+        {
+          magick = make_shared< _flt_::magick > ();
+        }
+
+      filter::ptr reorient;
+      if (magick)
+        {
+          if (magick->options ()->count ("auto-orient"))
+            {
+              reorient = make_shared< _flt_::reorient > ();
+              std::for_each (reorient->options ()->begin (),
+                             reorient->options ()->end (),
+                             visit (add_opts));
             }
         }
 
@@ -644,6 +663,13 @@ main (int argc, char *argv[])
                      blank_skip->options ()->end (),
                      visit (add_opts));
 
+      if (magick)
+        {
+          visit v (add_opts);
+          v ((*magick->options ())["brightness"]);
+          v ((*magick->options ())["contrast"]);
+        }
+
       if (rt.count ("help"))
         {
           if (!device->actions ()->empty ())
@@ -654,9 +680,9 @@ main (int argc, char *argv[])
                     << "\n"
                     <<
             // FIXME: use word-wrapping instead of hard-coded newlines
-            (_("Note: device options may be ignored if their prerequisites"
-               " are not satisfied.\nA '--duplex' option may be ignored if"
-               " you do not select the ADF, for example.\n"));
+            (CCB_("Note: device options may be ignored if their prerequisites"
+                  " are not satisfied.\nA '--duplex' option may be ignored if"
+                  " you do not select the ADF, for example.\n"));
 
           return EXIT_SUCCESS;
         }
@@ -702,18 +728,41 @@ main (int argc, char *argv[])
       po::store (add, add_vm);
       po::notify (add_vm);
 
+      // ...
+      if (dev_vm.count ("long-paper-mode")
+          && add_vm.count ("deskew"))
+        {
+          if (dev_vm["long-paper-mode"].as < bool > ()
+              && add_vm["deskew"].as < bool > ())
+            {
+              BOOST_THROW_EXCEPTION
+                (constraint::violation ("value combination not acceptable"));
+            }
+        }
       // Pick off those options and option values that need special
       // handling
 
+      bool long_paper_mode (dev_vm.count ("long-paper-mode")
+                            && dev_vm["long-paper-mode"].as < bool > ());
+
+      if (dev_vm.count ("doc-source"))
+        {
+          long_paper_mode &=
+            (dev_vm["doc-source"].as< string > () == "ADF");
+        }
+
       filter::ptr autocrop;
       if (HAVE_MAGICK_PP
-          && emulating_automatic_scan_area
+          && (emulating_automatic_scan_area || long_paper_mode)
           && (dev_vm["scan-area"].as< string > () == "Automatic"))
         {
           autocrop = make_shared< _flt_::autocrop > ();
           dev_vm.erase ("scan-area");
           po::variable_value v (std::string ("Maximum"), false);
           dev_vm.insert (std::make_pair ("scan-area", v));
+
+          if (device->options ()->count ("auto-kludge"))
+            (*device->options ())["auto-kludge"] = toggle (long_paper_mode);
 
           if (dev_vm.count ("overscan"))
             {
@@ -728,9 +777,36 @@ main (int argc, char *argv[])
           && add_vm.count ("deskew"))
         {
           if (!autocrop         // autocrop already deskews
+              && !long_paper_mode
               && add_vm["deskew"].as< bool > ())
             deskew = make_shared< _flt_::deskew > ();
           add_vm.erase ("deskew");
+        }
+
+      if (HAVE_MAGICK
+          && add_vm.count ("rotate"))
+        {
+          value angle = add_vm["rotate"].as< string > ();
+          (*reorient->options ())["rotate"] = angle;
+          add_vm.erase ("rotate");
+        }
+
+      quantity brightness;
+      quantity contrast;
+      if (magick)
+        {
+          brightness = add_vm["brightness"].as< quantity > ();
+          add_vm.erase ("brightness");
+          contrast   = add_vm["contrast"].as< quantity > ();
+          add_vm.erase ("contrast");
+        }
+
+      bool bilevel = (dev_vm["image-type"].as< string > () == "Gray (1 bit)");
+      if (bilevel)              // use software thresholding
+        {
+          dev_vm.erase ("image-type");
+          po::variable_value v (std::string ("Gray (8 bit)"), false);
+          dev_vm.insert (std::make_pair ("image-type", v));
         }
 
       // Push all options to their respective providers
@@ -764,8 +840,8 @@ main (int argc, char *argv[])
           else
             {
               std::cerr <<
-                format (_("cannot infer image format from file"
-                          " extension: '%1%'"))
+                format (CCB_("cannot infer image format from file"
+                             " extension: '%1%'"))
                 % path.extension ()
                 ;
               return EXIT_FAILURE;
@@ -785,7 +861,7 @@ main (int argc, char *argv[])
       else
         {
           std::cerr <<
-            format (_("unsupported image format: '%1%'"))
+            format (CCB_("unsupported image format: '%1%'"))
             % fmt
             ;
           return EXIT_FAILURE;
@@ -840,7 +916,7 @@ main (int argc, char *argv[])
           else
             {
               std::cerr <<
-                format (_("%1% does not support multi-image files"))
+                format (CCB_("%1% does not support multi-image files"))
                 % fmt
                 ;
               return EXIT_FAILURE;
@@ -869,8 +945,6 @@ main (int argc, char *argv[])
       const std::string xfer_jpg = "image/jpeg";
       std::string xfer_fmt = device->get_context ().content_type ();
 
-      bool bilevel = (om["image-type"] == "Gray (1 bit)");
-
       toggle force_extent = true;
       quantity width  = -1.0;
       quantity height = -1.0;
@@ -897,8 +971,17 @@ main (int argc, char *argv[])
 
       if (autocrop)
         {
-          (*autocrop->options ())["lo-threshold"] = value (om["lo-threshold"]);
-          (*autocrop->options ())["hi-threshold"] = value (om["hi-threshold"]);
+          if (long_paper_mode)
+            {
+              (*autocrop->options ())["trim"] = toggle (long_paper_mode);
+            }
+          else
+            {
+              (*autocrop->options ())["lo-threshold"]
+                = value (om["lo-threshold"]);
+              (*autocrop->options ())["hi-threshold"]
+                = value (om["hi-threshold"]);
+            }
         }
 
       /* deskew has been instantiated earlier if necessary
@@ -915,10 +998,12 @@ main (int argc, char *argv[])
       if (om.count ("enable-resampling"))
         resample = value (om["enable-resampling"]);
 
-      filter::ptr magick;
-      if (HAVE_MAGICK)
+      if (magick)
         {
-          magick = (make_shared< _flt_::magick > ());
+          if (reorient)
+            {
+              (*magick->options ())["auto-orient"] = toggle (true);
+            }
         }
 
       if (magick)
@@ -955,6 +1040,9 @@ main (int argc, char *argv[])
           thr /= (dynamic_pointer_cast< range >
                   (om["threshold"].constraint ()))->upper ();
           (*magick->options ())["threshold"] = thr;
+
+          (*magick->options ())["brightness"] = brightness;
+          (*magick->options ())["contrast"]   = contrast;
 
           if ("ASIS" != fmt)
             (*magick->options ())["image-format"] = fmt;
@@ -1010,7 +1098,7 @@ main (int argc, char *argv[])
           if ("ASIS" != fmt)
             BOOST_THROW_EXCEPTION
               (runtime_error
-               ((format (_("conversion from %1% to %2% is not supported"))
+               ((format (SEC_("conversion from %1% to %2% is not supported"))
                  % xfer_fmt
                  % fmt)
                 .str ()));
@@ -1018,11 +1106,12 @@ main (int argc, char *argv[])
 
       /**/ if ("ASIS" != fmt)
         {
-          if (skip_blank) str->push (blank_skip);
+          if (skip_blank)  str->push (blank_skip);
           str->push (make_shared< pnm > ());
-          if (autocrop)   str->push (autocrop);
-          if (deskew)     str->push (deskew);
-          if (magick)     str->push (magick);
+          if (autocrop)    str->push (autocrop);
+          if (deskew)      str->push (deskew);
+          if (reorient)    str->push (reorient);
+          if (magick)      str->push (magick);
 
           if ("PDF" == fmt)
             {

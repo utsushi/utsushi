@@ -1,6 +1,6 @@
 #! /bin/sh
 #  filter -- doxygen input files to expand `./configure`d values
-#  Copyright (C) 2012  AVASYS CORPORATION
+#  Copyright (C) 2012  EPSON AVASYS CORPORATION
 #
 #  License: GPL-3.0+
 #  Author : Olaf Meeuwissen

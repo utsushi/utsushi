@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -236,7 +236,6 @@ scanner_control::set (const parameters& parm, bool flip_side_only)
     }
   return *this;
 }
-
 
 scanner_control&
 scanner_control::set_parameters (const parameters& parm, bool flip_side_only)

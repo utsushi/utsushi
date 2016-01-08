@@ -3,7 +3,7 @@
 //  Copyright (C) 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -54,6 +54,7 @@
 #include "../filters/padding.hpp"
 #include "../filters/pdf.hpp"
 #include "../filters/pnm.hpp"
+#include "../filters/reorient.hpp"
 #if HAVE_LIBTIFF
 #include "../outputs/tiff.hpp"
 #endif
@@ -74,26 +75,33 @@ namespace gtkmm {
 using std::logic_error;
 using std::runtime_error;
 
+#define SCANNING  SEC_N_("Scanning...")
+#define CANCELING SEC_N_("Canceling...")
+
 dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
   : base (ptr), opts_ (new option::map), app_opts_ (new option::map)
   , maintenance_(nullptr)
   , maintenance_dialog_(nullptr)
+  , progress_(nullptr)
+  , scan_started_(false)
+  , ignore_delete_event_(false)
+  , revert_bilevel_(false)
+  , revert_overscan_(false)
 {
   Glib::RefPtr<Glib::Object> obj = builder->get_object ("uimanager");
   ui_manager_ = Glib::RefPtr<Gtk::UIManager>::cast_dynamic (obj);
 
   if (!ui_manager_)
     BOOST_THROW_EXCEPTION
-      (logic_error (_("Dialog specification requires a 'uimanager'")));
+      (logic_error ("Dialog specification requires a 'uimanager'"));
 
   //  set up custom child widgets
 
-  chooser *device_list = 0;
   preview *preview = 0;
   {
-    builder->get_widget_derived ("scanner-list", device_list);
-    device_list->unreference ();
-    device_list->signal_device_changed ()
+    builder->get_widget_derived ("scanner-list", chooser_);
+    chooser_->unreference ();
+    chooser_->signal_device_changed ()
       .connect (sigc::mem_fun (*this, &dialog::on_device_changed));
   }
   if (builder->get_object ("presets-list")) {
@@ -104,7 +112,7 @@ dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
   {
     builder->get_widget_derived ("preview-area", preview);
     preview->unreference ();
-    device_list->signal_device_changed ()
+    chooser_->signal_device_changed ()
       .connect (sigc::mem_fun (*preview, &preview::on_device_changed));
   }
   {
@@ -112,6 +120,8 @@ dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
     editor_->unreference ();
     signal_options_changed ()
       .connect (sigc::mem_fun (*editor_, &editor::on_options_changed));
+    editor_->signal_values_changed ()
+      .connect (sigc::mem_fun (*preview, &preview::on_values_changed));
   }
 
   //  customise self
@@ -132,6 +142,20 @@ dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
     }
   }
 
+  Gtk::Button *quit = 0;
+  if (builder->get_object ("quit-button")) {
+    builder->get_widget ("quit-button", quit);
+    if (quit) {
+      Glib::RefPtr<Gtk::Action> action;
+      action = ui_manager_->get_action ("/dialog/quit");
+      if (action) {
+        action->connect_proxy (*quit);
+        action->signal_activate ()
+          .connect (sigc::mem_fun (*this, &Gtk::Widget::hide));
+      }
+    }
+  }
+
   Gtk::Button *cancel = 0;
   builder->get_widget ("cancel-button", cancel);
   if (cancel) {
@@ -139,8 +163,14 @@ dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
     action = ui_manager_->get_action ("/dialog/cancel");
     if (action) {
       action->connect_proxy (*cancel);
-      cancel_ = action->signal_activate ()
-        .connect (sigc::mem_fun (*this, &Gtk::Widget::hide));
+      if (!quit) {              // overload cancel button to quit
+        cancel_ = action->signal_activate ()
+          .connect (sigc::mem_fun (*this, &Gtk::Widget::hide));
+      } else {
+        action->set_sensitive (false);
+        cancel_ = action->signal_activate ()
+          .connect (sigc::mem_fun (*this, &dialog::on_cancel));
+      }
     }
   }
 
@@ -196,6 +226,29 @@ dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
       }
     }
   }
+
+  if (builder->get_object ("progress-indicator")) {
+    Glib::RefPtr< Pango::Layout > layout;
+    int height, w, h;
+
+    builder->get_widget ("progress-indicator", progress_);
+    progress_->get_size_request (w, height);
+
+    layout = progress_->create_pango_layout ("");
+    layout->get_pixel_size (w, h);
+    if (h > height) height = h;
+    layout->set_text (SEC_(SCANNING));
+    layout->get_pixel_size (w, h);
+    if (h > height) height = h;
+    layout->set_text (SEC_(CANCELING));
+    layout->get_pixel_size (w, h);
+    if (h > height) height = h;
+    progress_->set_size_request (-1, height);
+
+    progress_->set_text ("");
+    progress_->set_fraction (0);
+  }
+
   set_sensitive ();
 }
 
@@ -224,6 +277,67 @@ dialog::set_sensitive (void)
 }
 
 void
+dialog::rewire_dialog (bool scanning)
+{
+  // switch to/from a busy cursor
+  Glib::RefPtr< Gdk::Window > window = get_window ();
+  if (window) {
+    if (scanning)
+      window->set_cursor (Gdk::Cursor (Gdk::WATCH));
+    else
+      window->set_cursor ();
+  }
+
+  // stop and clear progress bar
+  if (progress_) {
+    if (scanning) {
+      progress_->set_text (SEC_(SCANNING));
+      progress_pulse_ = Glib::signal_timeout ()
+        .connect (sigc::mem_fun (*this, &dialog::on_timeout), 50);
+    }
+    else {
+      progress_pulse_.disconnect ();
+      progress_->set_text ("");
+      progress_->set_fraction (0);
+    }
+  }
+
+  // toggle sensitivity of the editor pane and the preview, cancel,
+  // scan and quit buttons as well as the device chooser
+  chooser_->set_sensitive (!scanning);
+  editor_->set_sensitive (!scanning);
+  Glib::RefPtr<Gtk::Action> action;
+  action = ui_manager_->get_action ("/preview/refresh");
+  if (action) action->set_sensitive (!scanning);
+  action = ui_manager_->get_action ("/dialog/scan");
+  if (action) action->set_sensitive (!scanning);
+  action = ui_manager_->get_action ("/dialog/quit");
+  if (action) {                 // quit button
+    action->set_sensitive (!scanning);
+    action = ui_manager_->get_action ("/dialog/cancel");
+    if (action) action->set_sensitive (scanning);
+  }
+  else {                        // overloaded cancel button
+    action = ui_manager_->get_action ("/dialog/cancel");
+    if (action) {
+      cancel_.disconnect ();
+      cancel_ = action->signal_activate ()
+        .connect (sigc::mem_fun
+                  (*this, (scanning
+                           ? &dialog::on_cancel : &Gtk::Widget::hide)));
+    }
+  }
+  ignore_delete_event_ = scanning;
+}
+
+bool
+dialog::on_delete_event (GdkEventAny *event)
+{
+  // FIXME should cancel and quit the dialog cleanly
+  return ignore_delete_event_;
+}
+
+void
 dialog::on_detail_toggled (void)
 {
   if (!expand_ || !editor_) return;
@@ -238,35 +352,11 @@ dialog::on_detail_toggled (void)
 }
 
 void
-dialog::on_scan_update (traits::int_type c)
-{
-  if (traits::eos () == c || traits::eof () == c) {
-    // enable scan button
-    Glib::RefPtr<Gtk::Action> action;
-    action = ui_manager_->get_action ("/dialog/scan");
-    if (action) action->set_sensitive (true);
-    // retarget cancel button
-    action = ui_manager_->get_action ("/dialog/cancel");
-    if (action) {
-      cancel_.disconnect ();
-      cancel_ = action->signal_activate ()
-        .connect (sigc::mem_fun (*this, &Gtk::Widget::hide));
-    }
-
-    Glib::RefPtr< Gdk::Window > window = get_window ();
-    if (window)
-      {
-        window->set_cursor ();
-      }
-  }
-}
-
-void
 dialog::on_scan (void)
 {
-  file_chooser dialog (*this, _("Save As..."));
+  file_chooser dialog (*this, SEC_("Save As..."));
 
-  fs::path default_name (std::string (_("Untitled")) + ".pdf");
+  fs::path default_name (std::string (SEC_("Untitled")) + ".pdf");
   fs::path default_path (fs::current_path () / default_name);
 
   dialog.set_current_name (default_name.string ());
@@ -348,7 +438,16 @@ dialog::on_scan (void)
     const std::string xfer_jpg = "image/jpeg";
     std::string xfer_fmt = idevice_->get_context ().content_type ();
 
+    revert_bilevel_ = false;
     bool bilevel = ((*opts_)["device/image-type"] == "Gray (1 bit)");
+    if (bilevel)                // use software thresholding
+      {
+        try {
+          (*opts_)["device/image-type"] = string ("Gray (8 bit)");
+          revert_bilevel_ = true;
+        }
+        catch (const std::out_of_range&){}
+      }
 
     toggle force_extent = true;
     quantity width  = -1.0;
@@ -370,14 +469,25 @@ dialog::on_scan (void)
     if (force_extent) force_extent = (width > 0 || height > 0);
 
     filter::ptr autocrop;
+    revert_overscan_ = false;
     if (HAVE_MAGICK_PP
-        && opts_->count ("magick/automatic-scan-area"))
+        && opts_->count ("doc-locate/crop"))
       {
-        toggle t = value ((*opts_)["magick/automatic-scan-area"]);
+        toggle t = value ((*opts_)["doc-locate/crop"]);
         if (t)
-          autocrop = make_shared< _flt_::autocrop > ();
+          {
+            if (opts_->count ("device/overscan"))
+              {
+                t = value ((*opts_)["device/overscan"]);
+                if (!t)
+                  {
+                    (*opts_)["device/overscan"] = toggle (true);
+                    revert_overscan_ = true;
+                  }
+              }
+            autocrop = make_shared< _flt_::autocrop > ();
+          }
       }
-    if (autocrop) force_extent = false;
 
     if (autocrop)
       {
@@ -387,9 +497,15 @@ dialog::on_scan (void)
 
     filter::ptr deskew;
     if (HAVE_MAGICK_PP
-        && !autocrop && opts_->count ("magick/deskew"))
+        && !autocrop && opts_->count ("doc-locate/deskew"))
       {
-        toggle t = value ((*opts_)["magick/deskew"]);
+        toggle t = value ((*opts_)["doc-locate/deskew"]);
+
+        if (opts_->count ("device/long-paper-mode")
+            && (value (toggle (true))
+                == (*opts_)["device/long-paper-mode"]))
+            t = false;
+
         if (t)
           deskew = make_shared< _flt_::deskew > ();
       }
@@ -400,6 +516,33 @@ dialog::on_scan (void)
         (*deskew->options ())["hi-threshold"] = value ((*opts_)["device/hi-threshold"]);
       }
 
+    if (HAVE_MAGICK_PP
+        && opts_->count ("device/long-paper-mode"))
+      {
+        string s = value ((*opts_)["device/doc-source"]);
+        toggle t = value ((*opts_)["device/long-paper-mode"]);
+        if (s == "ADF" && t && opts_->count ("device/scan-area"))
+          {
+            t = ((((*opts_)["device/scan-area"]) == value ("Automatic"))
+                 || (// because we may be emulating Automatic ourselves
+                     opts_->count ("doc-locate/crop")
+                     && (*opts_)["doc-locate/crop"] == value (toggle (true))));
+            if (t && !autocrop)
+              autocrop = make_shared< _flt_::autocrop > ();
+            if (t)
+              (*autocrop->options ())["trim"] = t;
+          }
+      }
+    if (autocrop) force_extent = false;
+
+    filter::ptr reorient;
+    if (opts_->count ("magick/reorient/rotate"))
+      {
+        value angle = value ((*opts_)["magick/reorient/rotate"]);
+        reorient = make_shared< _flt_::reorient > ();
+        (*reorient->options ())["rotate"] = angle;
+      }
+
     toggle resample = false;
     if (opts_->count ("device/enable-resampling"))
       resample = value ((*opts_)["device/enable-resampling"]);
@@ -408,6 +551,10 @@ dialog::on_scan (void)
     if (HAVE_MAGICK)
       {
         magick = make_shared< _flt_::magick > ();
+        if (reorient)
+          {
+            (*magick->options ())["auto-orient"] = toggle (true);
+          }
       }
 
     if (magick)
@@ -444,6 +591,11 @@ dialog::on_scan (void)
         thr /= (dynamic_pointer_cast< range >
                 ((*opts_)["device/threshold"].constraint ()))->upper ();
         (*magick->options ())["threshold"] = thr;
+
+        quantity brightness = value ((*opts_)["magick/brightness"]);
+        quantity contrast   = value ((*opts_)["magick/contrast"]);
+        (*magick->options ())["brightness"] = brightness;
+        (*magick->options ())["contrast"]   = contrast;
 
         (*magick->options ())["image-format"] = fmt;
       }
@@ -498,17 +650,18 @@ dialog::on_scan (void)
 
         BOOST_THROW_EXCEPTION
           (runtime_error
-           ((format (_("conversion from %1% to %2% is not supported"))
+           ((format (SEC_("conversion from %1% to %2% is not supported"))
              % xfer_fmt
              % fmt)
             .str ()));
       }
 
-    if (skip_blank) str->push (blank_skip);
+    if (skip_blank)  str->push (blank_skip);
     str->push (make_shared< pnm > ());
-    if (autocrop)   str->push (autocrop);
-    if (deskew)     str->push (deskew);
-    if (magick)     str->push (magick);
+    if (autocrop)    str->push (autocrop);
+    if (deskew)      str->push (deskew);
+    if (reorient)    str->push (reorient);
+    if (magick)      str->push (magick);
 
     if ("PDF" == fmt)
       {
@@ -517,28 +670,47 @@ dialog::on_scan (void)
       }
   }
   {
+    scan_started_ = false;
+    rewire_dialog (true);
     str->push (odev);
-
-    // disable scan button
-    Glib::RefPtr<Gtk::Action> action;
-    action = ui_manager_->get_action ("/dialog/scan");
-    if (action) action->set_sensitive (false);
-    // retarget cancel button
-    action = ui_manager_->get_action ("/dialog/cancel");
-    if (action) {
-      cancel_.disconnect ();
-      cancel_ = action->signal_activate ()
-        .connect (sigc::mem_fun (*pump_, &pump::cancel));
-    }
-
-    Glib::RefPtr< Gdk::Window > window = get_window ();
-    if (window)
-      {
-        window->set_cursor (Gdk::Cursor (Gdk::WATCH));
-        Gdk::flush ();
-      }
-
     pump_->start (str);
+  }
+}
+
+void
+dialog::on_scan_update (traits::int_type c)
+{
+  if (traits::bos () == c)
+    {
+      scan_started_ = true;
+    }
+  if (traits::eos () == c || traits::eof () == c)
+    {
+      if (revert_bilevel_)
+        {
+          (*opts_)["device/image-type"] = string ("Gray (1 bit)");
+          revert_bilevel_ = false;
+        }
+      if (revert_overscan_)
+        {
+          (*opts_)["device/overscan"] = toggle (false);
+          revert_overscan_ = false;
+        }
+      rewire_dialog (false);
+      scan_started_ = false;
+    }
+}
+
+void
+dialog::on_cancel (void)
+{
+  pump_->cancel ();
+  if (progress_) { progress_->set_text (SEC_(CANCELING)); }
+  if (scan_started_) {
+    // The (traits::eof() == c) branch of dialog::on_scan_update()
+    // will call rewire_dialog() eventually.
+  } else {
+    rewire_dialog (false);
   }
 }
 
@@ -567,20 +739,12 @@ dialog::on_device_changed (utsushi::scanner::ptr idev)
   opts_->add_option_map () ("device", idevice_->options ());
   _flt_::image_skip skip;
   opts_->add_option_map () ("blank-skip", skip.options ());
-  if (   idevice_->options ()->count ("lo-threshold")
+  option::map::ptr opts (make_shared< option::map > ());
+  if (HAVE_MAGICK_PP
+      && idevice_->options ()->count ("lo-threshold")
       && idevice_->options ()->count ("hi-threshold"))
     {
-      option::map::ptr opts (make_shared< option::map > ());
-      if (HAVE_MAGICK_PP)
-        {
-          opts->add_options ()
-            ("deskew", toggle (),
-             attributes (tag::enhancement)(level::standard),
-             N_("Deskew"));
-        }
-
-      if (HAVE_MAGICK_PP
-          && idevice_->options ()->count ("scan-area"))
+      if (idevice_->options ()->count ("scan-area"))
         {
           constraint::ptr c ((*idevice_->options ())["scan-area"]
                              .constraint ());
@@ -589,10 +753,35 @@ dialog::on_device_changed (utsushi::scanner::ptr idev)
               dynamic_pointer_cast< store >
                 (c)->alternative ("Automatic");
               opts->add_options ()
-                ("automatic-scan-area", toggle ());
+                ("crop", toggle ());
             }
         }
 
+      if (!idevice_->options ()->count ("deskew"))
+        {
+          opts->add_options ()
+            ("deskew", toggle (),
+             attributes (tag::enhancement)(level::standard),
+             SEC_N_("Deskew"));
+        }
+    }
+
+  opts_->add_option_map () ("doc-locate", opts);
+
+  filter::ptr magick;
+  if (HAVE_MAGICK)
+    {
+      magick = make_shared< _flt_::magick > ();
+    }
+  if (magick)
+    {
+      option::map::ptr opts = magick->options ();
+      filter::ptr reorient;
+      if (magick->options ()->count ("auto-orient"))
+        {
+          reorient = make_shared< _flt_::reorient > ();
+          opts->add_option_map () ("reorient", reorient->options ());
+        }
       opts_->add_option_map () ("magick", opts);
     }
 
@@ -649,6 +838,15 @@ dialog::on_notify (log::priority level, std::string message)
 
   if (traits::eof () == c)
     on_scan_update (c);
+}
+
+bool
+dialog::on_timeout (void)
+{
+  if (progress_) {
+    progress_->pulse ();
+  }
+  return true;
 }
 
 }       // namespace gtkmm

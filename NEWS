@@ -1,6 +1,39 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.14.0                                            (2015-12-24)
+----------------------------------------------------------------------
+ * adds support for image rotation
+ * adds support for automatic rotation angle detection.  This requires
+   installation of extra software, see the README for information.
+ * adds support for ADF scanning of extra-long originals for selected
+   scanners.  The long-paper-mode does not support deskewing and only
+   supports automatic detection of document height.  GUI previews are
+   disabled in this mode as well.
+ * adds a progress bar to the GUI
+ * adds a Quit button to the GUI
+ * shows the list of available file formats by default
+ * documents driver support for the WF-6530 Series
+ * documents availability of non-free plugins in the README
+ * removes the Credits from the Help dialog
+ * removes the crop option in favour of an Automatic scan-area.  This
+   will affect command-line invocations.
+ * removes the bit depth indication from the dropout values and uses
+   the bit depth of the selected gray value instead.  This will also
+   affect command-line invocations.
+ * fixes reporting of error conditions by the SANE backend
+ * fixes several image processing bugs
+ * fixes software hangs when cancelling from the scanner under certain
+   conditions
+ * fixes device selection when attached through one or more USB hubs
+ * fixes Automatic scan-area support for the DS-60000 and DS-70000 for
+   ADF scans
+ * disables the preview refresh and delete window buttons during scans
+ * disables modification of scan settings during scans
+ * no longer requires the Boost Regex and Thread libraries for C++11
+   builds
+
+----------------------------------------------------------------------
 utsushi-0.13.1                                            (2015-10-27)
 ----------------------------------------------------------------------
  * makes the code C++11 compatible
@@ -116,7 +149,7 @@ utsushi-0.5.0                                             (2014-02-05)
    and DS-560 devices
  * renames the '--match-height' option to '--force-extent'
  * changes the default gamma setting for clearer images
- 
+
 ----------------------------------------------------------------------
 utsushi-0.4.0                                             (2013-11-21)
 ----------------------------------------------------------------------

@@ -3,7 +3,7 @@
 //  Copyright (C) 2013, 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -424,7 +424,6 @@ add_sane_udev (std::set<scanner::info>& devices, const char *key,
 }
 
 #endif  /* HAVE_LIBUDEV */
-
 
 //! Picks up scanner devices from configuration files
 /*! This function reads configuration files and merges scanner::info

@@ -3,7 +3,7 @@
 //  Copyright (C) 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -51,6 +51,7 @@
 #include "../filters/magick.hpp"
 #include "../filters/padding.hpp"
 #include "../filters/pnm.hpp"
+#include "../filters/reorient.hpp"
 
 #include "handle.hpp"
 #include "log.hpp"
@@ -477,6 +478,11 @@ public:
     oops_ = runtime_error (message);
     mark (traits::eof (), odevice::ctx_);
   }
+  void on_cancel ()
+  {
+    oops_ = runtime_error ("Device initiated cancellation.");
+    mark (traits::eof (), odevice::ctx_);
+  }
 };
 
 void
@@ -496,17 +502,18 @@ handle::handle(const scanner::info& info)
   , cancel_requested_(work_in_progress_)
   , emulating_automatic_scan_area_(false)
   , do_automatic_scan_area_(false)
+  , revert_bilevel_(false)
 {
   opt_.add_options ()
     (name::num_options, quantity (0),
      attributes ())
     ;
 
-  if (   idev_->options ()->count ("lo-threshold")
+  if (HAVE_MAGICK_PP
+      && idev_->options ()->count ("lo-threshold")
       && idev_->options ()->count ("hi-threshold"))
     {
-      if (HAVE_MAGICK_PP
-          && idev_->options ()->count ("scan-area"))
+      if (idev_->options ()->count ("scan-area"))
         {
           using utsushi::value;
 
@@ -525,19 +532,36 @@ handle::handle(const scanner::info& info)
         }
 
       // Playing tricky games with the option namespacing here to get
-      // software deskewing listed with a reasonable SANE option name.
+      // software emulated options listed with a reasonable SANE name.
       // An utsushi::key normally uses a '/' to separate namespaces
       // but SANE does not allow those.  We already map the '/' to a
       // '-', so using a '-' here will make it appear to be in the
-      // filter_prefix namespace without actually having to be a member
-      // of that namespace (which is used by the image_skip filter
-      // below as well).
-      if (HAVE_MAGICK_PP)
+      // filter_prefix namespace without the need to be a member of
+      // that namespace.
+
+      if (!idev_->options ()->count ("deskew"))
         {
           opt_.add_options ()
             (filter_prefix + "-deskew", toggle (),
              attributes (tag::enhancement)(level::standard),
-             N_("Deskew"));
+             SEC_N_("Deskew"));
+        }
+    }
+
+  filter::ptr reorient;
+  if (HAVE_MAGICK)
+    {
+      filter::ptr magick (make_shared< _flt_::magick > ());
+      if (magick->options ()->count ("auto-orient"))
+        {
+          reorient = make_shared< _flt_::reorient > ();
+          option rotate = (*reorient->options ())["rotate"];
+          // More option namespace trickery, see comment above
+          opt_.add_options ()
+            (filter_prefix + "-rotate", rotate.constraint(),
+             attributes (tag::enhancement)(level::standard),
+             rotate.name (),
+             rotate.text ());
         }
     }
 
@@ -550,6 +574,17 @@ handle::handle(const scanner::info& info)
   opt_.add_option_map ()
     (filter_prefix, flt.options ())
     ;
+
+  filter::ptr magick;
+  if (HAVE_MAGICK)
+    {
+      magick = make_shared< utsushi::_flt_::magick > ();
+    }
+  if (magick)
+    {
+      opt_.add_option_map ()
+        (magick_prefix, magick->options ());
+    }
 
   sod_.reserve (opt_.size ());
 
@@ -586,6 +621,12 @@ handle::handle(const scanner::info& info)
             seen.insert (om_it->key ());
           else if (option_prefix / sw_resolution_bind.first == om_it->key ())
             seen.insert (om_it->key ());
+          else if (0 == om_it->key ().find (magick_prefix))
+            {
+              if (!(   key (magick_prefix) / "brightness" == om_it->key ()
+                    || key (magick_prefix) / "contrast"   == om_it->key ()))
+                seen.insert (om_it->key ());
+            }
 
           if (!seen.count (om_it->key ())
               && om_it->tags ().count (*it))
@@ -729,11 +770,16 @@ handle::get (SANE_Int index, void *value) const
       v = utsushi::value ("Automatic");
     }
 
+  if (k == option_prefix / "image-type"
+      && revert_bilevel_)
+    {
+      v = utsushi::value ("Gray (1 bit)");
+    }
+
   v >> value;
 
   return status;
 }
-
 
 SANE_Status
 handle::set (SANE_Int index, void *value, SANE_Word *info)
@@ -768,7 +814,37 @@ handle::set (SANE_Int index, void *value, SANE_Word *info)
     {
       try
         {
-          opt_[k] = v;
+          value::map vm;
+
+          if (k == option_prefix / "scan-area"
+              && emulating_automatic_scan_area_)
+            {
+              vm[k] = v;
+              if (opt_.count (option_prefix / "auto-kludge"))
+                vm[option_prefix / "auto-kludge"]
+                  = toggle (do_automatic_scan_area_);
+            }
+
+          if (vm.empty ())
+            opt_[k] = v;
+          else
+            opt_.assign (vm);
+
+          if (k == option_prefix / "image-type")
+            {
+              revert_bilevel_ = false;
+            }
+
+          if (opt_.count (option_prefix / "long-paper-mode")
+              && opt_.count (filter_prefix + "-deskew"))
+            {
+              using utsushi::value;
+
+              toggle t1 = value (opt_[option_prefix / "long-paper-mode"]);
+              opt_[filter_prefix + "-deskew"].active (!t1);
+              toggle t2 = value (opt_[filter_prefix + "-deskew"]);
+              opt_[option_prefix / "long-paper-mode"].active (!t2);
+            }
 
           update_options (info);
 
@@ -1025,7 +1101,17 @@ handle::marker ()
           return last_marker_;
         }
 
+      if (revert_bilevel_)
+        {
+          opt_[option_prefix / "image-type"] = string ("Gray (1 bit)");
+          revert_bilevel_ = false;
+        }
       bool bilevel = (opt_[option_prefix / "image-type"] == "Gray (1 bit)");
+      if (bilevel)
+        {
+          opt_[option_prefix / "image-type"] = string ("Gray (8 bit)");
+          revert_bilevel_ = true;
+        }
 
       toggle force_extent = true;
       quantity width  = -1.0;
@@ -1062,7 +1148,6 @@ handle::marker ()
             }
           autocrop = make_shared< _flt_::autocrop > ();
         }
-      if (autocrop) force_extent = false;
 
       if (autocrop)
         {
@@ -1075,6 +1160,12 @@ handle::marker ()
           && !autocrop && opt_.count (filter_prefix + "-deskew"))
         {
           toggle t = value ((opt_)[filter_prefix + "-deskew"]);
+
+          if (opt_.count (option_prefix / "long-paper-mode")
+              && (value (toggle (true))
+                  == opt_[option_prefix / "long-paper-mode"]))
+            t = false;
+
           if (t)
             deskew = make_shared< _flt_::deskew > ();
         }
@@ -1085,6 +1176,32 @@ handle::marker ()
           (*deskew->options ())["hi-threshold"] = value (opt_[option_prefix / "hi-threshold"]);
         }
 
+      if (HAVE_MAGICK_PP
+          && opt_.count (option_prefix / "long-paper-mode"))
+        {
+          string s = value (opt_[option_prefix / "doc-source"]);
+          toggle t = value (opt_[option_prefix / "long-paper-mode"]);
+          if (s == "ADF" && t && opt_.count (option_prefix / "scan-area"))
+            {
+              t = (opt_[option_prefix / "scan-area"] == value ("Automatic")
+                   || do_automatic_scan_area_);
+              if (t && !autocrop)
+                autocrop = make_shared< _flt_::autocrop > ();
+              if (t)
+                (*autocrop->options ())["trim"] = t;
+            }
+        }
+      if (autocrop) force_extent = false;
+
+      filter::ptr reorient;
+      if (HAVE_MAGICK
+          && opt_.count (filter_prefix + "-rotate"))
+        {
+          value angle = value (opt_[filter_prefix + "-rotate"]);
+          reorient = make_shared< _flt_::reorient > ();
+          (*reorient->options ())["rotate"] = angle;
+        }
+
       toggle resample = false;
       if (opt_.count (option_prefix / "enable-resampling"))
         resample = value (opt_[option_prefix / "enable-resampling"]);
@@ -1093,6 +1210,10 @@ handle::marker ()
       if (HAVE_MAGICK)
         {
           magick = make_shared< _flt_::magick > ();
+          if (reorient)
+            {
+              (*magick->options ())["auto-orient"] = toggle (true);
+            }
         }
 
       if (magick)
@@ -1129,6 +1250,11 @@ handle::marker ()
           thr /= (dynamic_pointer_cast< range >
                   (opt_[option_prefix / "threshold"].constraint ()))->upper ();
           (*magick->options ())["threshold"] = thr;
+
+          quantity brightness = value (opt_[key (magick_prefix) / "brightness"]);
+          quantity contrast   = value (opt_[key (magick_prefix) / "contrast"]);
+          (*magick->options ())["brightness"] = brightness;
+          (*magick->options ())["contrast"]   = contrast;
 
           // keep magick filter's default format to generate image/x-raster
       }
@@ -1188,11 +1314,12 @@ handle::marker ()
               .str ()));
         }
 
-      if (skip_blank) str->push (blank_skip);
+      if (skip_blank)  str->push (blank_skip);
       str->push (make_shared< pnm > ());
-      if (autocrop)   str->push (autocrop);
-      if (deskew)     str->push (deskew);
-      if (magick)     str->push (magick);
+      if (autocrop)    str->push (autocrop);
+      if (deskew)      str->push (deskew);
+      if (reorient)    str->push (reorient);
+      if (magick)      str->push (magick);
 
       iocache::ptr cache (make_shared< iocache > ());
       str->push (odevice::ptr (cache));
@@ -1200,6 +1327,7 @@ handle::marker ()
       iptr_ = cache_;
 
       pump_->connect (bind (on_notify, cache, _1, _2));
+      pump_->connect_cancel (bind (&iocache::on_cancel, cache));
       pump_->start (str);
     }
   else
@@ -1249,8 +1377,8 @@ handle::add_option (option& visitor)
     {
       BOOST_THROW_EXCEPTION
         (logic_error
-         (_("SANE API specification violation\n"
-            "The option number count has to be the first option.")));
+         ("SANE API specification violation\n"
+          "The option number count has to be the first option."));
     }
 
   try
@@ -1341,6 +1469,10 @@ handle::update_capabilities (SANE_Word *info)
           if (opt.is_active ())
             {
               it->cap &= ~SANE_CAP_INACTIVE;
+            }
+          else
+            {
+              it->cap |= SANE_CAP_INACTIVE;
             }
           if (opt.is_read_only ())
             {
@@ -1450,8 +1582,8 @@ sanitize_(const utsushi::key& k)
     {
       BOOST_THROW_EXCEPTION
         (logic_error
-         (_("SANE API specification violation\n"
-            "Option names must start with a lower-case ASCII character.")));
+         ("SANE API specification violation\n"
+          "Option names must start with a lower-case ASCII character."));
     }
 
   std::string::size_type i (0);

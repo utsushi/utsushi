@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -109,8 +109,8 @@ DS_40::configure ()
   add_options ()
     ("speed", toggle (true),
      attributes (),
-     N_("Speed"),
-     N_("Optimize image acquisition for speed")
+     CCB_N_("Speed"),
+     CCB_N_("Optimize image acquisition for speed")
      );
 
   // FIXME disable workaround for #1094
@@ -125,7 +125,11 @@ DS_40::configure ()
   add_options ()
     ("lo-threshold", quantity (12.1))
     ("hi-threshold", quantity (25.4))
+    ("auto-kludge", toggle (false))
     ;
+  descriptors_["lo-threshold"]->read_only (true);
+  descriptors_["hi-threshold"]->read_only (true);
+  descriptors_["auto-kludge"]->read_only (true);
 }
 
 DS_5x0::DS_5x0 (const connexion::ptr& cnx)
@@ -193,8 +197,8 @@ DS_5x0::configure ()
   add_options ()
     ("speed", toggle (true),
      attributes (),
-     N_("Speed"),
-     N_("Optimize image acquisition for speed")
+     CCB_N_("Speed"),
+     CCB_N_("Optimize image acquisition for speed")
      );
 
   // FIXME disable workaround for #1094
@@ -209,7 +213,11 @@ DS_5x0::configure ()
   add_options ()
     ("lo-threshold", quantity (60.2))
     ("hi-threshold", quantity (79.3))
+    ("auto-kludge", toggle (false))
     ;
+  descriptors_["lo-threshold"]->read_only (true);
+  descriptors_["hi-threshold"]->read_only (true);
+  descriptors_["auto-kludge"]->read_only (true);
 }
 
 DS_760_860::DS_760_860 (const connexion::ptr& cnx)
@@ -334,6 +342,16 @@ PX_Mxxx0::PX_Mxxx0 (const connexion::ptr& cnx)
     if (!product.empty ())
       info.product.assign (product.begin (), product.end ());
   }
+
+  // The reported adf->max_doc is apparently only intended for FAX
+  // purposes, independent of whether the device actually has one.
+  // Scanner use with scan areas exceeding adf->area is untested.
+  // Disable use of such overly large areas to be on the safe side.
+  // TODO Test to see if this can be removed.
+  if (info.adf)
+    {
+      info.adf->max_doc = info.adf->area;
+    }
 
   // Disable 300dpi vertical resolution for performance reasons.
   // Acquiring at 400dpi is faster for some reason.

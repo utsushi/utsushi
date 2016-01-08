@@ -1,5 +1,5 @@
 ##  boost-test.am -- automake snippet for Boost.Test support
-##  Copyright (C) 2012  AVASYS CORPORATION
+##  Copyright (C) 2012  EPSON AVASYS CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : Olaf Meeuwissen

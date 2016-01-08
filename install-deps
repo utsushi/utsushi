@@ -1,7 +1,7 @@
 #! /bin/sh
 #  install-deps -- needed for developer and/or maintainer builds
 #  Copyright (C) 2013, 2015  Olaf Meeuwissen
-#  Copyright (C) 2012  AVASYS CORPORATION
+#  Copyright (C) 2012  EPSON AVASYS CORPORATION
 #
 #  License: GPL-3.0+
 #  Author : Olaf Meeuwissen
@@ -160,7 +160,10 @@ case "$PKG_MGR" in
         #  Needed for logo and icon format conversion
         has rsvg-convert      || pkg_list="$pkg_list librsvg2-bin"
         has gm || has convert || pkg_list="$pkg_list graphicsmagick"
-        pkg_list="$pkg_list ttf-dejima-mincho"
+        pkg_list="$pkg_list fonts-dejima-mincho"
+        #  Needed to generate test case input
+        has text2image  || pkg_list="$pkg_list tesseract-ocr"
+        pkg_list="$pkg_list fonts-dejavu-core"
         #  Needed for documentation generation purposes
         has doxygen     || pkg_list="$pkg_list doxygen"
         has perl        || pkg_list="$pkg_list perl-base"

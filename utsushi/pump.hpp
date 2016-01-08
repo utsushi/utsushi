@@ -1,8 +1,8 @@
 //  pump.hpp -- move image octets from a source to a sink
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -46,8 +46,10 @@ public:
   void cancel ();
 
   typedef signal< void (log::priority, std::string) > notify_signal_type;
+  typedef signal< void () > cancel_signal_type;
 
   connection connect (const notify_signal_type::slot_type& slot) const;
+  connection connect_cancel (const cancel_signal_type::slot_type& slot) const;
 
 private:
   class impl;

@@ -2,7 +2,7 @@
 //  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -82,7 +82,6 @@ struct test_option_map_fixture
     BOOST_TEST_MESSAGE ("option::map.size () = " << m.size ());
   }
 };
-
 
 BOOST_AUTO_TEST_CASE (access_non_existent_setting)
 {

@@ -1,8 +1,8 @@
 //  grammar-information.cpp -- component instantiations
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -85,6 +85,16 @@ information::product_name () const
   return string (name.begin () + leading, name.begin () + trailing);
 }
 
+bool
+information::is_double_pass_duplexer () const
+{
+  using namespace code_token::information;
+
+  return (    adf
+          &&  adf->duplex_passes
+          && *adf->duplex_passes == adf::SCN2);
+}
+
 information::source::source ()
   : resolution ()
 {}
@@ -151,6 +161,14 @@ information::adf_source::operator== (const information::adf_source& rhs) const
           && min_doc       == rhs.min_doc
           && max_doc       == rhs.max_doc
           && auto_recovers == rhs.auto_recovers);
+}
+
+bool
+information::adf_source::supports_long_paper_mode () const
+{
+  return (    0 != area.size ()
+          &&  0 != max_doc.size ()
+          && (area[1] < max_doc[1]));
 }
 
 template class

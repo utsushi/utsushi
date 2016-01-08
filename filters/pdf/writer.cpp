@@ -1,8 +1,8 @@
 //  writer.cpp -- putting PDF object in a file
-//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -64,7 +64,7 @@ writer::write (pdf::output::ptr& output)
 
   if (string::size_type (rv) != stream_.str ().size ())
     BOOST_THROW_EXCEPTION
-      (ios_base::failure (_("PDF filter octet count mismatch")));
+      (ios_base::failure ("PDF filter octet count mismatch"));
 
   stream_.str ("");
 
@@ -77,7 +77,7 @@ writer::write (object& obj)
   if (object_mode != _mode)
     {
       BOOST_THROW_EXCEPTION
-        (runtime_error (_("invalid call to _pdf_::writer::write (object&)")));
+        (runtime_error ("invalid call to _pdf_::writer::write (object&)"));
     }
 
   _xref[obj.obj_num ()] = octets_seen_;
@@ -97,7 +97,7 @@ writer::begin_stream (dictionary& dict)
   if (stream_mode == _mode)
     {
       BOOST_THROW_EXCEPTION
-        (runtime_error (_("invalid call to _pdf_::writer::begin_stream ()")));
+        (runtime_error ("invalid call to _pdf_::writer::begin_stream ()"));
     }
   _mode = stream_mode;
 
@@ -122,7 +122,7 @@ writer::write (const char *data, size_t n)
   if (stream_mode != _mode)
     {
       BOOST_THROW_EXCEPTION
-        (runtime_error (_("invalid call to _pdf_::writer::write ()")));
+        (runtime_error ("invalid call to _pdf_::writer::write ()"));
     }
   stream_.write (data, sizeof (char) * n);
   octets_seen_ += sizeof (char) * n;
@@ -134,7 +134,7 @@ writer::write (const string& s)
   if (stream_mode != _mode)
     {
       BOOST_THROW_EXCEPTION
-        (runtime_error (_("invalid call to _pdf_::writer::write ()")));
+        (runtime_error ("invalid call to _pdf_::writer::write ()"));
     }
   stream_ << s;
   octets_seen_ += s.size ();
@@ -146,7 +146,7 @@ writer::end_stream ()
   if (stream_mode != _mode)
     {
       BOOST_THROW_EXCEPTION
-        (runtime_error (_("invalid call to _pdf_::writer::end_stream ()")));
+        (runtime_error ("invalid call to _pdf_::writer::end_stream ()"));
     }
   _mode = object_mode;
 
@@ -173,7 +173,7 @@ writer::header ()
   if (_mode == stream_mode)
     {
       BOOST_THROW_EXCEPTION
-        (runtime_error (_("cannot write header in stream mode")));
+        (runtime_error ("cannot write header in stream mode"));
     }
   ostream::pos_type mark (stream_.tellp ());
   stream_ << "%PDF-1.0\n";
@@ -186,7 +186,7 @@ writer::trailer (dictionary& trailer_dict)
   if (_mode == stream_mode)
     {
       BOOST_THROW_EXCEPTION
-        (runtime_error (_("cannot write trailer in stream mode")));
+        (runtime_error ("cannot write trailer in stream mode"));
     }
   write_xref ();
   write_trailer (trailer_dict);

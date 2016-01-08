@@ -1,5 +1,5 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012  AVASYS CORPORATION
+##  Copyright (C) 2012  EPSON AVASYS CORPORATION
 ##
 ##  License: GPL-3.0+
 ##  Author : Olaf Meeuwissen
@@ -99,9 +99,9 @@ configure = \
 
 ##  HTML output specific configuration settings snippet and targets
 
-EXTRA_DIST += style.css trac-style.css
-EXTRA_DIST += header.html trac-header.html
-EXTRA_DIST += footer.html trac-footer.html
+EXTRA_DIST += style.css
+EXTRA_DIST += header.html
+EXTRA_DIST += footer.html
 
 .PHONY: $(documentation:_doc=_html)
 
@@ -109,9 +109,9 @@ html_configure = \
 	test -d html/$$output || $(MKDIR_P) html/$$output; \
 	$(configure); \
 	echo "HTML_OUTPUT = html/$$output"; \
-	echo 'HTML_HEADER = $(srcdir)/$(TRAC_DOXYGEN)header.html'; \
-	echo 'HTML_FOOTER = $(srcdir)/$(TRAC_DOXYGEN)footer.html'; \
-	echo 'HTML_STYLESHEET = $(srcdir)/$(TRAC_DOXYGEN)style.css'; \
+	echo 'HTML_HEADER = $(srcdir)/header.html'; \
+	echo 'HTML_FOOTER = $(srcdir)/footer.html'; \
+	echo 'HTML_STYLESHEET = $(srcdir)/style.css'; \
 	echo "GENERATE_HTML = YES"
 
 html-local: $(documentation:_doc=_html)

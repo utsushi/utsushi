@@ -2,7 +2,7 @@
 #  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 #
 #  License: GPL-3.0+
-#  Author : AVASYS CORPORATION
+#  Author : EPSON AVASYS CORPORATION
 #
 #  This file is part of the 'Utsushi' package.
 #  This package is free software: you can redistribute it and/or modify
@@ -49,7 +49,7 @@ ATTRS{idProduct}=="08c2", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="08cc", ENV{utsushi_driver}="esci"
 #  PX-M840FX
 ATTRS{idProduct}=="08cd", ENV{utsushi_driver}="esci"
-#  PX-M860F
+#  PX-M860F, WF-6530 Series
 ATTRS{idProduct}=="08ce", ENV{utsushi_driver}="esci"
 #  WF-6590 Series
 ATTRS{idProduct}=="08cf", ENV{utsushi_driver}="esci"

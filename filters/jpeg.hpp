@@ -1,8 +1,8 @@
 //  jpeg.hpp -- JPEG image format support
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -17,7 +17,6 @@
 //
 //  You ought to have received a copy of the GNU General Public License
 //  along with this package.  If not, see <http://www.gnu.org/licenses/>.
-
 
 #ifndef filters_jpeg_hpp_
 #define filters_jpeg_hpp_

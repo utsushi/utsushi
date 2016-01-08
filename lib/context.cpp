@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -44,6 +44,8 @@ context::context (const size_type& width, const size_type& height,
   , x_resolution_(0)
   , y_resolution_(0)
   , octets_seen_(0)
+  , orientation_(undefined)
+  , direction_(unknown)
 {
   check_pixel_type_();
 }
@@ -60,6 +62,8 @@ context::context (const size_type& width, const size_type& height,
   , x_resolution_(0)
   , y_resolution_(0)
   , octets_seen_(0)
+  , orientation_(undefined)
+  , direction_(unknown)
 {
   check_pixel_type_();
 }
@@ -273,6 +277,30 @@ context::resolution (const size_type& x_res, const size_type& y_res)
 {
   x_resolution_ = x_res;
   y_resolution_ = y_res;
+}
+
+context::orientation_type
+context::orientation () const
+{
+  return orientation_;
+}
+
+void
+context::orientation (const orientation_type& orientation)
+{
+  orientation_ = orientation;
+}
+
+context::direction_type
+context::direction () const
+{
+  return direction_;
+}
+
+void
+context::direction (const direction_type& direction)
+{
+  direction_ = direction;
 }
 
 context::size_type

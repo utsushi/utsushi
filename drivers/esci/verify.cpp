@@ -1,6 +1,6 @@
 //  verify.cpp -- ESC/I protocol assumptions and specification compliance
 //  Copyright (C) 2015  SEIKO EPSON CORPORATION
-//  Copyright (C) 2012-2014  AVASYS CORPORATION
+//  Copyright (C) 2012-2014  EPSON AVASYS CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : Olaf Meeuwissen
@@ -375,7 +375,6 @@ main (int argc, char *argv[])
       std::cerr << "verify: " << msg
                 << std::endl;
     }
-
 
   if (verify::vm.count ("devdata"))
     {

@@ -1,8 +1,8 @@
 //  setter.cc -- unit tests for ESC/I setter commands
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -101,7 +101,6 @@ BOOST_AUTO_TEST_CASE (setter_assignment)
   BOOST_CHECK (!std::equal (cmd1.dat_, cmd1.dat_ + setter_data_size,
                             cmd2.dat_));
 }
-
 
 BOOST_AUTO_TEST_CASE (dither_deep_copy)
 {

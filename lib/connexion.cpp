@@ -3,7 +3,7 @@
 //  Copyright (C) 2011  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //  Author : Olaf Meeuwissen
 //  Origin : FreeRISCI
 //

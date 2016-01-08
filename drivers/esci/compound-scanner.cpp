@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -137,6 +137,8 @@ vectorize (const quad& token, const matrix< double, 3 >& color_matrix)
               int8_t magnitude = min (abs (mat[i][j]), double (0x7f));
               int8_t sign      = 0 > mat[i][j] ? 0x80 : 0x00;
 
+              if (!magnitude) sign = 0x00;
+
               result.push_back (sign | magnitude);
             }
         }
@@ -151,6 +153,8 @@ vectorize (const quad& token, const matrix< double, 3 >& color_matrix)
             {
               int16_t magnitude = min (abs (mat[i][j]), double (0x7fff));
               int8_t  sign      = 0 > mat[i][j] ? 0x80 : 0x00;
+
+              if (!magnitude) sign = 0x00;
 
               result.push_back (sign | int8_t (0x7f & (magnitude >> 8)));
               result.push_back (       int8_t (0xff &  magnitude));
@@ -349,8 +353,8 @@ do_mechanics (connexion::ptr cnx, scanner_control& ctrl,
               {
                 rc = result_code (system_error::no_error,
                                   adf::LOAD == action
-                                  ? _("Loading completed")
-                                  : _("Ejecting completed"));
+                                  ? SEC_("Loading completed")
+                                  : SEC_("Ejecting completed"));
               }
             break;
           }
@@ -374,8 +378,8 @@ do_mechanics (connexion::ptr cnx, scanner_control& ctrl,
                       {
                         rc = result_code (system_error::no_error,
                                           adf::CLEN == action
-                                          ? _("Cleaning is complete.")
-                                          : _("Calibration is complete."));
+                                          ? SEC_("Cleaning is complete.")
+                                          : SEC_("Calibration is complete."));
                       }
                   }
               }
@@ -383,8 +387,8 @@ do_mechanics (connexion::ptr cnx, scanner_control& ctrl,
               {
                 rc = result_code (system_error::battery_low,
                                   adf::CLEN == action
-                                  ? _("Cleaning is failed.")
-                                  : _("Calibration is failed."));
+                                  ? SEC_("Cleaning is failed.")
+                                  : SEC_("Calibration is failed."));
               }
             break;
           }
@@ -404,15 +408,15 @@ do_mechanics (connexion::ptr cnx, scanner_control& ctrl,
   if (!rc && (ctrl.fatal_error () || ctrl.is_warming_up ()))
     {
       /**/ if (adf::LOAD == action)
-        rc = result_code (system_error::unknown_error, _("Loading failed"));
+        rc = result_code (system_error::unknown_error, SEC_("Loading failed"));
       else if (adf::EJCT == action)
-        rc = result_code (system_error::unknown_error, _("Ejecting failed"));
+        rc = result_code (system_error::unknown_error, SEC_("Ejecting failed"));
       else if (adf::CLEN == action)
-        rc = result_code (system_error::unknown_error, _("Cleaning is failed."));
+        rc = result_code (system_error::unknown_error, SEC_("Cleaning is failed."));
       else if (adf::CALB == action)
-        rc = result_code (system_error::unknown_error, _("Calibration is failed."));
+        rc = result_code (system_error::unknown_error, SEC_("Calibration is failed."));
       else
-        rc = result_code (system_error::unknown_error, _("Maintenance failed"));
+        rc = result_code (system_error::unknown_error, SEC_("Maintenance failed"));
     }
 
   if (do_finish) *cnx << ctrl.finish ();
@@ -437,6 +441,7 @@ compound_scanner::compound_scanner (const connexion::ptr& cnx)
   , streaming_flip_side_image_(false)
   , image_count_(0)
   , cancelled_(false)
+  , auto_crop_(false)
 {
   {
     log::trace ("getting basic device information");
@@ -521,7 +526,7 @@ compound_scanner::configure ()
         add_options ()
           ("doc-source", cp,
            attributes (tag::general)(level::standard),
-           N_("Document Source")
+           SEC_N_("Document Source")
            )
           ;
       }
@@ -532,10 +537,18 @@ compound_scanner::configure ()
 
     if (cp)
       {
+        if (value ("Gray (1 bit)") != (*cp)(value ("Gray (1 bit)")))
+          {
+            // FIXME  This should really be done by the application if
+            //        it is willing to emulate thresholding.  We rely
+            //        on cooperating applications at the moment.
+            dynamic_pointer_cast< utsushi::store >
+              (cp)->alternative ("Gray (1 bit)");
+          }
         add_options ()
           ("image-type", cp,
            attributes (tag::general)(level::standard),
-           N_("Image Type")
+           SEC_N_("Image Type")
            )
           ;
       }
@@ -548,7 +561,7 @@ compound_scanner::configure ()
         add_options ()
           ("dropout", cp,
            attributes (tag::enhancement)(level::standard),
-           N_("Dropout")
+           SEC_N_("Dropout")
            )
           ;
       }
@@ -561,9 +574,9 @@ compound_scanner::configure ()
         add_options ()
           ("transfer-format", cp,
            attributes (level::standard),
-           N_("Transfer Format"),
-           N_("Selecting a compressed format such as JPEG normally"
-              " results in faster device side processing.")
+           SEC_N_("Transfer Format"),
+           CCB_N_("Selecting a compressed format such as JPEG normally"
+                  " results in faster device side processing.")
            )
           ;
       }
@@ -576,7 +589,7 @@ compound_scanner::configure ()
         add_options ()
           ("jpeg-quality", cp,
            attributes (),
-           N_("JPEG Quality")
+           CCB_N_("JPEG Quality")
            )
           ;
       }
@@ -589,7 +602,7 @@ compound_scanner::configure ()
         add_options ()
           ("threshold", cp,
            attributes (tag::enhancement)(level::standard),
-           N_("Threshold")
+           SEC_N_("Threshold")
            )
           ;
       }
@@ -602,31 +615,7 @@ compound_scanner::configure ()
         add_options ()
           ("gamma", cp,
            attributes (),
-           N_("Gamma")
-           )
-          ;
-      }
-    // FIXME Should we check the gmt vector content?  I would expect
-    //       to need MONO or a {RED,GRN,BLU} triplet.  What if
-    //       e.g. only RED is present?  Too unlikely to contemplate?
-    // TODO Add a test for this to tests/compound-protocol.cpp so we
-    //      will notice when a device is "weird".
-    if (caps_.gmt && !caps_.gmt->empty ())
-      {
-        add_options ()
-          ("brightness", (from< range > ()
-                          -> lower (-1.0)
-                          -> upper ( 1.0)
-                          -> default_value (0.0)),
-           attributes (tag::enhancement)(level::standard),
-           N_("Brightness")
-           )
-          ("contrast", (from< range > ()
-                        -> lower (-1.0)
-                        -> upper ( 1.0)
-                        -> default_value (0.0)),
-           attributes (tag::enhancement)(level::standard),
-           N_("Contrast")
+           CCB_N_("Gamma")
            )
           ;
       }
@@ -640,7 +629,7 @@ compound_scanner::configure ()
         add_options ()
           ("transfer-size", cp,
            attributes (),
-           N_("Transfer Size")
+           CCB_N_("Transfer Size")
            )
           ;
       }
@@ -655,7 +644,7 @@ compound_scanner::configure ()
           adf_.add_options ()
             ("border-fill", cp_f,
              attributes (),
-             N_("Border Fill")
+             CCB_N_("Border Fill")
              );
 
           // Create *separate* constraints, one for each border, so that
@@ -671,22 +660,22 @@ compound_scanner::configure ()
             ("border-left", (caps_.border_size
                              (defs_.border_left (default_border))),
              attributes (),
-             N_("Left Border")
+             CCB_N_("Left Border")
              )
             ("border-right", (caps_.border_size
                               (defs_.border_right (default_border))),
              attributes (),
-             N_("Right Border")
+             CCB_N_("Right Border")
              )
             ("border-top", (caps_.border_size
                             (defs_.border_top (default_border))),
              attributes (),
-             N_("Top Border")
+             CCB_N_("Top Border")
              )
             ("border-bottom", (caps_.border_size
                                (defs_.border_bottom (default_border))),
              attributes (),
-             N_("Bottom Border")
+             CCB_N_("Bottom Border")
              )
             ;
         }
@@ -703,14 +692,14 @@ compound_scanner::configure ()
       add_options ()
         ("force-extent", toggle (true),
          attributes (tag::enhancement),
-         N_("Force Extent"),
-         N_("Force the image size to equal the user selected size."
-            "  Scanners may trim the image data to the detected size of"
-            " the document.  This may result in images that are not all"
-            " exactly the same size.  This option makes sure all image"
-            " sizes match the selected area.\n"
-            "Note that this option may slow down application/driver side"
-            " processing.")
+         CCB_N_("Force Extent"),
+         CCB_N_("Force the image size to equal the user selected size."
+                "  Scanners may trim the image data to the detected size of"
+                " the document.  This may result in images that are not all"
+                " exactly the same size.  This option makes sure all image"
+                " sizes match the selected area.\n"
+                "Note that this option may slow down application/driver side"
+                " processing.")
          )
         ;
     }
@@ -732,7 +721,7 @@ compound_scanner::configure ()
     {
       BOOST_THROW_EXCEPTION
         (logic_error
-         (_("esci::compound_scanner(): internal inconsistency")));
+         ("esci::compound_scanner(): internal inconsistency"));
     }
   finalize (values ());
 
@@ -745,32 +734,32 @@ compound_scanner::configure ()
         action_->add_actions ()
           ("calibrate", bind (do_mechanics, cnx_, ref (acquire_),
                               mech::ADF, mech::adf::CALB),
-           _("Calibration"),
-           _("Calibrating..."));
+           SEC_("Calibration"),
+           SEC_("Calibrating..."));
       }
     if (caps_.can_clean ())
       {
         action_->add_actions ()
           ("clean", bind (do_mechanics, cnx_, ref (acquire_),
                           mech::ADF, mech::adf::CLEN),
-           _("Cleaning"),
-           _("Cleaning..."));
+           SEC_("Cleaning"),
+           SEC_("Cleaning..."));
       }
     if (caps_.can_eject ())
       {
         action_->add_actions ()
           ("eject", bind (do_mechanics, cnx_, ref (acquire_),
                           mech::ADF, mech::adf::EJCT),
-           _("Eject"),
-           _("Ejecting ..."));
+           SEC_("Eject"),
+           SEC_("Ejecting ..."));
       }
     if (caps_.can_load ())
       {
         action_->add_actions ()
           ("load", bind (do_mechanics, cnx_, ref (acquire_),
                          mech::ADF, mech::adf::LOAD),
-           _("Load"),
-           _("Loading..."));
+           SEC_("Load"),
+           SEC_("Loading..."));
       }
   }
 }
@@ -831,6 +820,10 @@ compound_scanner::set_up_image ()
 
   ctx_ = context (pixel_width (), pixel_height (), pixel_type ());
   ctx_.resolution (*parm_.rsm, *parm_.rss);
+  ctx_.direction ((streaming_flip_side_image_
+                   && info_.is_double_pass_duplexer ())
+                  ? context::bottom_to_top
+                  : context::top_to_bottom);
 
   ctx_.content_type (transfer_content_type_(parm_));
 
@@ -887,9 +880,32 @@ compound_scanner::sgetn (octet *data, streamsize n)
   return rv;
 }
 
+namespace {
+void
+prune (value::map& vm, const option::map& om, const option::map& src)
+{
+  option::map::iterator it (const_cast< option::map& > (src).begin ());
+  for (; const_cast< option::map& > (src).end () != it; ++it)
+    {
+      if (!om.count (it->key ())) vm.erase (it->key ());
+    }
+}
+}
+
 void
 compound_scanner::set_up_initialize ()
 {
+  // Due to an ugly hack in configure(), we now have to prune all the
+  // values that come from options only present in the option map for
+  // the non-selected document source(s).  If we don't, these values
+  // may affect the set of parameters we end up sending.
+
+  const option::map& om (doc_source_options (val_.at ("doc-source")));
+
+  if (&om != &tpu_)     { prune (val_, om, tpu_); }
+  if (&om != &adf_)     { prune (val_, om, adf_); }
+  if (&om != &flatbed_) { prune (val_, om, flatbed_); }
+
   parm_      = defs_;
   parm_flip_ = defs_flip_;
 
@@ -901,12 +917,54 @@ compound_scanner::set_up_initialize ()
   cancelled_ = false;
   media_out_ = false;
 
+  auto_crop_ = false;
+
+  if (val_.count ("long-paper-mode")
+      && val_["long-paper-mode"] == value (toggle (true)))
+    return;
+
+  string src = val_["doc-source"];
+  bool probe = false;
+  source_capabilities src_caps;
+
+  /**/ if (src == "ADF")
+    {
+      probe = info_.adf && info_.adf->supports_size_detection ();
+      if (info_.adf) src_caps = caps_.adf->flags;
+    }
+  else if (src == "Document Table")
+    {
+      probe = info_.flatbed && info_.flatbed->supports_size_detection ();
+      if (info_.flatbed) src_caps = caps_.fb->flags;
+    }
+  else if (src == "TPU")
+    {
+      probe = info_.tpu && info_.tpu->supports_size_detection ();
+      if (info_.tpu && caps_.tpu) src_caps = caps_.tpu->flags;
+    }
+
+  using namespace code_token::capability;
+
   if (val_.count ("scan-area")
       && value ("Automatic") == val_["scan-area"])
     {
-      media size = probe_media_size_(val_["doc-source"]);
-      update_scan_area_(size, val_);
-      option::map::finalize (val_);
+      /**/ if (probe)
+        {
+          media size = probe_media_size_(val_["doc-source"]);
+          update_scan_area_(size, val_);
+          option::map::finalize (val_);
+        }
+      else if (src_caps
+               && (src_caps->end ()
+                   != std::find (src_caps->begin (), src_caps->end (),
+                                 adf::CRP)))
+        {
+          auto_crop_ = true;
+        }
+      else
+        {
+          // FIXME somebody dropped the ball
+        }
     }
 }
 
@@ -1032,18 +1090,23 @@ compound_scanner::set_up_doc_source ()
 
   std::vector< quad > src_opts;
 
-  if (val_.count ("crop")
-      && (value (toggle (true)) == val_["crop"]))
+  if (auto_crop_
+      || (val_.count ("crop")
+          && (value (toggle (true)) == val_["crop"])))
     {
       src_opts.push_back (fb::CRP);
     }
   if (val_.count ("deskew")
-      && (value (toggle (true)) == val_["deskew"]))
+      && (value (toggle (true)) == val_["deskew"])
+      && !(val_.count ("long-paper-mode")
+           && value (toggle (true)) == val_["long-paper-mode"]))
     {
       src_opts.push_back (fb::SKEW);
     }
   if (val_.count ("overscan")
-      && (value (toggle (true)) == val_["overscan"]))
+      && (value (toggle (true)) == val_["overscan"])
+      && !(val_.count ("long-paper-mode")
+           && value (toggle (true)) == val_["long-paper-mode"]))
     {
       src_opts.push_back (fb::OVSN);
     }
@@ -1123,39 +1186,6 @@ compound_scanner::set_up_gamma_tables ()
           % gamma
           ;
     }
-
-  if (caps_.gmt)
-    {
-      quantity brightness;
-      if (val_.count ("brightness")) brightness = val_["brightness"];
-
-      quantity contrast;
-      if (val_.count ("contrast")) contrast = val_["contrast"];
-
-      std::vector< byte > table (256);
-      quantity cap (table.size () - 1.0);
-
-      brightness *= cap / 2;
-      contrast   *= cap / 2;
-
-      for (std::vector< byte >::size_type i = 0; i < table.size (); ++i)
-        {
-          quantity val = ((cap * (quantity::non_integer_type (i) - contrast))
-                          / (cap - 2 * contrast)) + brightness;
-
-          val = std::min (cap, std::max (val, quantity ()));
-          table[i] = val.amount< quantity::non_integer_type > ();
-        }
-
-      parm_.gmt = std::vector< parameters::gamma_table > ();
-      BOOST_FOREACH (quad token, *caps_.gmt)
-        {
-          parameters::gamma_table gmt;
-          gmt.component = token;
-          gmt.table     = table;
-          parm_.gmt->push_back (gmt);
-        }
-    }
 }
 
 void
@@ -1180,28 +1210,12 @@ compound_scanner::set_up_image_mode ()
           ;
     }
 
-  if (!parm_.is_color ())
+  if (parm_.col
+      && caps_.has_dropout (*parm_.col))
     {
-      if (val_.count ("dropout"))
-        {
-          string dropout = val_["dropout"];
+      string dropout = val_["dropout"];
 
-          /**/ if (dropout == "None") ;
-          else if (dropout == "Red (1 bit)")    parm_.col = col::R001;
-          else if (dropout == "Red (8 bit)")    parm_.col = col::R008;
-          else if (dropout == "Red (16 bit)")   parm_.col = col::R016;
-          else if (dropout == "Green (1 bit)")  parm_.col = col::G001;
-          else if (dropout == "Green (8 bit)")  parm_.col = col::G008;
-          else if (dropout == "Green (16 bit)") parm_.col = col::G016;
-          else if (dropout == "Blue (1 bit)")   parm_.col = col::B001;
-          else if (dropout == "Blue (8 bit)")   parm_.col = col::B008;
-          else if (dropout == "Blue (16 bit)")  parm_.col = col::B016;
-          else
-            log::error
-              ("unknown dropout value: %1%, ignoring value")
-              % dropout
-              ;
-        }
+      parm_.col = caps_.get_dropout (*parm_.col, dropout);
     }
 
   if (val_.count ("speed"))
@@ -1294,8 +1308,9 @@ compound_scanner::set_up_scan_area ()
   parm_.acq->push_back ((*parm_.rsm * (br_x - tl_x)).amount< integer > ());
   parm_.acq->push_back ((*parm_.rss * (br_y - tl_y)).amount< integer > ());
 
-  if (val_.count ("crop")
-      && value (toggle (true)) == val_["crop"])
+  if (auto_crop_
+      || (val_.count ("crop")
+          && value (toggle (true)) == val_["crop"]))
     {
       if (val_.count ("crop-adjust"))
         {
@@ -1610,6 +1625,148 @@ compound_scanner::update_scan_area_(const media& size, value::map& vm) const
     }
 }
 
+void
+compound_scanner::update_scan_area_max_(value::map& vm)
+{
+  string docsrc = vm["doc-source"];
+  boost::optional< const information::source& > src;
+
+  /**/ if (docsrc == "ADF")            src = info_.adf;
+  else if (docsrc == "Document Table") src = info_.flatbed;
+  else if (docsrc == "TPU")            src = info_.tpu;
+
+  if (!src) return;             // FIXME mention this in the log
+
+  double max_x = src->area[0];
+  double max_y = src->area[1];
+
+  if (vm.count ("long-paper-mode") && docsrc == "ADF")
+    {
+      toggle t = vm["long-paper-mode"];
+      if (t)
+        {
+          max_x = info_.adf->max_doc[0];
+          max_y = info_.adf->max_doc[1];
+        }
+    }
+  if (vm.count ("alternative") && docsrc == "TPU")
+    {
+      toggle t = vm["alternative"];
+      if (t)
+        {
+          max_x = info_.tpu->alternative_area[0];
+          max_y = info_.tpu->alternative_area[1];
+        }
+    }
+
+  max_x /= 100;
+  max_y /= 100;
+
+  dynamic_pointer_cast< range > (constraints_["tl-x"])->upper (max_x);
+  dynamic_pointer_cast< range > (constraints_["tl-y"])->upper (max_y);
+  dynamic_pointer_cast< range > (constraints_["br-x"])->upper (max_x);
+  dynamic_pointer_cast< range > (constraints_["br-y"])->upper (max_y);
+
+  constraints_["br-x"]->default_value (max_x);
+  constraints_["br-y"]->default_value (max_y);
+
+  if (vm.count ("scan-area")
+      && (   vm["scan-area"] == value ("Maximum")
+          || vm["scan-area"] == value ("Automatic")
+          || vm["scan-area"] == value ("Manual")))
+    {
+      if (vm.count ("tl-x")
+          && (*constraints_["tl-x"])(vm["tl-x"]) != vm["tl-x"])
+        vm["tl-x"] = constraints_["tl-x"]->default_value ();
+      if (vm.count ("tl-y")
+          && (*constraints_["tl-y"])(vm["tl-y"]) != vm["tl-y"])
+        vm["tl-y"] = constraints_["tl-y"]->default_value ();
+      if (vm.count ("br-x")
+          && (*constraints_["br-x"])(vm["br-x"]) != vm["br-x"])
+        vm["br-x"] = constraints_["br-x"]->default_value ();
+      if (vm.count ("br-y")
+          && (*constraints_["br-y"])(vm["br-y"]) != vm["br-y"])
+        vm["br-y"] = constraints_["br-y"]->default_value ();
+    }
+}
+
+namespace {
+bool
+is_auto_updated (const value::map::key_type& k, const value::map& vm)
+{
+  if (k == "tl-x" || k == "tl-y" || k == "br-x" || k == "br-y")
+    {
+      if (vm.count ("scan-area"))
+        {
+          return (   vm.at ("scan-area") == value ("Maximum")
+                  || vm.at ("scan-area") == value ("Automatic")
+                  || vm.at ("scan-area") == value ("Manual"));
+        }
+    }
+  return false;
+}
+
+// FIXME flaming hack to take changing constraints into account
+bool
+satisfies_changing_constraint (const value::map::value_type& p,
+                               const value::map& vm, const information& info)
+{
+  value::map::key_type    k = p.first;
+  value::map::mapped_type v = p.second;
+
+  if (k == "tl-x" || k == "tl-y" || k == "br-x" || k == "br-y")
+    {
+      quantity q = v;
+      double max_x;
+      double max_y;
+
+      if (vm.at ("doc-source") == value ("ADF")
+          && vm.count ("long-paper-mode"))
+        {
+          if (vm.at ("long-paper-mode") == value (toggle (true)))
+            {
+              max_x = info.adf->max_doc[0];
+              max_y = info.adf->max_doc[1];
+            }
+          else
+            {
+              max_x = info.adf->area[0];
+              max_y = info.adf->area[1];
+            }
+          max_x /= 100;
+          max_y /= 100;
+
+          if (k == "tl-x" || k == "br-x")
+            return (q < max_x);
+          if (k == "tl-y" || k == "br-y")
+            return (q < max_y);
+        }
+     if (vm.at ("doc-source") == value ("TPU")
+          && vm.count ("alternative"))
+        {
+          if (vm.at ("alternative") == value (toggle (true)))
+            {
+              max_x = info.tpu->alternative_area[0];
+              max_y = info.tpu->alternative_area[1];
+            }
+          else
+            {
+              max_x = info.tpu->area[0];
+              max_y = info.tpu->area[1];
+            }
+          max_x /= 100;
+          max_y /= 100;
+
+          if (k == "tl-x" || k == "br-x")
+            return (q < max_x);
+          if (k == "tl-y" || k == "br-y")
+            return (q < max_y);
+        }
+    }
+  return false;
+}
+}
+
 //! \todo Don't use non-standard map::at() accessor
 bool
 compound_scanner::validate (const value::map& vm) const
@@ -1622,7 +1779,10 @@ compound_scanner::validate (const value::map& vm) const
       option::map::iterator it = const_cast< option::map& > (om).find (p.first);
       if (const_cast< option::map& > (om).end () != it)
         {
-          if (it->constraint ())
+          if (it->constraint ()
+              && !is_auto_updated (p.first, vm)
+              && !satisfies_changing_constraint (p, vm, info_))
+
             {
               value okay = (*it->constraint ()) (p.second);
               satisfied &= (p.second == okay);
@@ -1644,6 +1804,14 @@ compound_scanner::validate (const value::map& vm) const
       satisfied &= (*rit) (vm);
     }
 
+  if (vm.count ("deskew") && vm.count ("long-paper-mode"))
+    {
+      toggle t1 = vm.at ("deskew");
+      toggle t2 = vm.at ("long-paper-mode");
+
+      satisfied &= !(t1 && t2);
+    }
+
   return satisfied;
 }
 
@@ -1661,6 +1829,7 @@ compound_scanner::finalize (const value::map& vm)
       remove (old_opts, final_vm);
       insert (new_opts, final_vm);
     }
+  update_scan_area_max_(final_vm);
 
   {
     // Users should be shown the actual transfer-format value, *not*
@@ -1676,17 +1845,14 @@ compound_scanner::finalize (const value::map& vm)
 
     if (!t &&
         (   type == "Color (1 bit)"
-         || type == "Gray (1 bit)"
-         || type == "Red (1 bit)"
-         || type == "Blue (1 bit)"
-         || type == "Green (1 bit)"))
+         || type == "Gray (1 bit)"))
       {
         if ((*constraints_["transfer-format"]) (string ("RAW"))
             != value (string ("RAW")))
           {
             constraints_["transfer-format"]
               = shared_ptr <constraint >
-              (from< store > () -> alternative (N_("RAW")));
+              (from< store > () -> alternative (CCB_N_("RAW")));
           }
         final_vm["transfer-format"] = "RAW";
       }
@@ -1702,6 +1868,31 @@ compound_scanner::finalize (const value::map& vm)
       }
   }
 
+  if (final_vm.count ("dropout"))
+    {
+      using namespace code_token::capability;
+
+      string type = final_vm["image-type"];
+      quad   gray = quad ();
+
+      /**/ if (type == "Gray (1 bit)")  gray = col::M001;
+      else if (type == "Gray (8 bit)")  gray = col::M008;
+      else if (type == "Gray (16 bit)") gray = col::M016;
+
+      bool selectable = gray && caps_.has_dropout (gray);
+
+      descriptors_["dropout"]->active (selectable);
+    }
+
+  if (final_vm.count ("deskew")
+      && final_vm.count ("long-paper-mode"))
+    {
+      toggle t1 = final_vm["long-paper-mode"];
+      descriptors_["deskew"]->active (!t1);
+      toggle t2 = final_vm["deskew"];
+      descriptors_["long-paper-mode"]->active (!t2);
+    }
+
   string scan_area = final_vm["scan-area"];
   if (scan_area != "Manual")
     {
@@ -1709,17 +1900,55 @@ compound_scanner::finalize (const value::map& vm)
 
       /**/ if (scan_area == "Maximum")
         {
-          size = media (length (), length ());
+          string src = final_vm["doc-source"];
+
+          if (src == "ADF"
+              && final_vm.count ("long-paper-mode")
+              && final_vm["long-paper-mode"] == value (toggle (true)))
+            {
+              // Max out vertically, keep width settings
+              final_vm["tl-y"] = constraints_["tl-y"]->default_value ();
+              final_vm["br-y"] = constraints_["br-y"]->default_value ();
+            }
+          else if (!(final_vm.count ("auto-kludge")
+                     && final_vm["auto-kludge"] == value (toggle (true))))
+            {
+              update_scan_area_(size, final_vm);
+            }
         }
       else if (scan_area == "Automatic")
         {
-          size = probe_media_size_(final_vm["doc-source"]);
+          string src = final_vm["doc-source"];
+
+          if (src == "ADF"
+              && final_vm.count ("long-paper-mode")
+              && final_vm["long-paper-mode"] == value (toggle (true)))
+            {
+              // Max out vertically, keep width settings
+              final_vm["tl-y"] = constraints_["tl-y"]->default_value ();
+              final_vm["br-y"] = constraints_["br-y"]->default_value ();
+            }
+          else
+            {
+              bool probe = false;
+
+              /**/ if (src == "ADF")
+                probe = info_.adf && info_.adf->supports_size_detection ();
+              else if (src == "Document Table")
+                probe = info_.flatbed && info_.flatbed->supports_size_detection ();
+              else if (src == "TPU")
+                probe = info_.tpu && info_.tpu->supports_size_detection ();
+
+              if (probe)
+                size = probe_media_size_(final_vm["doc-source"]);
+              update_scan_area_(size, final_vm);
+            }
         }
       else                      // well-known media size
         {
           size = media::lookup (scan_area);
+          update_scan_area_(size, final_vm);
         }
-      update_scan_area_(size, final_vm);
     }
 
   // Link force-extent default value to scan-area changes.
@@ -1742,8 +1971,8 @@ compound_scanner::finalize (const value::map& vm)
     if (br_x - tl_x < min_width_ || br_y - tl_y < min_height_)
       BOOST_THROW_EXCEPTION
         (constraint::violation
-         ((format (_("Scan area too small.\n"
-                     "The area needs to be larger than %1% by %2%."))
+         ((format (CCB_("Scan area too small.\n"
+                        "The area needs to be larger than %1% by %2%."))
            % min_width_ % min_height_).str ()));
   }
 
@@ -1990,6 +2219,69 @@ compound_scanner::finalize (const value::map& vm)
               }
           }
       }
+
+    // Now check that we didn't step out of some slightly arbitrary
+    // bounds.  This is probably to ensure that JPEG transfers work.
+    // The logically Right Thing to do would be to check against the
+    // lesser of the info_.max_image height value and, if using JPEG
+    // transfer mode, the JPEG format constraint, using the device
+    // resolutions.  Prefer the emulated ones for more user-friendly
+    // feedback (as they've no clue as to what the device resolutions
+    // are).
+
+    {
+      quantity tl_y = final_vm["tl-y"];
+      quantity br_y = final_vm["br-y"];
+      quantity height = (br_y > tl_y ? br_y - tl_y : tl_y - br_y);
+
+      quantity res_y;
+      /**/ if (final_vm.count ("sw-resolution-y"))
+        {
+          res_y = final_vm["sw-resolution-y"];
+        }
+      else if (final_vm.count ("sw-resolution"))
+        {
+          res_y = final_vm["sw-resolution"];
+        }
+      else if (final_vm.count ("resolution-y"))
+        {
+          res_y = final_vm["resolution-y"];
+        }
+      else if (final_vm.count ("resolution"))
+        {
+          res_y = final_vm["resolution"];
+        }
+      else
+        BOOST_THROW_EXCEPTION
+          (logic_error ("resolution setting inconsistency"));
+
+      string docsrc = final_vm["doc-source"];
+      boost::optional< information::source > src;
+
+      /**/ if (docsrc == "ADF")            src = info_.adf;
+      else if (docsrc == "Document Table") src = info_.flatbed;
+      else if (docsrc == "TPU")            src = info_.tpu;
+
+      log::brief ("height: %1%, area: %2%, res: %3%")
+        % height % (src ? src->area[1] / 100.0: 0) % res_y;
+
+      if (src && height > src->area[1] / 100.0)
+        {
+          double limit = 0;
+          if (res_y > 300) limit = 300;
+          if (res_y > 200 && height > 215) limit = 200;
+          if (height > 240)
+            log::alert ("resolution limit for heights larger than 240 inches"
+                        " unspecified, using %1%") % limit;
+
+          if (limit)
+            BOOST_THROW_EXCEPTION
+              (constraint::violation
+               ((format (CCB_("Resolution too high for selected area.\n"
+                              "Choose a resolution no larger than %1%"))
+                 % limit).str ()));
+        }
+    }
   }
 
   option::map::finalize (final_vm);
@@ -2010,7 +2302,7 @@ compound_scanner::finalize (const value::map& vm)
   ctx_.content_type (transfer_content_type_(parm_));
 }
 
-//! \todo clarify intent of AMIN and AMAX info_ fields
+//! \todo clarify intent of AMIN info_ field
 void
 compound_scanner::configure_adf_options ()
 {
@@ -2023,7 +2315,7 @@ compound_scanner::configure_adf_options ()
       adf_.add_options ()
         ("duplex", toggle (),
          attributes (tag::general)(level::standard),
-         N_("Duplex")
+         SEC_N_("Duplex")
          );
       if (ENABLE_RESTRICTIONS) impose (duplex_needs_adf);
     }
@@ -2035,7 +2327,7 @@ compound_scanner::configure_adf_options ()
         adf_.add_options ()
           ("image-count", cp,
            attributes (),
-           N_("Image Count")
+           CCB_N_("Image Count")
            );
       }
   }
@@ -2047,11 +2339,23 @@ compound_scanner::configure_adf_options ()
         adf_.add_options ()
           ("double-feed-detection", s,
            attributes (level::standard),
-           N_("Detect Double Feed")
+           SEC_N_("Detect Double Feed")
            );
         if (ENABLE_RESTRICTIONS) impose (double_feed_needs_adf);
       }
   }
+
+  if (info_.adf->supports_long_paper_mode ())
+    {
+      adf_.add_options ()
+        ("long-paper-mode", toggle (false),
+         attributes (level::standard),
+         SEC_N_("Long Paper Mode"),
+         CCB_N_("Select this mode if you want to scan documents longer than"
+                " what the ADF would normally support.  Please note that it"
+                " only supports automatic detection of the document height.")
+         );
+    }
 
   if (info_.flatbed) flatbed_.share_values (adf_);
 }
@@ -2087,7 +2391,7 @@ compound_scanner::add_doc_source_options (option::map& opts,
 {
   add_resolution_options (opts, src);
   add_scan_area_options (opts, src);
-  add_crop_option (opts, src_caps, caps);
+  add_crop_option (opts, src, src_caps, caps);
   add_deskew_option (opts, src_caps);
   add_overscan_option (opts, src_caps);
 }
@@ -2162,19 +2466,19 @@ compound_scanner::add_resolution_options (option::map& opts,
       opts.add_options ()
         ("resolution-bind", toggle (true),
          attributes (tag::general),
-         N_("Bind X and Y resolutions")
+         CCB_N_("Bind X and Y resolutions")
          )
         ("resolution", cp,
          attributes (tag::general)(level::standard),
-         N_("Resolution")
+         SEC_N_("Resolution")
          )
         ("resolution-x", cp_x,
          attributes (tag::general),
-         N_("X Resolution")
+         CCB_N_("X Resolution")
          )
         ("resolution-y", cp_y,
          attributes (tag::general),
-         N_("Y Resolution")
+         CCB_N_("Y Resolution")
          )
         ;
     }
@@ -2185,11 +2489,11 @@ compound_scanner::add_resolution_options (option::map& opts,
           opts.add_options ()
             ("resolution-x", cp_x,
              attributes (tag::general)(level::standard),
-             N_("X Resolution")
+             CCB_N_("X Resolution")
              )
             ("resolution-y", cp_y,
              attributes (tag::general)(level::standard),
-             N_("Y Resolution")
+             CCB_N_("Y Resolution")
              )
             ;
         }
@@ -2201,7 +2505,7 @@ compound_scanner::add_resolution_options (option::map& opts,
               opts.add_options ()
                 ("resolution", cp,
                  attributes (tag::general)(level::standard),
-                 N_("Resolution")
+                 SEC_N_("Resolution")
                  )
                 ;
             }
@@ -2219,10 +2523,10 @@ compound_scanner::add_resolution_options (option::map& opts,
   opts.add_options ()
     ("enable-resampling", toggle (true),
      attributes (tag::general),
-     N_("Enable Resampling"),
-     N_("This option provides the user with a wider range of supported"
-        " resolutions.  Resolutions not supported by the hardware will"
-        " be achieved through image processing methods.")
+     SEC_N_("Enable Resampling"),
+     CCB_N_("This option provides the user with a wider range of supported"
+            " resolutions.  Resolutions not supported by the hardware will"
+            " be achieved through image processing methods.")
      );
 
   cp = intersection_of_(res_x_, res_y_);
@@ -2232,19 +2536,19 @@ compound_scanner::add_resolution_options (option::map& opts,
       opts.add_options ()
         ("sw-resolution-bind", toggle (true),
          attributes (tag::general),
-         N_("Bind X and Y resolutions")
+         CCB_N_("Bind X and Y resolutions")
          )
         ("sw-resolution", cp,
          attributes (tag::general)(level::standard).emulate (true),
-         N_("Resolution")
+         SEC_N_("Resolution")
          )
         ("sw-resolution-x", res_x_,
          attributes (tag::general).emulate (true),
-         N_("X Resolution")
+         CCB_N_("X Resolution")
          )
         ("sw-resolution-y", res_y_,
          attributes (tag::general).emulate (true),
-         N_("Y Resolution")
+         CCB_N_("Y Resolution")
          )
         ;
     }
@@ -2255,11 +2559,11 @@ compound_scanner::add_resolution_options (option::map& opts,
           opts.add_options ()
             ("sw-resolution-x", res_x_,
              attributes (tag::general)(level::standard).emulate (true),
-             N_("X Resolution")
+             CCB_N_("X Resolution")
              )
             ("sw-resolution-y", res_y_,
              attributes (tag::general)(level::standard).emulate (true),
-             N_("Y Resolution")
+             CCB_N_("Y Resolution")
              )
             ;
         }
@@ -2271,7 +2575,7 @@ compound_scanner::add_resolution_options (option::map& opts,
               opts.add_options ()
                 ("sw-resolution", cp,
                  attributes (tag::general)(level::standard).emulate (true),
-                 N_("Resolution")
+                 SEC_N_("Resolution")
                  )
                 ;
             }
@@ -2296,17 +2600,17 @@ compound_scanner::add_scan_area_options (option::map& opts,
 
   std::list< std::string > areas = media::within (double (area[0]) / 100,
                                                   double (area[1]) / 100);
-  areas.push_back (N_("Manual"));
-  areas.push_back (N_("Maximum"));
+  areas.push_back (SEC_N_("Manual"));
+  areas.push_back (SEC_N_("Maximum"));
   if (src.supports_size_detection ())
-    areas.push_back (("Automatic"));
+    areas.push_back (SEC_N_("Automatic"));
 
   opts.add_options ()
     ("scan-area", (from< utsushi::store > ()
                    -> alternatives (areas.begin (), areas.end ())
                    -> default_value ("Manual")),
      attributes (tag::general)(level::standard),
-     N_("Scan Area")
+     SEC_N_("Scan Area")
      )
     ("tl-x", (from< utsushi::range > ()
               -> lower (0.)
@@ -2314,7 +2618,7 @@ compound_scanner::add_scan_area_options (option::map& opts,
               -> default_value (0.)
               ),
      attributes (tag::geometry)(level::standard),
-     N_("Top Left X")
+     SEC_N_("Top Left X")
      )
     ("tl-y", (from< utsushi::range > ()
               -> lower (0.)
@@ -2322,7 +2626,7 @@ compound_scanner::add_scan_area_options (option::map& opts,
               -> default_value (0.)
               ),
      attributes (tag::geometry)(level::standard),
-     N_("Top Left Y")
+     SEC_N_("Top Left Y")
      )
     ("br-x", (from< utsushi::range > ()
               -> lower (0.)
@@ -2330,7 +2634,7 @@ compound_scanner::add_scan_area_options (option::map& opts,
               -> default_value (double (area[0]) / 100)
               ),
      attributes (tag::geometry)(level::standard),
-     N_("Bottom Right X")
+     SEC_N_("Bottom Right X")
      )
     ("br-y", (from< utsushi::range > ()
               -> lower (0.)
@@ -2338,12 +2642,13 @@ compound_scanner::add_scan_area_options (option::map& opts,
               -> default_value (double (area[1]) / 100)
               ),
      attributes (tag::geometry)(level::standard),
-     N_("Bottom Right Y")
+     SEC_N_("Bottom Right Y")
      );
 }
 
 void
 compound_scanner::add_crop_option (option::map& opts,
+                                   const information::source& src,
                                    const source_capabilities& src_caps,
                                    const capabilities& caps) const
 {
@@ -2358,12 +2663,25 @@ compound_scanner::add_crop_option (option::map& opts,
       == std::find (src_caps->begin (), src_caps->end (), adf::CRP))
     return;
 
-  opts.add_options ()
-    ("crop", toggle (),
-     attributes (tag::enhancement)(level::standard),
-     N_("Crop")
-     )
-    ;
+  if (!src.supports_size_detection ()
+      && opts.count ("scan-area"))
+    {
+      constraint::ptr c (opts["scan-area"].constraint ());
+      if (value ("Automatic") != (*c) (value ("Automatic")))
+        {
+          dynamic_pointer_cast< utsushi::store >
+            (c)->alternative (SEC_N_("Automatic"));
+        }
+    }
+  else
+    {
+      opts.add_options ()
+        ("crop", toggle (),
+         attributes (tag::enhancement)(level::standard),
+         SEC_N_("Crop")
+         )
+        ;
+    }
 
   utsushi::constraint::ptr cp (caps.crop_adjustment ());
 
@@ -2372,7 +2690,7 @@ compound_scanner::add_crop_option (option::map& opts,
       opts.add_options ()
         ("crop-adjust", cp,
          attributes (),
-         N_("Crop Adjustment")
+         CCB_N_("Crop Adjustment")
          )
         ;
     }
@@ -2396,7 +2714,7 @@ compound_scanner::add_deskew_option (option::map& opts,
   opts.add_options ()
     ("deskew", toggle (),
      attributes (tag::enhancement)(level::standard),
-     N_("Deskew")
+     SEC_N_("Deskew")
      )
     ;
 }
@@ -2424,7 +2742,7 @@ compound_scanner::add_overscan_option (option::map& opts,
   opts.add_options ()
     ("overscan", toggle (),
      attributes (),
-     N_("Overscan")
+     CCB_N_("Overscan")
      )
     ;
 }
@@ -2446,7 +2764,7 @@ compound_scanner::doc_source_options (const quad& q)
   if (caps_.tpu) return tpu_;
 
   BOOST_THROW_EXCEPTION
-    (logic_error (_("internal error: no document source")));
+    (logic_error ("internal error: no document source"));
 }
 
 option::map&
@@ -2828,11 +3146,11 @@ fallback_message (const quad& part, const quad& what)
   using namespace code_token::reply::info;
 
   if (err::AUTH == what || err::PERM == what)
-    return _("Authentication is required.\n"
-             "Unfortunately, this version of the driver does not support "
-             "authentication yet.");
+    return SEC_("Authentication is required.\n"
+                "Unfortunately, this version of the driver does not support "
+                "authentication yet.");
 
-  return (format (_("Unknown device error: %1%/%2%"))
+  return (format (CCB_("Unknown device error: %1%/%2%"))
           % str (part) % str (what)).str ();
 }
 
@@ -2922,25 +3240,26 @@ create_adf_message (const quad& what)
   using namespace code_token::reply::info;
 
   if (err::OPN  == what)
-    return _("The Automatic Document Feeder is open.\n"
-             "Please close it.");
+    return SEC_("The Automatic Document Feeder is open.\n"
+                "Please close it.");
   if (err::PJ   == what)
-    return _("A paper jam occurred.\n"
-             "Open the Automatic Document Feeder and remove any paper.\n"
-             "If there are any documents loaded in the ADF, remove them"
-             " and load them again.");
+    return SEC_("A paper jam occurred.\n"
+                "Open the Automatic Document Feeder and remove any paper.\n"
+                "If there are any documents loaded in the ADF, remove them"
+                " and load them again.");
   if (err::PE   == what)
-    return _("Please load the document(s) into the Automatic Document Feeder.");
+    return SEC_("Please load the document(s) into the Automatic Document"
+                " Feeder.");
   if (err::DFED == what)
-    return _("A multi page feed occurred in the auto document feeder. "
-             "Open the cover, remove the documents, and then try again."
-             " If documents remain on the tray, remove them and then"
-             " reload them.");
+    return SEC_("A multi page feed occurred in the auto document feeder. "
+                "Open the cover, remove the documents, and then try again."
+                " If documents remain on the tray, remove them and then"
+                " reload them.");
   if (err::ERR  == what)
-    return _("A fatal ADF error has occurred.\n"
-             "Resolve the error condition and try again.  You may have "
-             "to restart the scan dialog or application in order to be "
-             "able to scan.");
+    return CCB_("A fatal ADF error has occurred.\n"
+                "Resolve the error condition and try again.  You may have "
+                "to restart the scan dialog or application in order to be "
+                "able to scan.");
 
   return fallback_message (err::ADF, what);
 }
@@ -2951,7 +3270,7 @@ create_fb_message (const quad& what)
   using namespace code_token::reply::info;
 
   if (err::ERR  == what)
-    return _("A fatal error has occurred");
+    return CCB_("A fatal error has occurred");
 
   return fallback_message (err::FB, what);
 }

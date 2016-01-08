@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -91,6 +91,7 @@ public:
 
   //! Whether the option takes effect
   bool is_active () const;
+  void active (bool flag);
   //! Whether the software is responsible for achieving the effect
   bool is_emulated () const;
   //! Whether the option's value can be changed
@@ -270,7 +271,6 @@ private:
                              const string text) const;
   option::map& owner_;
 };
-
 
 class option::map::iterator
   : public boost::forward_iterator_helper< option::map::iterator, option >

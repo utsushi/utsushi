@@ -1,8 +1,8 @@
 #  grammar-formats.tcs -- test cases for integer value coding
-#  Copyright (C) 2012  SEIKO EPSON CORPORATION
+#  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 #
 #  License: GPL-3.0+
-#  Author : AVASYS CORPORATION
+#  Author : EPSON AVASYS CORPORATION
 #
 #  This file is part of the 'Utsushi' package.
 #  This package is free software: you can redistribute it and/or modify
@@ -35,7 +35,6 @@
 #       with a leading '0x' to ease test case definition review.
 #
 #  The parameters are separated by white space.
-
 
 #  Test cases for decoding::decimal_ parsers
 

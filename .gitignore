@@ -97,6 +97,10 @@ test-suite.log
 /drivers/esci/data/WF-6590.dat
 /drivers/esci/verify
 /filters/doc-locate
+/filters/tests/reorient.box
+/filters/tests/reorient.tif
+/filters/tests/reorient.txt
+/filters/tests/data/
 /gtkmm/about.xml
 /lib/tag.cpp
 /lib/tests/ipc-cnx

@@ -1,8 +1,8 @@
 //  i18n.hpp -- C++ wrappers for libintl.h functionality
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -521,6 +521,13 @@ N_(const char *msgid)
 {
   return msgid;
 }
+
+// Translation "responsibility" scope defines
+
+#define SEC_     _              /* SEIKO EPSON CORPORATION */
+#define SEC_N_  N_
+#define CCB_     _              /* Community Code Base */
+#define CCB_N_  N_
 
 }       // namespace utsushi
 

@@ -3,7 +3,7 @@
 //  Copyright (C) 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -165,6 +165,16 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
 
 namespace _drv_ {
 namespace esci {
+
+// Placeholder strings
+// These are not yet used but we have translations for them.
+
+const string adf_double_sided (SEC_N_("ADF - Double-sided"));
+const string adf_single_sided (SEC_N_("ADF - Single-sided"));
+const string monochrome (SEC_N_("Black & White"));
+const string color (SEC_N_("Color"));
+const string mode (SEC_N_("Mode"));
+const string text_line_art (SEC_N_("Text/Line Art"));
 
 scanner::scanner (const connexion::ptr& cnx)
   : utsushi::scanner (cnx)

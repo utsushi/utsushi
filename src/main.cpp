@@ -1,8 +1,8 @@
 //  main.cpp -- entry point to all applications and utilities
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -58,18 +58,18 @@ main (int argc, char *argv[])
 
       utsushi::run_time rt (argc, argv, utsushi::i18n);
 
-      po::options_description cli_cmds (_("Supported commands"));
+      po::options_description cli_cmds (CCB_("Supported commands"));
       cli_cmds
         .add_options ()
-        ("help"   , _("display the help for a command and exit"))
-        ("version", _("output command version information and exit"))
-        ("list"   , _("list available image acquisition devices"))
-        ("scan"   , _("scan with a suitable utility"))
+        ("help"   , CCB_("display the help for a command and exit"))
+        ("version", CCB_("output command version information and exit"))
+        ("list"   , CCB_("list available image acquisition devices"))
+        ("scan"   , CCB_("scan with a suitable utility"))
         ;
 
       if (rt.count ("help"))
         {
-          std::cout << rt.help (_("next generation image acquisition"));
+          std::cout << rt.help (CCB_("next generation image acquisition"));
 
           // Kludge to remove leading dashes from the commands
           std::stringstream ss;

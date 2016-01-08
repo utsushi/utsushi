@@ -1,8 +1,8 @@
 //  device.cpp -- interface default implementations
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -111,7 +111,7 @@ idevice::read_(octet *data, streamsize n)
   else
     {
       BOOST_THROW_EXCEPTION
-        (logic_error (_("unhandled state in idevice::read()")));
+        (logic_error ("unhandled state in idevice::read()"));
     }
 
   if (   traits::eos () == last_marker_
@@ -122,7 +122,8 @@ idevice::read_(octet *data, streamsize n)
       cancel_requested_ = work_in_progress_;
     }
 
-  if (prev_marker != last_marker_)
+  if (prev_marker != last_marker_
+      || traits::eof () == last_marker_)
     signal_marker_(last_marker_);
 
   return last_marker_;

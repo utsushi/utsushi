@@ -3,7 +3,7 @@
 //  Copyright (C) 2011, 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //  Author : Olaf Meeuwissen
 //  Origin : FreeRISCI
 //
@@ -97,7 +97,7 @@ using std::runtime_error;
             ctx_ = 0;
             log::error (libusb_error_name (err));
             BOOST_THROW_EXCEPTION
-              (runtime_error (_("unable to initialise USB support")));
+              (runtime_error ("unable to initialise USB support"));
           }
         libusb_set_debug (ctx_, 3);
       }
@@ -114,7 +114,7 @@ using std::runtime_error;
 
     if (!handle_)
       BOOST_THROW_EXCEPTION
-        (runtime_error (_("no usable, matching device")));
+        (runtime_error ("no usable, matching device"));
 
     ++connexion_count_;
   }
@@ -192,7 +192,8 @@ using std::runtime_error;
       return NULL;
 
 #if HAVE_LIBUSB_GET_PORT_NUMBER
-    if (device->usb_port_number () != libusb_get_port_number (dev))
+    if (libusb_get_port_number (dev)
+        && device->usb_port_number () != libusb_get_port_number (dev))
       return NULL;
 #endif
 

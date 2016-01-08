@@ -1,8 +1,8 @@
 //  command.cpp -- unit tests for free-standing command requirements
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -130,6 +130,15 @@ const string invocation_option ("--help");
  *  command can be used both before and after installation and be
  *  runnable from any location in the developer's working copy of
  *  the source tree.
+ *
+ *  \note  POSIX compliant shells must invoke a shell's matching
+ *         builtin for for commands without a slash.  Hence, if
+ *         such a shell provides builtins that match any Utsushi
+ *         command it is the latter that looses out if it were to
+ *         rely on system PATH based command lookup.  This makes
+ *         any system PATH based lookup tests pointless.
+ *
+ *         By the way, \c bash provides a \c help builtin.
  */
 static
 void
@@ -202,31 +211,6 @@ test_absolute_path_invocation (const fs::path& p)
   test_command_invocation (expect, result);
 }
 
-//! Runs a command without any path specification
-/*! The test prepends the directory where the command "lives" to the
- *  system's \c PATH and subsequently invokes the command without any
- *  path specification.  Naturally, this is the invocation scenario
- *  that the user-space program will be subject to after installation.
- *  It is also an alternative way that that program could use to find
- *  other free-standing command implementations in far-away corners of
- *  the file system.
- */
-static
-void
-test_in_system_path_invocation (const fs::path& p)
-{
-  suffix_test_case_name (p.stem ().string ());
-
-  BOOST_TEST_MESSAGE ("test: ../cmd --help == PATH=..:$PATH cmd --help");
-
-  command_line expect (p.string (), invocation_option);
-  command_line result ("PATH=" + p.parent_path ().string () + ":$PATH "
-                       + p.filename ().string (),
-                       invocation_option);
-
-  test_command_invocation (expect, result);
-}
-
 static
 bool
 is_not_executable_command (const fs::directory_entry& d)
@@ -276,8 +260,6 @@ init_test_runner ()
     ts->add (BOOST_PARAM_TEST_CASE (test_current_directory_invocation,
                                     executable.begin (), executable.end ()));
     ts->add (BOOST_PARAM_TEST_CASE (test_absolute_path_invocation,
-                                    executable.begin (), executable.end ()));
-    ts->add (BOOST_PARAM_TEST_CASE (test_in_system_path_invocation,
                                     executable.begin (), executable.end ()));
 
     ut::framework::master_test_suite ().add (ts);

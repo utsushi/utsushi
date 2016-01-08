@@ -3,7 +3,7 @@
 ##  Copyright (C) 2015  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
-##  Author : AVASYS CORPORATION
+##  Author : EPSON AVASYS CORPORATION
 ##
 ##  This file is part of the 'Utsushi' package.
 ##  This package is free software: you can redistribute it and/or modify
@@ -149,7 +149,7 @@ ltmain.sh.diff: $(auxdir)/ltmain.sh.orig $(auxdir)/ltmain.sh
 	    echo "#  Copyright (C) 2007  EPSON AVASYS CORPORATION" >> $@;\
 	    echo "#" >> $@; \
 	    echo "#  License: GPL-2.0+ (same as ltmain.sh)" >> $@; \
-	    echo "#  Author : AVASYS CORPORATION" >> $@; \
+	    echo "#  Author : EPSON AVASYS CORPORATION" >> $@; \
 	    echo "#" >> $@; \
 	    echo "#  Patch relative to: GNU libtool $$VERSION" >> $@; \
 	    echo "" >> $@; \

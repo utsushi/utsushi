@@ -1,8 +1,8 @@
 //  scan-gtkmm.cpp -- graphical user interface based scan utility
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -70,13 +70,13 @@ main (int argc, char *argv[])
       std::string gui_file = "gtkmm/dialog.glade";
       std::string rsc_file = "gtkmm/dialog.rc";
 
-      bpo::options_description opts (_("Utility options"));
+      bpo::options_description opts (CCB_("Utility options"));
       opts
         .add_options ()
         ("layout"  , bpo::value<std::string>(&gui_file),
-         _("use an alternative GUI layout definition file"))
+         CCB_("use an alternative GUI layout definition file"))
         ("resource", bpo::value<std::string>(&rsc_file),
-         _("use an alternative GUI resource file"))
+         CCB_("use an alternative GUI resource file"))
         ;
 
       if (rt.count ("help"))

@@ -2,7 +2,7 @@
 //  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -39,6 +39,24 @@ public:
 
   enum {
     unknown_size = -1,
+  };
+
+  enum orientation_type {
+    undefined,
+    bottom_left,
+    bottom_right,
+    left_bottom,
+    left_top,
+    right_bottom,
+    right_top,
+    top_left,
+    top_right,
+  };
+
+  enum direction_type {
+    unknown,
+    top_to_bottom,
+    bottom_to_top,
   };
 
   //! \e Temporary pixel type classification scheme
@@ -108,6 +126,12 @@ public:
   void resolution (const size_type& res);
   void resolution (const size_type& x_res, const size_type& y_res);
 
+  orientation_type orientation () const;
+  void orientation (const orientation_type& orientation);
+
+  direction_type direction () const;
+  void direction (const direction_type& direction);
+
 protected:
   std::string content_type_;
   _pxl_type_  pixel_type_;
@@ -120,6 +144,9 @@ protected:
   size_type y_resolution_;
 
   std::streamsize octets_seen_;
+
+  orientation_type orientation_;
+  direction_type direction_;
 
   size_type octets_per_pixel_() const;
 

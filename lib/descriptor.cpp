@@ -1,8 +1,8 @@
 //  descriptor.cpp -- objects for options and option groups
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -44,24 +44,24 @@ level::symbol::symbol (const key& key,
 
 const level::symbol level::standard (
   "01_standard",
-  N_("Standard"),
-  N_("If there is any user interface at all, options at the standard "
-     "level are meant to be made available to the user.")
+  CCB_N_("Standard"),
+  CCB_N_("If there is any user interface at all, options at the standard "
+         "level are meant to be made available to the user.")
 );
 
 const level::symbol level::extended (
   "02_extended",
-  N_("Extended"),
-  N_("Extended options are for those situations where the user needs "
-     "a bit more control over how things will be done.")
+  CCB_N_("Extended"),
+  CCB_N_("Extended options are for those situations where the user needs "
+         "a bit more control over how things will be done.")
 );
 
 const level::symbol level::complete (
   "03_complete",
-  N_("Complete"),
-  N_("This is for options that are mostly just relevant for the most "
-     "demanding of image acquisition jobs or those users will not be "
-     "satisfied unless they are in complete control.")
+  CCB_N_("Complete"),
+  CCB_N_("This is for options that are mostly just relevant for the most "
+         "demanding of image acquisition jobs or those users will not be "
+         "satisfied unless they are in complete control.")
 );
 
 descriptor::descriptor (const string& name, const string& text)

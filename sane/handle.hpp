@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -154,6 +154,7 @@ private:
 
   bool emulating_automatic_scan_area_;
   bool do_automatic_scan_area_;
+  bool revert_bilevel_;
 
   friend struct match_key;
 };

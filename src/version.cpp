@@ -1,8 +1,8 @@
 //  version.cpp -- output command version information and exit
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -49,7 +49,7 @@ main (int argc, char *argv[])
       if (rt.count ("help"))
         {
           std::cout << rt.help
-            (_("display version information for a command"));
+            (CCB_("display version information for a command"));
           return EXIT_SUCCESS;
         }
       if (rt.count ("version"))

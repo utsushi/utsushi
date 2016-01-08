@@ -1,8 +1,8 @@
 //  scan.cpp -- with a suitable utility
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -74,21 +74,21 @@ main (int argc, char *argv[])
       bool interface (getenv ("DISPLAY"));
 
       po::variables_map cmd_vm;
-      po::options_description cmd_opts (_("Command options"));
+      po::options_description cmd_opts (CCB_("Command options"));
       cmd_opts
         .add_options ()
         ("interface", (po::value< bool > (&interface)
                        -> default_value (interface)),
-         _("Start an interactive user interface\n"
-           "The default behavior depends on the environment where one runs"
-           " the command.  A scan utility suitable for non-interactive use"
-           " can be selected with the '--no-interface' option."))
+         CCB_("Start an interactive user interface\n"
+              "The default behavior depends on the environment where one runs"
+              " the command.  A scan utility suitable for non-interactive use"
+              " can be selected with the '--no-interface' option."))
         ;
 
       if (rt.count ("help"))
         {
           std::cout << rt.help
-            (_("acquire images with a suitable utility"))
+            (CCB_("acquire images with a suitable utility"))
                     << "\n"
                     << cmd_opts;
         }

@@ -1,0 +1,83 @@
+#! /bin/sh
+#  get-text-orientation -- of images to allow automatic reorientation
+#  Copyright (C) 2015  SEIKO EPSON CORPORATION
+#
+#  License: GPL-3.0+
+#  Author : EPSON AVASYS CORPORATION
+#
+#  This file is part of the 'Utsushi' package.
+#  This package is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License or, at
+#  your option, any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#  You ought to have received a copy of the GNU General Public License
+#  along with this package.  If not, see <http:#www.gnu.org/licenses/>.
+
+: ${engine:=tesseract}
+
+progname=$(basename $0)
+
+unset LANGUAGE
+LC_ALL=C
+export LC_ALL
+
+if test $# -gt 0; then
+    engine=$1
+    shift
+fi
+
+if test $# -gt 0; then
+    convert=$1
+    shift
+fi
+
+if test $# -gt 0; then
+    echo "$progname: ignoring extra arguments: '$@'" >&2
+fi
+
+msg=$(type "$engine" 2>&1)
+if test $? != 0; then
+    echo "$progname: $msg" >&2
+    exit 1
+fi
+
+tmpfile=$(mktemp -q .reorient.XXX)
+trap "rm -f $tmpfile" 0 1 2 15
+
+case "$engine" in
+    */tesseract|tesseract)
+
+        #  Notwithstanding what the manual page says, tesseract
+        #  doesn't support reading from standard input with the
+        #  `-psm 0` option.  We stuff incoming image data into a
+        #  temporary file to work around this limitation.
+        #  See https://github.com/tesseract-ocr/tesseract/issues/85
+
+        cat - > $tmpfile
+
+        #  We don't care about the "regular" tesseract output so
+        #  divert that to /dev/null.  The output that we do care
+        #  about ends up on standard error, but our caller looks
+        #  for it on standard output.  Redirect to handle that.
+
+        $engine $tmpfile /dev/null -psm 0 -l osd 2>&1
+        ;;
+
+    */ocr-engine-getrotate)
+
+        #  The ocr-engine-getrotate utility expects an uncompressed
+        #  BMP image.
+
+        $convert - -compress None bmp3:$tmpfile
+        $engine $tmpfile
+        ;;
+    *)
+        echo "$progname: unsupported engine: $engine" >&2
+        ;;
+esac

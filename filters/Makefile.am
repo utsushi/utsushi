@@ -3,7 +3,7 @@
 ##  Copyright (C) 2015  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
-##  Author : AVASYS CORPORATION
+##  Author : EPSON AVASYS CORPORATION
 ##
 ##  This file is part of the 'Utsushi' package.
 ##  This package is free software: you can redistribute it and/or modify
@@ -35,6 +35,7 @@ pkglibexec_PROGRAMS     =
 ##  FIXME: split each filter into its own plugin
 filterlib_LTLIBRARIES  = libflt-all.la
 
+libflt_all_la_CPPFLAGS  = $(AM_CPPFLAGS)
 libflt_all_la_CXXFLAGS  = $(AM_CXXFLAGS)
 libflt_all_la_LDFLAGS   = $(filter_ldflags)
 libflt_all_la_LIBADD    =
@@ -79,6 +80,11 @@ libflt_all_la_SOURCES   += autocrop.hpp
 libflt_all_la_SOURCES   += deskew.cpp
 libflt_all_la_SOURCES   += deskew.hpp
 endif				# have_libmagick_pp
+
+libflt_all_la_CPPFLAGS  += -DPKGLIBEXECDIR="\"$(pkglibexecdir)\""
+libflt_all_la_SOURCES   += reorient.cpp
+libflt_all_la_SOURCES   += reorient.hpp
+dist_pkglibexec_SCRIPTS += get-text-orientation
 
 AM_INSTALLCHECK_STD_OPTIONS_EXEMPT = doc-locate
 
