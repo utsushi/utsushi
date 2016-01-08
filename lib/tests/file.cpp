@@ -1,8 +1,8 @@
 //  file.cpp -- unit tests for the utsushi::file API
-//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -192,7 +192,6 @@ BOOST_AUTO_TEST_CASE (series_with_dotted_extension)
   BOOST_CHECK_EQUAL (gen (), path ("../cjkv-0875.tiff"));
   BOOST_CHECK_EQUAL (gen (), path ("../cjkv-0876.tiff"));
 }
-
 
 struct fixture
 {
@@ -439,7 +438,6 @@ BOOST_AUTO_TEST_CASE (multi_sequence_multi_file)
 }
 
 BOOST_AUTO_TEST_SUITE_END ();
-
 
 #define ARRAY_END(a)  ((a) + sizeof (a) / sizeof (a[0]))
 

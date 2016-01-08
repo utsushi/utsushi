@@ -1,8 +1,8 @@
 //  cstdint.hpp -- wrapper for standard fixed width integral types
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -37,7 +37,7 @@
  *  -# http://wikipedia.org/wiki/C++_Technical_Report_1
  */
 
-#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L && !WITH_INCLUDED_BOOST
 
 #include <cstdint>
 #define NAMESPACE std

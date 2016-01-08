@@ -1,8 +1,8 @@
 #  Makevars -- snippet for inclusion in po/ -*- Makefile -*-
-#  Copyright (C) 2012  SEIKO EPSON CORPORATION
+#  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 #
 #  License: GPL-3.0+
-#  Author : AVASYS CORPORATION
+#  Author : EPSON AVASYS CORPORATION
 #
 #  This file is part of the 'Utsushi' package.
 #  This package is free software: you can redistribute it and/or modify
@@ -46,7 +46,7 @@ subdir = po
 #  Options to pass to xgettext.
 #  Additional options may also by specified using AM_XGETTEXT_OPTION
 #  in `$(top_srcdir)/configure.ac`.
-XGETTEXT_OPTIONS = --keyword=_ --keyword=N_
+XGETTEXT_OPTIONS  = --keyword=SEC_ --keyword=SEC_N_
 
 #  Locale categories, in addition to LC_MESSAGES, for which message
 #  catalogs are to be used.

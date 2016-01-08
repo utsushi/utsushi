@@ -4,7 +4,7 @@
 //  Copyright (C) 2007  EPSON AVASYS CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -265,28 +265,32 @@ exception_to_sane_status (const runtime_error& e)
 
   std::string msg (_(e.what ()));
 
-  if (0 >= msg.compare
-      (_("Please load the document(s) into the Automatic Document Feeder.")))
+  if (0 == msg.compare
+      (SEC_("Please load the document(s) into the Automatic Document"
+            " Feeder.")))
     return SANE_STATUS_NO_DOCS;
 
-  if (0 >= msg.compare
-      (_("A paper jam occurred.\n"
-         "Open the Automatic Document Feeder and remove any paper.\n"
-         "If there are any documents loaded in the ADF, remove them"
-         " and load them again.")))
+  if (0 == msg.compare
+      (SEC_("A paper jam occurred.\n"
+            "Open the Automatic Document Feeder and remove any paper.\n"
+            "If there are any documents loaded in the ADF, remove them"
+            " and load them again.")))
     return SANE_STATUS_JAMMED;
 
-  if (0 >= msg.compare
-      (_("A multi page feed occurred in the auto document feeder. "
-         "Open the cover, remove the documents, and then try again."
-         " If documents remain on the tray, remove them and then"
-         " reload them.")))
+  if (0 == msg.compare
+      (SEC_("A multi page feed occurred in the auto document feeder. "
+            "Open the cover, remove the documents, and then try again."
+            " If documents remain on the tray, remove them and then"
+            " reload them.")))
     return SANE_STATUS_JAMMED;
 
-  if (0 >= msg.compare
-      (_("The Automatic Document Feeder is open.\n"
-         "Please close it.")))
+  if (0 == msg.compare
+      (SEC_("The Automatic Document Feeder is open.\n"
+            "Please close it.")))
     return SANE_STATUS_COVER_OPEN;
+
+  if (0 == msg.compare ("Device initiated cancellation."))
+    return SANE_STATUS_CANCELLED;
 
   return SANE_STATUS_IO_ERROR;
 }
@@ -1025,7 +1029,7 @@ API_ENTRY (BACKEND_NAME, ctor) (void)
     }
   catch (const std::runtime_error& e)
     {
-      fprintf (stderr, "%s\n", ::gettext (
+      fprintf (stderr, "%s\n", CCB_(
 "The current locale settings are not supported by the standard C++"
 " library used by this application.  This is most likely caused by a"
 " misconfigured locale but may also be due to use of a C++ library"
@@ -1033,7 +1037,7 @@ API_ENTRY (BACKEND_NAME, ctor) (void)
 " starting the application in a \"C\" locale, but you really should"
 " check your locale configuration and the locale support of the C++"
 " library used by the application."
-                                          ));
+                                    ));
       backend_is_usable = false;
     }
 
@@ -1045,12 +1049,12 @@ API_ENTRY (BACKEND_NAME, ctor) (void)
     }
   catch (const std::exception& e)
     {
-      fprintf (stderr, "%s\n", ::gettext (e.what ()));
+      fprintf (stderr, "%s\n", CCB_(e.what ()));
       backend_is_usable = false;
     }
   catch (...)
     {
-      fprintf (stderr, "%s\n", ::gettext ("library initialization failed"));
+      fprintf (stderr, "%s\n", CCB_("library initialization failed"));
       backend_is_usable = false;
     }
 }

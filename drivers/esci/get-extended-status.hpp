@@ -3,7 +3,7 @@
 //  Copyright (C) 2009  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //  Author : Olaf Meeuwissen
 //  Origin : FreeRISCI
 //
@@ -163,7 +163,7 @@ namespace _drv_ {
       bool adf_is_duplex_type (void) const;
       //!  Indicates which sheet an ADF unit loads.
       /*!  ADF units may load media from the top of the stack or from
-           the bottom of the stack.  This query  \c true for top
+           the bottom of the stack.  This query returns \c true for top
            loading ADF units.
        */
       bool adf_is_first_sheet_loader (void) const;

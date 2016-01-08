@@ -1,8 +1,8 @@
 //  preview.hpp -- display/control preview images before final acquisition
-//  Copyright (C) 2012, 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -71,6 +71,7 @@ public:
   virtual void eoi (const context& ctx);
 
   void on_device_changed (scanner::ptr s);
+  void on_values_changed ();
   void on_refresh ();
 
 protected:

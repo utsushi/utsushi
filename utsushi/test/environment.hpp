@@ -2,7 +2,7 @@
 //  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -30,7 +30,7 @@
 #include <utsushi/functional.hpp>
 #include <utsushi/regex.hpp>
 
-#if __cplusplus >= 201103L
+#if __cplusplus >= 201103L && !WITH_INCLUDED_BOOST
 #define NS(bind) std::bind
 #define NSPH(_1) std::placeholders::_1
 #else

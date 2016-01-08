@@ -1,6 +1,6 @@
 #! /bin/sh
 #  boost-test-report -- accumulator for matching reports
-#  Copyright (C) 2012  AVASYS CORPORATION
+#  Copyright (C) 2012  EPSON AVASYS CORPORATION
 #  Copyright (C) 2013  Olaf Meeuwissen
 #
 #  License: GPL-3.0+
@@ -111,5 +111,5 @@ done \
     | sed '1s|^|<TestResults>|; $s|$|</TestResults>|' \
     | xsltproc -nonet $0.xsl - \
     | sed '1d'
-    
+
 exit 0

@@ -1,8 +1,8 @@
 //  value.cpp -- mediate between utsushi::value and SANE API conventions
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -70,7 +70,7 @@ struct get
     else
       {
         BOOST_THROW_EXCEPTION
-          (logic_error (_("internal inconsistency")));
+          (logic_error ("internal inconsistency"));
       }
   }
 
@@ -218,7 +218,7 @@ struct multiply_by
   void operator() (T&) const
   {
     BOOST_THROW_EXCEPTION
-      (logic_error(_("value type does not support multiplication")));
+      (logic_error("value type does not support multiplication"));
   }
 };
 
@@ -242,7 +242,7 @@ struct divide_by
   void operator() (T&) const
   {
     BOOST_THROW_EXCEPTION
-      (logic_error (_("value type does not support division")));
+      (logic_error ("value type does not support division"));
   }
 };
 

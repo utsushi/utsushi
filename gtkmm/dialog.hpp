@@ -1,8 +1,8 @@
 //  dialog.hpp -- to acquire image data
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -23,6 +23,7 @@
 
 #include <gtkmm/builder.h>
 #include <gtkmm/dialog.h>
+#include <gtkmm/progressbar.h>
 #include <gtkmm/togglebutton.h>
 #include <gtkmm/uimanager.h>
 #include <sigc++/connection.h>
@@ -35,6 +36,7 @@ namespace utsushi {
 namespace gtkmm {
 
 class action_dialog;
+class chooser;
 class editor;
 
 class dialog : public Gtk::Dialog
@@ -44,6 +46,7 @@ class dialog : public Gtk::Dialog
   Glib::RefPtr<Gtk::UIManager> ui_manager_;
 
   Gtk::Widget *dialog_;
+  chooser     *chooser_;
   editor      *editor_;
 
   Gtk::ToggleButton *expand_;
@@ -59,6 +62,11 @@ class dialog : public Gtk::Dialog
   action_dialog   *maintenance_dialog_;
   sigc::connection maintenance_trigger_;
 
+  Gtk::ProgressBar *progress_;
+  sigc::connection  progress_pulse_;
+  sig_atomic_t      scan_started_;
+  sig_atomic_t      ignore_delete_event_;
+
 public:
   dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder);
   ~dialog ();
@@ -68,17 +76,24 @@ public:
 
 protected:
   void set_sensitive (void);
-
+  void rewire_dialog (bool scanning);
+  bool on_delete_event (GdkEventAny *event);
   void on_detail_toggled (void);
   void on_scan (void);
   void on_scan_update (traits::int_type c);
+  void on_cancel (void);
   void on_about (void);
 
   void on_device_changed (scanner::ptr idev);
   void on_notify (log::priority level, std::string message);
 
+  bool on_timeout (void);
+
   sigc::signal< void, option::map::ptr >
   signal_options_changed_;
+
+  bool revert_bilevel_;
+  bool revert_overscan_;
 };
 
 }       // namespace gtkmm

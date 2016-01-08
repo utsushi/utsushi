@@ -1,8 +1,8 @@
 ##  Makefile.am -- an automake template for Makefile.in
-##  Copyright (C) 2012  SEIKO EPSON CORPORATION
+##  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 ##
 ##  License: GPL-3.0+
-##  Author : AVASYS CORPORATION
+##  Author : EPSON AVASYS CORPORATION
 ##
 ##  This file is part of the 'Utsushi' package.
 ##  This package is free software: you can redistribute it and/or modify
@@ -25,7 +25,7 @@ if enable_boost_unit_test_framework
 TESTS_ENVIRONMENT =
 TESTS = $(check_PROGRAMS)
 
-check_PROGRAMS  = 
+check_PROGRAMS  =
 check_PROGRAMS += command.utr
 check_PROGRAMS += main.utr
 check_PROGRAMS += main-failure.utr

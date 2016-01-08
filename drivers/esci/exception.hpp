@@ -1,8 +1,8 @@
 //  exception.hpp -- classes for the ESC/I driver
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -60,7 +60,8 @@ namespace _drv_ {
     class invalid_parameter : public exception
     {
     public:
-      invalid_parameter (const std::string& message = N_("invalid parameter"))
+      invalid_parameter (const std::string& message
+                         = CCB_N_("invalid parameter"))
         : exception (message)
       {}
     };
@@ -69,7 +70,8 @@ namespace _drv_ {
     class unknown_reply : public exception
     {
     public:
-      unknown_reply (const std::string& message = N_("unknown reply"))
+      unknown_reply (const std::string& message
+                     = CCB_N_("unknown reply"))
         : exception (message)
       {}
     };
@@ -78,7 +80,8 @@ namespace _drv_ {
     class invalid_command : public exception
     {
     public:
-      invalid_command (const std::string& message = N_("invalid command"))
+      invalid_command (const std::string& message
+                       = CCB_N_("invalid command"))
         : exception (message)
       {}
     };
@@ -87,7 +90,8 @@ namespace _drv_ {
     class device_busy : public exception
     {
     public:
-      device_busy (const std::string& message = N_("device busy"))
+      device_busy (const std::string& message
+                   = SEC_N_("device busy"))
         : exception (message)
       {}
     };
@@ -96,7 +100,8 @@ namespace _drv_ {
     class protocol_error : public runtime_error
     {
     public:
-      protocol_error (const std::string& message = N_("protocol error"))
+      protocol_error (const std::string& message
+                      = CCB_N_("protocol error"))
         : runtime_error (message)
       {}
     };

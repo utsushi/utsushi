@@ -1,5 +1,5 @@
 //  test/runner.ipp -- for utsushi test programs
-//  Copyright (C) 2012  AVASYS CORPORATION
+//  Copyright (C) 2012  EPSON AVASYS CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : Olaf Meeuwissen

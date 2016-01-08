@@ -3,7 +3,7 @@
 //  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -81,8 +81,8 @@ namespace {
       {
         film_type = new dictionary;
         boost::assign::insert (film_type->left)
-          (POSITIVE_FILM, N_("Positive Film"))
-          (NEGATIVE_FILM, N_("Negative Film"))
+          (POSITIVE_FILM, CCB_N_("Positive Film"))
+          (NEGATIVE_FILM, CCB_N_("Negative Film"))
           ;
       }
     return store_from (film_type);
@@ -97,13 +97,13 @@ namespace {
       {
         gamma_correction = new dictionary;
         boost::assign::insert (gamma_correction->left)
-          (BI_LEVEL_CRT     , N_("Bi-level CRT"))
-          (MULTI_LEVEL_CRT  , N_("Multi-level CRT"))
-          (HI_DENSITY_PRINT , N_("High Density Print"))
-          (LO_DENSITY_PRINT , N_("Low Density Print"))
-          (HI_CONTRAST_PRINT, N_("High Contrast Print"))
-          (CUSTOM_GAMMA_A   , N_("Custom (Base Gamma = 1.0"))
-          (CUSTOM_GAMMA_B   , N_("Custom (Base Gamma = 1.8"))
+          (BI_LEVEL_CRT     , CCB_N_("Bi-level CRT"))
+          (MULTI_LEVEL_CRT  , CCB_N_("Multi-level CRT"))
+          (HI_DENSITY_PRINT , CCB_N_("High Density Print"))
+          (LO_DENSITY_PRINT , CCB_N_("Low Density Print"))
+          (HI_CONTRAST_PRINT, CCB_N_("High Contrast Print"))
+          (CUSTOM_GAMMA_A   , CCB_N_("Custom (Base Gamma = 1.0"))
+          (CUSTOM_GAMMA_B   , CCB_N_("Custom (Base Gamma = 1.8"))
           ;
       }
     return store_from (gamma_correction);
@@ -118,12 +118,12 @@ namespace {
       {
         color_correction = new dictionary;
         boost::assign::insert (color_correction->left)
-          (UNIT_MATRIX       , N_("None"))
-        //(USER_DEFINED      , N_("User Defined"))
-          (DOT_MATRIX_PRINTER, N_("Dot Matrix Printer"))
-          (THERMAL_PRINTER   , N_("Thermal Printer"))
-          (INKJET_PRINTER    , N_("Inkjet Printer"))
-          (CRT_DISPLAY       , N_("CRT Display"))
+          (UNIT_MATRIX       , SEC_N_("None"))
+        //(USER_DEFINED      , CCB_N_("User Defined"))
+          (DOT_MATRIX_PRINTER, CCB_N_("Dot Matrix Printer"))
+          (THERMAL_PRINTER   , CCB_N_("Thermal Printer"))
+          (INKJET_PRINTER    , CCB_N_("Inkjet Printer"))
+          (CRT_DISPLAY       , CCB_N_("CRT Display"))
           ;
       }
     return store_from (color_correction);
@@ -138,17 +138,17 @@ namespace {
       {
         dither_pattern = new dictionary;
         boost::assign::insert (dither_pattern->left)
-          (BI_LEVEL       , N_("Bi-level"))
-          (TEXT_ENHANCED  , N_("Text Enhanced"))
-          (HARD_TONE      , N_("Hard Tone"))
-          (SOFT_TONE      , N_("Soft Tone"))
-          (NET_SCREEN     , N_("Net Screen"))
-          (BAYER_4_4      , N_("Bayer 4x4"))
-          (SPIRAL_4_4     , N_("Spiral 4x4"))
-          (NET_SCREEN_4_4 , N_("Net Screen 4x4"))
-          (NET_SCREEN_8_4 , N_("Net Screen 8x4"))
-        //(CUSTOM_DITHER_A, N_("Value"))
-        //(CUSTOM_DITHER_B, N_("Table"))
+          (BI_LEVEL       , CCB_N_("Bi-level"))
+          (TEXT_ENHANCED  , CCB_N_("Text Enhanced"))
+          (HARD_TONE      , CCB_N_("Hard Tone"))
+          (SOFT_TONE      , CCB_N_("Soft Tone"))
+          (NET_SCREEN     , CCB_N_("Net Screen"))
+          (BAYER_4_4      , CCB_N_("Bayer 4x4"))
+          (SPIRAL_4_4     , CCB_N_("Spiral 4x4"))
+          (NET_SCREEN_4_4 , CCB_N_("Net Screen 4x4"))
+          (NET_SCREEN_8_4 , CCB_N_("Net Screen 8x4"))
+        //(CUSTOM_DITHER_A, CCB_N_("Value"))
+        //(CUSTOM_DITHER_B, CCB_N_("Table"))
           ;
       }
     return store_from (dither_pattern);
@@ -188,32 +188,33 @@ namespace {
   std::string
   fallback_message (const get_scanner_status& stat)
   {
-    return _("Unknown device error");
+    return CCB_("Unknown device error");
   }
 
   std::string
   create_adf_message (const get_scanner_status& stat)
   {
     if (stat.adf_media_out ())
-      return _("Please load the document(s) into the Automatic Document Feeder.");
+      return SEC_("Please load the document(s) into the Automatic Document"
+                  " Feeder.");
     if (stat.adf_media_jam ())
-      return _("A paper jam occurred.\n"
+      return SEC_("A paper jam occurred.\n"
                "Open the Automatic Document Feeder and remove any paper.\n"
                "If there are any documents loaded in the ADF, remove them"
                " and load them again.");
     if (stat.adf_cover_open ())
-      return _("The Automatic Document Feeder is open.\n"
-               "Please close it.");
+      return SEC_("The Automatic Document Feeder is open.\n"
+                  "Please close it.");
     if (stat.adf_double_feed ())
-      return _("A multi page feed occurred in the auto document feeder. "
-               "Open the cover, remove the documents, and then try again."
-               " If documents remain on the tray, remove them and then"
-               " reload them.");
+      return SEC_("A multi page feed occurred in the auto document feeder. "
+                  "Open the cover, remove the documents, and then try again."
+                  " If documents remain on the tray, remove them and then"
+                  " reload them.");
     if (stat.adf_error ())
-      return _("A fatal ADF error has occurred.\n"
-               "Resolve the error condition and try again.  You may have "
-               "to restart the scan dialog or application in order to be "
-               "able to scan.");
+      return CCB_("A fatal ADF error has occurred.\n"
+                  "Resolve the error condition and try again.  You may have "
+                  "to restart the scan dialog or application in order to be "
+                  "able to scan.");
 
     return fallback_message (stat);
   }
@@ -276,33 +277,33 @@ extended_scanner::configure ()
                       (quantity (int_cast (defs_.resolution ().x ())))
                       ),
        attributes (tag::general)(level::standard),
-       N_("Resolution")
+       SEC_N_("Resolution")
        );
   }
   {
     add_options ()
       ("image-type", (from< store > ()
-                      -> alternative (N_("Gray (1 bit)"))
-                      -> alternative (N_("Gray (8 bit)"))
-                      -> default_value (N_("Color (8 bit)"))
+                      -> alternative (SEC_N_("Gray (1 bit)"))
+                      -> alternative (SEC_N_("Gray (8 bit)"))
+                      -> default_value (SEC_N_("Color (8 bit)"))
                 ),
        attributes (tag::general)(level::standard),
-       N_("Image Type")
+       SEC_N_("Image Type")
        )
       ("speed", toggle (HI_SPEED == defs_.scan_mode ()),
        attributes (),
-       N_("Speed")
+       CCB_N_("Speed")
        )
       ("line-count", (from< range > ()
                       -> lower (std::numeric_limits< uint8_t >::min ())
                       -> upper (std::numeric_limits< uint8_t >::max ())
                       -> default_value (defs_.line_count ())),
        attributes (),
-       N_("Line Count"),
-       N_("Specify how many scan lines to move from the device to the "
-          "software in one transfer.  Note that 0 will use the maximum "
-          "usable value.  Values larger than the maximum usable value "
-          "are clamped to the maximum.")
+       CCB_N_("Line Count"),
+       CCB_N_("Specify how many scan lines to move from the device to the "
+              "software in one transfer.  Note that 0 will use the maximum "
+              "usable value.  Values larger than the maximum usable value "
+              "are clamped to the maximum.")
        );
   }
 
@@ -313,7 +314,7 @@ extended_scanner::configure ()
         -> default_value (gamma_correction
                           -> left.at (defs_.gamma_correction ()))),
        attributes (tag::enhancement),
-       N_("Gamma Correction")
+       CCB_N_("Gamma Correction")
        );
   else
     add_options ()
@@ -321,7 +322,7 @@ extended_scanner::configure ()
                  -> alternative ("1.0")
                  -> default_value ("1.8")),
        attributes (),
-       N_("Gamma")
+       CCB_N_("Gamma")
        );
   if (caps_.command_level () != "D7")
     add_options ()
@@ -330,7 +331,7 @@ extended_scanner::configure ()
         -> default_value (color_correction
                           -> left.at (defs_.color_correction ()))),
        attributes (tag::enhancement),
-       N_("Color Correction")
+       CCB_N_("Color Correction")
        );
   else
     configure_color_correction ();
@@ -338,9 +339,9 @@ extended_scanner::configure ()
     add_options ()
       ("auto-area-segmentation", toggle (defs_.auto_area_segmentation ()),
        attributes (tag::enhancement)(level::standard),
-       N_("Auto Area Segmentation"),
-       N_("Threshold text regions and apply half-toning to photo/image"
-          " areas.")
+       CCB_N_("Auto Area Segmentation"),
+       CCB_N_("Threshold text regions and apply half-toning to photo/image"
+              " areas.")
        );
   {
     add_options ()
@@ -350,7 +351,7 @@ extended_scanner::configure ()
                      -> default_value (defs_.threshold ())
                      ),
        attributes (tag::enhancement)(level::standard),
-       N_("Threshold")
+       SEC_N_("Threshold")
        );
   }
   if (caps_.command_level () != "D7")
@@ -360,7 +361,7 @@ extended_scanner::configure ()
         -> default_value (dither_pattern
                           -> left.at (defs_.halftone_processing ()))),
        attributes (tag::enhancement),
-       N_("Dither Pattern")
+       CCB_N_("Dither Pattern")
        );
   if (caps_.command_level () != "D7")
     add_options ()
@@ -370,9 +371,9 @@ extended_scanner::configure ()
                      -> default_value (defs_.sharpness ())
                      ),
        attributes (tag::enhancement)(level::standard),
-       N_("Sharpness"),
-       N_("Emphasize the edges in an image more by choosing a larger value,"
-          " less by selecting a smaller value.")
+       CCB_N_("Sharpness"),
+       CCB_N_("Emphasize the edges in an image more by choosing a larger"
+              " value, less by selecting a smaller value.")
        );
   if (caps_.command_level () != "D7")
     add_options ()
@@ -382,34 +383,15 @@ extended_scanner::configure ()
                       -> default_value (defs_.brightness ())
                       ),
        attributes (tag::enhancement)(level::standard),
-       N_("Brightness"),
-       N_("Make images look lighter with a larger value or darker with a"
-          " smaller value.")
+       CCB_N_("Brightness"),
+       CCB_N_("Make images look lighter with a larger value or darker with"
+              " a smaller value.")
        );
-  else
-    add_options ()
-      ("brightness", (from< range > ()
-                      -> lower (-1.0)
-                      -> upper ( 1.0)
-                      -> default_value (0.0)),
-       attributes (tag::enhancement)(level::standard),
-       N_("Brightness")
-       );
-  {
-    add_options ()
-      ("contrast", (from< range > ()
-                    -> lower (-1.0)
-                    -> upper ( 1.0)
-                    -> default_value (0.0)),
-       attributes (tag::enhancement)(level::standard),
-       N_("Contrast")
-       );
-  }
   if (caps_.command_level () != "D7")
     add_options ()
       ("mirror", toggle (defs_.mirroring ()),
        attributes (tag::enhancement)(level::standard),
-       N_("Mirror")
+       CCB_N_("Mirror")
        );
 
   //! \todo Remove transfer-format work-around for scan-cli utility
@@ -418,7 +400,7 @@ extended_scanner::configure ()
                          ->default_value ("RAW")
                          ),
      attributes (level::standard),
-     N_("Transfer Format")
+     SEC_N_("Transfer Format")
      )
     ;
 
@@ -440,7 +422,7 @@ extended_scanner::configure ()
     {
       BOOST_THROW_EXCEPTION
         (logic_error
-         (_("esci::extended_scanner(): internal inconsistency")));
+         ("esci::extended_scanner(): internal inconsistency"));
     }
   finalize (values ());
 }
@@ -685,8 +667,6 @@ void
 extended_scanner::set_up_brightness ()
 {
   if (!val_.count ("brightness")) return;
-  if (caps_.command_level () == "D7") // uses emulation
-    return;
 
   quantity q = val_["brightness"];
   parm_.brightness (q.amount< int8_t > ());
@@ -796,30 +776,8 @@ extended_scanner::set_up_gamma_tables ()
 
       parm_.gamma_correction (value);
 
-      quantity brightness;
-      if (val_.count ("brightness")) brightness = val_["brightness"];
-
-      quantity contrast;
-      if (val_.count ("contrast")) contrast = val_["contrast"];
-
-      vector< double, 256 > table;
-      quantity cap (1.0);
-
-      brightness *= cap / 2;
-      contrast   *= cap / 2;
-
-      for (vector< double, 256 >::size_type i = 0; i < table.size (); ++i)
-        {
-          quantity val = quantity::non_integer_type (i) / table.size ();
-
-          val = ((cap * (val - contrast))
-                 / (cap - 2 * contrast)) + brightness;
-          val = std::min (cap, std::max (val, quantity ()));
-          table[i] = val.amount< quantity::non_integer_type > ();
-        }
-
       set_gamma_table lut;
-      *cnx_ << lut (RGB, table);
+      *cnx_ << lut ();
 
       return;
     }
@@ -1078,7 +1036,7 @@ extended_scanner::doc_source_options (const value& v)
   if (v == value ("ADF"))     return adf_;
 
   BOOST_THROW_EXCEPTION
-    (logic_error (_("internal error: no document source")));
+    (logic_error ("internal error: no document source"));
 }
 
 const option::map&
@@ -1094,20 +1052,20 @@ extended_scanner::configure_doc_source_options ()
 
   if (caps_.is_flatbed_type ())         // order dependency
     {
-      s.alternative (N_("Document Table"));
+      s.alternative (SEC_N_("Document Table"));
       add_scan_area_options (flatbed_, MAIN);
     }
 
   if (stat_.adf_detected ())
     {
-      s.alternative (N_("ADF"));
+      s.alternative (SEC_N_("ADF"));
       add_scan_area_options (adf_, ADF);
 
       if (caps_.adf_is_duplex_type ())
         adf_.add_options ()
           ("duplex", toggle (),
            attributes (tag::general)(level::standard),
-           N_("Duplex")
+           SEC_N_("Duplex")
            );
       if (caps_.is_flatbed_type ()) flatbed_.share_values (adf_);
     }
@@ -1119,12 +1077,12 @@ extended_scanner::configure_doc_source_options ()
       if (stat_.tpu_detected (TPU1)
           && stat_.tpu_detected (TPU2))
         {
-          s.alternative (N_("Primary TPU"));
-          s.alternative (N_("Secondary TPU"));
+          s.alternative (CCB_N_("Primary TPU"));
+          s.alternative (CCB_N_("Secondary TPU"));
         }
       else
         {
-          s.alternative (N_("Transparency Unit"));
+          s.alternative (SEC_N_("Transparency Unit"));
         }
 
       tpu_.add_options ()
@@ -1133,7 +1091,7 @@ extended_scanner::configure_doc_source_options ()
           -> default_value (film_type
                             -> left.at (defs_.film_type ()))),
          attributes (tag::enhancement)(level::standard),
-         N_("Film Type")
+         CCB_N_("Film Type")
          );
 
       if (caps_.is_flatbed_type ()) flatbed_.share_values (tpu_);
@@ -1145,7 +1103,7 @@ extended_scanner::configure_doc_source_options ()
                     -> default_value (s.front ())
                     ),
      attributes (tag::general)(level::standard),
-     N_("Document Source")
+     SEC_N_("Document Source")
      );
   insert (doc_source_options (s.front ()));
 }
@@ -1164,17 +1122,17 @@ extended_scanner::add_scan_area_options (option::map& opts,
 
   std::list< std::string > areas = media::within (bbox.width (),
                                                   bbox.height ());
-  areas.push_back (N_("Manual"));
-  areas.push_back (N_("Maximum"));
+  areas.push_back (SEC_N_("Manual"));
+  areas.push_back (SEC_N_("Maximum"));
   if (stat_.supports_size_detection (src))
-    areas.push_back (N_("Automatic"));
+    areas.push_back (SEC_N_("Automatic"));
 
   opts.add_options ()
     ("scan-area", (from< utsushi::store > ()
                    -> alternatives (areas.begin (), areas.end ())
                    -> default_value ("Manual")),
      attributes (tag::general)(level::standard),
-     N_("Scan Area")
+     SEC_N_("Scan Area")
      )
     ("tl-x", (from< range > ()
               -> offset (bbox.offset ().x ())
@@ -1182,7 +1140,7 @@ extended_scanner::add_scan_area_options (option::map& opts,
               -> default_value (bbox.top_left ().x ())
               ),
      attributes (tag::geometry)(level::standard),
-     N_("Top Left X")
+     SEC_N_("Top Left X")
      )
     ("br-x", (from< range > ()
               -> offset (bbox.offset ().x ())
@@ -1190,7 +1148,7 @@ extended_scanner::add_scan_area_options (option::map& opts,
               -> default_value (bbox.bottom_right ().x ())
               ),
      attributes (tag::geometry)(level::standard),
-     N_("Bottom Right X")
+     SEC_N_("Bottom Right X")
      )
     ("tl-y", (from< range > ()
               -> offset (bbox.offset ().y ())
@@ -1198,7 +1156,7 @@ extended_scanner::add_scan_area_options (option::map& opts,
               -> default_value (bbox.top_left ().y ())
               ),
      attributes (tag::geometry)(level::standard),
-     N_("Top Left Y")
+     SEC_N_("Top Left Y")
      )
     ("br-y", (from< range > ()
               -> offset (bbox.offset ().y ())
@@ -1206,7 +1164,7 @@ extended_scanner::add_scan_area_options (option::map& opts,
               -> default_value (bbox.bottom_right ().y ())
               ),
      attributes (tag::geometry)(level::standard),
-     N_("Bottom Right Y")
+     SEC_N_("Bottom Right Y")
      );
 }
 

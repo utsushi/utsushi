@@ -2,7 +2,7 @@
 //  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -48,7 +48,9 @@ autocrop::autocrop ()
                       -> lower (  0.0)
                       -> upper (100.0)
                       -> default_value (55.0)))
+    ("trim", toggle (false))
     ;
+  freeze_options ();   // initializes option tracking member variables
 }
 
 void
@@ -77,6 +79,9 @@ autocrop::freeze_options ()
   lo_threshold_ = threshold.amount< double > ();
   threshold = value ((*option_)["hi-threshold"]);
   hi_threshold_ = threshold.amount< double > ();
+
+  toggle t = value ((*option_)["trim"]);
+  trim_ = t;
 }
 
 context
@@ -89,7 +94,7 @@ autocrop::estimate (const context& ctx)
 
   rv.width  (width_);
   rv.height (height_);
-  rv.content_type ("image/x-raster");
+  rv.content_type ("image/x-portable-anymap");
 
   return rv;
 }
@@ -101,7 +106,7 @@ autocrop::finalize (const context& ctx)
 
   rv.width  (width_);
   rv.height (height_);
-  rv.content_type ("image/x-raster");
+  rv.content_type ("image/x-portable-anymap");
 
   return rv;
 }
@@ -117,9 +122,11 @@ autocrop::arguments (const context& ctx)
 
   argv += " " + lexical_cast< string > (lo_threshold_ / 100);
   argv += " " + lexical_cast< string > (hi_threshold_ / 100);
-  argv += " crop";
+  argv += (trim_ ? " trim" : " crop");
   argv += " " + lexical_cast< string > (ctx.octets_per_image ()
                                         + PNM_HEADER_SIZE);
+  argv += " -";
+  argv += " pnm:-";
 
   return argv;
 }
@@ -208,7 +215,7 @@ autocrop::checked_write (octet *data, streamsize n)
       output_->mark (last_marker_, ctx_);
       signal_marker_(last_marker_);
 
-      if (head != tail) output_->write (head, tail - head);
+      output_->write (header_buf_, header_buf_size_);
 
       n    -= m;       // don't duplicate octets from header_buf_
       data += m;

@@ -1,8 +1,8 @@
 //  dropdown.cpp -- menu with three sections
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -167,12 +167,12 @@ dropdown::on_changed ()
 void
 dropdown::on_custom (const std::string& name)
 {
-  Gtk::MessageDialog tbd (_("To be implemented."),
+  Gtk::MessageDialog tbd (CCB_("To be implemented."),
                           false, Gtk::MESSAGE_WARNING);
   tbd.set_secondary_text
-    ((format (_("Support for changing the active item has not been "
-                "implemented yet.  Should be changing from"
-                "\n\n\t<b>%1%</b>\n\nto\n\n\t<b>%2%</b>"))
+    ((format (CCB_("Support for changing the active item has not been "
+                   "implemented yet.  Should be changing from"
+                   "\n\n\t<b>%1%</b>\n\nto\n\n\t<b>%2%</b>"))
       % cache_name_
       % name).str (),
      true);
@@ -190,9 +190,9 @@ dropdown::on_action (const std::string& name)
 {
   Gtk::MessageDialog msg (name, false, Gtk::MESSAGE_WARNING);
   msg.set_secondary_text
-    ((format(_("Support for management action functions has not been "
-               "implemented yet.  This action could manipulate, and "
-               "revert to,\n\n\t<b>%1%</b>"))
+    ((format(CCB_("Support for management action functions has not been "
+                  "implemented yet.  This action could manipulate, and "
+                  "revert to,\n\n\t<b>%1%</b>"))
       % cache_name_).str (),
      true);
   msg.run ();

@@ -2,7 +2,7 @@
 //  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -47,6 +47,7 @@
 #include <utsushi/store.hpp>
 #include <utsushi/log.hpp>
 
+#include <boost/assign/list_of.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <cerrno>
@@ -54,6 +55,7 @@
 #include <cstring>
 
 #include <stdio.h>
+#include <string.h>
 
 namespace {
 
@@ -70,6 +72,14 @@ geom_(context::size_type width, context::size_type height)
           + lexical_cast< string > (height));
 }
 
+inline void
+chomp (char *str)
+{
+  if (!str) return;
+  char *nl = strrchr (str, '\n');
+  if (nl) *nl = '\0';
+}
+
 bool
 image_magick_version_before_(const char *cutoff)
 {
@@ -81,21 +91,35 @@ image_magick_version_before_(const char *cutoff)
     {
       char  buf[80];
       char *version = fgets (buf, sizeof (buf), fp);
-      errc = errno;
 
       pclose (fp);
+      chomp (version);
 
       if (version)
         {
-          log::debug ("using ImageMagick-%1%") % version;
+          log::debug ("found ImageMagick-%1%") % version;
           return (0 > strverscmp (version, cutoff));
         }
     }
 
-  log::alert ("failed to get ImageMagick version: %1%")
-              % strerror (errc);
+  if (errc)
+    log::alert ("failure checking ImageMagick version: %1%")
+      % strerror (errc);
+
   return false;
 }
+
+const std::map < context::orientation_type, std::string >
+orientation = boost::assign::map_list_of
+  (context::bottom_left , "bottom-left")
+  (context::bottom_right, "bottom-right")
+  (context::left_bottom , "left-bottom")
+  (context::left_top    , "left-top")
+  (context::right_bottom, "right-bottom")
+  (context::right_top   , "right-top")
+  (context::top_left    , "top-left")
+  (context::top_right   , "top-right")
+  ;
 
 }       // namespace
 
@@ -106,6 +130,7 @@ magick::magick ()
   : shell_pipe (MAGICK_CONVERT)
   , bilevel_(false)
   , force_extent_(false)
+  , auto_orient_(false)
 {
   option_->add_options ()
     ("bilevel", toggle (false))
@@ -113,6 +138,22 @@ magick::magick ()
                    -> lower (  0.0)
                    -> upper (100.0)
                    -> default_value (50.0)))
+    ("brightness", (from< range > ()
+                    -> lower (-1.0)
+                    -> upper ( 1.0)
+                    -> default_value (0.0)),
+     attributes (tag::enhancement)(level::standard),
+     SEC_("Brightness"),
+     CCB_("Change brightness of the acquired image.")
+     )
+    ("contrast", (from< range > ()
+                  -> lower (-1.0)
+                  -> upper ( 1.0)
+                  -> default_value (0.0)),
+     attributes (tag::enhancement)(level::standard),
+     SEC_("Contrast"),
+     CCB_("Change contrast of the acquired image.")
+     )
     ("force-extent", toggle (false))
     ("resolution-x", quantity ())
     ("resolution-y", quantity ())
@@ -126,6 +167,7 @@ magick::magick ()
                       -> alternative ("PDF")
                       -> default_value (string ())))
     ("color-correction", toggle (false))
+    ("auto-orient", toggle (false))
     ;
 
   for (size_t i = 0; i < sizeof (cct_) / sizeof (*cct_); ++i)
@@ -134,6 +176,7 @@ magick::magick ()
       option_->add_options ()
         (k, quantity ());
     }
+  freeze_options ();   // initializes option tracking member variables
 }
 
 void
@@ -145,6 +188,12 @@ magick::freeze_options ()
 
     quantity thr = value ((*option_)["threshold"]);
     threshold_ = thr.amount< double > ();
+
+    quantity brightness = value ((*option_)["brightness"]);
+    brightness_ = brightness.amount< double > ();
+
+    quantity contrast = value ((*option_)["contrast"]);
+    contrast_ = contrast.amount< double > ();
 
     toggle c = value ((*option_)["color-correction"]);
     color_correction_ = c;
@@ -176,6 +225,11 @@ magick::freeze_options ()
     }
 
   image_format_ = value ((*option_)["image-format"]);
+
+  {
+    toggle t = value ((*option_)["auto-orient"]);
+    auto_orient_ = t;
+  }
 }
 
 context
@@ -225,6 +279,22 @@ magick::estimate (const context& ctx)
   if (bilevel_)
     {
       rv.depth (1);
+    }
+  if (auto_orient_)
+    {
+      rv.orientation (context::top_left);
+
+      // Swap x/y attributes for 90/270 degree rotations
+      if (   context::left_bottom  == ctx.orientation ()
+          || context::right_top    == ctx.orientation ()
+          || context::left_top     == ctx.orientation ()
+          || context::right_bottom == ctx.orientation ())
+        {
+          context::size_type tmp = rv.width ();
+          rv.width (rv.height ());
+          rv.height (tmp);
+          rv.resolution (rv.x_resolution (), rv.y_resolution ());
+        }
     }
   return rv;
 }
@@ -286,6 +356,31 @@ magick::arguments (const context& ctx)
       argv += "\"";
     }
 
+  if (   0 != brightness_
+      || 0 != contrast_)
+    {
+      double a = 1 / (1 - contrast_);
+      double b = (brightness_ - contrast_) * a / 2;
+
+      if (HAVE_IMAGE_MAGICK
+          && !image_magick_version_before_("6.6.1-0"))
+        argv += " -color-matrix";
+      else
+        argv += " -recolor";
+
+      argv += " \"";
+      for (size_t row = 0; row < 5; ++row)
+        for (size_t col = 0; col < 5; ++col)
+          {
+            double coef = 0;
+
+            if (row == col) coef = ((3 == col) ? 1 : a);
+            if ( 4  == col) coef = ((4 == row) ? 1 : b);
+            argv += lexical_cast< string > (coef) + " ";
+          }
+      argv += "\"";
+    }
+
   if (bilevel_)
     {
       // Thresholding an already thresholded image should be safe
@@ -297,6 +392,22 @@ magick::arguments (const context& ctx)
       else
         {
           argv += " -type bilevel";
+        }
+    }
+
+  if (auto_orient_)
+    {
+      try
+        {
+          std::string orient
+            = " -orient " + orientation.at (ctx.orientation ());
+
+          argv += orient + " -auto-orient";
+          ctx_.orientation (context::top_left);
+        }
+      catch (const std::out_of_range&)
+        {
+          // FIXME log something?
         }
     }
 

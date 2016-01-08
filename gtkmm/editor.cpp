@@ -1,9 +1,9 @@
 //  editor.cpp -- scanning dialog's option value editor
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2013  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -457,7 +457,7 @@ editor::editor (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
     }
 
   {                             // add a toggle for tag-less options
-    Gtk::ToggleButton *toggle = new Gtk::ToggleButton (_("Other"));
+    Gtk::ToggleButton *toggle = new Gtk::ToggleButton (SEC_("Other"));
     toggle->signal_toggled ()
       .connect (sigc::mem_fun (*this, &editor::on_toggled));
     toggles_["~"] = toggle;
@@ -468,7 +468,7 @@ editor::editor (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
 
   if (app_key_)
     {
-      set_application_name (_("Application"));
+      set_application_name (CCB_("Application"));
       toggles_[app_key_]->set_sensitive (false);
     }
 
@@ -636,39 +636,56 @@ editor::set (const std::string& key, const value& v)
   if (!opts_->count (key)) return;
 
   option opt ((*opts_)[key]);
-
-  if (v == opt) return;
-
-  value new_v (v);
+  value::map vm;
 
   if (key == "device/scan-area"
-      && opts_->count ("magick/automatic-scan-area"))
+      && opts_->count ("doc-locate/crop"))
     {
-      toggle t = (value ("Automatic") == new_v);
-      (*opts_)["magick/automatic-scan-area"] = t;
-      if (t) new_v = value ("Maximum");
+      toggle t = (value ("Automatic") == v);
+
+      vm[key] = (t ? value ("Maximum") : v);
+      vm["doc-locate/crop"] = t;
       if (opts_->count ("device/overscan"))
-        (*opts_)["device/overscan"] = t;
+        vm["device/overscan"] = t;
+      if (opts_->count ("device/auto-kludge"))
+        vm["device/auto-kludge"] = t;
+    }
+  else
+    {
+      if (v == opt) return;
     }
 
   try
     {
-      opt = new_v;
+      if (vm.empty ())
+        opt = v;
+      else
+        opts_->assign (vm);
     }
   catch (const constraint::violation& e)
     {
-      Gtk::MessageDialog message (_("Restoring previous value"),
+      Gtk::MessageDialog message (SEC_("Restoring previous value"),
                                   false, Gtk::MESSAGE_WARNING);
       message.set_secondary_text
-        (_("The selected combination of values is not supported."));
+        (SEC_("The selected combination of values is not supported."));
       message.run ();
 
       resetter r (controls_[key], connects_[key], opt, false);
       value (opt).apply (r);
     }
 
+  if (opts_->count ("device/long-paper-mode")
+      && opts_->count ("doc-locate/deskew"))
+    {
+      toggle t1 = value ((*opts_)["device/long-paper-mode"]);
+      (*opts_)["doc-locate/deskew"].active (!t1);
+      toggle t2 = value ((*opts_)["doc-locate/deskew"]);
+      (*opts_)["device/long-paper-mode"].active (!t2);
+    }
+
   for_each (editors_.begin (), editors_.end (),
             sigc::mem_fun (*this, &editor::update_appearance));
+  signal_values_changed_.emit ();
 }
 
 string
@@ -688,6 +705,12 @@ editor::untranslate (const key& k, const string& s)
   log::error ("no translation matching '%1%'") % s;
 
   return s;
+}
+
+sigc::signal<void>
+editor::signal_values_changed ()
+{
+  return signal_values_changed_;
 }
 
 void
@@ -751,9 +774,9 @@ editor::update_appearance (keyed_list::value_type& v)
   if (k == "device/scan-area")  // has device/doc-source dependency
     {
       toggle automatic;
-      if (opts_->count ("magick/automatic-scan-area"))
+      if (opts_->count ("doc-locate/crop"))
         {
-          automatic = value ((*opts_)["magick/automatic-scan-area"]);
+          automatic = value ((*opts_)["doc-locate/crop"]);
         }
       if (!automatic)
         {
@@ -771,19 +794,64 @@ editor::update_appearance (keyed_list::value_type& v)
   if (coordinates.count (k))    // have device/scan-area as well as
                                 // device/doc-source dependency
     {
+      bool manual_width (false);
+      if (opts_->count ("device/long-paper-mode")
+          && (k == "device/tl-x" || k == "device/br-x"))
+        {
+          if (opts_->count ("device/doc-source")
+              && (*opts_)["device/doc-source"] == string ("ADF"))
+            {
+              toggle t = value ((*opts_)["device/long-paper-mode"]);
+              manual_width = t;
+            }
+        }
+
       if (opts_->count ("device/scan-area"))
         {
           string v = value ((*opts_)["device/scan-area"]);
           bool manual =
             (string ("Manual") == untranslate ("device/scan-area", v));
+          manual_width &=
+            (string ("Automatic") == untranslate ("device/scan-area", v)
+             || (// because we may be emulating Automatic ourselves
+                 opts_->count ("doc-locate/crop")
+                 && (*opts_)["doc-locate/crop"] == value (toggle (true)))
+             );
 
           keyed_list::iterator jt = editors_.begin ();
           while (editors_.end () != jt && k != jt->first) ++jt;
           if (editors_.end () != jt)
-            jt->second->set_sensitive (manual);
+            jt->second->set_sensitive (manual || manual_width);
 
           resetter r (controls_[k], connects_[k], opt);
           value (opt).apply (r);
+        }
+    }
+
+  // FIXME should be taken care of by the driver but it is checking
+  //       resolution violations too late
+  if (k == "device/long-paper-mode")
+    {
+      if (opts_->count ("device/doc-source"))
+        {
+          string v = value ((*opts_)["device/doc-source"]);
+          bool active =
+            (string ("ADF") == untranslate ("device/doc-source", v));
+
+          w->set_sensitive (active);
+        }
+    }
+  // FIXME should be taken care of by the driver but it is checking
+  //       resolution violations too late
+  if (k == "device/duplex")
+    {
+      if (opts_->count ("device/doc-source"))
+        {
+          string v = value ((*opts_)["device/doc-source"]);
+          bool active =
+            (string ("ADF") == untranslate ("device/doc-source", v));
+
+          w->set_sensitive (active);
         }
     }
 }

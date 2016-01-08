@@ -1,8 +1,8 @@
 //  grammar-information.hpp -- component rule declarations
-//  Copyright (C) 2012-2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -49,6 +49,8 @@ struct information
   //! A product name free of leading and trailing whitespace
   std::string product_name () const;
 
+  bool is_double_pass_duplexer () const;
+
   struct source
     : private boost::equality_comparable< source >
   {
@@ -94,6 +96,8 @@ struct information
     adf_source ();
 
     bool operator== (const adf_source& rhs) const;
+
+    bool supports_long_paper_mode () const;
 
     quad type;
     boost::optional< quad > duplex_passes;

@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--  tag.xsl :: converts XML tag data to other formats
-      Copyright (C) 2012  SEIKO EPSON CORPORATION
+      Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 
       License: GPL-3.0+
-      Author : AVASYS CORPORATION
+      Author : EPSON AVASYS CORPORATION
 
       This file is part of the 'Utsushi' package.
       This package is free software: you can redistribute it and/or modify
@@ -158,8 +158,8 @@ tag::symbol::operator key () const
 <xsl:for-each select="tag">
 const tag::symbol tag::<xsl:value-of select="@key"/> (
   "<xsl:number format="01"/>_<xsl:value-of select="@key"/>",
-  N_("<xsl:value-of select="normalize-space(name)"/>"),
-  N_("<xsl:value-of select="normalize-space(text)"/>")
+  SEC_N_("<xsl:value-of select="normalize-space(name)"/>"),
+  CCB_N_("<xsl:value-of select="normalize-space(text)"/>")
 );</xsl:for-each>
 
 tags::container_type tags::set_;

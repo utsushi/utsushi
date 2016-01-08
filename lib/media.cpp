@@ -2,7 +2,7 @@
 //  Copyright (C) 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -59,19 +59,19 @@ namespace {
     dict = new dictionary;
     boost::assign::insert (*dict)
       // ISO A Series
-      (N_("ISO/A3"), media (297 * mm, 420 * mm))
-      (N_("ISO/A4"), media (210 * mm, 297 * mm))
-      (N_("ISO/A5"), media (148 * mm, 210 * mm))
-      (N_("ISO/A6"), media (105 * mm, 148 * mm))
+      (CCB_N_("ISO/A3"), media (297 * mm, 420 * mm))
+      (CCB_N_("ISO/A4"), media (210 * mm, 297 * mm))
+      (CCB_N_("ISO/A5"), media (148 * mm, 210 * mm))
+      (CCB_N_("ISO/A6"), media (105 * mm, 148 * mm))
       // JIS B Series
-      (N_("JIS/B4"), media (257 * mm, 364 * mm))
-      (N_("JIS/B5"), media (182 * mm, 257 * mm))
-      (N_("JIS/B6"), media (128 * mm, 182 * mm))
+      (CCB_N_("JIS/B4"), media (257 * mm, 364 * mm))
+      (CCB_N_("JIS/B5"), media (182 * mm, 257 * mm))
+      (CCB_N_("JIS/B6"), media (128 * mm, 182 * mm))
       // North American
-      (N_("Ledger")   , media (11.00 * inches, 17.00 * inches))
-      (N_("Legal")    , media ( 8.50 * inches, 14.00 * inches))
-      (N_("Letter")   , media ( 8.50 * inches, 11.00 * inches))
-      (N_("Executive"), media ( 7.25 * inches, 10.50 * inches))
+      (SEC_N_("Ledger")   , media (11.00 * inches, 17.00 * inches))
+      (SEC_N_("Legal")    , media ( 8.50 * inches, 14.00 * inches))
+      (SEC_N_("Letter")   , media ( 8.50 * inches, 11.00 * inches))
+      (SEC_N_("Executive"), media ( 7.25 * inches, 10.50 * inches))
       ;
   }
 }       // namespace

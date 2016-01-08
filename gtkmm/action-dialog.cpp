@@ -2,7 +2,7 @@
 //  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -109,14 +109,14 @@ struct action_runner
 
 action_dialog::action_dialog (option::map::ptr actions, Gtk::Widget *trigger,
                               bool use_spinner)
-  : Gtk::Dialog (_("Maintenance"), true)
+  : Gtk::Dialog (SEC_("Maintenance"), true)
   , actions_(actions)
   , trigger_(trigger)
   , buttons_(new Gtk::HButtonBox ())
   , process_(nullptr)
 {
   // window manager hints
-  set_title (_("Maintenance"));
+  set_title (SEC_("Maintenance"));
   set_position (Gtk::WIN_POS_CENTER_ALWAYS);
   set_keep_above ();
   set_deletable (false);

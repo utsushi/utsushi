@@ -3,7 +3,7 @@
 ##  Copyright (C) 2013  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
-##  Author : AVASYS CORPORATION
+##  Author : EPSON AVASYS CORPORATION
 ##
 ##  This file is part of the 'Utsushi' package.
 ##  This package is free software: you can redistribute it and/or modify
@@ -151,7 +151,7 @@ $(srcdir)/utsushi/tag.hpp $(srcdir)/lib/tag.cpp: $(srcdir)/lib/tag.xml \
 	    -e "/^<!--/s/\.xml ::/.$$format --/" \
 	    -e '/^<!--/,/-->/{ /-->/d; s|^$$|//|p; s|^....|//|p; }' $< > $@; \
 	xsltproc --stringparam format $$format $(srcdir)/lib/tag.xsl $< >> $@
-	sed -i 's/N_("%1%")/"%1%"/' $@
+	sed -i 's/SEC_N_("%1%")/"%1%"/' $@
 
 if with_included_boost
 

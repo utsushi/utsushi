@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -226,7 +226,7 @@ common::add_buffer_size_(option::map::ptr om_)
                      -> default_value (default_buffer_size)
                      ),
      attributes (level::complete),
-     N_("Buffer Size")
+     CCB_N_("Buffer Size")
      )
     ;
 }
@@ -247,7 +247,7 @@ compressor::compressor ()
                  -> default_value (quality_)
                  ),
      attributes (),
-     N_("Image Quality")
+     CCB_N_("Image Quality")
      )
     ;
 
@@ -666,7 +666,6 @@ decompressor::handle_bos (const option::map& om)
   smgr_.next_input_byte = jbuf_;
   smgr_.bytes_in_buffer = 0;
 }
-
 
 context
 decompressor::handle_boi (const context& ctx)

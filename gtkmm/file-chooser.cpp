@@ -2,7 +2,7 @@
 //  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -259,13 +259,13 @@ file_chooser::on_response (int response_id)
     if (!found)
       {
         Gtk::MessageDialog tbd
-          (*this, _("Unsupported file format."),
+          (*this, SEC_("Unsupported file format."),
            use_markup, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK, modal);
 
         tbd.set_secondary_text
-          ((format (_("The '%1%' file extension is not associated with"
-                      " a supported file format.  Please select a file"
-                      " format or use one of the known file extensions."))
+          ((format (SEC_("The '%1%' file extension is not associated with"
+                         " a supported file format.  Please select a file"
+                         " format or use one of the known file extensions."))
             % ext).str ());
 
         if (dynamic_cast< Gtk::Window * > (this))
@@ -283,14 +283,14 @@ file_chooser::on_response (int response_id)
       if (!supports_multi_image (get_current_name ()))
         {
           Gtk::MessageDialog tbd
-            (*this, (format (_("The %1% format does not support multiple"
-                               " images in a single file.")) % fmt).str (),
+            (*this, (format (SEC_("The %1% format does not support multiple"
+                                  " images in a single file.")) % fmt).str (),
              use_markup, Gtk::MESSAGE_WARNING, Gtk::BUTTONS_OK, modal);
 
           tbd.set_secondary_text
-            ((format (_("Please save to PDF or TIFF if you want a single"
-                        " file.  If you prefer the %1% image format, use"
-                        " a filename such as 'Untitled-%%3i%2%'."))
+            ((format (SEC_("Please save to PDF or TIFF if you want a single"
+                           " file.  If you prefer the %1% image format, use"
+                           " a filename such as 'Untitled-%%3i%2%'."))
               % fmt % get_current_extension ()).str ());
 
           if (dynamic_cast< Gtk::Window * > (this))
@@ -312,20 +312,22 @@ file_chooser::on_response (int response_id)
     {
       if (!fs::exists (std::string (get_filename ()))) return;
 
-      message = format (_("The name \"%1%\" already exists.\n"
-                          "OK to overwrite this name using the new settings?"));
-      details = format (_("The file already exists in \"%1%\"."
-                          "  Replacing it will overwrite its contents."));
+      message = format (SEC_("The name \"%1%\" already exists.\n"
+                             "OK to overwrite this name using the new"
+                             " settings?"));
+      details = format (SEC_("The file already exists in \"%1%\"."
+                             "  Replacing it will overwrite its contents."));
     }
   else
     {
       // FIXME Add meaningful checking
       // if (no_possible_matches ) return;
 
-      message = format (_("Files matching \"%1%\" may already exist."
-                          "  Do you want to replace them?"));
-    //details = format (_("These files already exist in \"%1%\"."
-    //                    "  Replacing them may overwrite their contents."));
+      message = format (SEC_("Files matching \"%1%\" may already exist."
+                             "  Do you want to replace them?"));
+    //details = format (CCB_("These files already exist in \"%1%\"."
+    //                       "  Replacing them may overwrite their "
+    //                       "contents."));
 
       // FIXME show list of matching files in an expander with details
     }
@@ -368,11 +370,11 @@ file_chooser::on_file_type_changed ()
 
   if (l.empty ())
     {
-      expander_.set_label (_("File Type"));
+      expander_.set_label (SEC_("File Type"));
     }
   else
     {
-      expander_.set_label ((format (_("File type: %1%"))
+      expander_.set_label ((format (SEC_("File type: %1%"))
                             % r.get_value (column->text)).str ());
 
       if (!count (l.begin (), l.end (), get_current_extension ()))
@@ -444,11 +446,11 @@ file_chooser::common_ctor_logic_()
     extension_list      l;
 
     r = *(types->append ());
-    r[column->text] = _("By extension");
+    r[column->text] = SEC_("By extension");
     r[column->exts] = l;
 
     r = *(types->append ());
-    r[column->text] = _("JPEG");
+    r[column->text] = CCB_("JPEG");
 #if __cplusplus >= 201103L
     l = {".jpeg", ".jpg"};
 #else
@@ -457,7 +459,7 @@ file_chooser::common_ctor_logic_()
     r[column->exts] = l;
 
     r = *(types->append ());
-    r[column->text] = _("PDF");
+    r[column->text] = CCB_("PDF");
 #if __cplusplus >= 201103L
     l = {".pdf"};
 #else
@@ -466,7 +468,7 @@ file_chooser::common_ctor_logic_()
     r[column->exts] = l;
 
     r = *(types->append ());
-    r[column->text] = _("PNG");
+    r[column->text] = CCB_("PNG");
 #if __cplusplus >= 201103L
     l = {".png"};
 #else
@@ -475,7 +477,7 @@ file_chooser::common_ctor_logic_()
     r[column->exts] = l;
 
     r = *(types->append ());
-    r[column->text] = _("PNM");
+    r[column->text] = CCB_("PNM");
 #if __cplusplus >= 201103L
     l = {".pnm"};
 #else
@@ -484,7 +486,7 @@ file_chooser::common_ctor_logic_()
     r[column->exts] = l;
 
     r = *(types->append ());
-    r[column->text] = _("TIFF");
+    r[column->text] = CCB_("TIFF");
 #if __cplusplus >= 201103L
     l = {".tiff", ".tif"};
 #else
@@ -500,10 +502,11 @@ file_chooser::common_ctor_logic_()
   file_type_.get_selection ()->signal_changed ()
     .connect (sigc::mem_fun (*this, &file_chooser::on_file_type_changed));
 
-  expander_.set_label (_("File Type"));
+  expander_.set_label (SEC_("File Type"));
   expander_.add (file_type_);
+  expander_.set_expanded ();
 
-  single_file_.set_label (_("Save all images in a single file"));
+  single_file_.set_label (SEC_("Save all images in a single file"));
   single_file_.signal_toggled ()
     .connect (sigc::mem_fun (*this, &file_chooser::on_single_file_toggled));
 
@@ -539,19 +542,19 @@ file_chooser::common_ctor_logic_()
     Gtk::FileFilter filter;
     filter.add_mime_type ("application/pdf");
     filter.add_mime_type ("image/*");
-    filter.set_name (_("PDFs and Image Files"));
+    filter.set_name (SEC_("PDFs and Image Files"));
     add_filter (filter);
   }
   {
     Gtk::FileFilter filter;
     filter.add_mime_type ("image/*");
-    filter.set_name (_("Image Files"));
+    filter.set_name (SEC_("Image Files"));
     add_filter (filter);
   }
   {
     Gtk::FileFilter filter;
     filter.add_pattern ("*");
-    filter.set_name (_("All Files"));
+    filter.set_name (SEC_("All Files"));
     add_filter (filter);
   }
 
@@ -630,7 +633,7 @@ file_chooser::on_name_change_(const std::string& name)
   if (!count (l.begin (), l.end (), get_current_extension ()))
     {
       s->unselect (it);
-      expander_.set_label (_("File Type"));
+      expander_.set_label (SEC_("File Type"));
     }
 
   // FIXME add filename sanity checking

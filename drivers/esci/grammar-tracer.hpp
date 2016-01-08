@@ -1,10 +1,10 @@
 //  grammar-tracer.hpp -- support for logging and debugging
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2001-2011  Hartmut Kaiser
 //  Copyright (C) 2001-2011  Joel de Guzman
 //
 //  License: BSL-1.0
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //  Origin : Boost.Spirit
 //
 //  This file is part of the 'Utsushi' package.

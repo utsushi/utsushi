@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -136,6 +136,12 @@ bool
 option::is_active () const
 {
   return owner_.descriptors_[key_]->is_active ();
+}
+
+void
+option::active (bool flag)
+{
+  owner_.descriptors_[key_]->active (flag);
 }
 
 bool
@@ -600,7 +606,7 @@ option::map::builder::operator() (const utsushi::key& name_space,
 {
   if (&owner_ == m.get ())
     BOOST_THROW_EXCEPTION
-      (logic_error (_("cannot add option::map to self")));
+      (logic_error ("cannot add option::map to self"));
 
   container< utsushi::key, value::ptr >::const_iterator it;
 

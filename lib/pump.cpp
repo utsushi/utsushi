@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -80,15 +80,15 @@ init_(option::map::ptr& option_)
   option_->add_options ()
     (ASYNC, toggle (true),
      attributes (/* level::debug */),
-     N_("Acquire image data asynchronously"),
-     N_("When true, image acquisition will proceed independently from"
-        " the rest of the program.  Normally, this would be what you"
-        " want because it keeps the program responsive to user input"
-        " and updated with respect to progress.  However, in case of"
-        " trouble shooting you may want to turn this off to obtain a"
-        " more predictable program flow.\n"
-        "Note, you may no longer be able to cancel image acquisition"
-        " via the normal means when this option is set to false.")
+     CCB_N_("Acquire image data asynchronously"),
+     CCB_N_("When true, image acquisition will proceed independently from"
+            " the rest of the program.  Normally, this would be what you"
+            " want because it keeps the program responsive to user input"
+            " and updated with respect to progress.  However, in case of"
+            " trouble shooting you may want to turn this off to obtain a"
+            " more predictable program flow.\n"
+            "Note, you may no longer be able to cancel image acquisition"
+            " via the normal means when this option is set to false.")
      );
 }
 
@@ -97,7 +97,7 @@ require_(input::ptr iptr)
 {
   if (iptr) return;
 
-  BOOST_THROW_EXCEPTION (invalid_argument (_("no image data source")));
+  BOOST_THROW_EXCEPTION (invalid_argument ("no image data source"));
 }
 
 void
@@ -105,7 +105,7 @@ require_(output::ptr optr)
 {
   if (optr) return;
 
-  BOOST_THROW_EXCEPTION (invalid_argument (_("no output destination")));
+  BOOST_THROW_EXCEPTION (invalid_argument ("no output destination"));
 }
 
 }       // namespace
@@ -152,6 +152,7 @@ public:
   condition_variable not_empty_;
 
   notify_signal_type signal_notify_;
+  cancel_signal_type signal_cancel_;
 
 private:
   impl (const impl&);
@@ -266,6 +267,7 @@ pump::impl::acquire_and_process (input::ptr iptr, output::ptr optr)
                      "unknown exception during acquisition and processing");
     }
   is_pumping_ = false;
+  if (traits::eof () == rv) signal_cancel_();
   return rv;
 }
 
@@ -279,6 +281,8 @@ pump::impl::acquire_data (input::ptr iptr)
       if (traits::bos () != rv)
         {
           mark (traits::eof (), context ());
+          is_pumping_ = false;
+          signal_cancel_();
           return rv;
         }
 
@@ -290,6 +294,7 @@ pump::impl::acquire_data (input::ptr iptr)
         }
       mark (rv, iptr->get_context ());
       is_pumping_ = false;
+      if (traits::eof () == rv) signal_cancel_();
       return rv;
     }
   catch (const std::exception& e)
@@ -303,6 +308,7 @@ pump::impl::acquire_data (input::ptr iptr)
       signal_notify_(log::ALERT, "unknown exception during acquisition");
     }
   is_pumping_ = false;
+  signal_cancel_();
   return traits::eof ();
 }
 
@@ -362,6 +368,7 @@ pump::impl::acquire_image (input::ptr iptr)
       n = iptr->read (bp->data_, bp->size_);
     }
   mark (n, iptr->get_context ());
+  if (traits::eof () == n) signal_cancel_();
   return n;
 }
 
@@ -491,6 +498,12 @@ connection
 pump::connect (const notify_signal_type::slot_type& slot) const
 {
   return pimpl_->signal_notify_.connect (slot);
+}
+
+connection
+pump::connect_cancel (const cancel_signal_type::slot_type& slot) const
+{
+  return pimpl_->signal_cancel_.connect (slot);
 }
 
 }       // namespace utsushi

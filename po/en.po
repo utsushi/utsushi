@@ -1,0 +1,575 @@
+#  en.po -- English message strings
+#  Copyright (C) 2015  SEIKO EPSON CORPORATION
+#
+#  License: GPL-3.0+
+#  Author : SEIKO EPSON CORPORATION
+#
+#  This file is part of the 'Utsushi' package.
+#  This package is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License or, at
+#  your option, any later version.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#  You ought to have received a copy of the GNU General Public License
+#  along with this package.  If not, see <http://www.gnu.org/licenses/>.
+msgid ""
+msgstr ""
+"Project-Id-Version: utsushi 0.14.0\n"
+"Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
+"POT-Creation-Date: 2015-12-25 01:09+0000\n"
+"PO-Revision-Date: 2015-12-15 17:05+0900\n"
+"Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
+"Language-Team: English\n"
+"Language: en\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: drivers/esci/compound-scanner.cpp:356
+msgid "Loading completed"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:357
+msgid "Ejecting completed"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:381
+msgid "Cleaning is complete."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:382
+msgid "Calibration is complete."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:390 drivers/esci/compound-scanner.cpp:415
+msgid "Cleaning is failed."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:391 drivers/esci/compound-scanner.cpp:417
+msgid "Calibration is failed."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:411
+msgid "Loading failed"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:413
+msgid "Ejecting failed"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:419
+msgid "Maintenance failed"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:529
+#: drivers/esci/extended-scanner.cpp:1106
+msgid "Document Source"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:551 drivers/esci/extended-scanner.cpp:291
+msgid "Image Type"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:564
+msgid "Dropout"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:577 drivers/esci/extended-scanner.cpp:403
+msgid "Transfer Format"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:605 drivers/esci/extended-scanner.cpp:354
+#: filters/threshold.cpp:49
+msgid "Threshold"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:737
+msgid "Calibration"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:738
+msgid "Calibrating..."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:745
+msgid "Cleaning"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:746
+msgid "Cleaning..."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:753
+msgid "Eject"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:754
+msgid "Ejecting ..."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:761
+msgid "Load"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:762
+msgid "Loading..."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2318
+#: drivers/esci/extended-scanner.cpp:1068
+msgid "Duplex"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2342
+msgid "Detect Double Feed"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2353
+msgid "Long Paper Mode"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2473
+#: drivers/esci/compound-scanner.cpp:2508
+#: drivers/esci/compound-scanner.cpp:2543
+#: drivers/esci/compound-scanner.cpp:2578
+#: drivers/esci/extended-scanner.cpp:280
+msgid "Resolution"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2526
+msgid "Enable Resampling"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2603
+#: drivers/esci/extended-scanner.cpp:1125
+msgid "Manual"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2604
+#: drivers/esci/extended-scanner.cpp:1126
+msgid "Maximum"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2606
+#: drivers/esci/compound-scanner.cpp:2673
+#: drivers/esci/extended-scanner.cpp:1128
+msgid "Automatic"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2613
+#: drivers/esci/extended-scanner.cpp:1135
+msgid "Scan Area"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2621
+#: drivers/esci/extended-scanner.cpp:1143
+msgid "Top Left X"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2629
+#: drivers/esci/extended-scanner.cpp:1159
+msgid "Top Left Y"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2637
+#: drivers/esci/extended-scanner.cpp:1151
+msgid "Bottom Right X"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2645
+#: drivers/esci/extended-scanner.cpp:1167
+msgid "Bottom Right Y"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2681
+msgid "Crop"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2717 gtkmm/dialog.cpp:765
+#: sane/handle.cpp:547 src/scan-cli.cpp:634
+msgid "Deskew"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:3149
+msgid ""
+"Authentication is required.\n"
+"Unfortunately, this version of the driver does not support authentication "
+"yet."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:3243
+#: drivers/esci/extended-scanner.cpp:206 sane/backend.cpp:288
+msgid ""
+"The Automatic Document Feeder is open.\n"
+"Please close it."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:3246
+#: drivers/esci/extended-scanner.cpp:201 sane/backend.cpp:274
+msgid ""
+"A paper jam occurred.\n"
+"Open the Automatic Document Feeder and remove any paper.\n"
+"If there are any documents loaded in the ADF, remove them and load them "
+"again."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:3251
+#: drivers/esci/extended-scanner.cpp:198 sane/backend.cpp:269
+msgid "Please load the document(s) into the Automatic Document Feeder."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:3254
+#: drivers/esci/extended-scanner.cpp:209 sane/backend.cpp:281
+msgid ""
+"A multi page feed occurred in the auto document feeder. Open the cover, "
+"remove the documents, and then try again. If documents remain on the tray, "
+"remove them and then reload them."
+msgstr ""
+
+#: drivers/esci/compound.cpp:628
+msgid ""
+"The device is in use.  Please wait until the device becomes available, then "
+"try again."
+msgstr ""
+
+#: drivers/esci/exception.hpp:94
+msgid "device busy"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:121
+#: drivers/esci/grammar-capabilities.cpp:246
+#: drivers/esci/grammar-capabilities.cpp:385
+msgid "None"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:286
+#: drivers/esci/grammar-capabilities.cpp:650
+msgid "Gray (1 bit)"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:287
+#: drivers/esci/grammar-capabilities.cpp:651
+msgid "Gray (8 bit)"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:288
+#: drivers/esci/grammar-capabilities.cpp:648
+msgid "Color (8 bit)"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:1055
+#: drivers/esci/grammar-capabilities.cpp:316
+#: drivers/esci/grammar-capabilities.cpp:326
+msgid "Document Table"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:1061
+#: drivers/esci/grammar-capabilities.cpp:314
+#: drivers/esci/grammar-capabilities.cpp:324
+msgid "ADF"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:1085
+#: drivers/esci/grammar-capabilities.cpp:315
+#: drivers/esci/grammar-capabilities.cpp:325
+msgid "Transparency Unit"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:255
+msgid "White"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:256
+msgid "Black"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:352
+msgid "Off"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:353
+msgid "Normal"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:354
+msgid "Thin"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:435
+msgid "Red"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:436
+msgid "Green"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:437
+msgid "Blue"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:647
+msgid "Color (1 bit)"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:649
+msgid "Color (16 bit)"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:652
+msgid "Gray (16 bit)"
+msgstr ""
+
+#: drivers/esci/scanner.cpp:172
+msgid "ADF - Double-sided"
+msgstr ""
+
+#: drivers/esci/scanner.cpp:173
+msgid "ADF - Single-sided"
+msgstr ""
+
+#: drivers/esci/scanner.cpp:174
+msgid "Black & White"
+msgstr ""
+
+#: drivers/esci/scanner.cpp:175
+msgid "Color"
+msgstr ""
+
+#: drivers/esci/scanner.cpp:176
+msgid "Mode"
+msgstr ""
+
+#: drivers/esci/scanner.cpp:177
+msgid "Text/Line Art"
+msgstr ""
+
+#: filters/image-skip.cpp:67
+msgid "Blank Image Threshold"
+msgstr ""
+
+#: filters/magick.cpp:146
+msgid "Brightness"
+msgstr ""
+
+#: filters/magick.cpp:154
+msgid "Contrast"
+msgstr ""
+
+#: filters/reorient.cpp:258
+msgid "0 degrees"
+msgstr "0°"
+
+#: filters/reorient.cpp:259
+msgid "90 degrees"
+msgstr "90°"
+
+#: filters/reorient.cpp:260
+msgid "180 degrees"
+msgstr "180°"
+
+#: filters/reorient.cpp:261
+msgid "270 degrees"
+msgstr "270°"
+
+#: filters/reorient.cpp:262
+msgid "Auto"
+msgstr ""
+
+#: filters/reorient.cpp:289
+msgid "Rotate"
+msgstr ""
+
+#: gtkmm/action-dialog.cpp:112 gtkmm/action-dialog.cpp:119
+#: gtkmm/dialog.glade:43
+msgid "Maintenance"
+msgstr ""
+
+#: gtkmm/chooser.cpp:71
+msgid "No devices found"
+msgstr ""
+
+#: gtkmm/chooser.cpp:78
+msgid "Select a device"
+msgstr ""
+
+#: gtkmm/chooser.cpp:213
+#, boost-format
+msgid ""
+"Cannot access %1%\n"
+"(%2%)\n"
+"%3%"
+msgstr ""
+
+#: gtkmm/dialog.cpp:78
+msgid "Scanning..."
+msgstr ""
+
+#: gtkmm/dialog.cpp:79
+msgid "Canceling..."
+msgstr ""
+
+#: gtkmm/dialog.cpp:357
+msgid "Save As..."
+msgstr ""
+
+#: gtkmm/dialog.cpp:359
+msgid "Untitled"
+msgstr ""
+
+#: gtkmm/dialog.cpp:653 src/scan-cli.cpp:1101
+#, boost-format
+msgid "conversion from %1% to %2% is not supported"
+msgstr ""
+
+#: gtkmm/dialog.glade:28 gtkmm/dialog.glade:366
+msgid "Scan"
+msgstr ""
+
+#: gtkmm/dialog.glade:53
+msgid "Details:"
+msgstr ""
+
+#: gtkmm/dialog.glade:90
+msgid "Preview"
+msgstr ""
+
+#: gtkmm/dialog.glade:97
+msgid "Zoom In"
+msgstr ""
+
+#: gtkmm/dialog.glade:104
+msgid "Zoom Out"
+msgstr ""
+
+#: gtkmm/dialog.glade:111
+msgid "Actual Size"
+msgstr ""
+
+#: gtkmm/dialog.glade:118
+msgid "Zoom to fit"
+msgstr ""
+
+#: gtkmm/dialog.glade:150
+msgid "Scanning Dialog"
+msgstr ""
+
+#: gtkmm/dialog.glade:188
+msgid "Scanner:"
+msgstr ""
+
+#: gtkmm/editor.cpp:460
+msgid "Other"
+msgstr ""
+
+#: gtkmm/editor.cpp:667
+msgid "Restoring previous value"
+msgstr ""
+
+#: gtkmm/editor.cpp:670
+msgid "The selected combination of values is not supported."
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:262
+msgid "Unsupported file format."
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:266
+#, boost-format
+msgid ""
+"The '%1%' file extension is not associated with a supported file format.  "
+"Please select a file format or use one of the known file extensions."
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:286
+#, boost-format
+msgid "The %1% format does not support multiple images in a single file."
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:291
+#, boost-format
+msgid ""
+"Please save to PDF or TIFF if you want a single file.  If you prefer the %1% "
+"image format, use a filename such as 'Untitled-%%3i%2%'."
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:315
+#, boost-format
+msgid ""
+"The name \"%1%\" already exists.\n"
+"OK to overwrite this name using the new settings?"
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:318
+#, boost-format
+msgid ""
+"The file already exists in \"%1%\".  Replacing it will overwrite its "
+"contents."
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:326
+#, boost-format
+msgid "Files matching \"%1%\" may already exist.  Do you want to replace them?"
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:373 gtkmm/file-chooser.cpp:505
+#: gtkmm/file-chooser.cpp:636
+msgid "File Type"
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:377
+#, boost-format
+msgid "File type: %1%"
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:449
+msgid "By extension"
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:509
+msgid "Save all images in a single file"
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:545
+msgid "PDFs and Image Files"
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:551
+msgid "Image Files"
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:557
+msgid "All Files"
+msgstr ""
+
+#: lib/media.cpp:71
+msgid "Ledger"
+msgstr ""
+
+#: lib/media.cpp:72
+msgid "Legal"
+msgstr ""
+
+#: lib/media.cpp:73
+msgid "Letter"
+msgstr ""
+
+#: lib/media.cpp:74
+msgid "Executive"
+msgstr ""
+
+#: lib/tag.cpp:74
+msgid "General"
+msgstr ""
+
+#: lib/tag.cpp:79
+msgid "Geometry"
+msgstr ""
+
+#: lib/tag.cpp:84
+msgid "Enhancement"
+msgstr ""

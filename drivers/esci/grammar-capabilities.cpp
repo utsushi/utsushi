@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -243,7 +243,7 @@ capabilities::border_fill () const
       || flc->empty ())
     return constraint::ptr ();
 
-  std::string default_fill (N_("None"));
+  std::string default_fill (SEC_N_("None"));
   std::set< std::string > s;
 
   for_each (quad token, *flc)
@@ -252,8 +252,8 @@ capabilities::border_fill () const
 
       switch (token)
         {
-        case WH: fill = N_("White"); break;
-        case BK: fill = N_("Black"); break;
+        case WH: fill = SEC_N_("White"); break;
+        case BK: fill = SEC_N_("Black"); break;
         default:
           log::error ("unknown border-fill token: %1%") % str (token);
         }
@@ -311,9 +311,9 @@ capabilities::document_sources (const quad& default_value) const
 
   std::set< std::string > s;
 
-  if (adf) s.insert (N_("ADF"));
-  if (tpu) s.insert (N_("Transparency Unit"));
-  if (fb ) s.insert (N_("Document Table"));
+  if (adf) s.insert (SEC_N_("ADF"));
+  if (tpu) s.insert (SEC_N_("Transparency Unit"));
+  if (fb ) s.insert (SEC_N_("Document Table"));
 
   if (s.empty ()) return constraint::ptr ();
 
@@ -321,9 +321,9 @@ capabilities::document_sources (const quad& default_value) const
 
   switch (default_value)
     {
-    case ADF: default_source = N_("ADF"); break;
-    case TPU: default_source = N_("Transparency Unit"); break;
-    case FB : default_source = N_("Document Table"); break;
+    case ADF: default_source = SEC_N_("ADF"); break;
+    case TPU: default_source = SEC_N_("Transparency Unit"); break;
+    case FB : default_source = SEC_N_("Document Table"); break;
     default:
       default_source = *s.begin ();
     }
@@ -349,9 +349,9 @@ capabilities::double_feed () const
     {
       store::ptr s = make_shared< store > ();
 
-      s -> alternative (N_("Off"))
-        -> alternative (N_("Normal"))
-        -> alternative (N_("Thin"))
+      s -> alternative (SEC_N_("Off"))
+        -> alternative (SEC_N_("Normal"))
+        -> alternative (SEC_N_("Thin"))
         -> default_value (s->front ());
 
       return s;
@@ -382,8 +382,17 @@ capabilities::dropouts () const
       || col->empty ())
     return constraint::ptr ();
 
-  std::string default_dropout (N_("None"));
+  std::string default_dropout (SEC_N_("None"));
   std::set< std::string > s;
+
+  int depth_001 = 0;
+  int depth_008 = 0;
+  int depth_016 = 0;
+
+  const int R = 0x01;
+  const int G = 0x02;
+  const int B = 0x04;
+  const int RGB = (R | G | B);
 
   for_each (quad token, *col)
     {
@@ -391,15 +400,15 @@ capabilities::dropouts () const
 
       switch (token)
         {
-        case R001: dropout = N_("Red (1 bit)"); break;
-        case R008: dropout = N_("Red (8 bit)"); break;
-        case R016: dropout = N_("Red (16 bit)"); break;
-        case G001: dropout = N_("Green (1 bit)"); break;
-        case G008: dropout = N_("Green (8 bit)"); break;
-        case G016: dropout = N_("Green (16 bit)"); break;
-        case B001: dropout = N_("Blue (1 bit)"); break;
-        case B008: dropout = N_("Blue (8 bit)"); break;
-        case B016: dropout = N_("Blue (16 bit)"); break;
+        case R001: depth_001 |= R; break;
+        case R008: depth_008 |= R; break;
+        case R016: depth_016 |= R; break;
+        case G001: depth_001 |= G; break;
+        case G008: depth_008 |= G; break;
+        case G016: depth_016 |= G; break;
+        case B001: depth_001 |= B; break;
+        case B008: depth_008 |= B; break;
+        case B016: depth_016 |= B; break;
           // ignore all non-dropouts
         case C003:
         case C024:
@@ -410,8 +419,22 @@ capabilities::dropouts () const
         default:
           log::error ("unknown dropout: %1%") % str (token);
         }
+    }
 
-      if (!dropout.empty ()) s.insert (dropout);
+  if (depth_001 && RGB != depth_001)
+    log::debug ("Bit depth  1 dropouts incomplete, %x") % depth_001;
+  if (depth_008 && RGB != depth_008)
+    log::debug ("Bit depth  8 dropouts incomplete, %x") % depth_008;
+  if (depth_016 && RGB != depth_016)
+    log::debug ("Bit depth 16 dropouts incomplete, %x") % depth_016;
+
+  if (   depth_001 == RGB
+      || depth_008 == RGB
+      || depth_016 == RGB)
+    {
+      s.insert (SEC_N_("Red"));
+      s.insert (SEC_N_("Green"));
+      s.insert (SEC_N_("Blue"));
     }
 
   if (s.empty ()) return constraint::ptr ();
@@ -420,6 +443,68 @@ capabilities::dropouts () const
     (from< store > ()
      -> alternatives (s.begin (), s.end ())
      -> default_value (default_dropout));
+}
+
+quad
+capabilities::get_dropout (const quad& gray, const string& color) const
+{
+  using namespace code_token::capability::col;
+
+  if (color == "None") return gray;
+  if (color == "Red")
+    {
+      if (M001 == gray) return R001;
+      if (M008 == gray) return R008;
+      if (M016 == gray) return R016;
+    }
+  if (color == "Green")
+    {
+      if (M001 == gray) return G001;
+      if (M008 == gray) return G008;
+      if (M016 == gray) return G016;
+    }
+  if (color == "Blue")
+    {
+      if (M001 == gray) return B001;
+      if (M008 == gray) return B008;
+      if (M016 == gray) return B016;
+    }
+
+  log::error
+    ("internal inconsistency:"
+     " '%1%' dropout for '%2%' not supported, using '%2%'")
+    % color
+    % str (gray)
+    ;
+
+  return gray;
+}
+
+bool
+capabilities::has_dropout (const quad& gray) const
+{
+  using namespace code_token::capability::col;
+
+  if (!col
+      || col->empty ())
+    return false;
+
+  // We rely on capabilities::dropouts() requiring the presence of
+  // dropouts for all of the RGB components.  In that case, it is
+  // sufficient to check for the presence of a single, arbitrary
+  // component here.
+
+  if (M001 == gray) return (col->end ()
+                            != std::find (col->begin (), col->end (), R001));
+  if (M008 == gray) return (col->end ()
+                            != std::find (col->begin (), col->end (), R008));
+  if (M016 == gray) return (col->end ()
+                            != std::find (col->begin (), col->end (), R016));
+
+  if (!(C048 == gray || C024 == gray || C003 == gray))
+  log::error ("unknown color value: '%1%'") % str (gray);
+    ;
+  return false;
 }
 
 utsushi::constraint::ptr
@@ -441,8 +526,8 @@ capabilities::formats (const boost::optional< quad >& default_value) const
 
       switch (token)
         {
-        case RAW : s = N_("RAW" ); break;
-        case JPG : s = N_("JPEG"); break;
+        case RAW : s = CCB_N_("RAW" ); break;
+        case JPG : s = CCB_N_("JPEG"); break;
         default:
           log::error ("unknown image transfer format: %1%") % str (token);
         }
@@ -559,12 +644,12 @@ capabilities::image_types (const boost::optional< quad >& default_value) const
       switch (token)
         {
           //! \todo Use values that are more command-line friendly
-        case C003: type = N_("Color (1 bit)"); break;
-        case C024: type = N_("Color (8 bit)"); break;
-        case C048: type = N_("Color (16 bit)"); break;
-        case M001: type = N_("Gray (1 bit)"); break;
-        case M008: type = N_("Gray (8 bit)"); break;
-        case M016: type = N_("Gray (16 bit)"); break;
+        case C003: type = SEC_N_("Color (1 bit)"); break;
+        case C024: type = SEC_N_("Color (8 bit)"); break;
+        case C048: type = SEC_N_("Color (16 bit)"); break;
+        case M001: type = SEC_N_("Gray (1 bit)"); break;
+        case M008: type = SEC_N_("Gray (8 bit)"); break;
+        case M016: type = SEC_N_("Gray (16 bit)"); break;
           // ignore all dropouts
         case R001:
         case R008:

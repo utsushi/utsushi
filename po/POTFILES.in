@@ -2,7 +2,7 @@
 #  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 #
 #  License: GPL-3.0+
-#  Author : AVASYS CORPORATION
+#  Author : EPSON AVASYS CORPORATION
 #
 #  This file is part of the 'Utsushi' package.
 #  This package is free software: you can redistribute it and/or modify
@@ -20,47 +20,39 @@
 
 #  List generated with
 #
-#    grep -lE '((^|[^_A-Za-z0-9])N?_\(")|(<property [^>]*translatable="yes")'
+#    grep -lE '((^|[^_A-Za-z0-9])(SEC|CCB)_(N_)?\(")|(<property [^>]*translatable="yes")'
 #
 #  on the files under version control filtered through
 #
-#    sed 's|\.xsl$|.cpp|; /Makefile\.am$/d; /\/tests\//d'
+#    sed 's|\.xsl$|.cpp|; /Makefile\.am$/d; /^tools\//d; /^tests\//d; /\/tests\//d'
 
-connexions/usb.cpp
-drivers/esci/code-token.hpp
 drivers/esci/compound-scanner.cpp
 drivers/esci/compound-tweaks.cpp
 drivers/esci/compound.cpp
 drivers/esci/exception.hpp
 drivers/esci/extended-scanner.cpp
 drivers/esci/grammar-capabilities.cpp
+drivers/esci/scanner.cpp
 filters/image-skip.cpp
 filters/jpeg.cpp
-filters/padding.cpp
-filters/pdf/object.cpp
-filters/pdf/writer.cpp
+filters/magick.cpp
+filters/reorient.cpp
 filters/threshold.cpp
 gtkmm/action-dialog.cpp
 gtkmm/chooser.cpp
-gtkmm/dialog-alt.glade
 gtkmm/dialog.cpp
 gtkmm/dialog.glade
 gtkmm/dropdown.cpp
 gtkmm/editor.cpp
 gtkmm/file-chooser.cpp
 lib/descriptor.cpp
-lib/device.cpp
 lib/media.cpp
-lib/option.cpp
 lib/pump.cpp
 lib/run-time.cpp
-lib/scanner.cpp
 lib/tag.cpp
-outputs/tiff.cpp
 sane/backend.cpp
 sane/backend.hpp
 sane/handle.cpp
-sane/value.cpp
 src/help.cpp
 src/list.cpp
 src/main.cpp

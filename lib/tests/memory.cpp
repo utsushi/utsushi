@@ -1,8 +1,8 @@
 //  memory.cpp -- unit tests for the memory device implementations
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -209,7 +209,6 @@ BOOST_AUTO_TEST_CASE (multi_sequence)
 }
 
 BOOST_AUTO_TEST_SUITE_END ();
-
 
 #define ARRAY_END(a)  (a) + sizeof (a) / sizeof (a[0])
 

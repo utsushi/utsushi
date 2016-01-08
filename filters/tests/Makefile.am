@@ -3,7 +3,7 @@
 ##  Copyright (C) 2013, 2015  Olaf Meeuwissen
 ##
 ##  License: GPL-3.0+
-##  Author : AVASYS CORPORATION
+##  Author : EPSON AVASYS CORPORATION
 ##
 ##  This file is part of the 'Utsushi' package.
 ##  This package is free software: you can redistribute it and/or modify
@@ -61,6 +61,8 @@ pdf_utr_LDADD    += $(LIBMAGIC_LIBS)
 endif
 endif
 
+check_PROGRAMS += reorient.utr
+
 endif # enable_boost_unit_test_framework
 
 EXTRA_DIST  =
@@ -70,6 +72,43 @@ EXTRA_DIST += data/A4-max-x-300.jpg
 EXTRA_DIST += data/A4-max-x-max.jpg
 
 CLEANFILES  =
+
+EXTRA_reorient_utr_DEPENDENCIES  =
+EXTRA_reorient_utr_DEPENDENCIES += $(srcdir)/data/top-left.png
+EXTRA_reorient_utr_DEPENDENCIES += $(srcdir)/data/left-bottom.png
+EXTRA_reorient_utr_DEPENDENCIES += $(srcdir)/data/bottom-right.png
+EXTRA_reorient_utr_DEPENDENCIES += $(srcdir)/data/right-top.png
+
+EXTRA_DIST += $(EXTRA_reorient_utr_DEPENDENCIES)
+
+$(EXTRA_reorient_utr_DEPENDENCIES): reorient.tif
+	file=`echo $@ | sed 's|.*/||'`; \
+	orient=`echo $$file | sed 's|\.[^.]*$$||'`; \
+	case $$orient in \
+	  left-bottom)  orient=right-top;; \
+	  right-top)  orient=left-bottom;; \
+	esac; \
+	$(MAGICK_CONVERT) '$<[0]' \
+	    -trim -bordercolor white -border 200 -monochrome \
+	    -orient $$orient \
+	    -auto-orient \
+	    $@
+
+reorient.tif: reorient.txt
+	text2image \
+	    --resolution 200 \
+	    --fonts_dir /usr/share/fonts \
+	    --font "DejaVu Sans" \
+	    --text $< \
+	    --outputbase `echo $@ | sed 's|\.[^.]*$$||'`
+
+#  A "page" of any reasonably static file with prose will do
+reorient.txt: $(top_srcdir)/ABOUT-NLS
+	sed '50q' $< > $@
+
+CLEANFILES += reorient.box
+CLEANFILES += reorient.tif
+CLEANFILES += reorient.txt
 
 include $(top_srcdir)/include/boost-test.am
 

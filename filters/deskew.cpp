@@ -2,7 +2,7 @@
 //  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -49,6 +49,7 @@ deskew::deskew ()
                       -> upper (100.0)
                       -> default_value (55.0)))
     ;
+  freeze_options ();   // initializes option tracking member variables
 }
 
 void

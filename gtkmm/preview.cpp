@@ -3,7 +3,7 @@
 //  Copyright (C) 2015  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -149,10 +149,25 @@ preview::set_sensitive ()
 {
   if (!ui_) return;
 
+  toggle too_long = false;
+  if (control_ && control_->count ("long-paper-mode"))
+    {
+      // FIXME should be taken care of by the driver but it is
+      //       checking resolution violations too late
+      if (control_->count ("doc-source"))
+        {
+          string s = value ((*control_)["doc-source"]);
+          if (s == "ADF")
+            {
+              too_long = value ((*control_)["long-paper-mode"]);
+            }
+        }
+    }
+
   Glib::RefPtr<Gtk::Action> a;
 
   a = ui_->get_action ("/preview/refresh");
-  if (a) { a->set_sensitive (bool(idevice_)); }
+  if (a) { a->set_sensitive (bool(idevice_) && !too_long); }
   a = ui_->get_action ("/preview/zoom-in");
   if (a) { a->set_sensitive (pixbuf_ && (zoom_ < zoom_max_)); }
   a = ui_->get_action ("/preview/zoom-out");
@@ -255,6 +270,7 @@ preview::on_refresh ()
   }
   catch (const std::out_of_range&){}
 
+  value image_type;
   try
     {
       const std::string xfer_raw = "image/x-raster";
@@ -262,6 +278,16 @@ preview::on_refresh ()
       std::string xfer_fmt = idevice_->get_context ().content_type ();
 
       bool bilevel = ((*control_)["image-type"] == "Gray (1 bit)");
+      if (bilevel)
+        {
+          image_type = (*control_)["image-type"];
+          try {
+            (*control_)["image-type"] = string ("Gray (8 bit)");
+          }
+          catch (const std::out_of_range&) {
+            image_type = value ();
+          }
+        }
 
       toggle force_extent = true;
       quantity width  = -1.0;
@@ -314,6 +340,7 @@ preview::on_refresh ()
       /**/ if (xfer_raw == xfer_fmt)
         {
           stream_->push (make_shared< padding > ());
+          if (value () != image_type) stream_->push (threshold);
           if (force_extent)
             stream_->push (make_shared< bottom_padder > (width, height));
           stream_->push (make_shared< pnm > ());
@@ -375,6 +402,10 @@ preview::on_refresh ()
       pixbuf_.reset ();
     }
 
+  if (value () != image_type)
+    {
+      (*control_)["image-type"] = image_type;
+    }
   if (value () != duplex)
     {
       (*control_)["duplex"] = duplex;
@@ -438,6 +469,12 @@ preview::on_device_changed (scanner::ptr s)
 
   pixbuf_.reset ();
   image_.clear ();
+  set_sensitive ();
+}
+
+void
+preview::on_values_changed ()
+{
   set_sensitive ();
 }
 

@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -57,7 +57,7 @@ run_time::run_time (int argc, const char *const argv[], bool configure_i18n)
 {
   if (impl::instance_)
     BOOST_THROW_EXCEPTION
-      (logic_error (_("run_time has been initialized already")));
+      (logic_error ("run_time has been initialized already"));
 
   if (configure_i18n)
     {
@@ -77,7 +77,7 @@ run_time::run_time ()
 {
   if (!impl::instance_)
     BOOST_THROW_EXCEPTION
-      (logic_error (_("run_time has not been initialized yet")));
+      (logic_error ("run_time has not been initialized yet"));
 }
 
 std::string
@@ -361,8 +361,8 @@ struct run_time::impl::env_var_mapper
 };
 
 run_time::impl::impl (int argc, const char *const argv[])
-  : gnu_opts_(_("GNU standard options"))
-  , std_opts_(_("Standard options"))
+  : gnu_opts_(CCB_("GNU standard options"))
+  , std_opts_(CCB_("Standard options"))
   , shell_(DEFAULT_SHELL)
 {
   lt_dlinit ();
@@ -412,8 +412,8 @@ run_time::impl::impl (int argc, const char *const argv[])
 
   gnu_opts_
     .add_options ()
-    ("help"   , _("display this help and exit"))
-    ("version", _("output version information and exit"))
+    ("help"   , CCB_("display this help and exit"))
+    ("version", CCB_("output version information and exit"))
     ;
 
   std_opts_

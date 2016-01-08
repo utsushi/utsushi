@@ -1,8 +1,8 @@
 //  editor.hpp -- scanning dialog's option value editor
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -96,6 +96,9 @@ public:
    */
   string untranslate (const key &k, const string &s);
 
+  sigc::signal<void>
+  signal_values_changed ();
+
 protected:
   bool block_on_toggled_;
   void on_toggled ();
@@ -106,6 +109,10 @@ protected:
 
   //! Whether any of the \a tags matches an active toggle
   bool active_toggle_(const std::set< key >& tags) const;
+
+private:
+  sigc::signal<void>
+  signal_values_changed_;
 };
 
 }       // namespace gtkmm

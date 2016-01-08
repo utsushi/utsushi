@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -91,6 +91,7 @@ protected:
 
   media probe_media_size_(const string& doc_source);
   void  update_scan_area_(const media& size, value::map& vm) const;
+  void  update_scan_area_max_(value::map& vm);
 
   bool validate (const value::map& vm) const;
   void finalize (const value::map& vm);
@@ -111,6 +112,7 @@ protected:
   void add_scan_area_options (option::map& opts,
                               const information::source& src) const;
   void add_crop_option (option::map& opts,
+                        const information::source& src,
                         const source_capabilities& src_caps,
                         const capabilities& caps) const;
   void add_deskew_option (option::map& opts,
@@ -190,6 +192,7 @@ protected:
   size_t image_count_;          //!< \todo Move to base class
   sig_atomic_t cancelled_;
   bool         media_out_;
+  bool         auto_crop_;
 
   option::map flatbed_;
   option::map adf_;

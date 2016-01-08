@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--  boost-test-report.xsl :: stylesheet to create Bitten test reports
-      Copyright (C) 2012  AVASYS CORPORATION
+      Copyright (C) 2012  EPSON AVASYS CORPORATION
 
       License: GPL-3.0+
       Author : Olaf Meeuwissen
@@ -10,19 +10,19 @@
       it under the terms of the GNU General Public License as published by
       the Free Software Foundation, either version 3 of the License or, at
       your option, any later version.
-    
+
         This program is distributed in the hope that it will be useful,
         but WITHOUT ANY WARRANTY; without even the implied warranty of
         MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
         GNU General Public License for more details.
-    
+
       You ought to have received a copy of the GNU General Public License
       along with this package.  If not, see <http://www.gnu.org/licenses/>.
   -->
 
 <xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 		version="1.0">
-  <xsl:output method="xml" encoding="UTF-8"/> 
+  <xsl:output method="xml" encoding="UTF-8"/>
 
   <xsl:template match="/">
     <BoostTestReport>

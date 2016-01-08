@@ -2,7 +2,7 @@
 //  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -68,14 +68,14 @@ chooser::chooser (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
       Gtk::TreeRow row = *(model_->prepend ());
 
       row[cols_->type] = MESSAGE;
-      row[cols_->name] = _("No devices found");
+      row[cols_->name] = SEC_("No devices found");
     }
   else if (2 <= custom_.size () + system_.size ())
     {
       Gtk::TreeRow row = *(model_->prepend ());
 
       row[cols_->type] = MESSAGE;
-      row[cols_->name] = _("Select a device");
+      row[cols_->name] = SEC_("Select a device");
     }
 
   insert_actions (builder, "chooser-actions");
@@ -210,7 +210,7 @@ chooser::create_device (const std::set<scanner::info>& devices,
 
         BOOST_THROW_EXCEPTION
           (std::runtime_error
-           ((format (_("Cannot access %1%\n(%2%)\n%3%"))
+           ((format (SEC_("Cannot access %1%\n(%2%)\n%3%"))
              % name
              % udi
              % _(why)

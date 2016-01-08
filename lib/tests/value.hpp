@@ -1,8 +1,8 @@
 //  value.hpp -- bounded type fixture templates
-//  Copyright (C) 2012  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -56,7 +56,6 @@ struct bounded_type_fixture_base
 template <typename T>
 const std::string
 bounded_type_fixture_base< T >::key_ = typeid (T).name ();
-
 
 //  Bounded type fixture template and specializations
 

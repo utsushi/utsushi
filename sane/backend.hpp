@@ -1,9 +1,9 @@
 //  backend.hpp -- SANE backend implementation boiler plate
-//  Copyright (C) 2012, 2013  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2013, 2015  SEIKO EPSON CORPORATION
 //  Copyright (C) 2007  EPSON AVASYS CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -288,9 +288,10 @@ API_ENTRY (BACKEND_NAME, strstatus) (SANE_Status status)
 
     default:
       {
+        using utsushi::_;
         static char msg[80];    // not re-entrant!
 
-        snprintf (msg, 80, utsushi::_("Unknown SANE status code %d"), status);
+        snprintf (msg, 80, CCB_("Unknown SANE status code %d"), status);
         return msg;
       }
     }

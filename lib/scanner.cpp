@@ -2,7 +2,7 @@
 //  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -68,7 +68,7 @@ scanner::create (connexion::ptr cnx, const scanner::info& info)
 
   lt_dlhandle handle = NULL;
   scanner_factory factory = 0;
-  std::string error (_("driver not found"));
+  std::string error ("driver not found");
 
   log::brief ("looking for preloaded '%1%' driver")
     % info.driver ();
@@ -150,7 +150,7 @@ scanner::info::info (const std::string& udi)
     {
       BOOST_THROW_EXCEPTION
         (invalid_argument
-         ((format (_("syntax error: invalid UDI '%1%'")) % udi_).str ()));
+         ((format ("syntax error: invalid UDI '%1%'") % udi_).str ()));
     }
 }
 

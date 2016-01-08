@@ -2,7 +2,7 @@
 //  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -129,7 +129,9 @@ shell_pipe::shell_pipe (const std::string& command)
   , e_pipe_(-1)
   , buffer_(new octet[default_buffer_size])
   , buffer_size_(default_buffer_size)
-{}
+{
+  freeze_options ();   // initializes option tracking member variables
+}
 
 shell_pipe::~shell_pipe ()
 {
@@ -335,6 +337,9 @@ shell_pipe::reap_process_()
 
   siginfo_t info;
   int ec = 0;
+
+  info.si_code   = !CLD_EXITED;         // be pessimistic
+  info.si_status = !EXIT_SUCCESS;
 
   do
     {

@@ -1,8 +1,8 @@
 //  exception.hpp -- extensions to the std::exception hierarchy
-//  Copyright (C) 2013, 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2013-2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -21,7 +21,7 @@
 #ifndef utsushi_exception_hpp_
 #define utsushi_exception_hpp_
 
-# if __cplusplus >= 201103L
+#if __cplusplus >= 201103L && !WITH_INCLUDED_BOOST
 
 #include <exception>
 #define NAMESPACE std

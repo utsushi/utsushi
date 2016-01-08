@@ -1,8 +1,8 @@
 //  magick.cpp -- unit tests for the magick filter implementation
-//  Copyright (C) 2014  SEIKO EPSON CORPORATION
+//  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
-//  Author : AVASYS CORPORATION
+//  Author : EPSON AVASYS CORPORATION
 //
 //  This file is part of the 'Utsushi' package.
 //  This package is free software: you can redistribute it and/or modify
@@ -32,6 +32,7 @@
 
 #include <boost/assign/list_inserter.hpp>
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/fstream.hpp>
 #include <boost/test/parameterized_test.hpp>
 #include <boost/test/unit_test.hpp>
 
@@ -147,6 +148,38 @@ BOOST_AUTO_TEST_CASE (force_extent)
 
   BOOST_CHECK (fs::exists (output));
   BOOST_CHECK_EQUAL (fs::file_size (output), ctx.octets_per_image ());
+
+  fs::remove (output);
+}
+
+BOOST_AUTO_TEST_CASE (auto_orient)
+{
+  context ctx (200, 300, context::GRAY8);
+  ctx.orientation (context::right_top);
+
+  rawmem_idevice dev (ctx);
+  idevice& idev (dev);
+
+  filter::ptr flt = make_shared< magick > ();
+  (*flt->options ())["auto-orient"] = toggle (true);
+  (*flt->options ())["image-format"] = "PNM";
+
+  stream str;
+  std::string output ("magick-auto-orient.pnm");
+
+  str.push (flt);
+  str.push (make_shared< file_odevice > (output));
+
+  idev | str;
+
+  BOOST_REQUIRE (fs::exists (output));
+
+  fs::ifstream img (output);
+  std::string line;
+
+  BOOST_REQUIRE (!getline (img, line).eof ()); // PNM magic "P?"
+  BOOST_REQUIRE (!getline (img, line).eof ()); // PNM size
+  BOOST_CHECK_EQUAL ("300 200", line);
 
   fs::remove (output);
 }
