@@ -47,6 +47,7 @@ subdir = po
 #  Additional options may also by specified using AM_XGETTEXT_OPTION
 #  in `$(top_srcdir)/configure.ac`.
 XGETTEXT_OPTIONS  = --keyword=SEC_ --keyword=SEC_N_
+XGETTEXT_OPTIONS += --keyword=CCB_ --keyword=CCB_N_
 
 #  Locale categories, in addition to LC_MESSAGES, for which message
 #  catalogs are to be used.
