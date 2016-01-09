@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2015-12-25 01:09+0000\n"
+"POT-Creation-Date: 2016-01-09 05:46+0000\n"
 "PO-Revision-Date: 2015-12-15 17:05+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Mexican Spanish\n"
@@ -84,10 +84,62 @@ msgstr "Elimianr"
 msgid "Transfer Format"
 msgstr "Formato de transferencia"
 
+#: drivers/esci/compound-scanner.cpp:578
+msgid ""
+"Selecting a compressed format such as JPEG normally results in faster device "
+"side processing."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:592
+msgid "JPEG Quality"
+msgstr ""
+
 #: drivers/esci/compound-scanner.cpp:605 drivers/esci/extended-scanner.cpp:354
 #: filters/threshold.cpp:49
 msgid "Threshold"
 msgstr "Umbral"
+
+#: drivers/esci/compound-scanner.cpp:618 drivers/esci/extended-scanner.cpp:325
+msgid "Gamma"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:632
+#, fuzzy
+msgid "Transfer Size"
+msgstr "Formato de transferencia"
+
+#: drivers/esci/compound-scanner.cpp:647
+msgid "Border Fill"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:663
+msgid "Left Border"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:668
+msgid "Right Border"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:673
+msgid "Top Border"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:678
+msgid "Bottom Border"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:695
+msgid "Force Extent"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:696
+msgid ""
+"Force the image size to equal the user selected size.  Scanners may trim the "
+"image data to the detected size of the document.  This may result in images "
+"that are not all exactly the same size.  This option makes sure all image "
+"sizes match the selected area.\n"
+"Note that this option may slow down application/driver side processing."
+msgstr ""
 
 #: drivers/esci/compound-scanner.cpp:737
 msgid "Calibration"
@@ -121,10 +173,33 @@ msgstr "Cargar"
 msgid "Loading..."
 msgstr "Cargando..."
 
+#: drivers/esci/compound-scanner.cpp:1855
+#: drivers/esci/grammar-capabilities.cpp:529
+msgid "RAW"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:1974
+#, boost-format
+msgid ""
+"Scan area too small.\n"
+"The area needs to be larger than %1% by %2%."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2280
+#, boost-format
+msgid ""
+"Resolution too high for selected area.\n"
+"Choose a resolution no larger than %1%"
+msgstr ""
+
 #: drivers/esci/compound-scanner.cpp:2318
 #: drivers/esci/extended-scanner.cpp:1068
 msgid "Duplex"
 msgstr "Dúplex"
+
+#: drivers/esci/compound-scanner.cpp:2330
+msgid "Image Count"
+msgstr ""
 
 #: drivers/esci/compound-scanner.cpp:2342
 msgid "Detect Double Feed"
@@ -132,6 +207,18 @@ msgstr "Detectar alimentación doble"
 
 #: drivers/esci/compound-scanner.cpp:2353
 msgid "Long Paper Mode"
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2354
+msgid ""
+"Select this mode if you want to scan documents longer than what the ADF "
+"would normally support.  Please note that it only supports automatic "
+"detection of the document height."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:2469
+#: drivers/esci/compound-scanner.cpp:2539
+msgid "Bind X and Y resolutions"
 msgstr ""
 
 #: drivers/esci/compound-scanner.cpp:2473
@@ -142,9 +229,32 @@ msgstr ""
 msgid "Resolution"
 msgstr "Resolución"
 
+#: drivers/esci/compound-scanner.cpp:2477
+#: drivers/esci/compound-scanner.cpp:2492
+#: drivers/esci/compound-scanner.cpp:2547
+#: drivers/esci/compound-scanner.cpp:2562
+#, fuzzy
+msgid "X Resolution"
+msgstr "Resolución"
+
+#: drivers/esci/compound-scanner.cpp:2481
+#: drivers/esci/compound-scanner.cpp:2496
+#: drivers/esci/compound-scanner.cpp:2551
+#: drivers/esci/compound-scanner.cpp:2566
+#, fuzzy
+msgid "Y Resolution"
+msgstr "Resolución"
+
 #: drivers/esci/compound-scanner.cpp:2526
 msgid "Enable Resampling"
 msgstr "Activar remuestreo"
+
+#: drivers/esci/compound-scanner.cpp:2527
+msgid ""
+"This option provides the user with a wider range of supported resolutions.  "
+"Resolutions not supported by the hardware will be achieved through image "
+"processing methods."
+msgstr ""
 
 #: drivers/esci/compound-scanner.cpp:2603
 #: drivers/esci/extended-scanner.cpp:1125
@@ -191,10 +301,18 @@ msgstr "Derecha inferior Y"
 msgid "Crop"
 msgstr "Recortar"
 
+#: drivers/esci/compound-scanner.cpp:2693
+msgid "Crop Adjustment"
+msgstr ""
+
 #: drivers/esci/compound-scanner.cpp:2717 gtkmm/dialog.cpp:765
 #: sane/handle.cpp:547 src/scan-cli.cpp:634
 msgid "Deskew"
 msgstr "Enderezar"
+
+#: drivers/esci/compound-scanner.cpp:2745
+msgid "Overscan"
+msgstr ""
 
 #: drivers/esci/compound-scanner.cpp:3149
 msgid ""
@@ -204,6 +322,11 @@ msgid ""
 msgstr ""
 "Autenticación requerida.\n"
 "Desafortunadamente, esta versión del driver aún no admite autenticación."
+
+#: drivers/esci/compound-scanner.cpp:3153
+#, boost-format
+msgid "Unknown device error: %1%/%2%"
+msgstr ""
 
 #: drivers/esci/compound-scanner.cpp:3243
 #: drivers/esci/extended-scanner.cpp:206 sane/backend.cpp:288
@@ -243,6 +366,27 @@ msgstr ""
 "documentos. Abra la tapa, retire los documentos y luego vuelva a intentarlo. "
 "Si aún tiene documentos en la bandeja, retírelos y luego vuelva a cargarlos."
 
+#: drivers/esci/compound-scanner.cpp:3259
+#: drivers/esci/extended-scanner.cpp:214
+msgid ""
+"A fatal ADF error has occurred.\n"
+"Resolve the error condition and try again.  You may have to restart the scan "
+"dialog or application in order to be able to scan."
+msgstr ""
+
+#: drivers/esci/compound-scanner.cpp:3273
+msgid "A fatal error has occurred"
+msgstr ""
+
+#: drivers/esci/compound-tweaks.cpp:112 drivers/esci/compound-tweaks.cpp:200
+#: drivers/esci/extended-scanner.cpp:295
+msgid "Speed"
+msgstr ""
+
+#: drivers/esci/compound-tweaks.cpp:113 drivers/esci/compound-tweaks.cpp:201
+msgid "Optimize image acquisition for speed"
+msgstr ""
+
 #: drivers/esci/compound.cpp:628
 msgid ""
 "The device is in use.  Please wait until the device becomes available, then "
@@ -251,15 +395,123 @@ msgstr ""
 "El dispositivo está en uso. Espere hasta que esté disponible, luego intente "
 "otra vez."
 
+#: drivers/esci/exception.hpp:64
+msgid "invalid parameter"
+msgstr ""
+
+#: drivers/esci/exception.hpp:74
+msgid "unknown reply"
+msgstr ""
+
+#: drivers/esci/exception.hpp:84
+msgid "invalid command"
+msgstr ""
+
 #: drivers/esci/exception.hpp:94
 msgid "device busy"
 msgstr "El dispositivo está ocupado."
+
+#: drivers/esci/exception.hpp:104
+msgid "protocol error"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:84
+msgid "Positive Film"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:85
+msgid "Negative Film"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:100
+msgid "Bi-level CRT"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:101
+msgid "Multi-level CRT"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:102
+msgid "High Density Print"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:103
+msgid "Low Density Print"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:104
+msgid "High Contrast Print"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:105
+msgid "Custom (Base Gamma = 1.0"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:106
+msgid "Custom (Base Gamma = 1.8"
+msgstr ""
 
 #: drivers/esci/extended-scanner.cpp:121
 #: drivers/esci/grammar-capabilities.cpp:246
 #: drivers/esci/grammar-capabilities.cpp:385
 msgid "None"
 msgstr "Ninguno"
+
+#: drivers/esci/extended-scanner.cpp:123
+msgid "Dot Matrix Printer"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:124
+msgid "Thermal Printer"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:125
+msgid "Inkjet Printer"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:126
+msgid "CRT Display"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:141
+msgid "Bi-level"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:142
+msgid "Text Enhanced"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:143
+msgid "Hard Tone"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:144
+msgid "Soft Tone"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:145
+msgid "Net Screen"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:146
+msgid "Bayer 4x4"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:147
+msgid "Spiral 4x4"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:148
+msgid "Net Screen 4x4"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:149
+msgid "Net Screen 8x4"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:191
+msgid "Unknown device error"
+msgstr ""
 
 #: drivers/esci/extended-scanner.cpp:286
 #: drivers/esci/grammar-capabilities.cpp:650
@@ -276,6 +528,60 @@ msgstr ""
 msgid "Color (8 bit)"
 msgstr ""
 
+#: drivers/esci/extended-scanner.cpp:302
+msgid "Line Count"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:303
+msgid ""
+"Specify how many scan lines to move from the device to the software in one "
+"transfer.  Note that 0 will use the maximum usable value.  Values larger "
+"than the maximum usable value are clamped to the maximum."
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:317
+msgid "Gamma Correction"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:334
+msgid "Color Correction"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:342
+msgid "Auto Area Segmentation"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:343
+msgid "Threshold text regions and apply half-toning to photo/image areas."
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:364
+msgid "Dither Pattern"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:374
+msgid "Sharpness"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:375
+msgid ""
+"Emphasize the edges in an image more by choosing a larger value, less by "
+"selecting a smaller value."
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:386 filters/magick.cpp:146
+msgid "Brightness"
+msgstr "Brillo"
+
+#: drivers/esci/extended-scanner.cpp:387
+msgid ""
+"Make images look lighter with a larger value or darker with a smaller value."
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:394
+msgid "Mirror"
+msgstr ""
+
 #: drivers/esci/extended-scanner.cpp:1055
 #: drivers/esci/grammar-capabilities.cpp:316
 #: drivers/esci/grammar-capabilities.cpp:326
@@ -288,11 +594,24 @@ msgstr "Tabla Documento"
 msgid "ADF"
 msgstr "ADF"
 
+#: drivers/esci/extended-scanner.cpp:1080
+msgid "Primary TPU"
+msgstr ""
+
+#: drivers/esci/extended-scanner.cpp:1081
+msgid "Secondary TPU"
+msgstr ""
+
 #: drivers/esci/extended-scanner.cpp:1085
 #: drivers/esci/grammar-capabilities.cpp:315
 #: drivers/esci/grammar-capabilities.cpp:325
 msgid "Transparency Unit"
 msgstr "Unidad de transparencia"
+
+#: drivers/esci/extended-scanner.cpp:1094
+#, fuzzy
+msgid "Film Type"
+msgstr "Tipo de archivo"
 
 #: drivers/esci/grammar-capabilities.cpp:255
 msgid "White"
@@ -324,6 +643,10 @@ msgstr ""
 
 #: drivers/esci/grammar-capabilities.cpp:437
 msgid "Blue"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:530 gtkmm/file-chooser.cpp:453
+msgid "JPEG"
 msgstr ""
 
 #: drivers/esci/grammar-capabilities.cpp:647
@@ -367,13 +690,26 @@ msgstr "Texto/Arte lineal"
 msgid "Blank Image Threshold"
 msgstr "Umbral"
 
-#: filters/magick.cpp:146
-msgid "Brightness"
-msgstr "Brillo"
+#: filters/jpeg.cpp:229
+msgid "Buffer Size"
+msgstr ""
+
+#: filters/jpeg.cpp:250
+#, fuzzy
+msgid "Image Quality"
+msgstr "Tipo de imagen"
+
+#: filters/magick.cpp:147
+msgid "Change brightness of the acquired image."
+msgstr ""
 
 #: filters/magick.cpp:154
 msgid "Contrast"
 msgstr "Contraste"
+
+#: filters/magick.cpp:155
+msgid "Change contrast of the acquired image."
+msgstr ""
 
 #: filters/reorient.cpp:258
 msgid "0 degrees"
@@ -480,9 +816,40 @@ msgstr ""
 msgid "Scanner:"
 msgstr "Escáner:"
 
+#: gtkmm/dropdown.cpp:170
+msgid "To be implemented."
+msgstr ""
+
+#: gtkmm/dropdown.cpp:173
+#, boost-format
+msgid ""
+"Support for changing the active item has not been implemented yet.  Should "
+"be changing from\n"
+"\n"
+"\t<b>%1%</b>\n"
+"\n"
+"to\n"
+"\n"
+"\t<b>%2%</b>"
+msgstr ""
+
+#: gtkmm/dropdown.cpp:193
+#, boost-format
+msgid ""
+"Support for management action functions has not been implemented yet.  This "
+"action could manipulate, and revert to,\n"
+"\n"
+"\t<b>%1%</b>"
+msgstr ""
+
 #: gtkmm/editor.cpp:460
 msgid "Other"
 msgstr "Otros"
+
+#: gtkmm/editor.cpp:471
+#, fuzzy
+msgid "Application"
+msgstr "Calibración"
 
 #: gtkmm/editor.cpp:667
 msgid "Restoring previous value"
@@ -559,6 +926,23 @@ msgstr "Tipo de archivo: %1%"
 msgid "By extension"
 msgstr "Por extensión"
 
+#: gtkmm/file-chooser.cpp:462
+#, fuzzy
+msgid "PDF"
+msgstr "ADF"
+
+#: gtkmm/file-chooser.cpp:471
+msgid "PNG"
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:480
+msgid "PNM"
+msgstr ""
+
+#: gtkmm/file-chooser.cpp:489
+msgid "TIFF"
+msgstr ""
+
 #: gtkmm/file-chooser.cpp:509
 msgid "Save all images in a single file"
 msgstr "Guardar todas las imágenes en un solo archivo"
@@ -574,6 +958,65 @@ msgstr "Archivos de imagen"
 #: gtkmm/file-chooser.cpp:557
 msgid "All Files"
 msgstr "Todos los archivos"
+
+#: lib/descriptor.cpp:47
+msgid "Standard"
+msgstr ""
+
+#: lib/descriptor.cpp:48
+msgid ""
+"If there is any user interface at all, options at the standard level are "
+"meant to be made available to the user."
+msgstr ""
+
+#: lib/descriptor.cpp:54
+msgid "Extended"
+msgstr ""
+
+#: lib/descriptor.cpp:55
+msgid ""
+"Extended options are for those situations where the user needs a bit more "
+"control over how things will be done."
+msgstr ""
+
+#: lib/descriptor.cpp:61
+msgid "Complete"
+msgstr ""
+
+#: lib/descriptor.cpp:62
+msgid ""
+"This is for options that are mostly just relevant for the most demanding of "
+"image acquisition jobs or those users will not be satisfied unless they are "
+"in complete control."
+msgstr ""
+
+#: lib/media.cpp:62
+msgid "ISO/A3"
+msgstr ""
+
+#: lib/media.cpp:63
+msgid "ISO/A4"
+msgstr ""
+
+#: lib/media.cpp:64
+msgid "ISO/A5"
+msgstr ""
+
+#: lib/media.cpp:65
+msgid "ISO/A6"
+msgstr ""
+
+#: lib/media.cpp:67
+msgid "JIS/B4"
+msgstr ""
+
+#: lib/media.cpp:68
+msgid "JIS/B5"
+msgstr ""
+
+#: lib/media.cpp:69
+msgid "JIS/B6"
+msgstr ""
 
 #: lib/media.cpp:71
 msgid "Ledger"
@@ -591,14 +1034,236 @@ msgstr "Carta"
 msgid "Executive"
 msgstr "Ejecutivo"
 
+#: lib/pump.cpp:83
+msgid "Acquire image data asynchronously"
+msgstr ""
+
+#: lib/pump.cpp:84
+msgid ""
+"When true, image acquisition will proceed independently from the rest of the "
+"program.  Normally, this would be what you want because it keeps the program "
+"responsive to user input and updated with respect to progress.  However, in "
+"case of trouble shooting you may want to turn this off to obtain a more "
+"predictable program flow.\n"
+"Note, you may no longer be able to cancel image acquisition via the normal "
+"means when this option is set to false."
+msgstr ""
+
+#: lib/run-time.cpp:364
+msgid "GNU standard options"
+msgstr ""
+
+#: lib/run-time.cpp:365
+msgid "Standard options"
+msgstr ""
+
+#: lib/run-time.cpp:415
+msgid "display this help and exit"
+msgstr ""
+
+#: lib/run-time.cpp:416
+msgid "output version information and exit"
+msgstr ""
+
+#: lib/tag.cpp:70
+#, boost-format
+msgid "Options provided by %1%."
+msgstr ""
+
 #: lib/tag.cpp:74
 msgid "General"
 msgstr "General"
+
+#: lib/tag.cpp:75
+msgid "Basic options."
+msgstr ""
 
 #: lib/tag.cpp:79
 msgid "Geometry"
 msgstr "Geometría"
 
+#: lib/tag.cpp:80
+msgid "Scan area and image size related options."
+msgstr ""
+
 #: lib/tag.cpp:84
 msgid "Enhancement"
 msgstr "Mejora"
+
+#: lib/tag.cpp:85
+msgid "Image modification options."
+msgstr ""
+
+#: sane/backend.cpp:1033
+msgid ""
+"The current locale settings are not supported by the standard C++ library "
+"used by this application.  This is most likely caused by a misconfigured "
+"locale but may also be due to use of a C++ library without localization "
+"support.  You can work around this issue by starting the application in a \"C"
+"\" locale, but you really should check your locale configuration and the "
+"locale support of the C++ library used by the application."
+msgstr ""
+
+#: sane/backend.cpp:1057
+#, fuzzy
+msgid "library initialization failed"
+msgstr "La calibración falló."
+
+#: sane/backend.hpp:294
+#, c-format, boost-format
+msgid "Unknown SANE status code %d"
+msgstr ""
+
+#: src/help.cpp:52
+msgid "display help information for a command"
+msgstr ""
+
+#: src/list.cpp:50 src/main.cpp:66
+msgid "list available image acquisition devices"
+msgstr ""
+
+#: src/main.cpp:61
+msgid "Supported commands"
+msgstr ""
+
+#: src/main.cpp:64
+msgid "display the help for a command and exit"
+msgstr ""
+
+#: src/main.cpp:65
+msgid "output command version information and exit"
+msgstr ""
+
+#: src/main.cpp:67
+msgid "scan with a suitable utility"
+msgstr ""
+
+#: src/main.cpp:72
+msgid "next generation image acquisition"
+msgstr ""
+
+#: src/scan-cli.cpp:163
+#, boost-format
+msgid "%1%: not found"
+msgstr ""
+
+#: src/scan-cli.cpp:168 src/scan-cli.cpp:575
+msgid "no usable devices available"
+msgstr ""
+
+#: src/scan-cli.cpp:175
+#, boost-format
+msgid "%1%: found but has no driver"
+msgstr ""
+
+#: src/scan-cli.cpp:189
+#, boost-format
+msgid "%1%: not supported"
+msgstr ""
+
+#: src/scan-cli.cpp:234
+#, boost-format
+msgid ""
+"%1%\n"
+"Allowed values: %2%"
+msgstr ""
+
+#: src/scan-cli.cpp:241
+#, boost-format
+msgid "Allowed values: %1%"
+msgstr ""
+
+#: src/scan-cli.cpp:500
+msgid "image acquisition device to use"
+msgstr ""
+
+#: src/scan-cli.cpp:502
+msgid "output destination to use"
+msgstr ""
+
+#: src/scan-cli.cpp:516 src/scan-gtkmm.cpp:73
+msgid "Utility options"
+msgstr ""
+
+#: src/scan-cli.cpp:519
+msgid "log device I/O in hexdump format"
+msgstr ""
+
+#: src/scan-cli.cpp:522
+msgid ""
+"output image format\n"
+"PNM, PNG, JPEG, PDF, TIFF or one of the device supported transfer-formats.  "
+"The explicitly mentioned types are normally inferred from the output file "
+"name.  Some require additional libraries at build-time in order to be "
+"available."
+msgstr ""
+
+#: src/scan-cli.cpp:584
+msgid "Device actions"
+msgstr ""
+
+#: src/scan-cli.cpp:594
+msgid ""
+"Only perform the actions given on the command-line.  Do not perform image "
+"acquisition."
+msgstr ""
+
+#: src/scan-cli.cpp:600
+msgid "Device options"
+msgstr ""
+
+#: src/scan-cli.cpp:602
+msgid "Add-on options"
+msgstr ""
+
+#: src/scan-cli.cpp:683
+msgid ""
+"Note: device options may be ignored if their prerequisites are not "
+"satisfied.\n"
+"A '--duplex' option may be ignored if you do not select the ADF, for "
+"example.\n"
+msgstr ""
+
+#: src/scan-cli.cpp:843
+#, boost-format
+msgid "cannot infer image format from file extension: '%1%'"
+msgstr ""
+
+#: src/scan-cli.cpp:864
+#, fuzzy, boost-format
+msgid "unsupported image format: '%1%'"
+msgstr "El formato de archivo no es compatible."
+
+#: src/scan-cli.cpp:919
+#, fuzzy, boost-format
+msgid "%1% does not support multi-image files"
+msgstr "El formato %1% no admite múltiples imágenes en un solo archivo."
+
+#: src/scan-gtkmm.cpp:77
+msgid "use an alternative GUI layout definition file"
+msgstr ""
+
+#: src/scan-gtkmm.cpp:79
+msgid "use an alternative GUI resource file"
+msgstr ""
+
+#: src/scan.cpp:77
+msgid "Command options"
+msgstr ""
+
+#: src/scan.cpp:82
+msgid ""
+"Start an interactive user interface\n"
+"The default behavior depends on the environment where one runs the command.  "
+"A scan utility suitable for non-interactive use can be selected with the '--"
+"no-interface' option."
+msgstr ""
+
+#: src/scan.cpp:91
+#, fuzzy
+msgid "acquire images with a suitable utility"
+msgstr "Guardar todas las imágenes en un solo archivo"
+
+#: src/version.cpp:52
+msgid "display version information for a command"
+msgstr ""
