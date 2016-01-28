@@ -1,7 +1,7 @@
 
   Utsushi - Next Generation Image Acquisition
 
-  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
+  Copyright (C) 2012-2016  SEIKO EPSON CORPORATION
   Copyright (C) 2015  Olaf Meeuwissen
 
 
@@ -54,53 +54,6 @@ USING THE SOFTWARE
   and use any of the displayed devices as an argument to the 'scan'
   command to select a particular device rather than whatever is the
   default.
-
-  SUPPORTED DEVICES
-  -----------------
-    At present, the following EPSON devices are supported:
-
-      - DS-40
-      - DS-510
-      - DS-520
-      - DS-560
-      - DS-760
-      - DS-860
-      - DS-5500
-      - DS-6500
-      - DS-7500
-      - DS-50000
-      - DS-60000
-      - DS-70000
-      - EP-10VA Series
-      - EP-808A Series
-      - EP-978A3 Series
-      - ET-2500 Series
-      - ET-2550 Series
-      - ET-4500 Series
-      - ET-4550 Series
-      - L220/L360 Series
-      - L365/L366 Series
-      - L455 Series
-      - L565/L566 Series
-      - L655 Series
-      - PX-M840FX
-      - PX-M860F
-      - PX-M7050 Series
-      - PX-M7050FX Series
-      - WF-6530 Series
-      - WF-6590 Series
-      - WF-8510/8590 Series
-      - WF-R8590 Series
-      - XP-220 Series
-      - XP-230 Series
-      - XP-235 Series
-      - XP-332 335 Series
-      - XP-430 Series
-      - XP-432 435 Series
-      - XP-530 Series
-      - XP-630 Series
-      - XP-830 Series
-      - XP-960 Series
 
   NETWORK SUPPORT
   ---------------

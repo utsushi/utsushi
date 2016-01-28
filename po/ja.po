@@ -22,7 +22,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2015-12-25 01:09+0000\n"
+"POT-Creation-Date: 2016-01-22 01:07+0000\n"
 "PO-Revision-Date: 2015-12-24 10:18+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Japanese\n"
@@ -364,11 +364,11 @@ msgstr "文字/線画"
 msgid "Blank Image Threshold"
 msgstr "白紙ページのしきい値"
 
-#: filters/magick.cpp:146
+#: filters/magick.cpp:187
 msgid "Brightness"
 msgstr "明るさ"
 
-#: filters/magick.cpp:154
+#: filters/magick.cpp:195
 msgid "Contrast"
 msgstr "コントラスト"
 

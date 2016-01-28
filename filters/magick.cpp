@@ -1,5 +1,5 @@
 //  magick.cpp -- touches applied to your image data
-//  Copyright (C) 2014, 2015  SEIKO EPSON CORPORATION
+//  Copyright (C) 2014-2016  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : EPSON AVASYS CORPORATION
@@ -81,11 +81,20 @@ chomp (char *str)
 }
 
 bool
-image_magick_version_before_(const char *cutoff)
+magick_version_before_(const char *magick, const char *cutoff)
 {
-  FILE *fp = popen (MAGICK_CONVERT " -version"
-                    "| awk '/^Version:/{print $3}'", "r");
-  int errc = errno;
+  FILE *fp = NULL;
+  int errc = 0;
+
+  if (0 == strcmp ("GraphicsMagick", magick))
+    fp = popen ("gm convert -version"
+                "| awk '/^GraphicsMagick/{print $2}'", "r");
+  if (fp) errc = errno;
+
+  if (0 == strcmp ("ImageMagick", magick))
+    fp  = popen ("convert -version"
+                 "| awk '/^Version:/{print $3}'", "r");
+  if (fp) errc = errno;
 
   if (fp)
     {
@@ -97,16 +106,48 @@ image_magick_version_before_(const char *cutoff)
 
       if (version)
         {
-          log::debug ("found ImageMagick-%1%") % version;
+          log::debug ("found %1%-%2%") % magick % version;
           return (0 > strverscmp (version, cutoff));
         }
     }
 
   if (errc)
-    log::alert ("failure checking ImageMagick version: %1%")
+    log::alert ("failure checking %1% version: %2%")
+      % magick
       % strerror (errc);
 
   return false;
+}
+
+bool
+graphics_magick_version_before_(const char *cutoff)
+{
+  return magick_version_before_("GraphicsMagick", cutoff);
+}
+
+bool
+image_magick_version_before_(const char *cutoff)
+{
+  return magick_version_before_("ImageMagick", cutoff);
+}
+
+bool
+auto_orient_is_usable ()
+{
+  static int usable = -1;
+
+  if (-1 == usable)
+    {
+      if (HAVE_GRAPHICS_MAGICK)         // version -auto-orient was added
+        usable = !graphics_magick_version_before_("1.3.18");
+      if (HAVE_IMAGE_MAGICK)            // version known to work
+        usable = !image_magick_version_before_("6.7.8-9");
+      if (-1 == usable)
+        usable = false;
+      usable = (usable ? 1 : 0);
+    }
+
+  return usable;
 }
 
 const std::map < context::orientation_type, std::string >
@@ -397,17 +438,43 @@ magick::arguments (const context& ctx)
 
   if (auto_orient_)
     {
-      try
+      if (auto_orient_is_usable ())
         {
-          std::string orient
-            = " -orient " + orientation.at (ctx.orientation ());
+          try
+            {
+              std::string orient
+                = " -orient " + orientation.at (ctx.orientation ());
 
-          argv += orient + " -auto-orient";
-          ctx_.orientation (context::top_left);
+              argv += orient + " -auto-orient";
+              ctx_.orientation (context::top_left);
+            }
+          catch (const std::out_of_range&)
+            {
+              // FIXME log something?
+            }
         }
-      catch (const std::out_of_range&)
+      else                      // auto-orient emulation fallback
         {
-          // FIXME log something?
+          /**/ if (context::bottom_left  == ctx.orientation ())
+            argv += " -flip";
+          else if (context::bottom_right == ctx.orientation ())
+            argv += " -flip -flop";
+          else if (context::left_bottom  == ctx.orientation ())
+            argv += " -rotate -90";
+          else if (context::left_top     == ctx.orientation ())
+            argv += " -rotate 90 -flop";
+          else if (context::right_bottom == ctx.orientation ())
+            argv += " -rotate -90 -flop";
+          else if (context::right_top    == ctx.orientation ())
+            argv += " -rotate 90";
+          else if (context::top_left     == ctx.orientation ())
+            argv += " -noop";
+          else if (context::top_right    == ctx.orientation ())
+            argv += " -flop";
+          else
+            {
+              // FIXME log something?
+            }
         }
     }
 
