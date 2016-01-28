@@ -1,5 +1,5 @@
 dnl  configure.ac -- an autoconf template for configure
-dnl  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
+dnl  Copyright (C) 2012-2016  SEIKO EPSON CORPORATION
 dnl  Copyright (C) 2013-2015  Olaf Meeuwissen
 dnl
 dnl  License: GPL-3.0+
@@ -24,7 +24,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.62)
-AC_INIT([Utsushi], [0.14.0],
+AC_INIT([Utsushi], [0.15.0],
         [linux-scanner@epson.jp],
         [utsushi])
 

@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2016-01-09 05:46+0000\n"
+"POT-Creation-Date: 2016-01-28 11:27+0000\n"
 "PO-Revision-Date: 2015-12-15 17:05+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: English\n"
@@ -552,7 +552,7 @@ msgid ""
 "selecting a smaller value."
 msgstr ""
 
-#: drivers/esci/extended-scanner.cpp:386 filters/magick.cpp:146
+#: drivers/esci/extended-scanner.cpp:386 filters/magick.cpp:187
 msgid "Brightness"
 msgstr ""
 
@@ -679,15 +679,15 @@ msgstr ""
 msgid "Image Quality"
 msgstr ""
 
-#: filters/magick.cpp:147
+#: filters/magick.cpp:188
 msgid "Change brightness of the acquired image."
 msgstr ""
 
-#: filters/magick.cpp:154
+#: filters/magick.cpp:195
 msgid "Contrast"
 msgstr ""
 
-#: filters/magick.cpp:155
+#: filters/magick.cpp:196
 msgid "Change contrast of the acquired image."
 msgstr ""
 

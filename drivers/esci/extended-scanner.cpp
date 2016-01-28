@@ -1,6 +1,6 @@
 //  extended-scanner.cpp -- devices that handle extended commands
 //  Copyright (C) 2013, 2014  Olaf Meeuwissen
-//  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
+//  Copyright (C) 2012, 2015, 2016  SEIKO EPSON CORPORATION
 //
 //  License: GPL-3.0+
 //  Author : EPSON AVASYS CORPORATION
@@ -1360,6 +1360,8 @@ extended_scanner::configure_color_correction ()
     ("PID 1105", profile_matrix_1)
     ("PID 1106", profile_matrix_1)
     ("PID 1107", profile_matrix_1)
+    ("PID 110D", profile_matrix_1)
+    ("PID 110F", profile_matrix_1)
     //
     ("PID 08CD", profile_matrix_2)
     ("PID 1108", profile_matrix_2)
