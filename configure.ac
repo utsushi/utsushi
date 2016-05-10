@@ -24,7 +24,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.62)
-AC_INIT([Utsushi], [0.15.0],
+AC_INIT([Utsushi], [0.16.0],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -231,7 +231,7 @@ AC_DEFINE_UNQUOTED([DEFAULT_TEXT_DOMAIN], ["$PACKAGE"],
   [Define to the default text domain for message translation.])
 
 LT_PREREQ([2.2.6])              dnl  portable plugin (build) support
-LT_INIT([dlopen])
+LT_INIT([dlopen disable-static])
 LT_LANG([C++])
 LT_CONFIG_LTDL_DIR([upstream/ltdl])
 LTDL_INIT([recursive])

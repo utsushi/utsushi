@@ -277,12 +277,12 @@ preview::on_refresh ()
       const std::string xfer_jpg = "image/jpeg";
       std::string xfer_fmt = idevice_->get_context ().content_type ();
 
-      bool bilevel = ((*control_)["image-type"] == "Gray (1 bit)");
+      bool bilevel = ((*control_)["image-type"] == "Monochrome");
       if (bilevel)
         {
           image_type = (*control_)["image-type"];
           try {
-            (*control_)["image-type"] = string ("Gray (8 bit)");
+            (*control_)["image-type"] = string ("Grayscale");
           }
           catch (const std::out_of_range&) {
             image_type = value ();

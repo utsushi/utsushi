@@ -37,6 +37,10 @@
 #include <boost/iostreams/stream.hpp>
 #include <boost/lambda/lambda.hpp>
 
+#ifndef SHELL
+#define SHELL "/bin/sh"
+#endif
+
 namespace utsushi {
 namespace test {
 

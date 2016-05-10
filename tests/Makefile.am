@@ -32,7 +32,6 @@ if enable_uncrustify_test
 check_PROGRAMS += indentation.utr
 endif
 
-AM_CPPFLAGS += -DSHELL="\"/bin/sh\""
 AM_LDFLAGS  += $(BOOST_LDFLAGS)
 
 LDADD  =

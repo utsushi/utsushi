@@ -283,9 +283,9 @@ extended_scanner::configure ()
   {
     add_options ()
       ("image-type", (from< store > ()
-                      -> alternative (SEC_N_("Gray (1 bit)"))
-                      -> alternative (SEC_N_("Gray (8 bit)"))
-                      -> default_value (SEC_N_("Color (8 bit)"))
+                      -> alternative (SEC_N_("Monochrome"))
+                      -> alternative (SEC_N_("Grayscale"))
+                      -> default_value (SEC_N_("Color"))
                 ),
        attributes (tag::general)(level::standard),
        SEC_N_("Image Type")
@@ -504,7 +504,7 @@ extended_scanner::set_up_image ()
 
   // \todo
   // need to recompute the scan area when FS_F_.media_value() returns
-  // non-zero values and the user has selected scan-area == Automatic
+  // non-zero values and the user has selected scan-area == "Auto Detect"
 
   if (!set_up_hardware ())
     {
@@ -623,7 +623,7 @@ extended_scanner::set_up_initialize ()
   lock_scanner ();
 
   if (val_.count ("scan-area")
-      && value ("Automatic") == val_["scan-area"])
+      && value ("Auto Detect") == val_["scan-area"])
     {
       media size = probe_media_size_(val_["doc-source"]);
       update_scan_area_(size, val_);
@@ -801,10 +801,10 @@ extended_scanner::set_up_image_mode ()
   if (!val_.count ("image-type")) return;
 
   const string& mode = val_["image-type"];
-  parm_.color_mode (mode == "Color (8 bit)"
+  parm_.color_mode (mode == "Color"
                     ? PIXEL_RGB
                     : MONOCHROME);
-  parm_.bit_depth (mode == "Gray (1 bit)"
+  parm_.bit_depth (mode == "Monochrome"
                    ? 1 : 8);
 }
 
@@ -1003,7 +1003,7 @@ extended_scanner::finalize (const value::map& vm)
         {
           size = media (length (), length ());
         }
-      else if (scan_area == "Automatic")
+      else if (scan_area == "Auto Detect")
         {
           size = probe_media_size_(final_vm["doc-source"]);
         }
@@ -1125,7 +1125,7 @@ extended_scanner::add_scan_area_options (option::map& opts,
   areas.push_back (SEC_N_("Manual"));
   areas.push_back (SEC_N_("Maximum"));
   if (stat_.supports_size_detection (src))
-    areas.push_back (SEC_N_("Automatic"));
+    areas.push_back (SEC_N_("Auto Detect"));
 
   opts.add_options ()
     ("scan-area", (from< utsushi::store > ()
@@ -1362,6 +1362,7 @@ extended_scanner::configure_color_correction ()
     ("PID 1107", profile_matrix_1)
     ("PID 110D", profile_matrix_1)
     ("PID 110F", profile_matrix_1)
+    ("PID 111C", profile_matrix_1)
     //
     ("PID 08CD", profile_matrix_2)
     ("PID 1108", profile_matrix_2)

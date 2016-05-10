@@ -38,7 +38,9 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#ifndef SHELL
 #define SHELL "/bin/sh"
+#endif
 
 namespace {
 

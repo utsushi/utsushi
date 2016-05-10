@@ -22,8 +22,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2016-01-28 11:27+0000\n"
-"PO-Revision-Date: 2015-12-24 10:18+0900\n"
+"POT-Creation-Date: 2016-04-12 04:38+0000\n"
+"PO-Revision-Date: 2016-02-24 09:02+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Japanese\n"
 "Language: ja\n"
@@ -34,11 +34,11 @@ msgstr ""
 
 #: drivers/esci/compound-scanner.cpp:356
 msgid "Loading completed"
-msgstr ""
+msgstr "給紙が完了しました。"
 
 #: drivers/esci/compound-scanner.cpp:357
 msgid "Ejecting completed"
-msgstr ""
+msgstr "排紙が完了しました。"
 
 #: drivers/esci/compound-scanner.cpp:381
 msgid "Cleaning is complete."
@@ -58,11 +58,11 @@ msgstr "キャリブレーションに失敗しました。"
 
 #: drivers/esci/compound-scanner.cpp:411
 msgid "Loading failed"
-msgstr ""
+msgstr "給紙に失敗しました。"
 
 #: drivers/esci/compound-scanner.cpp:413
 msgid "Ejecting failed"
-msgstr ""
+msgstr "排紙に失敗しました。"
 
 #: drivers/esci/compound-scanner.cpp:419
 msgid "Maintenance failed"
@@ -167,19 +167,19 @@ msgstr "クリーニング中"
 
 #: drivers/esci/compound-scanner.cpp:753
 msgid "Eject"
-msgstr ""
+msgstr "排紙"
 
 #: drivers/esci/compound-scanner.cpp:754
 msgid "Ejecting ..."
-msgstr ""
+msgstr "排紙中"
 
 #: drivers/esci/compound-scanner.cpp:761
 msgid "Load"
-msgstr ""
+msgstr "給紙"
 
 #: drivers/esci/compound-scanner.cpp:762
 msgid "Loading..."
-msgstr ""
+msgstr "給紙中"
 
 #: drivers/esci/compound-scanner.cpp:1855
 #: drivers/esci/grammar-capabilities.cpp:529
@@ -217,7 +217,7 @@ msgstr "重送検知（用紙厚設定）"
 
 #: drivers/esci/compound-scanner.cpp:2353
 msgid "Long Paper Mode"
-msgstr ""
+msgstr "長尺紙モード"
 
 #: drivers/esci/compound-scanner.cpp:2354
 msgid ""
@@ -279,8 +279,8 @@ msgstr "最大"
 #: drivers/esci/compound-scanner.cpp:2606
 #: drivers/esci/compound-scanner.cpp:2673
 #: drivers/esci/extended-scanner.cpp:1128
-msgid "Automatic"
-msgstr ""
+msgid "Auto Detect"
+msgstr "自動検知"
 
 #: drivers/esci/compound-scanner.cpp:2613
 #: drivers/esci/extended-scanner.cpp:1135
@@ -526,18 +526,18 @@ msgstr "不明なデバイスのエラー: %1%/%2%"
 
 #: drivers/esci/extended-scanner.cpp:286
 #: drivers/esci/grammar-capabilities.cpp:650
-msgid "Gray (1 bit)"
+msgid "Monochrome"
 msgstr "モノクロ"
 
 #: drivers/esci/extended-scanner.cpp:287
 #: drivers/esci/grammar-capabilities.cpp:651
-msgid "Gray (8 bit)"
-msgstr "グレー（8 bit）"
+msgid "Grayscale"
+msgstr "グレー"
 
 #: drivers/esci/extended-scanner.cpp:288
-#: drivers/esci/grammar-capabilities.cpp:648
-msgid "Color (8 bit)"
-msgstr "カラー（8 bit）"
+#: drivers/esci/grammar-capabilities.cpp:648 drivers/esci/scanner.cpp:175
+msgid "Color"
+msgstr "カラー"
 
 #: drivers/esci/extended-scanner.cpp:302
 msgid "Line Count"
@@ -620,7 +620,7 @@ msgstr "透過原稿ユニット 2"
 #: drivers/esci/grammar-capabilities.cpp:315
 #: drivers/esci/grammar-capabilities.cpp:325
 msgid "Transparency Unit"
-msgstr ""
+msgstr "透過原稿ユニット"
 
 #: drivers/esci/extended-scanner.cpp:1094
 #, fuzzy
@@ -659,22 +659,6 @@ msgstr "緑"
 msgid "Blue"
 msgstr "青"
 
-#: drivers/esci/grammar-capabilities.cpp:530 gtkmm/file-chooser.cpp:453
-msgid "JPEG"
-msgstr ""
-
-#: drivers/esci/grammar-capabilities.cpp:647
-msgid "Color (1 bit)"
-msgstr "カラー（1 bit）"
-
-#: drivers/esci/grammar-capabilities.cpp:649
-msgid "Color (16 bit)"
-msgstr "カラー（16 bit）"
-
-#: drivers/esci/grammar-capabilities.cpp:652
-msgid "Gray (16 bit)"
-msgstr "グレー（16 bit）"
-
 #: drivers/esci/scanner.cpp:172
 msgid "ADF - Double-sided"
 msgstr "ADF両面"
@@ -687,10 +671,6 @@ msgstr "ADF片面"
 msgid "Black & White"
 msgstr "モノクロ"
 
-#: drivers/esci/scanner.cpp:175
-msgid "Color"
-msgstr "カラー"
-
 #: drivers/esci/scanner.cpp:176
 msgid "Mode"
 msgstr "モード"
@@ -700,8 +680,8 @@ msgid "Text/Line Art"
 msgstr "文字/線画"
 
 #: filters/image-skip.cpp:67
-msgid "Blank Image Threshold"
-msgstr "白紙ページのしきい値"
+msgid "Skip Blank Pages Settings"
+msgstr "白紙ページ除去の設定"
 
 #: filters/jpeg.cpp:229
 msgid "Buffer Size"
@@ -819,10 +799,6 @@ msgstr "標準サイズ"
 #: gtkmm/dialog.glade:118
 msgid "Zoom to fit"
 msgstr "フィットさせる"
-
-#: gtkmm/dialog.glade:150
-msgid "Scanning Dialog"
-msgstr "スキャンダイアログ"
 
 #: gtkmm/dialog.glade:188
 msgid "Scanner:"
@@ -1029,19 +1005,19 @@ msgstr ""
 
 #: lib/media.cpp:71
 msgid "Ledger"
-msgstr ""
+msgstr "Ledger"
 
 #: lib/media.cpp:72
 msgid "Legal"
-msgstr ""
+msgstr "Legal"
 
 #: lib/media.cpp:73
 msgid "Letter"
-msgstr ""
+msgstr "Letter"
 
 #: lib/media.cpp:74
 msgid "Executive"
-msgstr ""
+msgstr "Executive"
 
 #: lib/pump.cpp:83
 msgid "Acquire image data asynchronously"
@@ -1298,109 +1274,3 @@ msgstr "適切なユーティリティで画像を取得する"
 #: src/version.cpp:52
 msgid "display version information for a command"
 msgstr "コマンドのバージョン情報を表示する"
-
-#~ msgid "unable to initialise USB support"
-#~ msgstr "USBの初期化ができません"
-
-#~ msgid "no usable, matching device"
-#~ msgstr "使用可能なデバイスがありません"
-
-#~ msgid "esci::compound_scanner(): internal inconsistency"
-#~ msgstr "esci::compound_scanner(): 内部不一致エラー"
-
-#~ msgid "internal error: no document source"
-#~ msgstr "内部エラー: 取り込み装置がありません"
-
-#~ msgid "crossed wires"
-#~ msgstr "配線が混線しています"
-
-#~ msgid "unknown extension designation"
-#~ msgstr "不明なエクステンション指定"
-
-#~ msgid "esci::extended_scanner(): internal inconsistency"
-#~ msgstr "esci::extended_scanner(): 内部不一致エラー"
-
-#~ msgid "padding only works with raster images of known size"
-#~ msgstr ""
-#~ "パディングフィルターはサイズが決まったラスター画像のみに対応しています"
-
-#~ msgid "PDF object number overflow"
-#~ msgstr "PDFのオブジェクト番号がオーバーフローしました"
-
-#~ msgid "PDF filter octet count mismatch"
-#~ msgstr "PDFデータを出力中に出力データサイズが一致しませんでした"
-
-#~ msgid "invalid call to _pdf_::writer::write (object&)"
-#~ msgstr "_pdf_::writer::write (object&) の無効な呼び出し"
-
-#~ msgid "invalid call to _pdf_::writer::begin_stream ()"
-#~ msgstr "_pdf_::writer::begin_stream () の無効な呼び出し"
-
-#~ msgid "invalid call to _pdf_::writer::write ()"
-#~ msgstr "_pdf_::writer::write () の無効な呼び出し"
-
-#~ msgid "invalid call to _pdf_::writer::end_stream ()"
-#~ msgstr "_pdf_::writer::end_stream () の無効な呼び出し"
-
-#~ msgid "cannot write header in stream mode"
-#~ msgstr "ストリームモードではヘッダーは書き込めません"
-
-#~ msgid "cannot write trailer in stream mode"
-#~ msgstr "ストリームモードではトレイラーは書き込めません"
-
-#~ msgid "Dialog specification requires a 'uimanager'"
-#~ msgstr "ダイアログの指定には'uimanager'が必要です"
-
-#~ msgid "unhandled state in idevice::read()"
-#~ msgstr "idevice::read() で処理できない状態"
-
-#~ msgid "cannot add option::map to self"
-#~ msgstr "自分自身を option::map に追加することはできません"
-
-#~ msgid "no image data source"
-#~ msgstr "イメージデータソースなし"
-
-#~ msgid "no output destination"
-#~ msgstr "出力の宛先なし"
-
-#~ msgid "run_time has been initialized already"
-#~ msgstr "run_time はすでに初期化されています"
-
-#~ msgid "run_time has not been initialized yet"
-#~ msgstr "run_time はまだ初期化されていません"
-
-#~ msgid "driver not found"
-#~ msgstr "ドライバーモジュールが見つかりません"
-
-#~ msgid "syntax error: invalid UDI '%1%'"
-#~ msgstr "文法エラー: 無効な UDI '%1%'"
-
-#~ msgid "unsupported colour space"
-#~ msgstr "サポートしていないカラースペース"
-
-#~ msgid "unsupported bit depth"
-#~ msgstr "サポートしていない色数"
-
-#~ msgid ""
-#~ "SANE API specification violation\n"
-#~ "The option number count has to be the first option."
-#~ msgstr ""
-#~ "SANE API の仕様違反\n"
-#~ "オプション番号数は最初のオプションでなければなりません。"
-
-#~ msgid ""
-#~ "SANE API specification violation\n"
-#~ "Option names must start with a lower-case ASCII character."
-#~ msgstr ""
-#~ "SANE API の仕様違反\n"
-#~ "オプション名は小文字のASCII文字で始まらなければなりません。"
-
-#~ msgid "internal inconsistency"
-#~ msgstr "内部不一致エラー"
-
-#~ msgid ""
-#~ "option parser internal inconsistency\n"
-#~ "  key = %1%"
-#~ msgstr ""
-#~ "オプションパーサーの内部不一致エラー\n"
-#~ "  キー = %1%"

@@ -30,7 +30,6 @@ check_PROGRAMS += command.utr
 check_PROGRAMS += main.utr
 check_PROGRAMS += main-failure.utr
 
-AM_CPPFLAGS += -DSHELL="\"/bin/sh\""
 AM_LDFLAGS  += $(BOOST_LDFLAGS)
 
 LDADD  =

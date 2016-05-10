@@ -138,8 +138,7 @@ BUILDING/INSTALLING FROM SOURCE
     --with-tiff
 
   See the output of `./configure --help` for a complete list and more
-  information.  To save time compiling the sources, you can use one of
-  the '--disable-static' and '--disable-shared' options.
+  information.
 
   If you have a sufficiently recent Boost installed on your system but
   `./configure` fails to find any of its libraries, please specify the

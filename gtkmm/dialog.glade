@@ -147,7 +147,7 @@
     </ui>
   </object>
   <object class="GtkDialog" id="scanning-dialog">
-    <property name="title" translatable="yes">Scanning Dialog</property>
+    <property name="title">Scanning Dialog</property>
     <property name="has-separator">False</property>
     <property name="height-request">580</property>
     <child internal-child="vbox">

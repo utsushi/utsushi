@@ -641,7 +641,7 @@ editor::set (const std::string& key, const value& v)
   if (key == "device/scan-area"
       && opts_->count ("doc-locate/crop"))
     {
-      toggle t = (value ("Automatic") == v);
+      toggle t = (value ("Auto Detect") == v);
 
       vm[key] = (t ? value ("Maximum") : v);
       vm["doc-locate/crop"] = t;
@@ -812,8 +812,8 @@ editor::update_appearance (keyed_list::value_type& v)
           bool manual =
             (string ("Manual") == untranslate ("device/scan-area", v));
           manual_width &=
-            (string ("Automatic") == untranslate ("device/scan-area", v)
-             || (// because we may be emulating Automatic ourselves
+            (string ("Auto Detect") == untranslate ("device/scan-area", v)
+             || (// because we may be emulating "Auto Detect" ourselves
                  opts_->count ("doc-locate/crop")
                  && (*opts_)["doc-locate/crop"] == value (toggle (true)))
              );

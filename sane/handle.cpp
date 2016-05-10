@@ -519,10 +519,10 @@ handle::handle(const scanner::info& info)
 
           constraint::ptr c ((*idev_->options ())["scan-area"]
                              .constraint ());
-          if (value ("Automatic") != (*c) (value ("Automatic")))
+          if (value ("Auto Detect") != (*c) (value ("Auto Detect")))
             {
               dynamic_pointer_cast< store >
-                (c)->alternative ("Automatic");
+                (c)->alternative ("Auto Detect");
 
               // All SANE options are exposed so we cannot really
               // stick this in an option as we do in the GUI.
@@ -767,13 +767,13 @@ handle::get (SANE_Int index, void *value) const
       && emulating_automatic_scan_area_
       && do_automatic_scan_area_)
     {
-      v = utsushi::value ("Automatic");
+      v = utsushi::value ("Auto Detect");
     }
 
   if (k == option_prefix / "image-type"
       && revert_bilevel_)
     {
-      v = utsushi::value ("Gray (1 bit)");
+      v = utsushi::value ("Monochrome");
     }
 
   v >> value;
@@ -795,7 +795,7 @@ handle::set (SANE_Int index, void *value, SANE_Word *info)
   if (k == option_prefix / "scan-area"
       && emulating_automatic_scan_area_)
     {
-      const utsushi::value automatic ("Automatic");
+      const utsushi::value automatic ("Auto Detect");
       do_automatic_scan_area_ = (automatic == utsushi::value (v));
       if (do_automatic_scan_area_)
         v = utsushi::value ("Maximum");
@@ -1103,13 +1103,13 @@ handle::marker ()
 
       if (revert_bilevel_)
         {
-          opt_[option_prefix / "image-type"] = string ("Gray (1 bit)");
+          opt_[option_prefix / "image-type"] = string ("Monochrome");
           revert_bilevel_ = false;
         }
-      bool bilevel = (opt_[option_prefix / "image-type"] == "Gray (1 bit)");
+      bool bilevel = (opt_[option_prefix / "image-type"] == "Monochrome");
       if (bilevel)
         {
-          opt_[option_prefix / "image-type"] = string ("Gray (8 bit)");
+          opt_[option_prefix / "image-type"] = string ("Grayscale");
           revert_bilevel_ = true;
         }
 
@@ -1183,7 +1183,7 @@ handle::marker ()
           toggle t = value (opt_[option_prefix / "long-paper-mode"]);
           if (s == "ADF" && t && opt_.count (option_prefix / "scan-area"))
             {
-              t = (opt_[option_prefix / "scan-area"] == value ("Automatic")
+              t = (opt_[option_prefix / "scan-area"] == value ("Auto Detect")
                    || do_automatic_scan_area_);
               if (t && !autocrop)
                 autocrop = make_shared< _flt_::autocrop > ();
