@@ -123,6 +123,19 @@ USING THE SOFTWARE
 
 BUILDING/INSTALLING FROM SOURCE
 ===============================
+  In case you got the source from a `git clone` command, you need to
+  run the `./bootstrap` script before anything else.  Note that this
+  script assumes you that have the "usual" autotools installed.  For
+  clarity's sake, that is `autoconf`, `automake`, `autopoint` (part
+  of `gettext`) and `libtool`.  You will need the `autoconf-archive`,
+  `patch` and `gnulib` as well.
+
+  The `./bootstrap` script has a `--help` option you may find useful
+  (or not).  The script tries to diagnose any problems it encounters
+  so pay attention to the output.  Once `./bootstrap` has completed,
+  things should be ready for the regular "source archive" build that
+  is documented in the remainder of this section.
+
   Generic installation notes can be found in the 'INSTALL' file.  The
   `./configure` script supports the following special options:
 
