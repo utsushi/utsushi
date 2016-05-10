@@ -618,10 +618,10 @@ main (int argc, char *argv[])
             {
               constraint::ptr c ((*device->options ())["scan-area"]
                                  .constraint ());
-              if (value ("Automatic") != (*c) (value ("Automatic")))
+              if (value ("Auto Detect") != (*c) (value ("Auto Detect")))
                 {
                   dynamic_pointer_cast< utsushi::store >
-                    (c)->alternative ("Automatic");
+                    (c)->alternative ("Auto Detect");
                   emulating_automatic_scan_area = true;
                 }
             }
@@ -754,7 +754,7 @@ main (int argc, char *argv[])
       filter::ptr autocrop;
       if (HAVE_MAGICK_PP
           && (emulating_automatic_scan_area || long_paper_mode)
-          && (dev_vm["scan-area"].as< string > () == "Automatic"))
+          && (dev_vm["scan-area"].as< string > () == "Auto Detect"))
         {
           autocrop = make_shared< _flt_::autocrop > ();
           dev_vm.erase ("scan-area");
@@ -801,11 +801,11 @@ main (int argc, char *argv[])
           add_vm.erase ("contrast");
         }
 
-      bool bilevel = (dev_vm["image-type"].as< string > () == "Gray (1 bit)");
+      bool bilevel = (dev_vm["image-type"].as< string > () == "Monochrome");
       if (bilevel)              // use software thresholding
         {
           dev_vm.erase ("image-type");
-          po::variable_value v (std::string ("Gray (8 bit)"), false);
+          po::variable_value v (std::string ("Grayscale"), false);
           dev_vm.insert (std::make_pair ("image-type", v));
         }
 

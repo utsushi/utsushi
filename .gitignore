@@ -47,7 +47,7 @@ Makefile.in
 
 #  Gettext stuff
 /ABOUT-NLS
-/po/
+/po/*
 !/po/*.po
 !/po/LINGUAS
 !/po/Makevars

@@ -32,6 +32,9 @@ filter_ldflags += -export-dynamic
 dist_pkglibexec_SCRIPTS =
 pkglibexec_PROGRAMS     =
 
+AM_INSTALLCHECK_STD_OPTIONS_EXEMPT  = $(pkglibexec_PROGRAMS)
+AM_INSTALLCHECK_STD_OPTIONS_EXEMPT += $(dist_pkglibexec_SCRIPTS)
+
 ##  FIXME: split each filter into its own plugin
 filterlib_LTLIBRARIES  = libflt-all.la
 
@@ -85,8 +88,6 @@ libflt_all_la_CPPFLAGS  += -DPKGLIBEXECDIR="\"$(pkglibexecdir)\""
 libflt_all_la_SOURCES   += reorient.cpp
 libflt_all_la_SOURCES   += reorient.hpp
 dist_pkglibexec_SCRIPTS += get-text-orientation
-
-AM_INSTALLCHECK_STD_OPTIONS_EXEMPT = doc-locate
 
 pdf_filter  =
 pdf_filter += pdf.cpp

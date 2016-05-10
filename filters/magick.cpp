@@ -402,6 +402,7 @@ magick::arguments (const context& ctx)
     {
       double a = 1 / (1 - contrast_);
       double b = (brightness_ - contrast_) * a / 2;
+      size_t mat_size = ((HAVE_IMAGE_MAGICK) ? 6 : 5);
 
       if (HAVE_IMAGE_MAGICK
           && !image_magick_version_before_("6.6.1-0"))
@@ -410,13 +411,13 @@ magick::arguments (const context& ctx)
         argv += " -recolor";
 
       argv += " \"";
-      for (size_t row = 0; row < 5; ++row)
-        for (size_t col = 0; col < 5; ++col)
+      for (size_t row = 0; row < mat_size; ++row)
+        for (size_t col = 0; col < mat_size; ++col)
           {
             double coef = 0;
 
-            if (row == col) coef = ((3 == col) ? 1 : a);
-            if ( 4  == col) coef = ((4 == row) ? 1 : b);
+            if ((mat_size - 1)  == col) coef = ((3 > row) ? b : 0);
+            if (row == col)             coef = ((3 > col) ? a : 1);
             argv += lexical_cast< string > (coef) + " ";
           }
       argv += "\"";

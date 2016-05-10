@@ -439,11 +439,11 @@ dialog::on_scan (void)
     std::string xfer_fmt = idevice_->get_context ().content_type ();
 
     revert_bilevel_ = false;
-    bool bilevel = ((*opts_)["device/image-type"] == "Gray (1 bit)");
+    bool bilevel = ((*opts_)["device/image-type"] == "Monochrome");
     if (bilevel)                // use software thresholding
       {
         try {
-          (*opts_)["device/image-type"] = string ("Gray (8 bit)");
+          (*opts_)["device/image-type"] = string ("Grayscale");
           revert_bilevel_ = true;
         }
         catch (const std::out_of_range&){}
@@ -523,8 +523,8 @@ dialog::on_scan (void)
         toggle t = value ((*opts_)["device/long-paper-mode"]);
         if (s == "ADF" && t && opts_->count ("device/scan-area"))
           {
-            t = ((((*opts_)["device/scan-area"]) == value ("Automatic"))
-                 || (// because we may be emulating Automatic ourselves
+            t = ((((*opts_)["device/scan-area"]) == value ("Auto Detect"))
+                 || (// because we may be emulating "Auto Detect" ourselves
                      opts_->count ("doc-locate/crop")
                      && (*opts_)["doc-locate/crop"] == value (toggle (true))));
             if (t && !autocrop)
@@ -688,7 +688,7 @@ dialog::on_scan_update (traits::int_type c)
     {
       if (revert_bilevel_)
         {
-          (*opts_)["device/image-type"] = string ("Gray (1 bit)");
+          (*opts_)["device/image-type"] = string ("Monochrome");
           revert_bilevel_ = false;
         }
       if (revert_overscan_)
@@ -748,10 +748,10 @@ dialog::on_device_changed (utsushi::scanner::ptr idev)
         {
           constraint::ptr c ((*idevice_->options ())["scan-area"]
                              .constraint ());
-          if (value ("Automatic") != (*c) (value ("Automatic")))
+          if (value ("Auto Detect") != (*c) (value ("Auto Detect")))
             {
               dynamic_pointer_cast< store >
-                (c)->alternative ("Automatic");
+                (c)->alternative ("Auto Detect");
               opts->add_options ()
                 ("crop", toggle ());
             }

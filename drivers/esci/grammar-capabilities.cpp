@@ -644,12 +644,12 @@ capabilities::image_types (const boost::optional< quad >& default_value) const
       switch (token)
         {
           //! \todo Use values that are more command-line friendly
-        case C003: type = SEC_N_("Color (1 bit)"); break;
-        case C024: type = SEC_N_("Color (8 bit)"); break;
-        case C048: type = SEC_N_("Color (16 bit)"); break;
-        case M001: type = SEC_N_("Gray (1 bit)"); break;
-        case M008: type = SEC_N_("Gray (8 bit)"); break;
-        case M016: type = SEC_N_("Gray (16 bit)"); break;
+        case C003: type =        "Color (1 bit)";  break;
+        case C024: type = SEC_N_("Color");         break;
+        case C048: type =        "Color (16 bit)"; break;
+        case M001: type = SEC_N_("Monochrome");    break;
+        case M008: type = SEC_N_("Grayscale");     break;
+        case M016: type =        "Gray (16 bit)";  break;
           // ignore all dropouts
         case R001:
         case R008:

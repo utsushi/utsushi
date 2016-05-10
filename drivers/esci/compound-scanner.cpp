@@ -537,13 +537,13 @@ compound_scanner::configure ()
 
     if (cp)
       {
-        if (value ("Gray (1 bit)") != (*cp)(value ("Gray (1 bit)")))
+        if (value ("Monochrome") != (*cp)(value ("Monochrome")))
           {
             // FIXME  This should really be done by the application if
             //        it is willing to emulate thresholding.  We rely
             //        on cooperating applications at the moment.
             dynamic_pointer_cast< utsushi::store >
-              (cp)->alternative ("Gray (1 bit)");
+              (cp)->alternative ("Monochrome");
           }
         add_options ()
           ("image-type", cp,
@@ -946,7 +946,7 @@ compound_scanner::set_up_initialize ()
   using namespace code_token::capability;
 
   if (val_.count ("scan-area")
-      && value ("Automatic") == val_["scan-area"])
+      && value ("Auto Detect") == val_["scan-area"])
     {
       /**/ if (probe)
         {
@@ -1198,10 +1198,10 @@ compound_scanner::set_up_image_mode ()
       string type = val_["image-type"];
 
       /**/ if (type == "Color (1 bit)" ) parm_.col = col::C003;
-      else if (type == "Color (8 bit)" ) parm_.col = col::C024;
+      else if (type == "Color"         ) parm_.col = col::C024;
       else if (type == "Color (16 bit)") parm_.col = col::C048;
-      else if (type == "Gray (1 bit)"  ) parm_.col = col::M001;
-      else if (type == "Gray (8 bit)"  ) parm_.col = col::M008;
+      else if (type == "Monochrome"    ) parm_.col = col::M001;
+      else if (type == "Grayscale"     ) parm_.col = col::M008;
       else if (type == "Gray (16 bit)" ) parm_.col = col::M016;
       else
         log::error
@@ -1672,7 +1672,7 @@ compound_scanner::update_scan_area_max_(value::map& vm)
 
   if (vm.count ("scan-area")
       && (   vm["scan-area"] == value ("Maximum")
-          || vm["scan-area"] == value ("Automatic")
+          || vm["scan-area"] == value ("Auto Detect")
           || vm["scan-area"] == value ("Manual")))
     {
       if (vm.count ("tl-x")
@@ -1699,7 +1699,7 @@ is_auto_updated (const value::map::key_type& k, const value::map& vm)
       if (vm.count ("scan-area"))
         {
           return (   vm.at ("scan-area") == value ("Maximum")
-                  || vm.at ("scan-area") == value ("Automatic")
+                  || vm.at ("scan-area") == value ("Auto Detect")
                   || vm.at ("scan-area") == value ("Manual"));
         }
     }
@@ -1845,7 +1845,7 @@ compound_scanner::finalize (const value::map& vm)
 
     if (!t &&
         (   type == "Color (1 bit)"
-         || type == "Gray (1 bit)"))
+         || type == "Monochrome"))
       {
         if ((*constraints_["transfer-format"]) (string ("RAW"))
             != value (string ("RAW")))
@@ -1875,8 +1875,8 @@ compound_scanner::finalize (const value::map& vm)
       string type = final_vm["image-type"];
       quad   gray = quad ();
 
-      /**/ if (type == "Gray (1 bit)")  gray = col::M001;
-      else if (type == "Gray (8 bit)")  gray = col::M008;
+      /**/ if (type == "Monochrome")    gray = col::M001;
+      else if (type == "Grayscale")     gray = col::M008;
       else if (type == "Gray (16 bit)") gray = col::M016;
 
       bool selectable = gray && caps_.has_dropout (gray);
@@ -1916,7 +1916,7 @@ compound_scanner::finalize (const value::map& vm)
               update_scan_area_(size, final_vm);
             }
         }
-      else if (scan_area == "Automatic")
+      else if (scan_area == "Auto Detect")
         {
           string src = final_vm["doc-source"];
 
@@ -1956,7 +1956,7 @@ compound_scanner::finalize (const value::map& vm)
   if (final_vm.count ("force-extent")
       && final_vm["scan-area"] != *values_["scan-area"])
     {
-      final_vm["force-extent"] = toggle (scan_area != "Automatic");
+      final_vm["force-extent"] = toggle (scan_area != "Auto Detect");
     }
 
   {                             // minimal scan area check
@@ -2603,7 +2603,7 @@ compound_scanner::add_scan_area_options (option::map& opts,
   areas.push_back (SEC_N_("Manual"));
   areas.push_back (SEC_N_("Maximum"));
   if (src.supports_size_detection ())
-    areas.push_back (SEC_N_("Automatic"));
+    areas.push_back (SEC_N_("Auto Detect"));
 
   opts.add_options ()
     ("scan-area", (from< utsushi::store > ()
@@ -2667,10 +2667,10 @@ compound_scanner::add_crop_option (option::map& opts,
       && opts.count ("scan-area"))
     {
       constraint::ptr c (opts["scan-area"].constraint ());
-      if (value ("Automatic") != (*c) (value ("Automatic")))
+      if (value ("Auto Detect") != (*c) (value ("Auto Detect")))
         {
           dynamic_pointer_cast< utsushi::store >
-            (c)->alternative (SEC_N_("Automatic"));
+            (c)->alternative (SEC_N_("Auto Detect"));
         }
     }
   else

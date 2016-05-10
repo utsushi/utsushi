@@ -1,6 +1,13 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.16.0                                            (2016-04-12)
+----------------------------------------------------------------------
+ * adds driver support for new models
+ * changes the name of some option values
+ * fixes the image processing bug
+
+----------------------------------------------------------------------
 utsushi-0.15.0                                            (2016-01-22)
 ----------------------------------------------------------------------
  * adds driver support for new models

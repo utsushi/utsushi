@@ -21,8 +21,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2016-01-22 01:07+0000\n"
-"PO-Revision-Date: 2015-12-15 17:05+0900\n"
+"POT-Creation-Date: 2016-04-12 04:38+0000\n"
+"PO-Revision-Date: 2016-02-24 09:02+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Russian\n"
 "Language: ru\n"
@@ -132,7 +132,7 @@ msgstr "Определять склеенные"
 
 #: drivers/esci/compound-scanner.cpp:2353
 msgid "Long Paper Mode"
-msgstr ""
+msgstr "Режим длинной бумаги"
 
 #: drivers/esci/compound-scanner.cpp:2473
 #: drivers/esci/compound-scanner.cpp:2508
@@ -159,8 +159,8 @@ msgstr "Максимальное значение"
 #: drivers/esci/compound-scanner.cpp:2606
 #: drivers/esci/compound-scanner.cpp:2673
 #: drivers/esci/extended-scanner.cpp:1128
-msgid "Automatic"
-msgstr ""
+msgid "Auto Detect"
+msgstr "Автоопределение"
 
 #: drivers/esci/compound-scanner.cpp:2613
 #: drivers/esci/extended-scanner.cpp:1135
@@ -262,18 +262,18 @@ msgstr "Нет"
 
 #: drivers/esci/extended-scanner.cpp:286
 #: drivers/esci/grammar-capabilities.cpp:650
-msgid "Gray (1 bit)"
-msgstr ""
+msgid "Monochrome"
+msgstr "Монохромный"
 
 #: drivers/esci/extended-scanner.cpp:287
 #: drivers/esci/grammar-capabilities.cpp:651
-msgid "Gray (8 bit)"
-msgstr ""
+msgid "Grayscale"
+msgstr "Оттенки серого"
 
 #: drivers/esci/extended-scanner.cpp:288
-#: drivers/esci/grammar-capabilities.cpp:648
-msgid "Color (8 bit)"
-msgstr ""
+#: drivers/esci/grammar-capabilities.cpp:648 drivers/esci/scanner.cpp:175
+msgid "Color"
+msgstr "Ц&ветное"
 
 #: drivers/esci/extended-scanner.cpp:1055
 #: drivers/esci/grammar-capabilities.cpp:316
@@ -315,27 +315,15 @@ msgstr "тонкая"
 
 #: drivers/esci/grammar-capabilities.cpp:435
 msgid "Red"
-msgstr ""
+msgstr "Красный"
 
 #: drivers/esci/grammar-capabilities.cpp:436
 msgid "Green"
-msgstr ""
+msgstr "Зеленый"
 
 #: drivers/esci/grammar-capabilities.cpp:437
 msgid "Blue"
-msgstr ""
-
-#: drivers/esci/grammar-capabilities.cpp:647
-msgid "Color (1 bit)"
-msgstr ""
-
-#: drivers/esci/grammar-capabilities.cpp:649
-msgid "Color (16 bit)"
-msgstr ""
-
-#: drivers/esci/grammar-capabilities.cpp:652
-msgid "Gray (16 bit)"
-msgstr ""
+msgstr "Синий"
 
 #: drivers/esci/scanner.cpp:172
 msgid "ADF - Double-sided"
@@ -349,10 +337,6 @@ msgstr "ADF - односторонний"
 msgid "Black & White"
 msgstr "Черно-белый"
 
-#: drivers/esci/scanner.cpp:175
-msgid "Color"
-msgstr "Ц&ветное"
-
 #: drivers/esci/scanner.cpp:176
 msgid "Mode"
 msgstr "Режим"
@@ -362,9 +346,8 @@ msgid "Text/Line Art"
 msgstr "Текст/штриховой рисунок"
 
 #: filters/image-skip.cpp:67
-#, fuzzy
-msgid "Blank Image Threshold"
-msgstr "Поро&г:"
+msgid "Skip Blank Pages Settings"
+msgstr "Настройки Пропуска пустых страниц"
 
 #: filters/magick.cpp:187
 msgid "Brightness"
@@ -470,10 +453,6 @@ msgstr "Фактический размер"
 #: gtkmm/dialog.glade:118
 msgid "Zoom to fit"
 msgstr "Масштаб по размерам окна"
-
-#: gtkmm/dialog.glade:150
-msgid "Scanning Dialog"
-msgstr ""
 
 #: gtkmm/dialog.glade:188
 msgid "Scanner:"

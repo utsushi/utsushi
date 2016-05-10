@@ -1,7 +1,7 @@
 #! /bin/sh
 #  install-deps -- needed for developer and/or maintainer builds
 #  Copyright (C) 2013, 2015  Olaf Meeuwissen
-#  Copyright (C) 2012  EPSON AVASYS CORPORATION
+#  Copyright (C) 2012, 2016  EPSON AVASYS CORPORATION
 #
 #  License: GPL-3.0+
 #  Author : Olaf Meeuwissen
@@ -45,9 +45,6 @@ The following options are supported:
                           packages).  See \``dirname $0`/tools/include-boost-src\`
                           on how to include Boost sources.
 
-The script is used on our Ubuntu 10.04LTS based Continuous Integration
-setup.  Your mileage may vary.
-
 BUG: does not really search the sources
 BUG: only supports \`apt-get\`
 EOF
@@ -58,6 +55,22 @@ EOF
 
 has () {
     type $1 >/dev/null 2>&1
+}
+
+#  Run a command with root privileges.
+
+as_root () {
+
+    if test -z "$as_root" -a 0 -ne $(id -u) -a -z "$SUDO_USER"; then
+        if $(type sudo >/dev/null 2>&1); then
+            as_root=sudo
+            if $($as_root -A true 2>/dev/null); then
+                as_root="$as_root -A"
+            fi
+        fi
+    fi
+
+    $as_root "$@"
 }
 
 #  Set initial values of global variables.
@@ -120,16 +133,17 @@ case "$PKG_MGR" in
         #  Needed by our `./bootstrap` script.  These packages should
         #  not be necessary when building from a clean source tarball
         #  unless you plan to perform maintenance activities.
-        #  The cvs dependency can be removed for gettext >= 0.18.
         has automake    || pkg_list="$pkg_list automake"
         has autoconf    || pkg_list="$pkg_list autoconf"
         pkg_list="$pkg_list autoconf-archive"
-        has autopoint   || pkg_list="$pkg_list gettext cvs"
+        has autopoint   || pkg_list="$pkg_list autopoint"
         has libtool     || pkg_list="$pkg_list libtool"
         pkg_list="$pkg_list libltdl-dev"
         has gnulib-tool || pkg_list="$pkg_list gnulib"
         #  Needed by `./configure`
         has pkg-config  || pkg_list="$pkg_list pkg-config"
+        #  Needed to generate some source files
+        has xsltproc    || pkg_list="$pkg_list xsltproc"
         #  We use a number of Boost libraries to avoid reinventing
         #  wheels.  Boost.Test is only used in the unit test suite
         #  exercised by `make check`.
@@ -141,7 +155,7 @@ case "$PKG_MGR" in
             pkg_list="$pkg_list libboost-test-dev"
             pkg_list="$pkg_list libboost-thread-dev"
         else
-            has bcp     || pkg_list="$pkg_list libboost-dev"
+            has bcp     || pkg_list="$pkg_list libboost-tools-dev"
             #  Needed to build libboost-iostreams
             pkg_list="$pkg_list libz-dev"
             pkg_list="$pkg_list libbz2-dev"
@@ -150,13 +164,12 @@ case "$PKG_MGR" in
         pkg_list="$pkg_list libudev-dev"
         #  Needed to enable optional components
         pkg_list="$pkg_list libusb-1.0-0-dev"
-        pkg_list="$pkg_list libusb-dev"
         pkg_list="$pkg_list libgtkmm-2.4-dev"
         pkg_list="$pkg_list libjpeg-dev"
         pkg_list="$pkg_list libmagic-dev"
         pkg_list="$pkg_list libsane-dev"
         pkg_list="$pkg_list libtiff-dev"
-        pkg_list="$pkg_list libmagick++-dev"
+        pkg_list="$pkg_list libgraphicsmagick++1-dev"
         #  Needed for logo and icon format conversion
         has rsvg-convert      || pkg_list="$pkg_list librsvg2-bin"
         has gm || has convert || pkg_list="$pkg_list graphicsmagick"
@@ -171,13 +184,8 @@ case "$PKG_MGR" in
         if has pdflatex; then
             pkg_list="$pkg_list texlive-fonts-recommended"
         fi
-        #  Needed for style/consistency checking and enforcement
-        has uncrustify  || pkg_list="$pkg_list uncrustify"
-        #  Needed for software metrics collection purposes
-        has xsltproc    || pkg_list="$pkg_list xsltproc"
-        has ohcount     || pkg_list="$pkg_list ohcount"
 
-        sudo apt-get -qy install $pkg_list
+        as_root apt-get -qy install $pkg_list
         ;;
 
     *)
@@ -186,5 +194,3 @@ case "$PKG_MGR" in
         ;;
 
 esac
-
-exit 0

@@ -21,8 +21,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2016-01-22 01:07+0000\n"
-"PO-Revision-Date: 2015-12-15 17:05+0900\n"
+"POT-Creation-Date: 2016-04-12 04:38+0000\n"
+"PO-Revision-Date: 2016-02-24 09:02+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Simplified Chinese\n"
 "Language: zh_CN\n"
@@ -132,7 +132,7 @@ msgstr "探测双重进纸"
 
 #: drivers/esci/compound-scanner.cpp:2353
 msgid "Long Paper Mode"
-msgstr ""
+msgstr "加长纸张模式"
 
 #: drivers/esci/compound-scanner.cpp:2473
 #: drivers/esci/compound-scanner.cpp:2508
@@ -159,8 +159,8 @@ msgstr "最大"
 #: drivers/esci/compound-scanner.cpp:2606
 #: drivers/esci/compound-scanner.cpp:2673
 #: drivers/esci/extended-scanner.cpp:1128
-msgid "Automatic"
-msgstr ""
+msgid "Auto Detect"
+msgstr "自动侦测"
 
 #: drivers/esci/compound-scanner.cpp:2613
 #: drivers/esci/extended-scanner.cpp:1135
@@ -259,18 +259,18 @@ msgstr "无"
 
 #: drivers/esci/extended-scanner.cpp:286
 #: drivers/esci/grammar-capabilities.cpp:650
-msgid "Gray (1 bit)"
-msgstr ""
+msgid "Monochrome"
+msgstr "单色"
 
 #: drivers/esci/extended-scanner.cpp:287
 #: drivers/esci/grammar-capabilities.cpp:651
-msgid "Gray (8 bit)"
-msgstr ""
+msgid "Grayscale"
+msgstr "灰度"
 
 #: drivers/esci/extended-scanner.cpp:288
-#: drivers/esci/grammar-capabilities.cpp:648
-msgid "Color (8 bit)"
-msgstr ""
+#: drivers/esci/grammar-capabilities.cpp:648 drivers/esci/scanner.cpp:175
+msgid "Color"
+msgstr "彩色"
 
 #: drivers/esci/extended-scanner.cpp:1055
 #: drivers/esci/grammar-capabilities.cpp:316
@@ -312,27 +312,15 @@ msgstr "细"
 
 #: drivers/esci/grammar-capabilities.cpp:435
 msgid "Red"
-msgstr ""
+msgstr "红色"
 
 #: drivers/esci/grammar-capabilities.cpp:436
 msgid "Green"
-msgstr ""
+msgstr "绿色"
 
 #: drivers/esci/grammar-capabilities.cpp:437
 msgid "Blue"
-msgstr ""
-
-#: drivers/esci/grammar-capabilities.cpp:647
-msgid "Color (1 bit)"
-msgstr ""
-
-#: drivers/esci/grammar-capabilities.cpp:649
-msgid "Color (16 bit)"
-msgstr ""
-
-#: drivers/esci/grammar-capabilities.cpp:652
-msgid "Gray (16 bit)"
-msgstr ""
+msgstr "蓝色"
 
 #: drivers/esci/scanner.cpp:172
 msgid "ADF - Double-sided"
@@ -346,10 +334,6 @@ msgstr "自动文稿进纸器 - 单面"
 msgid "Black & White"
 msgstr "黑白"
 
-#: drivers/esci/scanner.cpp:175
-msgid "Color"
-msgstr "彩色"
-
 #: drivers/esci/scanner.cpp:176
 msgid "Mode"
 msgstr "模式"
@@ -359,9 +343,8 @@ msgid "Text/Line Art"
 msgstr "文本/线画"
 
 #: filters/image-skip.cpp:67
-#, fuzzy
-msgid "Blank Image Threshold"
-msgstr "阈值"
+msgid "Skip Blank Pages Settings"
+msgstr "跳过空白页设置"
 
 #: filters/magick.cpp:187
 msgid "Brightness"
@@ -467,10 +450,6 @@ msgstr "实际大小"
 #: gtkmm/dialog.glade:118
 msgid "Zoom to fit"
 msgstr "缩放以适合"
-
-#: gtkmm/dialog.glade:150
-msgid "Scanning Dialog"
-msgstr ""
 
 #: gtkmm/dialog.glade:188
 msgid "Scanner:"

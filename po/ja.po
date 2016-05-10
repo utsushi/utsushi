@@ -22,8 +22,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2016-01-22 01:07+0000\n"
-"PO-Revision-Date: 2015-12-24 10:18+0900\n"
+"POT-Creation-Date: 2016-04-12 04:38+0000\n"
+"PO-Revision-Date: 2016-02-24 09:02+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Japanese\n"
 "Language: ja\n"
@@ -34,11 +34,11 @@ msgstr ""
 
 #: drivers/esci/compound-scanner.cpp:356
 msgid "Loading completed"
-msgstr ""
+msgstr "給紙が完了しました。"
 
 #: drivers/esci/compound-scanner.cpp:357
 msgid "Ejecting completed"
-msgstr ""
+msgstr "排紙が完了しました。"
 
 #: drivers/esci/compound-scanner.cpp:381
 msgid "Cleaning is complete."
@@ -58,11 +58,11 @@ msgstr "キャリブレーションに失敗しました。"
 
 #: drivers/esci/compound-scanner.cpp:411
 msgid "Loading failed"
-msgstr ""
+msgstr "給紙に失敗しました。"
 
 #: drivers/esci/compound-scanner.cpp:413
 msgid "Ejecting failed"
-msgstr ""
+msgstr "排紙に失敗しました。"
 
 #: drivers/esci/compound-scanner.cpp:419
 msgid "Maintenance failed"
@@ -108,19 +108,19 @@ msgstr "クリーニング中"
 
 #: drivers/esci/compound-scanner.cpp:753
 msgid "Eject"
-msgstr ""
+msgstr "排紙"
 
 #: drivers/esci/compound-scanner.cpp:754
 msgid "Ejecting ..."
-msgstr ""
+msgstr "排紙中"
 
 #: drivers/esci/compound-scanner.cpp:761
 msgid "Load"
-msgstr ""
+msgstr "給紙"
 
 #: drivers/esci/compound-scanner.cpp:762
 msgid "Loading..."
-msgstr ""
+msgstr "給紙中"
 
 #: drivers/esci/compound-scanner.cpp:2318
 #: drivers/esci/extended-scanner.cpp:1068
@@ -133,7 +133,7 @@ msgstr "重送検知（用紙厚設定）"
 
 #: drivers/esci/compound-scanner.cpp:2353
 msgid "Long Paper Mode"
-msgstr ""
+msgstr "長尺紙モード"
 
 #: drivers/esci/compound-scanner.cpp:2473
 #: drivers/esci/compound-scanner.cpp:2508
@@ -160,8 +160,8 @@ msgstr "最大"
 #: drivers/esci/compound-scanner.cpp:2606
 #: drivers/esci/compound-scanner.cpp:2673
 #: drivers/esci/extended-scanner.cpp:1128
-msgid "Automatic"
-msgstr ""
+msgid "Auto Detect"
+msgstr "自動検知"
 
 #: drivers/esci/compound-scanner.cpp:2613
 #: drivers/esci/extended-scanner.cpp:1135
@@ -261,18 +261,18 @@ msgstr "なし"
 
 #: drivers/esci/extended-scanner.cpp:286
 #: drivers/esci/grammar-capabilities.cpp:650
-msgid "Gray (1 bit)"
+msgid "Monochrome"
 msgstr "モノクロ"
 
 #: drivers/esci/extended-scanner.cpp:287
 #: drivers/esci/grammar-capabilities.cpp:651
-msgid "Gray (8 bit)"
-msgstr "グレー（8 bit）"
+msgid "Grayscale"
+msgstr "グレー"
 
 #: drivers/esci/extended-scanner.cpp:288
-#: drivers/esci/grammar-capabilities.cpp:648
-msgid "Color (8 bit)"
-msgstr "カラー（8 bit）"
+#: drivers/esci/grammar-capabilities.cpp:648 drivers/esci/scanner.cpp:175
+msgid "Color"
+msgstr "カラー"
 
 #: drivers/esci/extended-scanner.cpp:1055
 #: drivers/esci/grammar-capabilities.cpp:316
@@ -290,7 +290,7 @@ msgstr "ADF"
 #: drivers/esci/grammar-capabilities.cpp:315
 #: drivers/esci/grammar-capabilities.cpp:325
 msgid "Transparency Unit"
-msgstr ""
+msgstr "透過原稿ユニット"
 
 #: drivers/esci/grammar-capabilities.cpp:255
 msgid "White"
@@ -324,18 +324,6 @@ msgstr "緑"
 msgid "Blue"
 msgstr "青"
 
-#: drivers/esci/grammar-capabilities.cpp:647
-msgid "Color (1 bit)"
-msgstr "カラー（1 bit）"
-
-#: drivers/esci/grammar-capabilities.cpp:649
-msgid "Color (16 bit)"
-msgstr "カラー（16 bit）"
-
-#: drivers/esci/grammar-capabilities.cpp:652
-msgid "Gray (16 bit)"
-msgstr "グレー（16 bit）"
-
 #: drivers/esci/scanner.cpp:172
 msgid "ADF - Double-sided"
 msgstr "ADF両面"
@@ -348,10 +336,6 @@ msgstr "ADF片面"
 msgid "Black & White"
 msgstr "モノクロ"
 
-#: drivers/esci/scanner.cpp:175
-msgid "Color"
-msgstr "カラー"
-
 #: drivers/esci/scanner.cpp:176
 msgid "Mode"
 msgstr "モード"
@@ -361,8 +345,8 @@ msgid "Text/Line Art"
 msgstr "文字/線画"
 
 #: filters/image-skip.cpp:67
-msgid "Blank Image Threshold"
-msgstr "白紙ページのしきい値"
+msgid "Skip Blank Pages Settings"
+msgstr "白紙ページ除去の設定"
 
 #: filters/magick.cpp:187
 msgid "Brightness"
@@ -469,10 +453,6 @@ msgstr "標準サイズ"
 msgid "Zoom to fit"
 msgstr "フィットさせる"
 
-#: gtkmm/dialog.glade:150
-msgid "Scanning Dialog"
-msgstr "スキャンダイアログ"
-
 #: gtkmm/dialog.glade:188
 msgid "Scanner:"
 msgstr "スキャナー:"
@@ -572,19 +552,19 @@ msgstr "すべてのファイル"
 
 #: lib/media.cpp:71
 msgid "Ledger"
-msgstr ""
+msgstr "Ledger"
 
 #: lib/media.cpp:72
 msgid "Legal"
-msgstr ""
+msgstr "Legal"
 
 #: lib/media.cpp:73
 msgid "Letter"
-msgstr ""
+msgstr "Letter"
 
 #: lib/media.cpp:74
 msgid "Executive"
-msgstr ""
+msgstr "Executive"
 
 #: lib/tag.cpp:74
 msgid "General"
@@ -597,449 +577,3 @@ msgstr "出力サイズ"
 #: lib/tag.cpp:84
 msgid "Enhancement"
 msgstr "エンハンスメント"
-
-#~ msgid ""
-#~ "This option provides the user with a wider range of supported "
-#~ "resolutions.  Resolutions not supported by the hardware will be achieved "
-#~ "through image processing methods."
-#~ msgstr ""
-#~ "このオプションはより多くの解像度の選択肢を提供します。ハードウェアがサポー"
-#~ "トしていない解像度は画像処理によって実現します。"
-
-#~ msgid ""
-#~ "Selecting a compressed format such as JPEG normally results in faster "
-#~ "device side processing."
-#~ msgstr ""
-#~ "JPEG等の圧縮された画像形式を選択することで通常デバイスからの転送処理が速く"
-#~ "なります。"
-
-#~ msgid "JPEG Quality"
-#~ msgstr "JPEG画質"
-
-#~ msgid "Gamma"
-#~ msgstr "ガンマ"
-
-#~ msgid "Transfer Size"
-#~ msgstr "転送サイズ"
-
-#~ msgid "Border Fill"
-#~ msgstr "境界補正"
-
-#~ msgid "Left Border"
-#~ msgstr "境界補正量 左"
-
-#~ msgid "Right Border"
-#~ msgstr "境界補正量 右"
-
-#~ msgid "Top Border"
-#~ msgstr "境界補正量 上"
-
-#~ msgid "Bottom Border"
-#~ msgstr "境界補正量 下"
-
-#~ msgid "Force Extent"
-#~ msgstr "サイズ揃え"
-
-#~ msgid ""
-#~ "Force the image size to equal the user selected size.  Scanners may trim "
-#~ "the image data to the detected size of the document.  This may result in "
-#~ "images that are not all exactly the same size.  This option makes sure "
-#~ "all image sizes match the selected area.\n"
-#~ "Note that this option may slow down application/driver side processing."
-#~ msgstr ""
-#~ "常に画像サイズをユーザーが選択したサイズに合わせます。スキャナーによっては"
-#~ "スキャンした原稿の大きさに合わせ画像データを返す場合があります。そのため複"
-#~ "数のスキャン画像が同じ大きさに揃わないことがあります。このオプションは全て"
-#~ "のスキャン画像のサイズを選択したサイズに合わせます。\n"
-#~ "このオプションはアプリケーション／ドライバーの処理速度を低下させるかもしれ"
-#~ "ません。"
-
-#~ msgid "RAW"
-#~ msgstr "RAW"
-
-#~ msgid ""
-#~ "Scan area too small.\n"
-#~ "The area needs to be larger than %1% by %2%."
-#~ msgstr ""
-#~ "取り込み領域が小さすぎます。\n"
-#~ "領域は、%1%×%2%よりも大きくする必要があります。"
-
-#~ msgid "Image Count"
-#~ msgstr "イメージカウント"
-
-#~ msgid "Bind X and Y resolutions"
-#~ msgstr "水平解像度と垂直解像度を連動させる"
-
-#~ msgid "X Resolution"
-#~ msgstr "水平解像度"
-
-#~ msgid "Y Resolution"
-#~ msgstr "垂直解像度"
-
-#~ msgid "Crop Adjustment"
-#~ msgstr "切り出し位置調整"
-
-#~ msgid "Overscan"
-#~ msgstr "オーバースキャン"
-
-#~ msgid "Unknown device error: %1%/%2%"
-#~ msgstr "不明なデバイスのエラー: %1%/%2%"
-
-#~ msgid ""
-#~ "A fatal ADF error has occurred.\n"
-#~ "Resolve the error condition and try again.  You may have to restart the "
-#~ "scan dialog or application in order to be able to scan."
-#~ msgstr ""
-#~ "ADFで予期せぬエラーが発生しました。\n"
-#~ "エラーの状態を解決して、再試行してください。スキャンするためにスキャンダイ"
-#~ "アログまたはアプリケーションを再起動する必要があります。"
-
-#~ msgid "A fatal error has occurred"
-#~ msgstr "予期せぬエラーが発生しました。"
-
-#~ msgid "Speed"
-#~ msgstr "速度優先"
-
-#~ msgid "Optimize image acquisition for speed"
-#~ msgstr "速度を優先させるために画像取得方法を最適化します"
-
-#~ msgid "invalid parameter"
-#~ msgstr "無効なパラメーターです"
-
-#~ msgid "unknown reply"
-#~ msgstr "不明な応答です"
-
-#~ msgid "invalid command"
-#~ msgstr "無効なコマンドです"
-
-#~ msgid "protocol error"
-#~ msgstr "プロトコルエラーが発生しました"
-
-#~ msgid "Line Count"
-#~ msgstr "ラインカウント"
-
-#~ msgid ""
-#~ "Specify how many scan lines to move from the device to the software in "
-#~ "one transfer.  Note that 0 will use the maximum usable value.  Values "
-#~ "larger than the maximum usable value are clamped to the maximum."
-#~ msgstr ""
-#~ "デバイスからドライバーへ一度に転送するスキャンラインの量を指定します。0を"
-#~ "指定した場合、設定可能な最大値が使われます。設定可能な最大値よりも大きな値"
-#~ "を指定した場合も最大値が使われます。"
-
-#~ msgid "Primary TPU"
-#~ msgstr "透過原稿ユニット 1"
-
-#~ msgid "Secondary TPU"
-#~ msgstr "透過原稿ユニット 2"
-
-#~ msgid "Buffer Size"
-#~ msgstr "バッファーサイズ"
-
-#~ msgid "Image Quality"
-#~ msgstr "画質"
-
-#~ msgid "Change brightness of the acquired image."
-#~ msgstr "デバイスから取得した画像の明るさを変更します"
-
-#~ msgid "Change contrast of the acquired image."
-#~ msgstr "デバイスから取得した画像のコントラストを変更します"
-
-#~ msgid "Application"
-#~ msgstr "アプリケーション"
-
-#~ msgid "Standard"
-#~ msgstr "標準"
-
-#~ msgid "Extended"
-#~ msgstr "拡張"
-
-#~ msgid "Complete"
-#~ msgstr "全て"
-
-#~ msgid "Acquire image data asynchronously"
-#~ msgstr "イメージデータを非同期的に取得する"
-
-#~ msgid "GNU standard options"
-#~ msgstr "GNU標準オプション"
-
-#~ msgid "Standard options"
-#~ msgstr "標準オプション"
-
-#~ msgid "display this help and exit"
-#~ msgstr "この使い方を表示して終了"
-
-#~ msgid "output version information and exit"
-#~ msgstr "バージョン情報を表示して終了"
-
-#~ msgid "Options provided by %1%."
-#~ msgstr "%1%により提供されるオプション"
-
-#~ msgid "Basic options."
-#~ msgstr "基本オプション"
-
-#~ msgid "Scan area and image size related options."
-#~ msgstr "取り込み領域と画像サイズ関係のオプション"
-
-#~ msgid "Image modification options."
-#~ msgstr "画像加工オプション"
-
-#~ msgid ""
-#~ "The current locale settings are not supported by the standard C++ library "
-#~ "used by this application.  This is most likely caused by a misconfigured "
-#~ "locale but may also be due to use of a C++ library without localization "
-#~ "support.  You can work around this issue by starting the application in a "
-#~ "\"C\" locale, but you really should check your locale configuration and "
-#~ "the locale support of the C++ library used by the application."
-#~ msgstr ""
-#~ "現在のロケール設定はこのアプリケーションで使われている標準C++ライブラリー"
-#~ "ではサポートされていません。この問題の最もよくある原因としてはロケールの設"
-#~ "定が間違っていることが考えられますが、ローカライズをサポートしていないC+"
-#~ "+ライブラリーを使っている場合にもこの問題は発生します。この問題を回避する"
-#~ "には\"C\"ロケールを指定してアプリケーションを起動して下さい。問題を解決す"
-#~ "るためにはお使いの環境のロケールの設定とアプリケーションが使用しているC+"
-#~ "+ライブラリーのロケールのサポート状況を確認して下さい。"
-
-#~ msgid "library initialization failed"
-#~ msgstr "ライブラリーの初期化に失敗しました"
-
-#~ msgid "Unknown SANE status code %d"
-#~ msgstr "不明なSANEのステータスコード %d"
-
-#~ msgid "display help information for a command"
-#~ msgstr "コマンドの使い方を表示"
-
-#~ msgid "list available image acquisition devices"
-#~ msgstr "利用可能な画像取得デバイスの一覧を表示"
-
-#~ msgid "Supported commands"
-#~ msgstr "対応コマンド"
-
-#~ msgid "display the help for a command and exit"
-#~ msgstr "コマンドの使い方を表示して終了"
-
-#~ msgid "output command version information and exit"
-#~ msgstr "コマンドのバージョン情報を表示して終了"
-
-#~ msgid "scan with a suitable utility"
-#~ msgstr "適切なツールで画像を取得"
-
-#~ msgid "next generation image acquisition"
-#~ msgstr "次世代の画像取得ユーティリティ"
-
-#, fuzzy
-#~ msgid "%1%: not found"
-#~ msgstr "%1%: サポートしていません"
-
-#, fuzzy
-#~ msgid "no usable devices available"
-#~ msgstr "利用可能なデバイスが存在しません"
-
-#, fuzzy
-#~ msgid "%1%: found but has no driver"
-#~ msgstr "デバイスに対応したドライバーがありません"
-
-#~ msgid "%1%: not supported"
-#~ msgstr "%1%: サポートしていません"
-
-#~ msgid ""
-#~ "%1%\n"
-#~ "Allowed values: %2%"
-#~ msgstr ""
-#~ "%1%\n"
-#~ "指定可能な値: %2%"
-
-#~ msgid "Allowed values: %1%"
-#~ msgstr "指定可能な値: %1%"
-
-#~ msgid "image acquisition device to use"
-#~ msgstr "使用する画像取得デバイス"
-
-#~ msgid "output destination to use"
-#~ msgstr "使用する出力先"
-
-#~ msgid "Utility options"
-#~ msgstr "ユーティリティオプション"
-
-#~ msgid "log device I/O in hexdump format"
-#~ msgstr "デバイスとの入出力を16進ダンプでログ出力する"
-
-#, fuzzy
-#~ msgid ""
-#~ "output image format\n"
-#~ "PNM, PNG, JPEG, PDF, TIFF or one of the device supported transfer-"
-#~ "formats.  The explicitly mentioned types are normally inferred from the "
-#~ "output file name.  Some require additional libraries at build-time in "
-#~ "order to be available."
-#~ msgstr ""
-#~ "出力画像形式\n"
-#~ "PNM、PNG、JPEG、PDF、TIFF、またはデバイスがサポートしている転送形式。\n"
-#~ "上記の画像形式は通常出力ファイル名から自動的に判断されます。"
-
-#~ msgid "Device actions"
-#~ msgstr "デバイスアクション"
-
-#~ msgid ""
-#~ "Only perform the actions given on the command-line.  Do not perform image "
-#~ "acquisition."
-#~ msgstr ""
-#~ "コマンドラインで指定されたアクションのみを実行する。画像取得処理は実行しな"
-#~ "い。"
-
-#~ msgid "Device options"
-#~ msgstr "デバイスオプション"
-
-#~ msgid "Add-on options"
-#~ msgstr "アドオンオプション"
-
-#~ msgid ""
-#~ "Note: device options may be ignored if their prerequisites are not "
-#~ "satisfied.\n"
-#~ "A '--duplex' option may be ignored if you do not select the ADF, for "
-#~ "example.\n"
-#~ msgstr ""
-#~ "注意: デバイスオプションは前提条件が満たされないとき無視される場合がありま"
-#~ "す。\n"
-#~ "例えば、'--duplex'オプションはADFを選択していないときに無視されます。\n"
-
-#~ msgid "cannot infer image format from file extension: '%1%'"
-#~ msgstr "拡張子 '%1%' からファイル形式を判別できません"
-
-#~ msgid "unsupported image format: '%1%'"
-#~ msgstr "'%1%' はサポートされていない画像形式です"
-
-#~ msgid "%1% does not support multi-image files"
-#~ msgstr "%1% は複数画像をサポートしていません"
-
-#~ msgid "use an alternative GUI layout definition file"
-#~ msgstr "別のGUIレイアウト定義ファイルを使う"
-
-#~ msgid "use an alternative GUI resource file"
-#~ msgstr "別のGUIリソースファイルを使う"
-
-#~ msgid "Command options"
-#~ msgstr "コマンドオプション"
-
-#~ msgid ""
-#~ "Start an interactive user interface\n"
-#~ "The default behavior depends on the environment where one runs the "
-#~ "command.  A scan utility suitable for non-interactive use can be selected "
-#~ "with the '--no-interface' option."
-#~ msgstr ""
-#~ "インタラクティブなユーザーインターフェイスでスキャンユーティリティを起動し"
-#~ "ます。\n"
-#~ "デフォルトの動作はコマンドを実行する環境に依存します。'--no-interface'オプ"
-#~ "ションを指定することで非インタラクティブなスキャンユーティリティを起動する"
-#~ "ことができます。"
-
-#~ msgid "acquire images with a suitable utility"
-#~ msgstr "適切なユーティリティで画像を取得する"
-
-#~ msgid "display version information for a command"
-#~ msgstr "コマンドのバージョン情報を表示する"
-
-#~ msgid "unable to initialise USB support"
-#~ msgstr "USBの初期化ができません"
-
-#~ msgid "no usable, matching device"
-#~ msgstr "使用可能なデバイスがありません"
-
-#~ msgid "esci::compound_scanner(): internal inconsistency"
-#~ msgstr "esci::compound_scanner(): 内部不一致エラー"
-
-#~ msgid "internal error: no document source"
-#~ msgstr "内部エラー: 取り込み装置がありません"
-
-#~ msgid "crossed wires"
-#~ msgstr "配線が混線しています"
-
-#~ msgid "unknown extension designation"
-#~ msgstr "不明なエクステンション指定"
-
-#~ msgid "esci::extended_scanner(): internal inconsistency"
-#~ msgstr "esci::extended_scanner(): 内部不一致エラー"
-
-#~ msgid "padding only works with raster images of known size"
-#~ msgstr ""
-#~ "パディングフィルターはサイズが決まったラスター画像のみに対応しています"
-
-#~ msgid "PDF object number overflow"
-#~ msgstr "PDFのオブジェクト番号がオーバーフローしました"
-
-#~ msgid "PDF filter octet count mismatch"
-#~ msgstr "PDFデータを出力中に出力データサイズが一致しませんでした"
-
-#~ msgid "invalid call to _pdf_::writer::write (object&)"
-#~ msgstr "_pdf_::writer::write (object&) の無効な呼び出し"
-
-#~ msgid "invalid call to _pdf_::writer::begin_stream ()"
-#~ msgstr "_pdf_::writer::begin_stream () の無効な呼び出し"
-
-#~ msgid "invalid call to _pdf_::writer::write ()"
-#~ msgstr "_pdf_::writer::write () の無効な呼び出し"
-
-#~ msgid "invalid call to _pdf_::writer::end_stream ()"
-#~ msgstr "_pdf_::writer::end_stream () の無効な呼び出し"
-
-#~ msgid "cannot write header in stream mode"
-#~ msgstr "ストリームモードではヘッダーは書き込めません"
-
-#~ msgid "cannot write trailer in stream mode"
-#~ msgstr "ストリームモードではトレイラーは書き込めません"
-
-#~ msgid "Dialog specification requires a 'uimanager'"
-#~ msgstr "ダイアログの指定には'uimanager'が必要です"
-
-#~ msgid "unhandled state in idevice::read()"
-#~ msgstr "idevice::read() で処理できない状態"
-
-#~ msgid "cannot add option::map to self"
-#~ msgstr "自分自身を option::map に追加することはできません"
-
-#~ msgid "no image data source"
-#~ msgstr "イメージデータソースなし"
-
-#~ msgid "no output destination"
-#~ msgstr "出力の宛先なし"
-
-#~ msgid "run_time has been initialized already"
-#~ msgstr "run_time はすでに初期化されています"
-
-#~ msgid "run_time has not been initialized yet"
-#~ msgstr "run_time はまだ初期化されていません"
-
-#~ msgid "driver not found"
-#~ msgstr "ドライバーモジュールが見つかりません"
-
-#~ msgid "syntax error: invalid UDI '%1%'"
-#~ msgstr "文法エラー: 無効な UDI '%1%'"
-
-#~ msgid "unsupported colour space"
-#~ msgstr "サポートしていないカラースペース"
-
-#~ msgid "unsupported bit depth"
-#~ msgstr "サポートしていない色数"
-
-#~ msgid ""
-#~ "SANE API specification violation\n"
-#~ "The option number count has to be the first option."
-#~ msgstr ""
-#~ "SANE API の仕様違反\n"
-#~ "オプション番号数は最初のオプションでなければなりません。"
-
-#~ msgid ""
-#~ "SANE API specification violation\n"
-#~ "Option names must start with a lower-case ASCII character."
-#~ msgstr ""
-#~ "SANE API の仕様違反\n"
-#~ "オプション名は小文字のASCII文字で始まらなければなりません。"
-
-#~ msgid "internal inconsistency"
-#~ msgstr "内部不一致エラー"
-
-#~ msgid ""
-#~ "option parser internal inconsistency\n"
-#~ "  key = %1%"
-#~ msgstr ""
-#~ "オプションパーサーの内部不一致エラー\n"
-#~ "  キー = %1%"

@@ -64,7 +64,7 @@ image_skip::image_skip ()
                          -> default_value (0.)
                          ),
      attributes (tag::enhancement)(level::standard),
-     SEC_N_("Blank Image Threshold")
+     SEC_N_("Skip Blank Pages Settings")
      )
     ;
 }
