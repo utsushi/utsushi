@@ -1,5 +1,5 @@
 #  .travis.yml -- Continuous Integration configuration
-#  Copyright (C) 2014, 2015  Olaf Meeuwissen
+#  Copyright (C) 2014-2016  Olaf Meeuwissen
 #
 #  License: GPL-3.0+
 #  Author : Olaf Meeuwissen
@@ -18,13 +18,14 @@
 #  You ought to have received a copy of the GNU General Public License
 #  along with this package.  If not, see <http://www.gnu.org/licenses/>.
 
+sudo: required
+dist: trusty
 language: cpp
 compiler:
   - gcc
   - clang
 install:
   - sudo apt-get update -qq
-  - ./install-deps --with-included-boost
-  - ./tools/include-boost-src
+  - ./install-deps
 before_script: ./bootstrap
-script: ./configure --with-included-boost && make
+script: ./configure && make -j2
