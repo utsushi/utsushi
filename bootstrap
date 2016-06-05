@@ -1,7 +1,7 @@
 #! /bin/sh
 #  bootstrap -- clean checkouts to a point where `./configure` succeeds
 #  Copyright (C) 2012-2015  SEIKO EPSON CORPORATION
-#  Copyright (C) 2013, 2014  Olaf Meeuwissen
+#  Copyright (C) 2013, 2014, 2016  Olaf Meeuwissen
 #
 #  License: GPL-3.0+
 #  Author : EPSON AVASYS CORPORATION
@@ -39,6 +39,9 @@ The following options are supported:
 
   -h, --help              display this message and exit
   -f, --force             replace existing files
+
+If you want to rerun \``basename $0`\`, you should pass it the \`--force\`
+option to prevent \`libtoolize\` from reporting an error.
 
 For those of you that want/need to include Boost sources, please refer
 to \``dirname $0`/tools/include-boost-src\`.
