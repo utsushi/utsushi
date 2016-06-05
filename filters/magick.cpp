@@ -346,6 +346,7 @@ magick::arguments (const context& ctx)
   using std::string;
 
   string argv;
+  char *lc_numeric = setlocale (LC_NUMERIC, "C");
 
   // Set up input data characteristics
 
@@ -528,6 +529,7 @@ magick::arguments (const context& ctx)
         }
     }
 
+  setlocale (LC_NUMERIC, lc_numeric);
   return argv;
 }
 
