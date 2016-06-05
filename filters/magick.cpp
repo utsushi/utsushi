@@ -1,5 +1,6 @@
 //  magick.cpp -- touches applied to your image data
 //  Copyright (C) 2014-2016  SEIKO EPSON CORPORATION
+//  Copyright (C) 2016  Olaf Meeuwissen
 //
 //  License: GPL-3.0+
 //  Author : EPSON AVASYS CORPORATION
