@@ -32,4 +32,5 @@ install:
 before_script:
   - docker pull debian:stable
   - docker run -v `pwd`:/home -w /home debian:stable /bin/sh -c 'apt-get -qq update && apt-get install -qqy --no-install-recommends autoconf autoconf-archive automake autopoint libltdl-dev libtool gnulib patch pkg-config && ./bootstrap'
+  - sudo chown --recursive `id -u`:`id -g` .
 script: ./configure && make -j2
