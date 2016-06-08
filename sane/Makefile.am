@@ -129,7 +129,8 @@ check-soname: libsane-$(BACKEND_NAME).la
 ##  for other ltmain.sh version may be added in which case you have
 ##  to update $(top_srcdir)/bootstrap too.
 
-EXTRA_DIST += ltmain.sh-2.4.diff
+EXTRA_DIST += ltmain.sh-2.4.6.diff
+EXTRA_DIST += ltmain.sh-2.4.2.diff
 EXTRA_DIST += ltmain.sh-2.2.6b.diff
 
 ##  Convenience target to maintain our SANE specific libtool patch.

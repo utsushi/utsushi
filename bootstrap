@@ -46,6 +46,11 @@ option to prevent \`libtoolize\` from reporting an error.
 For those of you that want/need to include Boost sources, please refer
 to \``dirname $0`/tools/include-boost-src\`.
 
+To accommodate SANE idiosyncracies, \``basename $0`\` applies a patch to the
+\`ltmain.sh\` script.  When doing so, it may complain about line offsets
+and/or using a fuzz.  You can use the \`PATCH_OPTS\` environment variable
+to pass additional options to the \`patch\` command to remedy that.
+
 BUG: should support more \`autoreconf\` options
 EOF
     exit $1
@@ -159,12 +164,13 @@ done
 
 eval `sed -n '/^VERSION=/{ p; q }' $aux_dir/ltmain.sh`
 case "$VERSION" in
-    2.4|2.4.*) patch=sane/ltmain.sh-2.4.diff ;;
-    2.2|2.2.*) patch=sane/ltmain.sh-2.2.6b.diff ;;
+    2.2|2.2.*)     patch=sane/ltmain.sh-2.2.6b.diff ;;
+    2.4|2.4.[012]) patch=sane/ltmain.sh-2.4.2.diff ;;
+    2.4.*)         patch=sane/ltmain.sh-2.4.6.diff ;;
 esac
 if test -n "$patch"; then
     if ! `grep "^## Utsushi SANE " $aux_dir/ltmain.sh >/dev/null 2>&1`; then
-        patch -z .orig -p1 < $patch
+        patch ${PATCH_OPTS} -z .orig -p1 < $patch
     fi
 fi
 

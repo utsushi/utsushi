@@ -1,0 +1,166 @@
+#  ltmain.sh.diff -- SANE backend library soname handling fixes
+#  Copyright (C) 2012, 2015  SEIKO EPSON CORPORATION
+#  Copyright (C) 2007  EPSON AVASYS CORPORATION
+#
+#  License: GPL-2.0+ (same as ltmain.sh)
+#  Author : EPSON AVASYS CORPORATION
+#
+#  Patch relative to: GNU libtool 2.4.6 Debian-2.4.6-0.1
+
+--- ../upstream/ltmain.sh.orig	2016-06-08 13:29:28.558668167 +0000
++++ ../upstream/ltmain.sh	2016-06-08 13:30:01.211903631 +0000
+@@ -3827,10 +3827,20 @@
+       s/^Usage:.*--mode=\([^ ]*\) .*/Description of \1 mode:/'
+   fi
+   exit $?
+ fi
+ 
++##  Utsushi SANE modification (start)
++##  Regular expression for SANE backend names (valid C identifier).
++##  Note this regexp needs to be correct for use in shell globs as
++##  well as with sed.  It is used in link and execute modes.
++
++utsushi_alpha='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
++utsushi_digit='0123456789'
++utsushi_sane_backend_regexp=[_$utsushi_alpha][_$utsushi_alpha$utsushi_digit]*
++
++##  Utsushi SANE modification (end)
+ 
+ # func_mode_execute arg...
+ func_mode_execute ()
+ {
+     $debug_cmd
+@@ -5326,10 +5336,62 @@
+ 
+ # Core function for launching the target application
+ func_exec_program_core ()
+ {
+ "
++## Utsushi SANE modification (start)
++  case $host in
++  *aix*)                        # rumoured not to work ...
++    ;;
++
++  *)
++    $ECHO "\
++      # Utsushi libtool modification (start)
++      # Make sure that programs can find the as of yet uninstalled
++      # libraries for which we changed the soname.
++      for lib in $notinst_deplibs \"$dlname\"; do
++        libdir=
++        dlname=
++        case \$lib in
++          libsane-$utsushi_sane_backend_regexp.*)
++            libdir=.
++            case \$lib in
++              *$std_shrext*)
++          dlname=\$lib
++          ;;
++              *.la)
++          dlname=\`${SED} -n -e \"s/^dlname='\\([^']*\\).*/\\1/p\" \$lib\`
++                ;;
++            esac
++            ;;
++          */libsane-$utsushi_sane_backend_regexp.la)
++            libdir=\`\$ECHO \$lib | ${SED} -e 's/\/[^/]*\$//'\`
++            if test -d \"\$libdir/$objdir\"; then
++              libdir=../\$libdir/$objdir
++            fi
++            dlname=\`${SED} -n -e \"s/^dlname='\\([^']*\\).*/\\1/p\" \$lib\`
++            ;;
++        esac
++        # Link the dlname library to its soname equivalent and make sure
++        # it is found before anything else.
++        if test x != x\"\$libdir\"; then
++          soname=\`\$ECHO \$dlname | ${SED} -e 's/libsane-$utsushi_sane_backend_regexp/libsane/'\`
++          $LN_S -f \$libdir/\$dlname \"\$progdir/\$soname\"
++          if test -n "\$$shlibpath_var"; then
++            $shlibpath_var="\$progdir:\$$shlibpath_var"
++          else
++            $shlibpath_var="\$progdir"
++          fi
++          export $shlibpath_var
++          break
++        fi
++      done
++      # Utsushi libtool modification (end)
++"
++    ;;
++  esac
++## Utsushi SANE modification (end)
+   case $host in
+   # Backslashes separate directories on plain windows
+   *-*-mingw | *-*-os2* | *-cegcc*)
+     $ECHO "\
+       if test -n \"\$lt_option_debug\"; then
+@@ -9613,10 +9675,47 @@
+ 	fi
+ 	if test -z "$dlname"; then
+ 	  dlname=$soname
+ 	fi
+ 
++## Utsushi SANE modification (start)
++## Moved here from just before the enclosing 'fi' statement so we can
++## safely rewrite the soname before anything gets run.
++
++	# If -module or -export-dynamic was specified, set the dlname.
++	if test "$module" = yes || test "$export_dynamic" = yes; then
++	  # On all known operating systems, these are identical.
++	  dlname="$soname"
++	fi
++
++## The SANE API recommends/requires(?) that backends are made available
++## with a soname that does NOT contain the "-$backend" bit.  The dlname
++## should contain this part for the SANE dll backend to work.
++## Note, there are several 'libname_spec' and 'soname_spec' definitions
++## and these combine to yield a number of different soname varieties at
++## this point in the code.  Trying to catch them all but there's a fair
++## chance we dropping the ball on little used OSs.  SANE's dll backend
++## tries to do the same in its implementation so its PREFIX definitions
++## may be helpful in identifying other soname patterns.
++##
++## Last versions checked: libtool-2.2.6b, sane-backends-1.0.21.
++## Last versions checked: libtool-2.4.2, sane-backends-1.0.24.
++
++	case $host in
++	 *aix*)    # rumoured not to work ...
++	 ;;
++
++	 *)
++	   soname=`echo $soname \
++	       | sed -e "s/^libsane-$utsushi_sane_backend_regexp/libsane/g" \
++	             -e "s/^cygsane-$utsushi_sane_backend_regexp/cygsane/g" \
++	             -e "s/^sane-$utsushi_sane_backend_regexp/sane/g"`
++	 ;;
++	esac
++
++## Utsushi SANE modification (end)
++
+ 	lib=$output_objdir/$realname
+ 	linknames=
+ 	for link
+ 	do
+ 	  func_append linknames " $link"
+@@ -10072,15 +10171,17 @@
+ 	  if test "$realname" != "$linkname"; then
+ 	    func_show_eval '(cd "$output_objdir" && $RM "$linkname" && $LN_S "$realname" "$linkname")' 'exit $?'
+ 	  fi
+ 	done
+ 
+-	# If -module or -export-dynamic was specified, set the dlname.
+-	if test yes = "$module" || test yes = "$export_dynamic"; then
+-	  # On all known operating systems, these are identical.
+-	  dlname=$soname
+-	fi
++## Moved before the soname modification needed by SANE.
++## # If -module or -export-dynamic was specified, set the dlname.
++##	if test "$module" = yes || test "$export_dynamic" = yes; then
++##	  # On all known operating systems, these are identical.
++##	  dlname="$soname"
++##	fi
++## Utsushi SANE modification (end)
+       fi
+       ;;
+ 
+     obj)
+       if test -n "$dlfiles$dlprefiles" || test no != "$dlself"; then
