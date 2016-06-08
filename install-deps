@@ -185,7 +185,7 @@ case "$PKG_MGR" in
             pkg_list="$pkg_list texlive-fonts-recommended"
         fi
 
-        as_root apt-get -qy install $pkg_list
+        as_root apt-get -qqy --no-install-recommends install $pkg_list
         ;;
 
     *)
