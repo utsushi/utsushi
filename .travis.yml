@@ -21,11 +21,15 @@
 sudo: required
 dist: trusty
 language: cpp
+services:
+  - docker
 compiler:
   - gcc
   - clang
 install:
   - sudo apt-get update -qq
   - ./install-deps
-before_script: ./bootstrap
+before_script:
+  - docker pull debian:stable
+  - docker run -v `pwd`:/home -w /home debian:stable /bin/sh -c 'apt-get -qq update && apt-get -qqy --no-recommends-install autoconf autoconf-archive automake    autopoint libltdl-dev libtool gnulib patch pkg-config && ./bootstrap'
 script: ./configure && make -j2
