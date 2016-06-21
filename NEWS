@@ -1,6 +1,12 @@
 NEWS -- an overview of user-visible changes with each release
 
 ----------------------------------------------------------------------
+utsushi-0.17.0                                            (2016-06-15)
+----------------------------------------------------------------------
+ * adds driver support for new models
+ * fixes the image processing bug in some locales
+
+----------------------------------------------------------------------
 utsushi-0.16.0                                            (2016-04-12)
 ----------------------------------------------------------------------
  * adds driver support for new models

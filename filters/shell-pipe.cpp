@@ -37,6 +37,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #ifndef SHELL
 #define SHELL "/bin/sh"
@@ -278,6 +279,8 @@ shell_pipe::exec_process_(const context& ctx)
           close (in[0]);        // unused duplicates
           close (out[1]);
           close (err[1]);
+
+          setenv ("LC_NUMERIC", "C", 1);
 
           execl (SHELL, SHELL, "-c", command_line.c_str (), NULL);
         }
