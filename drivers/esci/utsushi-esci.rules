@@ -85,6 +85,10 @@ ATTRS{idProduct}=="110b", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="110c", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="110d", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="110f", ENV{utsushi_driver}="esci"
+ATTRS{idProduct}=="1113", ENV{utsushi_driver}="esci"
+ATTRS{idProduct}=="1114", ENV{utsushi_driver}="esci"
+ATTRS{idProduct}=="1115", ENV{utsushi_driver}="esci"
+ATTRS{idProduct}=="1116", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="111c", ENV{utsushi_driver}="esci"
 
 #  Give scanner users read/write permissions on the device.

@@ -1346,6 +1346,18 @@ extended_scanner::configure_color_correction ()
 
   static const matrix< double, 3 > profile_matrix_2 = mat;
 
+  mat[0][0] =  0.9803;  mat[0][1] =  0.0341;  mat[0][2] = -0.0144;
+  mat[1][0] =  0.0080;  mat[1][1] =  1.0308;  mat[1][2] = -0.0388;
+  mat[2][0] =  0.0112;  mat[2][1] = -0.1296;  mat[2][2] =  1.1184;
+
+  static const matrix< double, 3 > profile_matrix_3 = mat;
+
+  mat[0][0] =  1.0027;  mat[0][1] =  0.0005;  mat[0][2] = -0.0032;
+  mat[1][0] =  0.0044;  mat[1][1] =  1.0214;  mat[1][2] = -0.0258;
+  mat[2][0] =  0.0048;  mat[2][1] = -0.0624;  mat[2][2] =  1.0576;
+
+  static const matrix< double, 3 > profile_matrix_4 = mat;
+
   static const std::map< std::string, const matrix< double, 3 > >
     profile_matrix = boost::assign::map_list_of
     ("PID 08C0", profile_matrix_1)
@@ -1370,6 +1382,12 @@ extended_scanner::configure_color_correction ()
     ("PID 110A", profile_matrix_2)
     ("PID 110B", profile_matrix_2)
     ("PID 110C", profile_matrix_2)
+    //
+    ("PID 1113", profile_matrix_3)
+    //
+    ("PID 1114", profile_matrix_4)
+    ("PID 1115", profile_matrix_4)
+    ("PID 1116", profile_matrix_4)
     ;
 
   try {
