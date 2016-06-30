@@ -1,5 +1,5 @@
 ;;;  utsushi.desc                               -*- emacs-lisp -*- (sort of)
-;;;  Copyright (C) 2015  Olaf Meeuwissen
+;;;  Copyright (C) 2015, 2016 Meeuwissen
 ;;;
 ;;;  License: GPL-3.0+
 ;;;  Author : Olaf Meeuwissen
@@ -186,6 +186,11 @@
 :usbid     "0x04b8" "0x08cc"
 :status    :good
 
+:model     "WF-6530"
+:interface "USB"
+:usbid     "0x04b8" "0x08cd"
+:status    :good
+
 :model     "WF-6590"
 :interface "USB"
 :usbid     "0x04b8" "0x08cf"
@@ -259,4 +264,32 @@
 :model     "XP-960"
 :interface "USB"
 :usbid     "0x04b8" "0x1109"
+:status    :good
+
+:interface "USB"
+:usbid     "0x04b8" "0x110d"
+:status    :good
+
+:interface "USB"
+:usbid     "0x04b8" "0x110f"
+:status    :good
+
+:interface "USB"
+:usbid     "0x04b8" "0x1113"
+:status    :good
+
+:interface "USB"
+:usbid     "0x04b8" "0x1114"
+:status    :good
+
+:interface "USB"
+:usbid     "0x04b8" "0x1115"
+:status    :good
+
+:interface "USB"
+:usbid     "0x04b8" "0x1116"
+:status    :good
+
+:interface "USB"
+:usbid     "0x04b8" "0x111c"
 :status    :good
