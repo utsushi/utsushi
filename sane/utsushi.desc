@@ -266,30 +266,37 @@
 :usbid     "0x04b8" "0x1109"
 :status    :good
 
+:model     "PID 110D"
 :interface "USB"
 :usbid     "0x04b8" "0x110d"
 :status    :good
 
+:model     "PID 110F"
 :interface "USB"
 :usbid     "0x04b8" "0x110f"
 :status    :good
 
+:model     "PID 1113"
 :interface "USB"
 :usbid     "0x04b8" "0x1113"
 :status    :good
 
+:model     "PID 1114"
 :interface "USB"
 :usbid     "0x04b8" "0x1114"
 :status    :good
 
+:model     "PID 1115"
 :interface "USB"
 :usbid     "0x04b8" "0x1115"
 :status    :good
 
+:model     "PID 1116"
 :interface "USB"
 :usbid     "0x04b8" "0x1116"
 :status    :good
 
+:model     "PID 111C"
 :interface "USB"
 :usbid     "0x04b8" "0x111c"
 :status    :good
