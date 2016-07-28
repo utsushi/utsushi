@@ -104,6 +104,9 @@ struct parameters
   boost::optional< quad > flc;
   boost::optional< std::vector< integer > > fla;
   boost::optional< quad > qit;
+  boost::optional< integer > ldf;
+  boost::optional< std::vector< integer > > dfa;
+  boost::optional< quad > lam;
 };
 
 namespace decoding {
@@ -146,6 +149,7 @@ protected:
   qi::rule< Iterator, quad () > parm_mrr_token_;
   qi::rule< Iterator, quad () > parm_flc_token_;
   qi::rule< Iterator, quad () > parm_qit_token_;
+  qi::rule< Iterator, quad () > parm_lam_token_;
 };
 
 extern template class basic_grammar_parameters< default_iterator_type >;
@@ -203,6 +207,7 @@ protected:
   karma::symbols< quad, token_rule_ > parm_mrr_token_;
   karma::symbols< quad, token_rule_ > parm_flc_token_;
   karma::symbols< quad, token_rule_ > parm_qit_token_;
+  karma::symbols< quad, token_rule_ > parm_lam_token_;
 };
 
 extern template class basic_grammar_parameters< default_iterator_type >;

@@ -26,6 +26,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <string>
+#include <set>
 
 #include <boost/filesystem.hpp>
 #include <boost/throw_exception.hpp>
@@ -85,7 +86,6 @@ dialog::dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder)
   , progress_(nullptr)
   , scan_started_(false)
   , ignore_delete_event_(false)
-  , revert_bilevel_(false)
   , revert_overscan_(false)
 {
   Glib::RefPtr<Glib::Object> obj = builder->get_object ("uimanager");
@@ -261,7 +261,7 @@ dialog::~dialog ()
     }
 }
 
-sigc::signal< void, option::map::ptr >
+sigc::signal< void, option::map::ptr, const std::set<std::string>& >
 dialog::signal_options_changed ()
 {
   return signal_options_changed_;
@@ -438,17 +438,6 @@ dialog::on_scan (void)
     const std::string xfer_jpg = "image/jpeg";
     std::string xfer_fmt = idevice_->get_context ().content_type ();
 
-    revert_bilevel_ = false;
-    bool bilevel = ((*opts_)["device/image-type"] == "Monochrome");
-    if (bilevel)                // use software thresholding
-      {
-        try {
-          (*opts_)["device/image-type"] = string ("Grayscale");
-          revert_bilevel_ = true;
-        }
-        catch (const std::out_of_range&){}
-      }
-
     toggle force_extent = true;
     quantity width  = -1.0;
     quantity height = -1.0;
@@ -548,17 +537,30 @@ dialog::on_scan (void)
       resample = value ((*opts_)["device/enable-resampling"]);
 
     filter::ptr magick;
+    bool bilevel = false;
     if (HAVE_MAGICK)
       {
         magick = make_shared< _flt_::magick > ();
-        if (reorient)
-          {
-            (*magick->options ())["auto-orient"] = toggle (true);
-          }
       }
 
     if (magick)
       {
+        string type = value ((*opts_)["magick/image-type"]);
+        bilevel = (type == "Monochrome");
+        if (bilevel)                // use software thresholding
+          {
+            type = "Grayscale";
+          }
+        try {
+          (*opts_)["device/image-type"] = type;
+        }
+        catch (const std::out_of_range&){}
+
+        if (reorient)
+          {
+            (*magick->options ())["auto-orient"] = toggle (true);
+          }
+
         toggle bound = true;
         quantity res_x  = -1.0;
         quantity res_y  = -1.0;
@@ -586,19 +588,20 @@ dialog::on_scan (void)
 
         (*magick->options ())["bilevel"] = toggle (bilevel);
 
-        quantity thr = value ((*opts_)["device/threshold"]);
-        thr *= 100.0;
-        thr /= (dynamic_pointer_cast< range >
-                ((*opts_)["device/threshold"].constraint ()))->upper ();
-        (*magick->options ())["threshold"] = thr;
-
+        quantity threshold = value ((*opts_)["magick/threshold"]);
         quantity brightness = value ((*opts_)["magick/brightness"]);
         quantity contrast   = value ((*opts_)["magick/contrast"]);
+        (*magick->options ())["threshold"] = threshold;
         (*magick->options ())["brightness"] = brightness;
         (*magick->options ())["contrast"]   = contrast;
 
         (*magick->options ())["image-format"] = fmt;
       }
+    else
+    {
+      if (opts_->count ("device/image-type"))
+        bilevel = ((*opts_)["device/image-type"] == "Monochrome");
+    }
 
     {
       toggle sw_color_correction = false;
@@ -615,6 +618,8 @@ dialog::on_scan (void)
     }
 
     toggle skip_blank = !bilevel; // \todo fix filter limitation
+    if (magick)
+      skip_blank = true;
     quantity skip_thresh = -1.0;
     filter::ptr blank_skip (make_shared< image_skip > ());
     try
@@ -686,11 +691,6 @@ dialog::on_scan_update (traits::int_type c)
     }
   if (traits::eos () == c || traits::eof () == c)
     {
-      if (revert_bilevel_)
-        {
-          (*opts_)["device/image-type"] = string ("Monochrome");
-          revert_bilevel_ = false;
-        }
       if (revert_overscan_)
         {
           (*opts_)["device/overscan"] = toggle (false);
@@ -732,6 +732,8 @@ dialog::on_about (void)
 void
 dialog::on_device_changed (utsushi::scanner::ptr idev)
 {
+  std::set<std::string> option_blacklist;
+
   idevice_ = idev;
 
   opts_.reset (new option::map);
@@ -776,6 +778,18 @@ dialog::on_device_changed (utsushi::scanner::ptr idev)
   if (magick)
     {
       option::map::ptr opts = magick->options ();
+      opts->add_options ()
+        ("image-type", (from< utsushi::store > ()
+                        -> alternative (SEC_N_("Monochrome"))
+                        -> alternative (SEC_N_("Grayscale"))
+                        -> default_value (SEC_N_("Color"))),
+         attributes (tag::general)(level::standard),
+         SEC_N_("Image Type"))
+        ;
+      option_blacklist.insert ("device/image-type");
+
+      option_blacklist.insert ("device/threshold");
+
       filter::ptr reorient;
       if (magick->options ()->count ("auto-orient"))
         {
@@ -802,7 +816,7 @@ dialog::on_device_changed (utsushi::scanner::ptr idev)
       action->set_sensitive (!idevice_->actions ()->empty ());
     }
 
-  signal_options_changed_.emit (opts_);
+  signal_options_changed_.emit (opts_, option_blacklist);
 
   pump_ = make_shared< pump > (idev);
 

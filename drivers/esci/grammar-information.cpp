@@ -38,24 +38,28 @@ information::information ()
   , truncates_at_media_end (false)
   , supports_authentication (false)
   , supports_reinitialization (false)
+  , supports_automatic_feed (false)
 {}
 
 bool
 information::operator== (const information& rhs) const
 {
-  return (   adf                       == rhs.adf
-          && tpu                       == rhs.tpu
-          && flatbed                   == rhs.flatbed
-          && max_image                 == rhs.max_image
-          && has_push_button           == rhs.has_push_button
-          && product                   == rhs.product
-          && version                   == rhs.version
-          && device_buffer_size        == rhs.device_buffer_size
-          && extension                 == rhs.extension
-          && truncates_at_media_end    == rhs.truncates_at_media_end
-          && serial_number             == rhs.serial_number
-          && supports_authentication   == rhs.supports_authentication
-          && supports_reinitialization == rhs.supports_reinitialization);
+  return (   adf                             == rhs.adf
+          && tpu                             == rhs.tpu
+          && flatbed                         == rhs.flatbed
+          && max_image                       == rhs.max_image
+          && has_push_button                 == rhs.has_push_button
+          && product                         == rhs.product
+          && version                         == rhs.version
+          && device_buffer_size              == rhs.device_buffer_size
+          && extension                       == rhs.extension
+          && truncates_at_media_end          == rhs.truncates_at_media_end
+          && serial_number                   == rhs.serial_number
+          && supports_authentication         == rhs.supports_authentication
+          && supports_reinitialization       == rhs.supports_reinitialization
+          && supports_automatic_feed         == rhs.supports_automatic_feed
+          && double_feed_detection_threshold == rhs.double_feed_detection_threshold
+          && crop_resolution_constraint      == rhs.crop_resolution_constraint);
 }
 
 void
@@ -93,6 +97,18 @@ information::is_double_pass_duplexer () const
   return (    adf
           &&  adf->duplex_passes
           && *adf->duplex_passes == adf::SCN2);
+}
+
+information::range::range (const integer& lower, const integer& upper)
+  : lower_(lower)
+  , upper_(upper)
+{}
+
+bool
+information::range::operator== (const information::range& rhs) const
+{
+  return (   lower_ == rhs.lower_
+          && upper_ == rhs.upper_);
 }
 
 information::source::source ()
@@ -147,20 +163,22 @@ information::adf_source::adf_source ()
   , prefeeds (false)
   , auto_scans (false)
   , auto_recovers (false)
+  , detects_carrier_sheet (false)
 {}
 
 bool
 information::adf_source::operator== (const information::adf_source& rhs) const
 {
   return (fb_source::operator== (rhs)
-          && type          == rhs.type
-          && duplex_passes == rhs.duplex_passes
-          && doc_order     == rhs.doc_order
-          && prefeeds      == rhs.prefeeds
-          && auto_scans    == rhs.auto_scans
-          && min_doc       == rhs.min_doc
-          && max_doc       == rhs.max_doc
-          && auto_recovers == rhs.auto_recovers);
+          && type                  == rhs.type
+          && duplex_passes         == rhs.duplex_passes
+          && doc_order             == rhs.doc_order
+          && prefeeds              == rhs.prefeeds
+          && auto_scans            == rhs.auto_scans
+          && min_doc               == rhs.min_doc
+          && max_doc               == rhs.max_doc
+          && auto_recovers         == rhs.auto_recovers
+          && detects_carrier_sheet == rhs.detects_carrier_sheet);
 }
 
 bool

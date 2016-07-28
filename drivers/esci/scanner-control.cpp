@@ -346,6 +346,32 @@ scanner_control::mechanics (const quad& part, const quad& action,
   return *this;
 }
 
+scanner_control&
+scanner_control::automatic_feed (const quad& value)
+{
+  namespace request = code_token::request;
+
+  if (!acquiring_)
+    {
+      par_blk_.reserve (sizeof (value));
+      par_blk_.clear ();
+
+      if (encode_.automatic_feed_(std::back_inserter (par_blk_), value))
+        {
+          encode_request_block_(request::AFM, par_blk_.size ());
+        }
+      else
+        {
+          log::error ("%1%") % encode_.trace ();
+        }
+    }
+  else
+    {
+      log::debug ("cannot set automatic feed while acquiring image data");
+    }
+  return *this;
+}
+
 boost::optional< std::vector < status::error > >
 scanner_control::fatal_error () const
 {

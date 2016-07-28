@@ -37,6 +37,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <set>
 
 #include <boost/any.hpp>
 #include <boost/filesystem.hpp>
@@ -195,10 +196,12 @@ class option_visitor
 {
 public:
   option_visitor (po::options_description& desc, const option& opt,
+                  const std::set<std::string>& option_blacklist,
                   boost::optional< toggle > resampling = boost::none)
     : desc_(desc)
     , opt_(opt)
     , resampling_(resampling)
+    , option_blacklist_(option_blacklist)
   {}
 
   template< typename T >
@@ -208,6 +211,7 @@ protected:
   po::options_description& desc_;
   const option& opt_;
   boost::optional< toggle > resampling_;
+  const std::set<std::string>& option_blacklist_;
 };
 
 template< typename T >
@@ -223,6 +227,8 @@ option_visitor::operator() (const T& t) const
       if (key.substr (0,10) == "resolution") return;
       if (key.substr (0, 3) == "sw-") key.erase (0, 3);
     }
+
+  if (option_blacklist_.count (key)) return;
 
   if (opt_.text ())             // only translate non-empty strings
     description = _(opt_.text ());
@@ -265,6 +271,8 @@ option_visitor::operator() (const toggle& t) const
       if (key.substr (0, 3) == "sw-") key.erase (0, 3);
     }
 
+  if (option_blacklist_.count (key)) return;
+
   if (opt_.text ())             // only translate non-empty strings
     description = _(opt_.text ());
 
@@ -301,9 +309,11 @@ class visit
 {
 public:
   visit (po::options_description& desc,
+         const std::set<std::string>& option_blacklist = std::set<std::string>(),
          boost::optional< toggle > resampling = boost::none)
     : desc_(desc)
     , resampling_(resampling)
+    , option_blacklist_(option_blacklist)
   {}
 
   void operator() (const option& opt) const
@@ -311,7 +321,7 @@ public:
     if (opt.is_read_only ()) return;
 
     value val (opt);
-    option_visitor v (desc_, opt, resampling_);
+    option_visitor v (desc_, opt, option_blacklist_, resampling_);
 
     val.apply (v);
   }
@@ -319,6 +329,7 @@ public:
 protected:
   po::options_description& desc_;
   boost::optional< toggle > resampling_;
+  const std::set<std::string>& option_blacklist_;
 };
 
 class run
@@ -582,6 +593,7 @@ main (int argc, char *argv[])
 
       po::variables_map act_vm;
       po::options_description dev_acts (CCB_("Device actions"));
+
       std::for_each (device->actions ()->begin (),
                      device->actions ()->end (),
                      visit (dev_acts));
@@ -631,12 +643,13 @@ main (int argc, char *argv[])
               add_opts
                 .add_options ()
                 ("deskew", po::bool_switch (),
-                 SEC_("Deskew"))
+                 SEC_N_("Deskew"))
                 ;
             }
         }
 
       filter::ptr magick;
+      std::set<std::string> option_blacklist;
       if (HAVE_MAGICK)
         {
           magick = make_shared< _flt_::magick > ();
@@ -645,6 +658,25 @@ main (int argc, char *argv[])
       filter::ptr reorient;
       if (magick)
         {
+          visit v (add_opts);
+          option::map om;
+
+          om.add_options ()
+            ("image-type", (from< utsushi::store > ()
+                            -> alternative (SEC_N_("Monochrome"))
+                            -> alternative (SEC_N_("Grayscale"))
+                            -> default_value (SEC_N_("Color"))),
+             attributes (tag::general)(level::standard),
+             SEC_N_("Image Type"))
+            ;
+          v (om ["image-type"]);
+          option_blacklist.insert ("image-type");
+
+          v ((*magick->options ())["threshold"]);
+          option_blacklist.insert ("threshold");
+          v ((*magick->options ())["brightness"]);
+          v ((*magick->options ())["contrast"]);
+
           if (magick->options ()->count ("auto-orient"))
             {
               reorient = make_shared< _flt_::reorient > ();
@@ -654,21 +686,14 @@ main (int argc, char *argv[])
             }
         }
 
-      std::for_each (device->options ()->begin (),
-                     device->options ()->end (),
-                     visit (dev_opts, resampling));
-
       filter::ptr blank_skip = make_shared< _flt_::image_skip > ();
       std::for_each (blank_skip->options ()->begin (),
                      blank_skip->options ()->end (),
                      visit (add_opts));
 
-      if (magick)
-        {
-          visit v (add_opts);
-          v ((*magick->options ())["brightness"]);
-          v ((*magick->options ())["contrast"]);
-        }
+      std::for_each (device->options ()->begin (),
+                     device->options ()->end (),
+                     visit (dev_opts, option_blacklist, resampling));
 
       if (rt.count ("help"))
         {
@@ -791,22 +816,35 @@ main (int argc, char *argv[])
           add_vm.erase ("rotate");
         }
 
+      quantity threshold;
       quantity brightness;
       quantity contrast;
+      bool bilevel = false;
       if (magick)
         {
+          threshold = add_vm["threshold"].as< quantity > ();
+          add_vm.erase ("threshold");
           brightness = add_vm["brightness"].as< quantity > ();
           add_vm.erase ("brightness");
           contrast   = add_vm["contrast"].as< quantity > ();
           add_vm.erase ("contrast");
-        }
 
-      bool bilevel = (dev_vm["image-type"].as< string > () == "Monochrome");
-      if (bilevel)              // use software thresholding
-        {
-          dev_vm.erase ("image-type");
-          po::variable_value v (std::string ("Grayscale"), false);
+          std::string type (add_vm["image-type"].as< string > ());
+          bilevel = (type == "Monochrome");
+          if (bilevel)              // use software thresholding
+            {
+              type = "Grayscale";
+            }
+          po::variable_value v (type, false);
           dev_vm.insert (std::make_pair ("image-type", v));
+          add_vm.erase ("image-type");
+        }
+      else
+        {
+          if (dev_vm.count ("image-type"))
+            {
+              bilevel = (dev_vm["image-type"].as< string > () == "Monochrome");
+            }
         }
 
       // Push all options to their respective providers
@@ -1035,12 +1073,7 @@ main (int argc, char *argv[])
 
           (*magick->options ())["bilevel"] = toggle (bilevel);
 
-          quantity thr = value (om["threshold"]);
-          thr *= 100.0;
-          thr /= (dynamic_pointer_cast< range >
-                  (om["threshold"].constraint ()))->upper ();
-          (*magick->options ())["threshold"] = thr;
-
+          (*magick->options ())["threshold"] = threshold;
           (*magick->options ())["brightness"] = brightness;
           (*magick->options ())["contrast"]   = contrast;
 

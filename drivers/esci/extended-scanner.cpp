@@ -102,8 +102,8 @@ namespace {
           (HI_DENSITY_PRINT , CCB_N_("High Density Print"))
           (LO_DENSITY_PRINT , CCB_N_("Low Density Print"))
           (HI_CONTRAST_PRINT, CCB_N_("High Contrast Print"))
-          (CUSTOM_GAMMA_A   , CCB_N_("Custom (Base Gamma = 1.0"))
-          (CUSTOM_GAMMA_B   , CCB_N_("Custom (Base Gamma = 1.8"))
+          (CUSTOM_GAMMA_A   , CCB_N_("Custom (Base Gamma = 1.0)"))
+          (CUSTOM_GAMMA_B   , CCB_N_("Custom (Base Gamma = 1.8)"))
           ;
       }
     return store_from (gamma_correction);
@@ -1384,10 +1384,13 @@ extended_scanner::configure_color_correction ()
     ("PID 110C", profile_matrix_2)
     //
     ("PID 1113", profile_matrix_3)
+    ("PID 1117", profile_matrix_3)
+    ("PID 111A", profile_matrix_3)
     //
     ("PID 1114", profile_matrix_4)
     ("PID 1115", profile_matrix_4)
     ("PID 1116", profile_matrix_4)
+    ("PID 111D", profile_matrix_4)
     ;
 
   try {

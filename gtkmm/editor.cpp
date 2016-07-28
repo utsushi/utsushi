@@ -516,7 +516,8 @@ editor::set_application_name (const std::string& name)
 }
 
 void
-editor::on_options_changed (option::map::ptr om)
+editor::on_options_changed (option::map::ptr om,
+                            const std::set<std::string>& option_blacklist)
 {
   log::brief ("update the set of controllers");
 
@@ -548,7 +549,8 @@ editor::on_options_changed (option::map::ptr om)
         {
           if (!seen.count (om_it->key ())
               && om_it->is_at (level::standard)
-              && om_it->tags ().count (*it))
+              && om_it->tags ().count (*it)
+              && !option_blacklist.count (om_it->key ()))
             {
               add_widget (*om_it);
               seen.insert (om_it->key ());
@@ -573,7 +575,8 @@ editor::on_options_changed (option::map::ptr om)
   for (; opts_->end () != om_it; ++om_it)
     {
       if (!seen.count (om_it->key ())
-          && om_it->is_at (level::standard))
+          && om_it->is_at (level::standard)
+          && !option_blacklist.count (om_it->key ()))
         {
           add_widget (*om_it);
           seen.insert (om_it->key ());
@@ -685,7 +688,7 @@ editor::set (const std::string& key, const value& v)
 
   for_each (editors_.begin (), editors_.end (),
             sigc::mem_fun (*this, &editor::update_appearance));
-  signal_values_changed_.emit ();
+  signal_values_changed_.emit (opts_);
 }
 
 string
@@ -707,7 +710,7 @@ editor::untranslate (const key& k, const string& s)
   return s;
 }
 
-sigc::signal<void>
+sigc::signal<void, option::map::ptr>
 editor::signal_values_changed ()
 {
   return signal_values_changed_;

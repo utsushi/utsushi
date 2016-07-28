@@ -107,6 +107,12 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
         {
           sp = make_shared< PX_Mxxx0 > (cnx);
         }
+      else if (   info.product_name () == "DS-530"
+               || info.product_name () == "DS-570W"
+               )
+        {
+          sp = make_shared< DS_530_570W > (cnx);
+        }
       else
         {
           sp = make_shared< compound_scanner > (cnx);

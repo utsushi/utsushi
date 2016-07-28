@@ -81,6 +81,7 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
      ^ (token_(FLC) > token_(value::LIST) > +caps_flc_token_)
      ^ (token_(FLA) > (this->positive_range_ | this->positive_list_))
      ^ (token_(QIT) > token_(value::LIST) > +caps_qit_token_)
+     ^ (token_(LAM) > token_(value::LIST) > +caps_lam_token_)
      )
     > qi::eoi
     ;
@@ -153,6 +154,7 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
       | token_(adf::PEDT)
       | token_(adf::DFL1)
       | token_(adf::DFL2)
+      | token_(adf::LDF )
       | token_(adf::FAST)
       | token_(adf::SLOW)
       | token_(adf::BGWH)
@@ -296,6 +298,13 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
     > token_
     ;
 
+  caps_lam_token_ %=
+    &(  token_(lam::ON  )
+      | token_(lam::OFF )
+      )
+    > token_
+    ;
+
   ESCI_GRAMMAR_TRACE_NODE (capability_rule_);
 
   ESCI_GRAMMAR_TRACE_NODE (caps_adf_rule_);
@@ -325,6 +334,7 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
   ESCI_GRAMMAR_TRACE_NODE (caps_mrr_token_);
   ESCI_GRAMMAR_TRACE_NODE (caps_flc_token_);
   ESCI_GRAMMAR_TRACE_NODE (caps_qit_token_);
+  ESCI_GRAMMAR_TRACE_NODE (caps_lam_token_);
 }
 
 }       // namespace decoding
@@ -381,7 +391,8 @@ BOOST_FUSION_ADAPT_STRUCT
  (boost::optional< ESCI_NS::capabilities::focus_control>, fcs)
  (boost::optional< std::vector< ESCI_NS::quad > >, flc)
  (boost::optional< ESCI_NS::capabilities::constraint >, fla)
- (boost::optional< std::vector< ESCI_NS::quad > >, qit))
+ (boost::optional< std::vector< ESCI_NS::quad > >, qit)
+ (boost::optional< std::vector< ESCI_NS::quad > >, lam))
 
 #undef ESCI_NS
 

@@ -174,6 +174,7 @@ namespace request {
   const quad RESA = CODE_TOKEN (UPPER_R, UPPER_E, UPPER_S, UPPER_A);
   const quad RESB = CODE_TOKEN (UPPER_R, UPPER_E, UPPER_S, UPPER_B);
   const quad STAT = CODE_TOKEN (UPPER_S, UPPER_T, UPPER_A, UPPER_T);
+  const quad AFM  = CODE_TOKEN (UPPER_A, UPPER_F, UPPER_M, SPACE  );
   const quad MECH = CODE_TOKEN (UPPER_M, UPPER_E, UPPER_C, UPPER_H);
   const quad TRDT = CODE_TOKEN (UPPER_T, UPPER_R, UPPER_D, UPPER_T);
   const quad IMG  = CODE_TOKEN (UPPER_I, UPPER_M, UPPER_G, SPACE  );
@@ -248,6 +249,7 @@ namespace reply {
     const quad TYP  = CODE_TOKEN (NUMBER , LOWER_T, LOWER_Y, LOWER_P);
     const quad ATN  = CODE_TOKEN (NUMBER , LOWER_A, LOWER_T, LOWER_N);
     const quad PAR  = CODE_TOKEN (NUMBER , LOWER_P, LOWER_A, LOWER_R);
+    const quad DOC  = CODE_TOKEN (NUMBER , LOWER_D, LOWER_O, LOWER_C);
     const quad END  = CODE_TOKEN (NUMBER , MINUS  , MINUS  , MINUS  );
 
     //! Hardware trouble indicators
@@ -369,6 +371,13 @@ namespace reply {
 
     }   // namespace par
 
+    //! Document type notifications
+    namespace doc {
+
+      const quad CRST = CODE_TOKEN (UPPER_C, UPPER_R, UPPER_S, UPPER_T);
+
+    }   // namespace doc
+
     //! When there's nothing left to say
     /*! Anything past the \c END marker can and should be ignored.
      */
@@ -427,6 +436,9 @@ namespace information {
   const quad S_N  = CODE_TOKEN (NUMBER , UPPER_S, SLASH  , UPPER_N);
   const quad ATH  = CODE_TOKEN (NUMBER , UPPER_A, UPPER_T, UPPER_H);
   const quad INI  = CODE_TOKEN (NUMBER , UPPER_I, UPPER_N, UPPER_I);
+  const quad AFM  = CODE_TOKEN (NUMBER , UPPER_A, UPPER_F, UPPER_M);
+  const quad DFM  = CODE_TOKEN (NUMBER , UPPER_D, UPPER_F, UPPER_M);
+  const quad CRR  = CODE_TOKEN (NUMBER , UPPER_C, UPPER_R, UPPER_R);
 
   //! Automatic document feeder features
   namespace adf {
@@ -454,6 +466,8 @@ namespace information {
     const quad RESO = CODE_TOKEN (UPPER_R, UPPER_E, UPPER_S, UPPER_O);
     const quad RCVR = CODE_TOKEN (UPPER_R, UPPER_C, UPPER_V, UPPER_R);
     const quad OVSN = CODE_TOKEN (UPPER_O, UPPER_V, UPPER_S, UPPER_N);
+    const quad CRST = CODE_TOKEN (UPPER_C, UPPER_R, UPPER_S, UPPER_T);
+    const quad CARD = CODE_TOKEN (UPPER_C, UPPER_A, UPPER_R, UPPER_D);
 
     // token values
     const quad PAGE = CODE_TOKEN (UPPER_P, UPPER_A, UPPER_G, UPPER_E);
@@ -582,6 +596,7 @@ namespace capability {
   const quad FLC  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_L, UPPER_C);
   const quad FLA  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_L, UPPER_A);
   const quad QIT  = CODE_TOKEN (NUMBER , UPPER_Q, UPPER_I, UPPER_T);
+  const quad LAM  = CODE_TOKEN (NUMBER , UPPER_L, UPPER_A, UPPER_M);
 
   //! Automatic document feeder options
   /*! Note that the \c LOAD and \c EJCT tokens correspond to the same
@@ -594,6 +609,7 @@ namespace capability {
     const quad PEDT = CODE_TOKEN (UPPER_P, UPPER_E, UPPER_D, UPPER_T);
     const quad DFL1 = CODE_TOKEN (UPPER_D, UPPER_F, UPPER_L, DIGIT_1);
     const quad DFL2 = CODE_TOKEN (UPPER_D, UPPER_F, UPPER_L, DIGIT_2);
+    const quad LDF  = CODE_TOKEN (UPPER_L, UPPER_D, UPPER_F, SPACE  );
     const quad FAST = CODE_TOKEN (UPPER_F, UPPER_A, UPPER_S, UPPER_T);
     const quad SLOW = CODE_TOKEN (UPPER_S, UPPER_L, UPPER_O, UPPER_W);
     const quad BGWH = CODE_TOKEN (UPPER_B, UPPER_G, UPPER_W, UPPER_H);
@@ -830,6 +846,14 @@ namespace capability {
 
   }   // namespace qit
 
+  //! Supported laminated paper settings
+  namespace lam {
+
+    const quad ON   = CODE_TOKEN (UPPER_O, UPPER_N, SPACE  , SPACE  );
+    const quad OFF  = CODE_TOKEN (UPPER_O, UPPER_F, UPPER_F, SPACE  );
+
+  }   // namespace lam
+
 }     // namespace capability
 
 //! Setting and getting scan parameters
@@ -877,8 +901,14 @@ namespace parameter {
   const quad FLC  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_L, UPPER_C);
   const quad FLA  = CODE_TOKEN (NUMBER , UPPER_F, UPPER_L, UPPER_A);
   const quad QIT  = CODE_TOKEN (NUMBER , UPPER_Q, UPPER_I, UPPER_T);
+  const quad LDF  = CODE_TOKEN (NUMBER , UPPER_L, UPPER_D, UPPER_F);
+  const quad DFA  = CODE_TOKEN (NUMBER , UPPER_D, UPPER_F, UPPER_A);
+  const quad LAM  = CODE_TOKEN (NUMBER , UPPER_L, UPPER_A, UPPER_M);
 
-  namespace adf = capability::adf;
+  namespace adf {
+    using namespace capability::adf;
+    const quad CARD = CODE_TOKEN (UPPER_C, UPPER_A, UPPER_R, UPPER_D);
+  }
   namespace tpu = capability::tpu;
   namespace fb  = capability::fb ;
   namespace col = capability::col;
@@ -923,6 +953,7 @@ namespace parameter {
   namespace flc = capability::flc;
   namespace fla = capability::fla;
   namespace qit = capability::qit;
+  namespace lam = capability::lam;
 
 }     // namespace parameter
 
@@ -1048,6 +1079,13 @@ namespace status {
   }   // namespace sep
 
 }     // namespace status
+
+namespace automatic_feed {
+
+  const quad ON   = CODE_TOKEN (NUMBER , UPPER_O, UPPER_N, SPACE  );
+  const quad OFF  = CODE_TOKEN (NUMBER , UPPER_O, UPPER_F, UPPER_F);
+
+}     // namespace automatic_feed
 
 //! Moving bits and pieces
 /*! The \c MECH request lets one control the "flow" of media through

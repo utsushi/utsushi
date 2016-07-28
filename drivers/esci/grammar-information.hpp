@@ -51,6 +51,20 @@ struct information
 
   bool is_double_pass_duplexer () const;
 
+  struct range
+    : private boost::equality_comparable< range >
+  {
+    range (const integer& lower = integer (),
+           const integer& upper = esci_int_max);
+
+    bool operator== (const range& rhs) const;
+
+    integer lower_;
+    integer upper_;
+  };
+
+  typedef boost::variant< range, std::vector< integer > > constraint;
+
   struct source
     : private boost::equality_comparable< source >
   {
@@ -107,6 +121,8 @@ struct information
     std::vector< integer > min_doc;
     std::vector< integer > max_doc;
     bool auto_recovers;
+    bool detects_carrier_sheet;
+    bool supports_plastic_card;
   };
 
   boost::optional< adf_source > adf;
@@ -122,6 +138,9 @@ struct information
   boost::optional< std::vector< byte > > serial_number;
   bool supports_authentication;
   bool supports_reinitialization;
+  bool supports_automatic_feed;
+  boost::optional< integer > double_feed_detection_threshold;
+  boost::optional< constraint > crop_resolution_constraint;
 };
 
 namespace decoding {
@@ -154,6 +173,9 @@ protected:
 
   //! Codes a width and height
   qi::rule< Iterator, std::vector< integer > () > extent_;
+
+  qi::rule< Iterator, std::vector< integer > () > positive_list_;
+  qi::rule< Iterator, information::range     () > positive_range_;
 
   qi::rule< Iterator, quad () > info_adf_type_token_;
   qi::rule< Iterator, quad () > info_adf_dplx_token_;

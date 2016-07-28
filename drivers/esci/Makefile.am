@@ -80,6 +80,9 @@ libdrv_esci_la_SOURCES += get-scan-parameters.hpp
 libdrv_esci_la_SOURCES += get-scanner-status.cpp
 libdrv_esci_la_SOURCES += get-scanner-status.hpp
 libdrv_esci_la_SOURCES += getter.hpp
+libdrv_esci_la_SOURCES += grammar-automatic-feed.cpp
+libdrv_esci_la_SOURCES += grammar-automatic-feed.hpp
+libdrv_esci_la_SOURCES += grammar-automatic-feed.ipp
 libdrv_esci_la_SOURCES += grammar-capabilities.cpp
 libdrv_esci_la_SOURCES += grammar-capabilities.hpp
 libdrv_esci_la_SOURCES += grammar-capabilities.ipp
@@ -186,6 +189,8 @@ driverdata_DATA += data/DS-40.dat
 driverdata_DATA += data/DS-510.dat
 driverdata_DATA += data/DS-520.dat
 driverdata_DATA += data/DS-560.dat
+driverdata_DATA += data/DS-530.dat
+driverdata_DATA += data/DS-570W.dat
 driverdata_DATA += data/DS-760.dat
 driverdata_DATA += data/DS-860.dat
 driverdata_DATA += data/DS-5500.dat
@@ -221,6 +226,9 @@ $(srcdir)/data/DS-520.dat: $(srcdir)/data/DS-510.dat
 	$(clone_dat)
 
 $(srcdir)/data/DS-560.dat: $(srcdir)/data/DS-510.dat
+	$(clone_dat)
+
+$(srcdir)/data/DS-570W.dat: $(srcdir)/data/DS-530.dat
 	$(clone_dat)
 
 $(srcdir)/data/DS-760.dat: $(srcdir)/data/DS-860.dat

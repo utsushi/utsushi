@@ -89,6 +89,7 @@ public:
   //! @{
   scanner_control& mechanics (const quad& part, const quad& action = quad (),
                               integer value = 0);
+  scanner_control& automatic_feed (const quad& value);
   //! @}
 
   using base_type_::extension;
