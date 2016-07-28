@@ -176,10 +176,13 @@ magick::magick ()
 {
   option_->add_options ()
     ("bilevel", toggle (false))
-    ("threshold", (from< range > ()     // percentage
-                   -> lower (  0.0)
-                   -> upper (100.0)
-                   -> default_value (50.0)))
+    ("threshold", (from< range > ()
+                   -> lower (  0)
+                   -> upper (255)
+                   -> default_value (128)),
+     attributes (tag::enhancement)(level::standard),
+     SEC_N_("Threshold")
+     )
     ("brightness", (from< range > ()
                     -> lower (-1.0)
                     -> upper ( 1.0)
@@ -229,6 +232,9 @@ magick::freeze_options ()
     bilevel_ = t;
 
     quantity thr = value ((*option_)["threshold"]);
+    thr *= 100.0;
+    thr /= (dynamic_pointer_cast< range >
+            ((*option_)["threshold"].constraint ()))->upper ();
     threshold_ = thr.amount< double > ();
 
     quantity brightness = value ((*option_)["brightness"]);

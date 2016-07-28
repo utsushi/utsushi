@@ -42,6 +42,7 @@
 
 #include "buffer.hpp"
 #include "code-token.hpp"
+#include "grammar-automatic-feed.hpp"
 #include "grammar-capabilities.hpp"
 #include "grammar-information.hpp"
 #include "grammar-mechanics.hpp"
@@ -95,6 +96,7 @@ struct status
   bool is_parameter_set_okay () const;
   bool is_ready () const;
   bool is_warming_up () const;
+  bool is_normal_sheet () const;
 
   //! Indicates whether the device ran out of media
   /*! Note that this may or may not be a fatal_error()
@@ -145,6 +147,7 @@ struct status
   boost::optional< quad > typ;
   boost::optional< quad > atn;
   boost::optional< quad > par;
+  boost::optional< quad > doc;
 
 private:
   bool is_get_parameter_code (const quad& code) const;
@@ -204,6 +207,7 @@ protected:
   qi::rule< Iterator, quad () > typ_token_;
   qi::rule< Iterator, quad () > atn_token_;
   qi::rule< Iterator, quad () > par_token_;
+  qi::rule< Iterator, quad () > doc_token_;
 };
 
 typedef basic_grammar< default_iterator_type > grammar;
@@ -219,6 +223,7 @@ template< typename Iterator >
 class basic_grammar
   : virtual protected basic_grammar_formats< Iterator >
   , public basic_grammar_parameters< Iterator >
+  , public basic_grammar_automatic_feed< Iterator >
   , public basic_grammar_mechanics< Iterator >
 {
 public:

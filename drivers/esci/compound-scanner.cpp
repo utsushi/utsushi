@@ -483,6 +483,16 @@ compound_scanner::compound_scanner (const connexion::ptr& cnx)
       caps.pag = capabilities::range (esci_dec_min, esci_dec_max);
     }
 
+  // Disable ADF plastic card support flag.  It has been removed from
+  // the protocol specification and devices should no longer use it.
+
+  if (info_.adf)
+    {
+      information& info (const_cast< information& > (info_));
+
+      info.adf->supports_plastic_card = false;
+    }
+
   // Disable flip-side scan parameter support because driver support
   // for it is not ready yet.  The protocol specification is missing
   // information needed for implementation.
@@ -537,14 +547,6 @@ compound_scanner::configure ()
 
     if (cp)
       {
-        if (value ("Monochrome") != (*cp)(value ("Monochrome")))
-          {
-            // FIXME  This should really be done by the application if
-            //        it is willing to emulate thresholding.  We rely
-            //        on cooperating applications at the moment.
-            dynamic_pointer_cast< utsushi::store >
-              (cp)->alternative ("Monochrome");
-          }
         add_options ()
           ("image-type", cp,
            attributes (tag::general)(level::standard),
@@ -734,32 +736,32 @@ compound_scanner::configure ()
         action_->add_actions ()
           ("calibrate", bind (do_mechanics, cnx_, ref (acquire_),
                               mech::ADF, mech::adf::CALB),
-           SEC_("Calibration"),
-           SEC_("Calibrating..."));
+           SEC_N_("Calibration"),
+           SEC_N_("Calibrating..."));
       }
     if (caps_.can_clean ())
       {
         action_->add_actions ()
           ("clean", bind (do_mechanics, cnx_, ref (acquire_),
                           mech::ADF, mech::adf::CLEN),
-           SEC_("Cleaning"),
-           SEC_("Cleaning..."));
+           SEC_N_("Cleaning"),
+           SEC_N_("Cleaning..."));
       }
     if (caps_.can_eject ())
       {
         action_->add_actions ()
           ("eject", bind (do_mechanics, cnx_, ref (acquire_),
                           mech::ADF, mech::adf::EJCT),
-           SEC_("Eject"),
-           SEC_("Ejecting ..."));
+           SEC_N_("Eject"),
+           SEC_N_("Ejecting ..."));
       }
     if (caps_.can_load ())
       {
         action_->add_actions ()
           ("load", bind (do_mechanics, cnx_, ref (acquire_),
                          mech::ADF, mech::adf::LOAD),
-           SEC_("Load"),
-           SEC_("Loading..."));
+           SEC_N_("Load"),
+           SEC_N_("Loading..."));
       }
   }
 }
@@ -2863,6 +2865,7 @@ map_(std::string product)
   if ("PID 08BC" == product) product = "PX-M7050";
   if ("PID 08CC" == product) product = "PX-M7050FX";
   if ("PID 08CE" == product) product = "PX-M860F";
+  if ("PID 08CF" == product) product = "WF-6590";
 
   if (rt.running_in_place ())
     product.insert (0, "data/");

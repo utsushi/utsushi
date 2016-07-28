@@ -81,7 +81,8 @@ public:
   void add_widget (option& opt);
 
   void set_application_name (const std::string& name);
-  void on_options_changed (option::map::ptr om);
+  void on_options_changed (option::map::ptr om,
+                           const std::set<std::string>& option_blacklist);
 
   void set (const std::string& key, const value& v);
 
@@ -96,7 +97,7 @@ public:
    */
   string untranslate (const key &k, const string &s);
 
-  sigc::signal<void>
+  sigc::signal<void, option::map::ptr>
   signal_values_changed ();
 
 protected:
@@ -111,7 +112,7 @@ protected:
   bool active_toggle_(const std::set< key >& tags) const;
 
 private:
-  sigc::signal<void>
+  sigc::signal<void, option::map::ptr>
   signal_values_changed_;
 };
 

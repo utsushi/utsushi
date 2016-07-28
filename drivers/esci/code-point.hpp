@@ -144,6 +144,7 @@ namespace code_point {
   const byte LOWER_L = 0x6c;
   const byte LOWER_M = 0x6d;
   const byte LOWER_N = 0x6e;
+  const byte LOWER_O = 0x6f;
   const byte LOWER_P = 0x70;
   const byte LOWER_Q = 0x71;
   const byte LOWER_R = 0x72;

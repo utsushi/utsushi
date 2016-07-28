@@ -502,7 +502,6 @@ handle::handle(const scanner::info& info)
   , cancel_requested_(work_in_progress_)
   , emulating_automatic_scan_area_(false)
   , do_automatic_scan_area_(false)
-  , revert_bilevel_(false)
 {
   opt_.add_options ()
     (name::num_options, quantity (0),
@@ -584,6 +583,15 @@ handle::handle(const scanner::info& info)
     {
       opt_.add_option_map ()
         (magick_prefix, magick->options ());
+
+      opt_.add_options ()
+        (magick_prefix + "-image-type", (from< utsushi::store > ()
+                                         -> alternative (SEC_N_("Monochrome"))
+                                         -> alternative (SEC_N_("Grayscale"))
+                                         -> default_value (SEC_N_("Color"))),
+         attributes (tag::general)(level::standard),
+         SEC_N_("Image Type"))
+        ;
     }
 
   sod_.reserve (opt_.size ());
@@ -600,6 +608,13 @@ handle::handle(const scanner::info& info)
 
   std::set< key > seen;
   seen.insert (name::num_options);
+
+  std::set<std::string> option_blacklist;
+  if (magick)
+    {
+      option_blacklist.insert(option_prefix / "image-type");
+      option_blacklist.insert(option_prefix / "threshold");
+    }
 
   tags::const_iterator it (tags::begin ());
   for (; tags::end () != it; ++it)
@@ -623,21 +638,26 @@ handle::handle(const scanner::info& info)
             seen.insert (om_it->key ());
           else if (0 == om_it->key ().find (magick_prefix))
             {
-              if (!(   key (magick_prefix) / "brightness" == om_it->key ()
-                    || key (magick_prefix) / "contrast"   == om_it->key ()))
+              if (!(   key (magick_prefix) / "threshold"   == om_it->key ()
+                    || key (magick_prefix) / "brightness"  == om_it->key ()
+                    || key (magick_prefix) / "contrast"    == om_it->key ()
+                    || key (magick_prefix + "-image-type") == om_it->key ()))
                 seen.insert (om_it->key ());
             }
 
           if (!seen.count (om_it->key ())
               && om_it->tags ().count (*it))
             {
-              if (!group_added)
+              if (!option_blacklist.count (om_it->key ()))
                 {
-                  add_group (option_prefix / *it,
-                             it->name (), it->text ());
-                  group_added = true;
+                  if (!group_added)
+                    {
+                      add_group (option_prefix / *it,
+                                 it->name (), it->text ());
+                      group_added = true;
+                    }
+                  add_option (*om_it);
                 }
-              add_option (*om_it);
               seen.insert (om_it->key ());
             }
         }
@@ -770,12 +790,6 @@ handle::get (SANE_Int index, void *value) const
       v = utsushi::value ("Auto Detect");
     }
 
-  if (k == option_prefix / "image-type"
-      && revert_bilevel_)
-    {
-      v = utsushi::value ("Monochrome");
-    }
-
   v >> value;
 
   return status;
@@ -829,11 +843,6 @@ handle::set (SANE_Int index, void *value, SANE_Word *info)
             opt_[k] = v;
           else
             opt_.assign (vm);
-
-          if (k == option_prefix / "image-type")
-            {
-              revert_bilevel_ = false;
-            }
 
           if (opt_.count (option_prefix / "long-paper-mode")
               && opt_.count (filter_prefix + "-deskew"))
@@ -1101,16 +1110,19 @@ handle::marker ()
           return last_marker_;
         }
 
-      if (revert_bilevel_)
-        {
-          opt_[option_prefix / "image-type"] = string ("Monochrome");
-          revert_bilevel_ = false;
-        }
       bool bilevel = (opt_[option_prefix / "image-type"] == "Monochrome");
-      if (bilevel)
+      if (HAVE_MAGICK
+          && opt_.count (magick_prefix + "-image-type"))
         {
-          opt_[option_prefix / "image-type"] = string ("Grayscale");
-          revert_bilevel_ = true;
+          bilevel = (opt_[magick_prefix + "-image-type"] == "Monochrome");
+          if (bilevel)
+            {
+              opt_[option_prefix / "image-type"] = string ("Grayscale");
+            }
+          else
+            {
+              opt_[option_prefix / "image-type"] = value (opt_[magick_prefix + "-image-type"]);
+            }
         }
 
       toggle force_extent = true;
@@ -1245,14 +1257,10 @@ handle::marker ()
 
           (*magick->options ())["bilevel"] = toggle (bilevel);
 
-          quantity thr = value (opt_[option_prefix / "threshold"]);
-          thr *= 100.0;
-          thr /= (dynamic_pointer_cast< range >
-                  (opt_[option_prefix / "threshold"].constraint ()))->upper ();
-          (*magick->options ())["threshold"] = thr;
-
+          quantity threshold  = value (opt_[key (magick_prefix) / "threshold"]);
           quantity brightness = value (opt_[key (magick_prefix) / "brightness"]);
           quantity contrast   = value (opt_[key (magick_prefix) / "contrast"]);
+          (*magick->options ())["threshold"] = threshold;
           (*magick->options ())["brightness"] = brightness;
           (*magick->options ())["contrast"]   = contrast;
 
@@ -1275,6 +1283,8 @@ handle::marker ()
     }
 
       toggle skip_blank = !bilevel; // \todo fix filter limitation
+      if (magick)
+        skip_blank = true;
       quantity skip_thresh = -1.0;
       filter::ptr blank_skip (make_shared< image_skip > ());
       try
@@ -1548,7 +1558,7 @@ sanitize_(const utsushi::key& k)
         {
           rv = entry.second;
         }
-      else if (k == entry.first)
+      else if (rv == std::string (entry.first))
         {
           rv = entry.second;
         }
@@ -1567,7 +1577,9 @@ sanitize_(const utsushi::key& k)
       else if (0 == rv.find (magick_prefix))
         {
           std::string tmp (rv.substr (magick_prefix.size () + 1));
-          if (0 == tmp.find_first_of (lower_case))
+          if (tmp == std::string (entry.first))
+            rv = entry.second;
+          else if (0 == tmp.find_first_of (lower_case))
             rv = tmp;
         }
       else if (0 == rv.find (action_prefix))

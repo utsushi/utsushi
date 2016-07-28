@@ -29,7 +29,7 @@
 namespace utsushi {
 
 class string
-  : private boost::equality_comparable< string >
+  : private boost::totally_ordered< string >
 {
 public:
   typedef std::string::size_type size_type;
@@ -39,6 +39,7 @@ public:
   explicit string ();
 
   bool operator== (const string& s) const;
+  bool operator<  (const string& s) const;
 
   string& operator= (const string& s);
 

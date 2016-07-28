@@ -58,7 +58,10 @@ parameters::operator== (const parameters& rhs) const
           && acq == rhs.acq
           && flc == rhs.flc
           && fla == rhs.fla
-          && qit == rhs.qit);
+          && qit == rhs.qit
+          && ldf == rhs.ldf
+          && dfa == rhs.dfa
+          && lam == rhs.lam);
 }
 
 void

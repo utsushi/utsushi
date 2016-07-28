@@ -71,7 +71,7 @@ public:
   dialog (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder);
   ~dialog ();
 
-  sigc::signal< void, option::map::ptr >
+  sigc::signal< void, option::map::ptr, const std::set<std::string>& >
   signal_options_changed ();
 
 protected:
@@ -89,10 +89,9 @@ protected:
 
   bool on_timeout (void);
 
-  sigc::signal< void, option::map::ptr >
+  sigc::signal< void, option::map::ptr, const std::set<std::string>& >
   signal_options_changed_;
 
-  bool revert_bilevel_;
   bool revert_overscan_;
 };
 

@@ -123,6 +123,7 @@ basic_grammar< Iterator >::basic_grammar ()
         ^  ((token_(info::TYP) > typ_token_)     > skip_rule_)
         ^  ((token_(info::ATN) > atn_token_)     > skip_rule_)
         ^  ((token_(info::PAR) > par_token_)     > skip_rule_)
+        ^  ((token_(info::DOC) > doc_token_)     > skip_rule_)
         )
     > (token_(info::END) | qi::eoi)
     ;
@@ -140,6 +141,7 @@ basic_grammar< Iterator >::basic_grammar ()
       | token_(info::TYP)
       | token_(info::ATN)
       | token_(info::PAR)
+      | token_(info::DOC)
       | token_(info::END)
       )
     > token_
@@ -219,6 +221,12 @@ basic_grammar< Iterator >::basic_grammar ()
     > token_
     ;
 
+  doc_token_ %=
+    &(  token_(doc::CRST)
+      )
+    > token_
+    ;
+
   ESCI_GRAMMAR_TRACE_NODE (header_rule_);
   ESCI_GRAMMAR_TRACE_NODE (status_rule_);
 
@@ -236,6 +244,7 @@ basic_grammar< Iterator >::basic_grammar ()
   ESCI_GRAMMAR_TRACE_NODE (typ_token_);
   ESCI_GRAMMAR_TRACE_NODE (atn_token_);
   ESCI_GRAMMAR_TRACE_NODE (par_token_);
+  ESCI_GRAMMAR_TRACE_NODE (doc_token_);
 }
 
 }       // namespace decoding
@@ -315,7 +324,8 @@ BOOST_FUSION_ADAPT_STRUCT
  (boost::optional< ESCI_NS::integer >, lft)
  (boost::optional< ESCI_NS::quad >, typ)
  (boost::optional< ESCI_NS::quad >, atn)
- (boost::optional< ESCI_NS::quad >, par))
+ (boost::optional< ESCI_NS::quad >, par)
+ (boost::optional< ESCI_NS::quad >, doc))
 
 #undef ESCI_NS
 

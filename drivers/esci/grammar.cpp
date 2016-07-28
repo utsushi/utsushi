@@ -57,7 +57,8 @@ status::operator== (const status& rhs) const
           && lft == rhs.lft
           && typ == rhs.typ
           && atn == rhs.atn
-          && par == rhs.par);
+          && par == rhs.par
+          && doc == rhs.doc);
 }
 
 bool
@@ -117,6 +118,12 @@ status::is_warming_up () const
 }
 
 bool
+status::is_normal_sheet () const
+{
+  return !doc;
+}
+
+bool
 status::media_out () const
 {
   std::vector< error >::const_iterator it = err.begin ();
@@ -145,6 +152,7 @@ status::clear ()
   *this = status ();
 }
 
+//! \todo Check for which values of reply.code doc is inappropriate
 void
 status::check (const header& reply) const
 {

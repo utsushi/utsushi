@@ -243,6 +243,7 @@ compound_base::decode_reply_block_()
   decode_reply_block_hook_();
 }
 
+//! \todo Add handling of doc here or in overrides
 void
 compound_base::decode_reply_block_hook_() throw ()
 {

@@ -46,6 +46,12 @@ string::operator== (const string& s) const
   return string_ == s.string_;
 }
 
+bool
+string::operator< (const string& s) const
+{
+  return string_ < s.string_;
+}
+
 string&
 string::operator= (const string& s)
 {

@@ -60,7 +60,8 @@ class preview : public Gtk::HBox, public odevice
   odevice::ptr  odevice_;
   stream::ptr   stream_;
 
-  option::map::ptr control_;
+  option::map::ptr control_;    //! \todo replace control_ to current_
+  option::map::ptr current_;
 
 public:
   preview (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder);
@@ -71,7 +72,7 @@ public:
   virtual void eoi (const context& ctx);
 
   void on_device_changed (scanner::ptr s);
-  void on_values_changed ();
+  void on_values_changed (option::map::ptr om);
   void on_refresh ();
 
 protected:

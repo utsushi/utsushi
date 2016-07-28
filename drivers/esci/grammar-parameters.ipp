@@ -90,6 +90,9 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
      ^ (token_(FLC) >  parm_flc_token_)
      ^ (token_(FLA) >  qi::repeat (4) [ this->positive_ ])
      ^ (token_(QIT) >  parm_qit_token_)
+     ^ (token_(LDF) >  this->positive_)
+     ^ (token_(DFA) >  qi::repeat (2) [ this->positive_ ])
+     ^ (token_(LAM) >  parm_lam_token_)
      )
     > qi::eoi
     ;
@@ -107,6 +110,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
       | token_(adf::PEDT)
       | token_(adf::DFL1)
       | token_(adf::DFL2)
+      | token_(adf::LDF )
       | token_(adf::FAST)
       | token_(adf::SLOW)
       | token_(adf::BGWH)
@@ -117,6 +121,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
       | token_(adf::CRP )
       | token_(adf::SKEW)
       | token_(adf::OVSN)
+      | token_(adf::CARD)
       )
     > token_
     ;
@@ -245,6 +250,13 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     > token_
     ;
 
+  parm_lam_token_ %=
+    &(  token_(lam::ON  )
+      | token_(lam::OFF )
+      )
+    > token_
+    ;
+
   ESCI_GRAMMAR_TRACE_NODE (parameters_rule_);
 
   ESCI_GRAMMAR_TRACE_NODE (gamma_table_rule_);
@@ -263,6 +275,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
   ESCI_GRAMMAR_TRACE_NODE (parm_mrr_token_);
   ESCI_GRAMMAR_TRACE_NODE (parm_flc_token_);
   ESCI_GRAMMAR_TRACE_NODE (parm_qit_token_);
+  ESCI_GRAMMAR_TRACE_NODE (parm_lam_token_);
 }
 
 }       // namespace decoding
@@ -303,6 +316,10 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     << - karma::buffer [ token_(FLA)
                          << karma::repeat (4) [ this->positive_ ] ]
     << - karma::buffer [ token_(QIT) << parm_qit_token_ ]
+    << - karma::buffer [ token_(LDF) << this->positive_ ]
+    << - karma::buffer [ token_(DFA)
+                         << karma::repeat (2) [ this->positive_ ] ]
+    << - karma::buffer [ token_(LAM) << parm_lam_token_ ]
     ;
 
   parameter_subset_rule_ %=
@@ -334,6 +351,9 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     SYMBOL_ENTRY (FLC)
     SYMBOL_ENTRY (FLA)
     SYMBOL_ENTRY (QIT)
+    SYMBOL_ENTRY (LDF)
+    SYMBOL_ENTRY (DFA)
+    SYMBOL_ENTRY (LAM)
     ;
 
   parm_adf_token_.add
@@ -341,6 +361,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     SYMBOL_ENTRY (adf::PEDT)
     SYMBOL_ENTRY (adf::DFL1)
     SYMBOL_ENTRY (adf::DFL2)
+    SYMBOL_ENTRY (adf::LDF )
     SYMBOL_ENTRY (adf::FAST)
     SYMBOL_ENTRY (adf::SLOW)
     SYMBOL_ENTRY (adf::BGWH)
@@ -351,6 +372,7 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     SYMBOL_ENTRY (adf::CRP )
     SYMBOL_ENTRY (adf::SKEW)
     SYMBOL_ENTRY (adf::OVSN)
+    SYMBOL_ENTRY (adf::CARD)
     ;
 
   parm_tpu_token_.add
@@ -453,6 +475,11 @@ basic_grammar_parameters< Iterator >::basic_grammar_parameters ()
     SYMBOL_ENTRY (qit::OFF )
     ;
 
+  parm_lam_token_.add
+    SYMBOL_ENTRY (lam::ON  )
+    SYMBOL_ENTRY (lam::OFF )
+    ;
+
 #undef SYMBOL_ENTRY
 
   ESCI_GRAMMAR_TRACE_NODE (parameters_rule_);
@@ -501,6 +528,9 @@ BOOST_FUSION_ADAPT_STRUCT
  (boost::optional< ESCI_NS::quad >, flc)
  (boost::optional< std::vector< ESCI_NS::integer > >, fla)
  (boost::optional< ESCI_NS::quad >, qit)
+ (boost::optional< ESCI_NS::integer >, ldf)
+ (boost::optional< std::vector< ESCI_NS::integer > >, dfa)
+ (boost::optional< ESCI_NS::quad >, lam)
 )
 
 #undef ESCI_NS

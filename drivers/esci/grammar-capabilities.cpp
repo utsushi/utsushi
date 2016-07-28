@@ -142,7 +142,8 @@ capabilities::operator== (const capabilities& rhs) const
           && fcs == rhs.fcs
           && flc == rhs.flc
           && fla == rhs.fla
-          && qit == rhs.qit);
+          && qit == rhs.qit
+          && lam == rhs.lam);
 }
 
 void
@@ -174,7 +175,8 @@ capabilities::operator bool () const
           || fcs
           || flc
           || fla
-          || qit);
+          || qit
+          || lam);
 }
 
 static bool inline

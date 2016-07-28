@@ -72,6 +72,9 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
      ^ (token_(S_N) > this->bin_hex_data_)
      ^  qi::matches [ token_(ATH) ]
      ^  qi::matches [ token_(INI) ]
+     ^  qi::matches [ token_(AFM) ]
+     ^ (token_(DFM) > this->positive_)
+     ^ (token_(CRR) > (this->positive_range_ | this->positive_list_))
        )
     > qi::eoi
     ;
@@ -92,6 +95,8 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
       ^ (token_(adf::RESO) > this->positive_)
       ^  qi::matches [ token_(adf::RCVR) ]
       ^ (token_(adf::OVSN) > this->extent_)
+      ^  qi::matches [ token_(adf::CRST) ]
+      ^  qi::matches [ token_(adf::CARD) ]
      ];
 
   info_tpu_rule_ %=
@@ -162,6 +167,17 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
     > token_
     ;
 
+  positive_list_ %=
+    token_(value::LIST)
+    > +this->positive_
+    ;
+
+  positive_range_ %=
+    token_(value::RANG)
+    > this->positive_
+    > this->positive_
+    ;
+
   ESCI_GRAMMAR_TRACE_NODE (information_rule_);
 
   ESCI_GRAMMAR_TRACE_NODE (info_adf_rule_);
@@ -176,6 +192,9 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
   ESCI_GRAMMAR_TRACE_NODE (info_adf_algn_token_);
   ESCI_GRAMMAR_TRACE_NODE (info_fb_algn_token_);
   ESCI_GRAMMAR_TRACE_NODE (info_ext_token_);
+
+  ESCI_GRAMMAR_TRACE_NODE (positive_list_);
+  ESCI_GRAMMAR_TRACE_NODE (positive_range_);
 }
 
 }       // namespace decoding
@@ -185,6 +204,12 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
 }       // namespace utsushi
 
 #define ESCI_NS utsushi::_drv_::esci
+
+BOOST_FUSION_ADAPT_STRUCT
+(ESCI_NS::information::range,
+ (ESCI_NS::integer, lower_)
+ (ESCI_NS::integer, upper_)
+ )
 
 BOOST_FUSION_ADAPT_STRUCT
 (ESCI_NS::information::tpu_source,
@@ -217,7 +242,9 @@ BOOST_FUSION_ADAPT_STRUCT
  (std::vector< ESCI_NS::integer >, max_doc)
  (ESCI_NS::integer, resolution)
  (bool, auto_recovers)
- (std::vector< ESCI_NS::integer >, overscan))
+ (std::vector< ESCI_NS::integer >, overscan)
+ (bool, detects_carrier_sheet)
+ (bool, supports_plastic_card))
 
 BOOST_FUSION_ADAPT_STRUCT
 (ESCI_NS::information,
@@ -233,7 +260,10 @@ BOOST_FUSION_ADAPT_STRUCT
  (bool, truncates_at_media_end)
  (boost::optional< std::vector< ESCI_NS::byte > >, serial_number)
  (bool, supports_authentication)
- (bool, supports_reinitialization))
+ (bool, supports_reinitialization)
+ (bool, supports_automatic_feed)
+ (boost::optional< ESCI_NS::integer >, double_feed_detection_threshold)
+ (boost::optional< ESCI_NS::information::constraint >, crop_resolution_constraint))
 
 #undef ESCI_NS
 

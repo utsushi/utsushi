@@ -44,7 +44,7 @@
 #endif
 #include "../filters/padding.hpp"
 #include "../filters/pnm.hpp"
-#include "../filters/threshold.hpp"
+#include "../filters/magick.hpp"
 
 namespace utsushi {
 namespace gtkmm {
@@ -240,6 +240,8 @@ preview::on_area_updated (int x, int y, int width, int height)
 void
 preview::on_refresh ()
 {
+  //! \todo replace control_ to current_
+
   value resampling;
   try {
     resampling = (*control_)["enable-resampling"];
@@ -273,16 +275,30 @@ preview::on_refresh ()
   value image_type;
   try
     {
+      using namespace _flt_;
+
       const std::string xfer_raw = "image/x-raster";
       const std::string xfer_jpg = "image/jpeg";
       std::string xfer_fmt = idevice_->get_context ().content_type ();
 
-      bool bilevel = ((*control_)["image-type"] == "Monochrome");
-      if (bilevel)
+      filter::ptr magick;
+      bool bilevel = false;
+      if (HAVE_MAGICK)
         {
+          magick = make_shared< _flt_::magick > ();
+        }
+      if (magick)
+        {
+          bilevel = ((*current_)["magick/image-type"] == "Monochrome");
+          string type = value ((*current_)["magick/image-type"]);
+          if (bilevel)                // use software thresholding
+            {
+              type = std::string ("Grayscale");
+            }
+
           image_type = (*control_)["image-type"];
           try {
-            (*control_)["image-type"] = string ("Grayscale");
+            (*control_)["image-type"] = type;
           }
           catch (const std::out_of_range&) {
             image_type = value ();
@@ -312,15 +328,16 @@ preview::on_refresh ()
       //! \todo add deskew support?
       //! \todo decide what to do WRT resampling
 
-      filter::ptr threshold (make_shared< threshold > ());
-      try
+      if (magick)
         {
-          (*threshold->options ())["threshold"]
-            = value ((*control_)["threshold"]);
-        }
-      catch (std::out_of_range&)
-        {
-          log::error ("Falling back to default threshold value");
+          (*magick->options ())["resolution-x"] = value ((*control_)["resolution"]);
+          (*magick->options ())["resolution-y"] = value ((*control_)["resolution"]);
+          (*magick->options ())["force-extent"] = force_extent;
+          (*magick->options ())["width"]  = width;
+          (*magick->options ())["height"] = height;
+          (*magick->options ())["bilevel"] = toggle (bilevel);
+          //! \todo add brightness, contrast, threshold
+          (*magick->options ())["image-format"] = std::string ("PNM");
         }
 
 #if HAVE_LIBJPEG
@@ -340,19 +357,21 @@ preview::on_refresh ()
       /**/ if (xfer_raw == xfer_fmt)
         {
           stream_->push (make_shared< padding > ());
-          if (value () != image_type) stream_->push (threshold);
           if (force_extent)
             stream_->push (make_shared< bottom_padder > (width, height));
           stream_->push (make_shared< pnm > ());
+          if (magick)
+            stream_->push (magick);
         }
       else if (xfer_jpg == xfer_fmt)
         {
 #if HAVE_LIBJPEG
           stream_->push (make_shared< jpeg::decompressor > ());
-          if (bilevel) stream_->push (threshold);
           if (force_extent)
             stream_->push (make_shared< bottom_padder > (width, height));
           stream_->push (make_shared< pnm > ());
+          if (magick)
+            stream_->push (magick);
 #else
           if (bilevel)
             log::alert ("bilevel JPEG preview not supported");
@@ -473,8 +492,9 @@ preview::on_device_changed (scanner::ptr s)
 }
 
 void
-preview::on_values_changed ()
+preview::on_values_changed (option::map::ptr om)
 {
+  current_ = om;
   set_sensitive ();
 }
 

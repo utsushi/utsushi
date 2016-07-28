@@ -154,7 +154,6 @@ private:
 
   bool emulating_automatic_scan_area_;
   bool do_automatic_scan_area_;
-  bool revert_bilevel_;
 
   friend struct match_key;
 };
