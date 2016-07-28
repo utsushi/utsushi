@@ -266,6 +266,25 @@
 :usbid     "0x04b8" "0x1109"
 :status    :good
 
+; These are models for which we don't know the model name yet.
+; Upstream releases have stopped providing the information we
+; need to fill out the :model fields :-(
+
+:model     "PID 0155"
+:interface "USB"
+:usbid     "0x04b8" "0x0155"
+:status    :good
+
+:model     "PID 0156"
+:interface "USB"
+:usbid     "0x04b8" "0x0156"
+:status    :good
+
+:model     "PID 0157"
+:interface "USB"
+:usbid     "0x04b8" "0x0157"
+:status    :good
+
 :model     "PID 110D"
 :interface "USB"
 :usbid     "0x04b8" "0x110d"
@@ -296,7 +315,23 @@
 :usbid     "0x04b8" "0x1116"
 :status    :good
 
+:model     "PID 1117"
+:interface "USB"
+:usbid     "0x04b8" "0x1117"
+:status    :good
+
+:model     "PID 111A"
+:interface "USB"
+:usbid     "0x04b8" "0x111a"
+:status    :good
+
 :model     "PID 111C"
 :interface "USB"
 :usbid     "0x04b8" "0x111c"
 :status    :good
+
+:model     "PID 111D"
+:interface "USB"
+:usbid     "0x04b8" "0x111d"
+:status    :good
+
