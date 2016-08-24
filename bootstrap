@@ -51,6 +51,9 @@ To accommodate SANE idiosyncracies, \``basename $0`\` applies a patch to the
 and/or using a fuzz.  You can use the \`PATCH_OPTS\` environment variable
 to pass additional options to the \`patch\` command to remedy that.
 
+To install all prerequisite software (and more), use \`./install-deps\`.
+Use its \`--help\` option for more information.
+
 BUG: should support more \`autoreconf\` options
 EOF
     exit $1

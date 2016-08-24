@@ -130,6 +130,13 @@ BUILDING/INSTALLING FROM SOURCE
   of `gettext`) and `libtool`.  You will need the `autoconf-archive`,
   `patch` and `gnulib` as well.
 
+  # The names above refer to *source* packages.  Distributions may
+  # have split these in multiple *binary* packages and you man need
+  # several of those for the `./bootstrap` to succeed.  In case of
+  # trouble, you may want to use `./install-deps` to satisfy *all*
+  # binary package dependencies in one fell swoop.
+  # See `./install-deps --help` for more information.
+
   The `./bootstrap` script has a `--help` option you may find useful
   (or not).  The script tries to diagnose any problems it encounters
   so pay attention to the output.  Once `./bootstrap` has completed,
