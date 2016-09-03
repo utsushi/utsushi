@@ -335,3 +335,12 @@
 :usbid     "0x04b8" "0x111d"
 :status    :good
 
+:model     "PID 111E"
+:interface "USB"
+:usbid     "0x04b8" "0x111e"
+:status    :good
+
+:model     "PID 111F"
+:interface "USB"
+:usbid     "0x04b8" "0x111f"
+:status    :good
