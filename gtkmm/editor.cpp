@@ -653,6 +653,18 @@ editor::set (const std::string& key, const value& v)
       if (opts_->count ("device/auto-kludge"))
         vm["device/auto-kludge"] = t;
     }
+  else if (key == "magick/image-type"
+           && opts_->count ("device/image-type"))
+    {
+      string type = v;
+      if (type == "Monochrome")
+        type = "Grayscale";
+      vm[key] = v;
+      try {
+        vm["device/image-type"] = type;
+      }
+      catch (const std::out_of_range&){}
+    }
   else
     {
       if (v == opt) return;

@@ -55,17 +55,13 @@ DS_40::DS_40 (const connexion::ptr& cnx)
 
   if (HAVE_MAGICK)              /* enable resampling */
     {
-      constraint::ptr res_x (from< range > ()
-                             -> bounds (50, 600)
-                             -> default_value (*defs.rsm));
-      const_cast< constraint::ptr& > (res_x_) = res_x;
-
+      constraint::ptr res (from< range > ()
+                           -> bounds (50, 600)
+                           -> default_value (*defs.rsm));
+      const_cast< constraint::ptr& > (adf_res_x_) = res;
       if (caps.rss)
         {
-          constraint::ptr res_y (from< range > ()
-                                 -> bounds (50, 600)
-                                 -> default_value (*defs.rss));
-          const_cast< constraint::ptr& > (res_y_) = res_y;
+          const_cast< constraint::ptr& > (adf_res_y_) = res;
         }
     }
 
@@ -143,17 +139,13 @@ DS_5x0::DS_5x0 (const connexion::ptr& cnx)
 
   if (HAVE_MAGICK)              /* enable resampling */
     {
-      constraint::ptr res_x (from< range > ()
-                             -> bounds (50, 600)
-                             -> default_value (*defs.rsm));
-      const_cast< constraint::ptr& > (res_x_) = res_x;
-
+      constraint::ptr res (from< range > ()
+                           -> bounds (50, 600)
+                           -> default_value (*defs.rsm));
+      const_cast< constraint::ptr& > (adf_res_x_) = res;
       if (caps.rss)
         {
-          constraint::ptr res_y (from< range > ()
-                                 -> bounds (50, 600)
-                                 -> default_value (*defs.rss));
-          const_cast< constraint::ptr& > (res_y_) = res_y;
+          const_cast< constraint::ptr& > (adf_res_y_) = res;
         }
     }
 
@@ -377,17 +369,18 @@ PX_Mxxx0::PX_Mxxx0 (const connexion::ptr& cnx)
 
   if (HAVE_MAGICK)              /* enable resampling */
     {
-      constraint::ptr res_x (from< range > ()
-                             -> bounds (50, 1200)
-                             -> default_value (*defs.rsm));
-      const_cast< constraint::ptr& > (res_x_) = res_x;
-
+      constraint::ptr fb_res (from< range > ()
+                              -> bounds (50, 1200)
+                              -> default_value (*defs.rsm));
+      constraint::ptr adf_res (from< range > ()
+                               -> bounds (50, 600)
+                               -> default_value (*defs.rsm));
+      const_cast< constraint::ptr& > (fb_res_x_) = fb_res;
+      const_cast< constraint::ptr& > (adf_res_x_) = adf_res;
       if (caps.rss)
         {
-          constraint::ptr res_y (from< range > ()
-                                 -> bounds (50, 1200)
-                                 -> default_value (*defs.rss));
-          const_cast< constraint::ptr& > (res_y_) = res_y;
+          const_cast< constraint::ptr& > (fb_res_y_) = fb_res;
+          const_cast< constraint::ptr& > (adf_res_y_) = adf_res;
         }
     }
 
@@ -432,17 +425,13 @@ DS_530_570W::DS_530_570W (const connexion::ptr& cnx)
 
   if (HAVE_MAGICK)              /* enable resampling */
     {
-      constraint::ptr res_x (from< range > ()
-                             -> bounds (50, 600)
-                             -> default_value (*defs.rsm));
-      const_cast< constraint::ptr& > (res_x_) = res_x;
-
+      constraint::ptr res (from< range > ()
+                           -> bounds (50, 600)
+                           -> default_value (*defs.rsm));
+      const_cast< constraint::ptr& > (adf_res_x_) = res;
       if (caps.rss)
         {
-          constraint::ptr res_y (from< range > ()
-                                 -> bounds (50, 600)
-                                 -> default_value (*defs.rss));
-          const_cast< constraint::ptr& > (res_y_) = res_y;
+          const_cast< constraint::ptr& > (adf_res_y_) = res;
         }
     }
 
@@ -479,6 +468,71 @@ DS_530_570W::DS_530_570W (const connexion::ptr& cnx)
 
 void
 DS_530_570W::configure ()
+{
+  compound_scanner::configure ();
+
+  descriptors_["enable-resampling"]->active (false);
+  descriptors_["enable-resampling"]->read_only (true);
+}
+
+DS_16x0::DS_16x0 (const connexion::ptr& cnx)
+  : compound_scanner (cnx)
+{
+  capabilities& caps (const_cast< capabilities& > (caps_));
+  parameters&   defs (const_cast< parameters& > (defs_));
+
+  // Both resolution settings need to be identical
+  caps.rss = boost::none;
+
+  if (HAVE_MAGICK)              /* enable resampling */
+    {
+      constraint::ptr fb_res (from< range > ()
+                              -> bounds (50, 1200)
+                              -> default_value (*defs.rsm));
+      constraint::ptr adf_res (from< range > ()
+                               -> bounds (50, 600)
+                               -> default_value (*defs.rsm));
+      const_cast< constraint::ptr& > (fb_res_x_) = fb_res;
+      const_cast< constraint::ptr& > (adf_res_x_) = adf_res;
+      if (caps.rss)
+        {
+          const_cast< constraint::ptr& > (fb_res_y_) = fb_res;
+          const_cast< constraint::ptr& > (adf_res_y_) = adf_res;
+        }
+    }
+
+  // Assume people prefer brighter colors over B/W
+  defs.col = code_token::parameter::col::C024;
+  defs.gmm = code_token::parameter::gmm::UG18;
+
+  // Boost USB I/O throughput
+  defs.bsz = 1024 * 1024;
+
+  // Color correction parameters
+
+  vector< double, 3 >& exp
+    (const_cast< vector< double, 3 >& > (gamma_exponent_));
+
+  exp[0] = 1.011;
+  exp[1] = 0.990;
+  exp[2] = 1.000;
+
+  matrix< double, 3 >& mat
+    (const_cast< matrix< double, 3 >& > (profile_matrix_));
+
+  mat[0][0] =  0.9883;
+  mat[0][1] =  0.0242;
+  mat[0][2] = -0.0125;
+  mat[1][0] =  0.0013;
+  mat[1][1] =  1.0046;
+  mat[1][2] = -0.0059;
+  mat[2][0] =  0.0036;
+  mat[2][1] = -0.0620;
+  mat[2][2] =  1.0584;
+}
+
+void
+DS_16x0::configure ()
 {
   compound_scanner::configure ();
 

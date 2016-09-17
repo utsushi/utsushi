@@ -1385,11 +1385,13 @@ extended_scanner::configure_color_correction ()
     //
     ("PID 1113", profile_matrix_3)
     ("PID 1117", profile_matrix_3)
+    ("PID 1119", profile_matrix_3)
     ("PID 111A", profile_matrix_3)
     //
     ("PID 1114", profile_matrix_4)
     ("PID 1115", profile_matrix_4)
     ("PID 1116", profile_matrix_4)
+    ("PID 1118", profile_matrix_4)
     ("PID 111D", profile_matrix_4)
     ("PID 111E", profile_matrix_4)
     ("PID 111F", profile_matrix_4)

@@ -2310,7 +2310,8 @@ compound_scanner::configure_adf_options ()
 {
   if (!info_.adf) return;
 
-  add_doc_source_options (adf_, *info_.adf, caps_.adf->flags, caps_);
+  add_doc_source_options (adf_, *info_.adf, caps_.adf->flags,
+                          adf_res_x_, adf_res_y_, caps_);
 
   if (caps_.has_duplex ())
     {
@@ -2367,7 +2368,8 @@ compound_scanner::configure_flatbed_options ()
 {
   if (!info_.flatbed) return;
 
-  add_doc_source_options (flatbed_, *info_.flatbed, caps_.fb->flags, caps_);
+  add_doc_source_options (flatbed_, *info_.flatbed, caps_.fb->flags,
+                          fb_res_x_, fb_res_y_, caps_);
 }
 
 //! \todo add alternative area option (needs own scan-area constraint)
@@ -2379,6 +2381,7 @@ compound_scanner::configure_tpu_options ()
   source_capabilities src_caps;
   add_doc_source_options (tpu_, *info_.tpu,
                           caps_.tpu ? caps_.tpu->flags : src_caps,
+                          tpu_res_x_, tpu_res_y_,
                           caps_);
 
   if (info_.flatbed) flatbed_.share_values (tpu_);
@@ -2389,9 +2392,11 @@ void
 compound_scanner::add_doc_source_options (option::map& opts,
                                           const information::source& src,
                                           const source_capabilities& src_caps,
+                                          const constraint::ptr& sw_res_x,
+                                          const constraint::ptr& sw_res_y,
                                           const capabilities& caps) const
 {
-  add_resolution_options (opts, src);
+  add_resolution_options (opts, sw_res_x, sw_res_y, src);
   add_scan_area_options (opts, src);
   add_crop_option (opts, src, src_caps, caps);
   add_deskew_option (opts, src_caps);
@@ -2450,6 +2455,8 @@ intersection_of_(const constraint::ptr& cp_x, const constraint::ptr& cp_y)
 
 void
 compound_scanner::add_resolution_options (option::map& opts,
+                                          const constraint::ptr& sw_res_x,
+                                          const constraint::ptr& sw_res_y,
                                           const information::source& src) const
 {
   using namespace code_token::capability;
@@ -2518,7 +2525,7 @@ compound_scanner::add_resolution_options (option::map& opts,
         }
     }
 
-  if (!res_x_ && !res_y_) return;
+  if (!sw_res_x && !sw_res_y) return;
 
   // repeat the above for software-emulated resolution options
 
@@ -2531,7 +2538,7 @@ compound_scanner::add_resolution_options (option::map& opts,
             " be achieved through image processing methods.")
      );
 
-  cp = intersection_of_(res_x_, res_y_);
+  cp = intersection_of_(sw_res_x, sw_res_y);
 
   if (cp)
     {
@@ -2544,11 +2551,11 @@ compound_scanner::add_resolution_options (option::map& opts,
          attributes (tag::general)(level::standard).emulate (true),
          SEC_N_("Resolution")
          )
-        ("sw-resolution-x", res_x_,
+        ("sw-resolution-x", sw_res_x,
          attributes (tag::general).emulate (true),
          CCB_N_("X Resolution")
          )
-        ("sw-resolution-y", res_y_,
+        ("sw-resolution-y", sw_res_y,
          attributes (tag::general).emulate (true),
          CCB_N_("Y Resolution")
          )
@@ -2556,14 +2563,14 @@ compound_scanner::add_resolution_options (option::map& opts,
     }
   else
     {
-      if (res_x_ && res_y_)
+      if (sw_res_x && sw_res_y)
         {
           opts.add_options ()
-            ("sw-resolution-x", res_x_,
+            ("sw-resolution-x", sw_res_x,
              attributes (tag::general)(level::standard).emulate (true),
              CCB_N_("X Resolution")
              )
-            ("sw-resolution-y", res_y_,
+            ("sw-resolution-y", sw_res_y,
              attributes (tag::general)(level::standard).emulate (true),
              CCB_N_("Y Resolution")
              )
@@ -2571,7 +2578,7 @@ compound_scanner::add_resolution_options (option::map& opts,
         }
       else
         {
-          cp = (res_x_ ? res_x_ : res_y_);
+          cp = (sw_res_x ? sw_res_x : sw_res_y);
           if (cp)
             {
               opts.add_options ()

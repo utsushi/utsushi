@@ -81,6 +81,7 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
         }
       else if (   info.product_name () == "DS-760"
                || info.product_name () == "DS-860"
+               || info.product_name () == "FF-640"
                )
         {
           sp = make_shared< DS_760_860 > (cnx);
@@ -99,6 +100,19 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
         {
           sp = make_shared< DS_x0000 > (cnx);
         }
+      else if (   info.product_name () == "DS-530"
+               || info.product_name () == "DS-570W"
+               )
+        {
+          sp = make_shared< DS_530_570W > (cnx);
+        }
+      else if (   info.product_name () == "DS-1610"
+               || info.product_name () == "DS-1630"
+               || info.product_name () == "DS-1660W"
+               )
+        {
+          sp = make_shared< DS_16x0 > (cnx);
+        }
       else if (   info.product_name () == "PID 08BC"
                || info.product_name () == "PID 08CC"
                || info.product_name () == "PID 08CE"
@@ -106,12 +120,6 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
                )
         {
           sp = make_shared< PX_Mxxx0 > (cnx);
-        }
-      else if (   info.product_name () == "DS-530"
-               || info.product_name () == "DS-570W"
-               )
-        {
-          sp = make_shared< DS_530_570W > (cnx);
         }
       else
         {

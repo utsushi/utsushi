@@ -88,8 +88,11 @@ test-suite.log
 /src/version
 
 #  Project specific stuff
+/drivers/esci/data/DS-1610.dat
+/drivers/esci/data/DS-1660W.dat
 /drivers/esci/data/DS-520.dat
 /drivers/esci/data/DS-560.dat
+/drivers/esci/data/DS-570W.dat
 /drivers/esci/data/DS-60000.dat
 /drivers/esci/data/DS-6500.dat
 /drivers/esci/data/DS-760.dat
