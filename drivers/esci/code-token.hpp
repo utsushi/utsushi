@@ -970,6 +970,7 @@ namespace status {
   const quad PB   = CODE_TOKEN (NUMBER , UPPER_P, UPPER_B, SPACE  );
   const quad SEP  = CODE_TOKEN (NUMBER , UPPER_S, UPPER_E, UPPER_P);
   const quad BAT  = CODE_TOKEN (NUMBER , UPPER_B, UPPER_A, UPPER_T);
+  const quad CSL  = CODE_TOKEN (NUMBER , UPPER_C, UPPER_S, UPPER_L);
 
   //! Detected media sizes
   /*! The detectable media sizes expand on those from the media_value
@@ -1076,7 +1077,15 @@ namespace status {
 
     const quad LOW  = CODE_TOKEN (UPPER_L, UPPER_O, UPPER_W, SPACE  );
 
-  }   // namespace sep
+  }   // namespace bat
+
+  //! Card slot lever state feedback
+  namespace csl {
+
+    const quad ON   = CODE_TOKEN (UPPER_O, UPPER_N, SPACE  , SPACE  );
+    const quad OFF  = CODE_TOKEN (UPPER_O, UPPER_F, UPPER_F, SPACE  );
+
+  }   // namespace csl
 
 }     // namespace status
 

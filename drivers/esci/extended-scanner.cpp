@@ -1395,6 +1395,8 @@ extended_scanner::configure_color_correction ()
     ("PID 111D", profile_matrix_4)
     ("PID 111E", profile_matrix_4)
     ("PID 111F", profile_matrix_4)
+    ("PID 1120", profile_matrix_4)
+    ("PID 1121", profile_matrix_4)
     ;
 
   try {
