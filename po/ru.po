@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2016-08-17 06:27+0000\n"
+"POT-Creation-Date: 2016-09-06 02:57+0000\n"
 "PO-Revision-Date: 2016-02-24 09:02+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Russian\n"
@@ -122,82 +122,82 @@ msgstr "Загрузить"
 msgid "Loading..."
 msgstr "Загрузка..."
 
-#: drivers/esci/compound-scanner.cpp:2320
+#: drivers/esci/compound-scanner.cpp:2321
 #: drivers/esci/extended-scanner.cpp:1068
 msgid "Duplex"
 msgstr "Двусторонняя"
 
-#: drivers/esci/compound-scanner.cpp:2344
+#: drivers/esci/compound-scanner.cpp:2345
 msgid "Detect Double Feed"
 msgstr "Определять склеенные"
 
-#: drivers/esci/compound-scanner.cpp:2355
+#: drivers/esci/compound-scanner.cpp:2356
 msgid "Long Paper Mode"
 msgstr "Режим длинной бумаги"
 
-#: drivers/esci/compound-scanner.cpp:2475
-#: drivers/esci/compound-scanner.cpp:2510
-#: drivers/esci/compound-scanner.cpp:2545
-#: drivers/esci/compound-scanner.cpp:2580
+#: drivers/esci/compound-scanner.cpp:2482
+#: drivers/esci/compound-scanner.cpp:2517
+#: drivers/esci/compound-scanner.cpp:2552
+#: drivers/esci/compound-scanner.cpp:2587
 #: drivers/esci/extended-scanner.cpp:280
 msgid "Resolution"
 msgstr "Разрешение"
 
-#: drivers/esci/compound-scanner.cpp:2528
+#: drivers/esci/compound-scanner.cpp:2535
 msgid "Enable Resampling"
 msgstr "Включить ресемплинг"
 
-#: drivers/esci/compound-scanner.cpp:2605
+#: drivers/esci/compound-scanner.cpp:2612
 #: drivers/esci/extended-scanner.cpp:1125
 msgid "Manual"
 msgstr "Ручной"
 
-#: drivers/esci/compound-scanner.cpp:2606
+#: drivers/esci/compound-scanner.cpp:2613
 #: drivers/esci/extended-scanner.cpp:1126
 msgid "Maximum"
 msgstr "Максимальное значение"
 
-#: drivers/esci/compound-scanner.cpp:2608
-#: drivers/esci/compound-scanner.cpp:2675
+#: drivers/esci/compound-scanner.cpp:2615
+#: drivers/esci/compound-scanner.cpp:2682
 #: drivers/esci/extended-scanner.cpp:1128
 msgid "Auto Detect"
 msgstr "Автоопределение"
 
-#: drivers/esci/compound-scanner.cpp:2615
+#: drivers/esci/compound-scanner.cpp:2622
 #: drivers/esci/extended-scanner.cpp:1135
 msgid "Scan Area"
 msgstr "Сканировать область"
 
-#: drivers/esci/compound-scanner.cpp:2623
+#: drivers/esci/compound-scanner.cpp:2630
 #: drivers/esci/extended-scanner.cpp:1143
 msgid "Top Left X"
 msgstr "Вверху слева по оси X"
 
-#: drivers/esci/compound-scanner.cpp:2631
+#: drivers/esci/compound-scanner.cpp:2638
 #: drivers/esci/extended-scanner.cpp:1159
 msgid "Top Left Y"
 msgstr "Вверху слева по оси Y"
 
-#: drivers/esci/compound-scanner.cpp:2639
+#: drivers/esci/compound-scanner.cpp:2646
 #: drivers/esci/extended-scanner.cpp:1151
 msgid "Bottom Right X"
 msgstr "Внизу справа по оси X"
 
-#: drivers/esci/compound-scanner.cpp:2647
+#: drivers/esci/compound-scanner.cpp:2654
 #: drivers/esci/extended-scanner.cpp:1167
 msgid "Bottom Right Y"
 msgstr "Внизу справа по оси Y"
 
-#: drivers/esci/compound-scanner.cpp:2683
+#: drivers/esci/compound-scanner.cpp:2690
 msgid "Crop"
 msgstr "Обрезать"
 
-#: drivers/esci/compound-scanner.cpp:2719 gtkmm/dialog.cpp:767
+#: drivers/esci/compound-scanner.cpp:2726 gtkmm/dialog.cpp:767
 #: sane/handle.cpp:546 src/scan-cli.cpp:646
 msgid "Deskew"
 msgstr "Устранение перекоса"
 
-#: drivers/esci/compound-scanner.cpp:3152
+#: drivers/esci/compound-scanner.cpp:3159
 msgid ""
 "Authentication is required.\n"
 "Unfortunately, this version of the driver does not support authentication "
@@ -206,7 +206,7 @@ msgstr ""
 "Требуется аутентификация.\n"
 "К сожалению, эта версия драйвера не поддерживает аутентификацию."
 
-#: drivers/esci/compound-scanner.cpp:3246
+#: drivers/esci/compound-scanner.cpp:3253
 #: drivers/esci/extended-scanner.cpp:206 sane/backend.cpp:288
 msgid ""
 "The Automatic Document Feeder is open.\n"
@@ -215,7 +215,7 @@ msgstr ""
 "Автоматический податчик документов открыт.\n"
 "Пожалуйста, закройте его."
 
-#: drivers/esci/compound-scanner.cpp:3249
+#: drivers/esci/compound-scanner.cpp:3256
 #: drivers/esci/extended-scanner.cpp:201 sane/backend.cpp:274
 msgid ""
 "A paper jam occurred.\n"
@@ -227,12 +227,12 @@ msgstr ""
 "бумагу.Если в автоматический податчик загружены документы, извлеките их и "
 "загрузите заново."
 
-#: drivers/esci/compound-scanner.cpp:3254
+#: drivers/esci/compound-scanner.cpp:3261
 #: drivers/esci/extended-scanner.cpp:198 sane/backend.cpp:269
 msgid "Please load the document(s) into the Automatic Document Feeder."
 msgstr "Пожалуйста, загрузите документы в автоматический податчик документов."
 
-#: drivers/esci/compound-scanner.cpp:3257
+#: drivers/esci/compound-scanner.cpp:3264
 #: drivers/esci/extended-scanner.cpp:209 sane/backend.cpp:281
 msgid ""
 "A multi page feed occurred in the auto document feeder. Open the cover, "
@@ -274,7 +274,7 @@ msgid "Grayscale"
 msgstr "Оттенки серого"
 
 #: drivers/esci/extended-scanner.cpp:288
-#: drivers/esci/grammar-capabilities.cpp:650 drivers/esci/scanner.cpp:181
+#: drivers/esci/grammar-capabilities.cpp:650 drivers/esci/scanner.cpp:189
 #: gtkmm/dialog.cpp:785 sane/handle.cpp:591 src/scan-cli.cpp:668
 msgid "Color"
 msgstr "Ц&ветное"
@@ -329,23 +329,23 @@ msgstr "Зеленый"
 msgid "Blue"
 msgstr "Синий"
 
-#: drivers/esci/scanner.cpp:178
+#: drivers/esci/scanner.cpp:186
 msgid "ADF - Double-sided"
 msgstr "ADF - двусторонний"
 
-#: drivers/esci/scanner.cpp:179
+#: drivers/esci/scanner.cpp:187
 msgid "ADF - Single-sided"
 msgstr "ADF - односторонний"
 
-#: drivers/esci/scanner.cpp:180
+#: drivers/esci/scanner.cpp:188
 msgid "Black & White"
 msgstr "Черно-белый"
 
-#: drivers/esci/scanner.cpp:182
+#: drivers/esci/scanner.cpp:190
 msgid "Mode"
 msgstr "Режим"
 
-#: drivers/esci/scanner.cpp:183
+#: drivers/esci/scanner.cpp:191
 msgid "Text/Line Art"
 msgstr "Текст/штриховой рисунок"
 
@@ -466,11 +466,11 @@ msgstr "Сканер:"
 msgid "Other"
 msgstr "Другое"
 
-#: gtkmm/editor.cpp:670
+#: gtkmm/editor.cpp:682
 msgid "Restoring previous value"
 msgstr "Восстановление предыдущего значения"
 
-#: gtkmm/editor.cpp:673
+#: gtkmm/editor.cpp:685
 msgid "The selected combination of values is not supported."
 msgstr "Выбранная комбинация значений не поддерживается."
 

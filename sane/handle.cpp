@@ -839,6 +839,19 @@ handle::set (SANE_Int index, void *value, SANE_Word *info)
                   = toggle (do_automatic_scan_area_);
             }
 
+          if (k == key (magick_prefix + "-image-type")
+              && opt_.count (option_prefix / "image-type"))
+            {
+              string type = v;
+              if (type == "Monochrome")
+                type = "Grayscale";
+              vm[k] = v;
+              try {
+                vm[option_prefix / "image-type"] = type;
+              }
+              catch (const std::out_of_range&){}
+            }
+
           if (vm.empty ())
             opt_[k] = v;
           else

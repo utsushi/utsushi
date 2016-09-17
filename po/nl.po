@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2016-08-17 06:27+0000\n"
+"POT-Creation-Date: 2016-09-06 02:57+0000\n"
 "PO-Revision-Date: 2016-02-24 09:02+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Dutch\n"
@@ -122,82 +122,82 @@ msgstr "Laden"
 msgid "Loading..."
 msgstr "Laden..."
 
-#: drivers/esci/compound-scanner.cpp:2320
+#: drivers/esci/compound-scanner.cpp:2321
 #: drivers/esci/extended-scanner.cpp:1068
 msgid "Duplex"
 msgstr "Duplex"
 
-#: drivers/esci/compound-scanner.cpp:2344
+#: drivers/esci/compound-scanner.cpp:2345
 msgid "Detect Double Feed"
 msgstr "Dubbele invoer detecteren"
 
-#: drivers/esci/compound-scanner.cpp:2355
+#: drivers/esci/compound-scanner.cpp:2356
 msgid "Long Paper Mode"
 msgstr "Modus lang papier"
 
-#: drivers/esci/compound-scanner.cpp:2475
-#: drivers/esci/compound-scanner.cpp:2510
-#: drivers/esci/compound-scanner.cpp:2545
-#: drivers/esci/compound-scanner.cpp:2580
+#: drivers/esci/compound-scanner.cpp:2482
+#: drivers/esci/compound-scanner.cpp:2517
+#: drivers/esci/compound-scanner.cpp:2552
+#: drivers/esci/compound-scanner.cpp:2587
 #: drivers/esci/extended-scanner.cpp:280
 msgid "Resolution"
 msgstr "Resolutie"
 
-#: drivers/esci/compound-scanner.cpp:2528
+#: drivers/esci/compound-scanner.cpp:2535
 msgid "Enable Resampling"
 msgstr "Nieuwe kleurschakeling inschakelen"
 
-#: drivers/esci/compound-scanner.cpp:2605
+#: drivers/esci/compound-scanner.cpp:2612
 #: drivers/esci/extended-scanner.cpp:1125
 msgid "Manual"
 msgstr "Gleuf voor handinvoer"
 
-#: drivers/esci/compound-scanner.cpp:2606
+#: drivers/esci/compound-scanner.cpp:2613
 #: drivers/esci/extended-scanner.cpp:1126
 msgid "Maximum"
 msgstr "Maximum"
 
-#: drivers/esci/compound-scanner.cpp:2608
-#: drivers/esci/compound-scanner.cpp:2675
+#: drivers/esci/compound-scanner.cpp:2615
+#: drivers/esci/compound-scanner.cpp:2682
 #: drivers/esci/extended-scanner.cpp:1128
 msgid "Auto Detect"
 msgstr "Automatisch detecteren"
 
-#: drivers/esci/compound-scanner.cpp:2615
+#: drivers/esci/compound-scanner.cpp:2622
 #: drivers/esci/extended-scanner.cpp:1135
 msgid "Scan Area"
 msgstr "Scangebied"
 
-#: drivers/esci/compound-scanner.cpp:2623
+#: drivers/esci/compound-scanner.cpp:2630
 #: drivers/esci/extended-scanner.cpp:1143
 msgid "Top Left X"
 msgstr "Linkerbovenhoek X"
 
-#: drivers/esci/compound-scanner.cpp:2631
+#: drivers/esci/compound-scanner.cpp:2638
 #: drivers/esci/extended-scanner.cpp:1159
 msgid "Top Left Y"
 msgstr "Linkerbovenhoek Y"
 
-#: drivers/esci/compound-scanner.cpp:2639
+#: drivers/esci/compound-scanner.cpp:2646
 #: drivers/esci/extended-scanner.cpp:1151
 msgid "Bottom Right X"
 msgstr "Rechteronderhoek X"
 
-#: drivers/esci/compound-scanner.cpp:2647
+#: drivers/esci/compound-scanner.cpp:2654
 #: drivers/esci/extended-scanner.cpp:1167
 msgid "Bottom Right Y"
 msgstr "Rechteronderhoek Y"
 
-#: drivers/esci/compound-scanner.cpp:2683
+#: drivers/esci/compound-scanner.cpp:2690
 msgid "Crop"
 msgstr "Bijsnijden"
 
-#: drivers/esci/compound-scanner.cpp:2719 gtkmm/dialog.cpp:767
+#: drivers/esci/compound-scanner.cpp:2726 gtkmm/dialog.cpp:767
 #: sane/handle.cpp:546 src/scan-cli.cpp:646
 msgid "Deskew"
 msgstr "Recht zetten"
 
-#: drivers/esci/compound-scanner.cpp:3152
+#: drivers/esci/compound-scanner.cpp:3159
 msgid ""
 "Authentication is required.\n"
 "Unfortunately, this version of the driver does not support authentication "
@@ -207,7 +207,7 @@ msgstr ""
 "Helaas wordt verificatie nog niet ondersteund door deze versie van het "
 "stuurprogramma."
 
-#: drivers/esci/compound-scanner.cpp:3246
+#: drivers/esci/compound-scanner.cpp:3253
 #: drivers/esci/extended-scanner.cpp:206 sane/backend.cpp:288
 msgid ""
 "The Automatic Document Feeder is open.\n"
@@ -216,7 +216,7 @@ msgstr ""
 "De automatische documententoevoerderer is geopend.\n"
 "Sluit hem."
 
-#: drivers/esci/compound-scanner.cpp:3249
+#: drivers/esci/compound-scanner.cpp:3256
 #: drivers/esci/extended-scanner.cpp:201 sane/backend.cpp:274
 msgid ""
 "A paper jam occurred.\n"
@@ -229,12 +229,12 @@ msgstr ""
 "automatische documenttoevoerder werden geplaatst, moeten eruit worden "
 "gehaald en daarna teruggeplaatst."
 
-#: drivers/esci/compound-scanner.cpp:3254
+#: drivers/esci/compound-scanner.cpp:3261
 #: drivers/esci/extended-scanner.cpp:198 sane/backend.cpp:269
 msgid "Please load the document(s) into the Automatic Document Feeder."
 msgstr "Laad document(en) in de automatische documententoevoerder."
 
-#: drivers/esci/compound-scanner.cpp:3257
+#: drivers/esci/compound-scanner.cpp:3264
 #: drivers/esci/extended-scanner.cpp:209 sane/backend.cpp:281
 msgid ""
 "A multi page feed occurred in the auto document feeder. Open the cover, "
@@ -277,7 +277,7 @@ msgid "Grayscale"
 msgstr "Grijs"
 
 #: drivers/esci/extended-scanner.cpp:288
-#: drivers/esci/grammar-capabilities.cpp:650 drivers/esci/scanner.cpp:181
+#: drivers/esci/grammar-capabilities.cpp:650 drivers/esci/scanner.cpp:189
 #: gtkmm/dialog.cpp:785 sane/handle.cpp:591 src/scan-cli.cpp:668
 msgid "Color"
 msgstr "Kleuren"
@@ -332,23 +332,23 @@ msgstr "Groen"
 msgid "Blue"
 msgstr "Blauw"
 
-#: drivers/esci/scanner.cpp:178
+#: drivers/esci/scanner.cpp:186
 msgid "ADF - Double-sided"
 msgstr "ADF - Dubbelzijdig"
 
-#: drivers/esci/scanner.cpp:179
+#: drivers/esci/scanner.cpp:187
 msgid "ADF - Single-sided"
 msgstr "ADF - Enkelzijdig"
 
-#: drivers/esci/scanner.cpp:180
+#: drivers/esci/scanner.cpp:188
 msgid "Black & White"
 msgstr "Zwart-wit"
 
-#: drivers/esci/scanner.cpp:182
+#: drivers/esci/scanner.cpp:190
 msgid "Mode"
 msgstr "Modus"
 
-#: drivers/esci/scanner.cpp:183
+#: drivers/esci/scanner.cpp:191
 msgid "Text/Line Art"
 msgstr "Tekst/lijntekeningen"
 
@@ -469,11 +469,11 @@ msgstr "Scanner:"
 msgid "Other"
 msgstr "Overig"
 
-#: gtkmm/editor.cpp:670
+#: gtkmm/editor.cpp:682
 msgid "Restoring previous value"
 msgstr "Vorige waarde herstellen"
 
-#: gtkmm/editor.cpp:673
+#: gtkmm/editor.cpp:685
 msgid "The selected combination of values is not supported."
 msgstr "De geselecteerde combinatie van waarden wordt niet ondersteund."
 

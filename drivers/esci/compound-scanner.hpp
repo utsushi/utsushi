@@ -105,9 +105,13 @@ protected:
   void add_doc_source_options (option::map& opts,
                                const information::source& src,
                                const source_capabilities& src_caps,
+                               const constraint::ptr& sw_res_x,
+                               const constraint::ptr& sw_res_y,
                                const capabilities& caps) const;
 
   void add_resolution_options (option::map& opts,
+                               const constraint::ptr& sw_res_x,
+                               const constraint::ptr& sw_res_y,
                                const information::source& src) const;
   void add_scan_area_options (option::map& opts,
                               const information::source& src) const;
@@ -172,8 +176,12 @@ protected:
 
   // Preferred resolution constraints for when software emulation is
   // available
-  const constraint::ptr res_x_;
-  const constraint::ptr res_y_;
+  const constraint::ptr fb_res_x_;
+  const constraint::ptr fb_res_y_;
+  const constraint::ptr adf_res_x_;
+  const constraint::ptr adf_res_y_;
+  const constraint::ptr tpu_res_x_;
+  const constraint::ptr tpu_res_y_;
   //! @}
 
   mutable scanner_control acquire_;
