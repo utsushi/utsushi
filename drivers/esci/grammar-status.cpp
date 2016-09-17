@@ -110,11 +110,12 @@ void check_bits (const integer& push_button)
 bool
 hardware_status::operator== (const hardware_status& rhs) const
 {
-  return (   medium          == rhs.medium
-          && error_          == rhs.error_
-          && focus           == rhs.focus
-          && push_button     == rhs.push_button
-          && separation_mode == rhs.separation_mode);
+  return (   medium                 == rhs.medium
+          && error_                 == rhs.error_
+          && focus                  == rhs.focus
+          && push_button            == rhs.push_button
+          && separation_mode        == rhs.separation_mode
+          && card_slot_lever_status == rhs.card_slot_lever_status);
 }
 
 void

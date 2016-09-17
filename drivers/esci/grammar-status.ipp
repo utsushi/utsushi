@@ -62,6 +62,7 @@ basic_grammar_status< Iterator >::basic_grammar_status ()
      ^  (token_(PB ) > this->decimal_)
      ^  (token_(SEP) > stat_sep_rule_)
      ^  (token_(BAT) > stat_bat_rule_)
+     ^  (token_(CSL) > stat_csl_rule_)
      )
     > qi::eoi
     ;
@@ -90,6 +91,13 @@ basic_grammar_status< Iterator >::basic_grammar_status ()
 
   stat_bat_rule_ %=
     &( token_(bat::LOW)
+      )
+    > token_
+    ;
+
+  stat_csl_rule_ %=
+    &(  token_(csl::ON)
+      | token_(csl::OFF)
       )
     > token_
     ;
@@ -189,7 +197,8 @@ BOOST_FUSION_ADAPT_STRUCT
  (boost::optional< ESCI_NS::integer >, focus)
  (boost::optional< ESCI_NS::integer >, push_button)
  (boost::optional< ESCI_NS::quad >, separation_mode)
- (boost::optional< ESCI_NS::quad >, battery_status))
+ (boost::optional< ESCI_NS::quad >, battery_status)
+ (boost::optional< ESCI_NS::quad >, card_slot_lever_status))
 
 #undef ESCI_NS
 
