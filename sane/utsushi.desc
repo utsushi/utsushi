@@ -166,16 +166,6 @@
 :usbid     "0x04b8" "0x1101"
 :status    :good
 
-:model     "PX-M840FX"
-:interface "USB"
-:usbid     "0x04b8" "0x08cd"
-:status    :good
-
-:model     "PX-M860F"
-:interface "USB"
-:usbid     "0x04b8" "0x08ce"
-:status    :good
-
 :model     "PX-M7050"
 :interface "USB"
 :usbid     "0x04b8" "0x08bc"
@@ -184,6 +174,16 @@
 :model     "PX-M7050FX"
 :interface "USB"
 :usbid     "0x04b8" "0x08cc"
+:status    :good
+
+:model     "PX-M840FX"
+:interface "USB"
+:usbid     "0x04b8" "0x08cd"
+:status    :good
+
+:model     "PX-M860F"
+:interface "USB"
+:usbid     "0x04b8" "0x08ce"
 :status    :good
 
 :model     "WF-6530"
