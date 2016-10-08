@@ -1296,6 +1296,8 @@ compound_scanner::set_up_resolution ()
 void
 compound_scanner::set_up_scan_area ()
 {
+  using std::swap;
+
   quantity tl_x = val_["tl-x"];
   quantity tl_y = val_["tl-y"];
   quantity br_x = val_["br-x"];
@@ -1962,6 +1964,8 @@ compound_scanner::finalize (const value::map& vm)
     }
 
   {                             // minimal scan area check
+    using std::swap;
+
     quantity tl_x = final_vm["tl-x"];
     quantity tl_y = final_vm["tl-y"];
     quantity br_x = final_vm["br-x"];

@@ -827,6 +827,8 @@ extended_scanner::set_up_resolution ()
 void
 extended_scanner::set_up_scan_area ()
 {
+  using std::swap;
+
   quantity tl_x = val_["tl-x"];      // inches
   quantity tl_y = val_["tl-y"];
   quantity br_x = val_["br-x"];
