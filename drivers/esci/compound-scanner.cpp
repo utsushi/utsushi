@@ -1633,7 +1633,7 @@ void
 compound_scanner::update_scan_area_max_(value::map& vm)
 {
   string docsrc = vm["doc-source"];
-  boost::optional< const information::source& > src;
+  boost::optional< information::source > src;
 
   /**/ if (docsrc == "ADF")            src = info_.adf;
   else if (docsrc == "Document Table") src = info_.flatbed;
