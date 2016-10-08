@@ -355,6 +355,12 @@
 :usbid     "0x04b8" "0x111a"
 :status    :good
 
+:model     "PID 111B"
+:interface "USB"
+:usbid     "0x04b8" "0x111b"
+:status    :good
+:comment   "EP-879A?"
+
 :model     "PID 111C"
 :interface "USB"
 :usbid     "0x04b8" "0x111c"
@@ -384,3 +390,9 @@
 :interface "USB"
 :usbid     "0x04b8" "0x1121"
 :status    :good
+
+:model     "PID 1123"
+:interface "USB"
+:usbid     "0x04b8" "0x1123"
+:status    :good
+:comment   "EP-30VA?"
