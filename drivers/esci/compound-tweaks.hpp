@@ -61,6 +61,12 @@ DERIVED_COMPOUND_(compound_scanner, DS_530_570W,
 DERIVED_COMPOUND_(compound_scanner, DS_16x0,
                   void configure ();
 );
+DERIVED_COMPOUND_(compound_scanner, EP_30VA,
+                  void configure ();
+);
+DERIVED_COMPOUND_(compound_scanner, EP_879A,
+                  void configure ();
+);
 
 }       // namespace esci
 }       // namespace _drv_

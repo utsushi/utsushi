@@ -121,6 +121,14 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
         {
           sp = make_shared< PX_Mxxx0 > (cnx);
         }
+      else if (info.product_name () == "PID 111B")
+        {
+          sp = make_shared< EP_879A > (cnx);
+        }
+      else if (info.product_name () == "PID 1123")
+        {
+          sp = make_shared< EP_30VA > (cnx);
+        }
       else
         {
           sp = make_shared< compound_scanner > (cnx);
