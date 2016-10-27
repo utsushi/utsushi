@@ -1303,8 +1303,8 @@ compound_scanner::set_up_scan_area ()
   quantity br_x = val_["br-x"];
   quantity br_y = val_["br-y"];
 
-  if (br_x < tl_x) std::swap (tl_x, br_x);
-  if (br_y < tl_y) std::swap (tl_y, br_y);
+  if (br_x < tl_x) swap (tl_x, br_x);
+  if (br_y < tl_y) swap (tl_y, br_y);
 
   parm_.acq = std::vector< integer > ();
   parm_.acq->push_back ((*parm_.rsm *  tl_x        ).amount< integer > ());
@@ -1971,8 +1971,8 @@ compound_scanner::finalize (const value::map& vm)
     quantity br_x = final_vm["br-x"];
     quantity br_y = final_vm["br-y"];
 
-    if (br_x < tl_x) std::swap (tl_x, br_x);
-    if (br_y < tl_y) std::swap (tl_y, br_y);
+    if (br_x < tl_x) swap (tl_x, br_x);
+    if (br_y < tl_y) swap (tl_y, br_y);
 
     if (br_x - tl_x < min_width_ || br_y - tl_y < min_height_)
       BOOST_THROW_EXCEPTION
