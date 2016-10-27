@@ -280,8 +280,6 @@ shell_pipe::exec_process_(const context& ctx)
           close (out[1]);
           close (err[1]);
 
-          setenv ("LC_NUMERIC", "C", 1);
-
           execl (SHELL, SHELL, "-c", command_line.c_str (), NULL);
         }
 
