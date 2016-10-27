@@ -456,8 +456,8 @@ g3fax::skip_pbm_header_(const octet *& data, streamsize n)
   }
 
   //! Converts a vector of run lengths into FAX G3 encoded data
-  /*! The string always ends with an end-of-line marker that is
-   *  aligned on an octet boundary.
+  /*! The string always starts with an end-of-line marker and will be
+   *  filled if necessary.
    */
   static string
   transform (vector< size_t >& runs)
@@ -468,6 +468,21 @@ g3fax::skip_pbm_header_(const octet *& data, streamsize n)
     string result;
     unsigned char ch = 0x00;
     size_t i = 0;
+
+    unsigned int mask = 1 << 11;
+    unsigned int code = 1;
+
+    while (mask)
+      {
+        if (code & mask) ch |= (1 << (7 - i % 8));
+        ++i;
+        mask >>= 1;
+        if (0 == i % 8)
+          {
+            result.push_back (ch);
+            ch = 0x00;
+          }
+      }
 
     while (runs.end () != it)
       {
@@ -527,30 +542,8 @@ g3fax::skip_pbm_header_(const octet *& data, streamsize n)
         ++it;
         colour = (WHITE == colour ? BLACK : WHITE);
       }
-
-    // Write an end-of-line marker with the one bit aligned on the end
-    // of an octet.  In order to align we insert zero padding bits, if
-    // necessary, between the last run length code and the EOL marker.
-    // This works because the EOL marker does double duty as an error
-    // recovery code.  No combination of codes has more than 7 zeros
-    // in succession.  Upon seeing an eight zero, decoders will keep
-    // scanning until the first 1 bit so using more than the required
-    // eleven zero bits for the EOL marker is no problem.
-
-    unsigned int mask = 1 << (11 + ((12 - i % 8) % 8));
-    unsigned int code = 1;
-
-    while (mask)
-      {
-        if (code & mask) ch |= (1 << (7 - i % 8));
-        ++i;
-        mask >>= 1;
-        if (0 == i % 8)
-          {
-            result.push_back (ch);
-            ch = 0x00;
-          }
-      }
+    if (0 != i % 8)
+      result.push_back (ch);
 
     return result;
   }

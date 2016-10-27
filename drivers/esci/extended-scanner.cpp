@@ -834,8 +834,8 @@ extended_scanner::set_up_scan_area ()
   quantity br_x = val_["br-x"];
   quantity br_y = val_["br-y"];
 
-  if (br_x < tl_x) swap (tl_x, br_x);
-  if (br_y < tl_y) swap (tl_y, br_y);
+  if (br_x < tl_x) std::swap (tl_x, br_x);
+  if (br_y < tl_y) std::swap (tl_y, br_y);
 
   tl_x *= 1. * parm_.resolution ().x ();      // pixels
   tl_y *= 1. * parm_.resolution ().y ();
