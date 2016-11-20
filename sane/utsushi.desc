@@ -285,6 +285,16 @@
 :usbid     "0x04b8" "0x0157"
 :status    :good
 
+:model     "PID 0159"
+:interface "USB"
+:usbid     "0x04b8" "0x0159"
+:status    :good
+
+:model     "PID 015A"
+:interface "USB"
+:usbid     "0x04b8" "0x015a"
+:status    :good
+
 :model     "PID 015C"
 :interface "USB"
 :usbid     "0x04b8" "0x015c"
