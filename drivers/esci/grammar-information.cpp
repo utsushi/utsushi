@@ -99,6 +99,18 @@ information::is_double_pass_duplexer () const
           && *adf->duplex_passes == adf::SCN2);
 }
 
+bool
+information::supports_size_detection (const quad& src) const
+{
+    using namespace code_token::information;
+
+    if (src == FB ) return (flatbed && flatbed->supports_size_detection ());
+    if (src == ADF) return (adf     && adf->supports_size_detection ());
+    if (src == TPU) return (tpu     && tpu->supports_size_detection ());
+
+    return false;
+}
+
 information::range::range (const integer& lower, const integer& upper)
   : lower_(lower)
   , upper_(upper)

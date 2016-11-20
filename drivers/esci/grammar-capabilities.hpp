@@ -58,6 +58,8 @@ struct capabilities
   bool can_eject () const;
   bool can_load () const;
 
+  bool can_crop (const quad& src) const;
+
   utsushi::constraint::ptr border_fill () const;
   utsushi::constraint::ptr border_size (const quantity& default_value = quantity ()) const;
   utsushi::constraint::ptr buffer_size (const boost::optional< integer >& default_value) const;

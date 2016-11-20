@@ -44,8 +44,10 @@ public:
   length height () const;
 
   static media lookup (const std::string& name);
-  static std::list< std::string > within (const length& width,
-                                          const length& height);
+  static std::list< std::string > within (const length& min_width,
+                                          const length& min_height,
+                                          const length& max_width,
+                                          const length& max_height);
 private:
   struct impl;
   impl *pimpl_;

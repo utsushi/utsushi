@@ -169,13 +169,13 @@ preview::set_sensitive ()
   a = ui_->get_action ("/preview/refresh");
   if (a) { a->set_sensitive (bool(idevice_) && !too_long); }
   a = ui_->get_action ("/preview/zoom-in");
-  if (a) { a->set_sensitive (pixbuf_ && (zoom_ < zoom_max_)); }
+  if (a) { a->set_sensitive (bool(pixbuf_) && (zoom_ < zoom_max_)); }
   a = ui_->get_action ("/preview/zoom-out");
-  if (a) { a->set_sensitive (pixbuf_ && (zoom_ > zoom_min_)); }
+  if (a) { a->set_sensitive (bool(pixbuf_) && (zoom_ > zoom_min_)); }
   a = ui_->get_action ("/preview/zoom-100");
-  if (a) { a->set_sensitive (pixbuf_); }
+  if (a) { a->set_sensitive (bool(pixbuf_)); }
   a = ui_->get_action ("/preview/zoom-fit");
-  if (a) { a->set_sensitive (pixbuf_); }
+  if (a) { a->set_sensitive (bool(pixbuf_)); }
 }
 
 void

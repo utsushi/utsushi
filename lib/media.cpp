@@ -159,7 +159,8 @@ media::lookup (const std::string& name)
  *        poor support for option dependencies.
  */
 std::list< std::string >
-media::within (const length& width, const length& height)
+media::within (const length& min_width, const length& min_height,
+               const length& max_width, const length& max_height)
 {
   std::list< std::string > rv;
 
@@ -167,18 +168,20 @@ media::within (const length& width, const length& height)
 
   BOOST_FOREACH (dictionary::value_type entry, *dict)
     {
-      if (   entry.second.width ()  <= width
-          && entry.second.height () <= height)
+      length w = entry.second.width ();
+      length h = entry.second.height ();
+      if (   min_width  <= w && w <= max_width
+          && min_height <= h && h <= max_height)
         {
-          if (   entry.second.height () <= width
-              && entry.second.width ()  <= height)
+          if (   min_width  <= h && h <= max_width
+              && min_height <= w && w <= max_height)
             {
               rv.push_back (entry.first + "/Portrait");
               rv.push_back (entry.first + "/Landscape");
             }
           else
             {
-              rv.push_back (entry.first);
+              rv.push_back (entry.first + "/Portrait");
             }
         }
     }

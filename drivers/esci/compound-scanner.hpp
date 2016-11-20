@@ -91,7 +91,11 @@ protected:
 
   media probe_media_size_(const string& doc_source);
   void  update_scan_area_(const media& size, value::map& vm) const;
-  void  update_scan_area_max_(value::map& vm);
+  void  update_scan_area_range_(value::map& vm);
+
+  bool satisfies_changing_constraint (const value::map::value_type& p,
+                                      const value::map& vm,
+                                      const information& info) const;
 
   bool validate (const value::map& vm) const;
   void finalize (const value::map& vm);
@@ -104,6 +108,8 @@ protected:
 
   void add_doc_source_options (option::map& opts,
                                const information::source& src,
+                               const integer& min_w,
+                               const integer& min_h,
                                const source_capabilities& src_caps,
                                const constraint::ptr& sw_res_x,
                                const constraint::ptr& sw_res_y,
@@ -114,6 +120,8 @@ protected:
                                const constraint::ptr& sw_res_y,
                                const information::source& src) const;
   void add_scan_area_options (option::map& opts,
+                              const integer& min_w,
+                              const integer& min_h,
                               const information::source& src) const;
   void add_crop_option (option::map& opts,
                         const information::source& src,
@@ -148,11 +156,11 @@ protected:
    *  file.  Subclass constructors are free to modify the result of
    *  this in any way necessary to make devices behave.
    *
-   *  \note The min_width_ and min_height_ values are not based on any
-   *        protocol information.  Their values have been determined
-   *        experimentally.  At least one device did not like zero and
-   *        anything less than 0.05 inch results in such small images
-   *        that it is not really worth scanning anymore.
+   *  \note The min_area_width_ and min_area_height_ values are not
+   *        based on any protocol information.  Their values have been
+   *        determined experimentally.  At least one device did not
+   *        like zero and anything less than 0.05 inch results in such
+   *        small images that it is not really worth scanning anymore.
    */
   //! @{
 
@@ -171,8 +179,8 @@ protected:
   const parameters   defs_;
   const parameters   defs_flip_;
 
-  const quantity min_width_;
-  const quantity min_height_;
+  const quantity min_area_width_;
+  const quantity min_area_height_;
 
   // Preferred resolution constraints for when software emulation is
   // available
@@ -205,6 +213,11 @@ protected:
   option::map flatbed_;
   option::map adf_;
   option::map tpu_;
+
+  integer adf_duplex_min_doc_width_;
+  integer adf_duplex_min_doc_height_;
+  integer adf_duplex_max_doc_width_;
+  integer adf_duplex_max_doc_height_;
 
   context::size_type pixel_width () const;
   context::size_type pixel_height () const;
