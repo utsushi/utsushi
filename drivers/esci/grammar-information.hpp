@@ -51,6 +51,8 @@ struct information
 
   bool is_double_pass_duplexer () const;
 
+  bool supports_size_detection (const quad& src) const;
+
   struct range
     : private boost::equality_comparable< range >
   {

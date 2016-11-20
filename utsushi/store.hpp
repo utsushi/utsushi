@@ -73,6 +73,10 @@ public:
   //! Adds a value \a v to the %store
   store * alternative (const value& v);
 
+  //! replace values from the range \c [first,last) to the %store
+  template <typename InputIterator>
+  store * assign (InputIterator first, InputIterator last);
+
   size_type size () const;
 
   //! Returns an iterator to the first %value in the %store
@@ -103,6 +107,16 @@ store::alternatives (InputIterator first, InputIterator last)
     {
       alternative (*it);
     }
+  return this;
+}
+
+template <typename InputIterator>
+store *
+store::assign (InputIterator first, InputIterator last)
+{
+  BOOST_CONCEPT_ASSERT ((boost::InputIterator< InputIterator >));
+
+  store_.assign (first, last);
   return this;
 }
 

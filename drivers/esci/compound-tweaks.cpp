@@ -25,6 +25,7 @@
 #include <algorithm>
 #include <vector>
 
+#include <boost/assign/list_of.hpp>
 #include <boost/none.hpp>
 
 #include <utsushi/i18n.hpp>
@@ -121,6 +122,87 @@ DS_40::configure ()
   add_options ()
     ("lo-threshold", quantity (12.1))
     ("hi-threshold", quantity (25.4))
+    ("auto-kludge", toggle (false))
+    ;
+  descriptors_["lo-threshold"]->read_only (true);
+  descriptors_["hi-threshold"]->read_only (true);
+  descriptors_["auto-kludge"]->read_only (true);
+}
+
+DS_3x0::DS_3x0 (const connexion::ptr& cnx)
+  : compound_scanner (cnx)
+{
+  capabilities& caps (const_cast< capabilities& > (caps_));
+  parameters&   defs (const_cast< parameters& > (defs_));
+
+  // Both resolution settings need to be identical
+  caps.rss = boost::none;
+
+  if (HAVE_MAGICK)              /* enable resampling */
+    {
+      constraint::ptr res (from< range > ()
+                           -> bounds (50, 600)
+                           -> default_value (*defs.rsm));
+      const_cast< constraint::ptr& > (adf_res_x_) = res;
+      if (caps.rss)
+        {
+          const_cast< constraint::ptr& > (adf_res_y_) = res;
+        }
+    }
+
+  // Assume people prefer brighter colors over B/W
+  defs.col = code_token::parameter::col::C024;
+  defs.gmm = code_token::parameter::gmm::UG18;
+
+  // Boost USB I/O throughput
+  defs.bsz = 1024 * 1024;
+  caps.bsz = capabilities::range (1, *defs.bsz);
+
+  // Color correction parameters
+
+  vector< double, 3 >& exp
+    (const_cast< vector< double, 3 >& > (gamma_exponent_));
+
+  exp[0] = 1.015;
+  exp[1] = 0.991;
+  exp[2] = 0.994;
+
+  matrix< double, 3 >& mat
+    (const_cast< matrix< double, 3 >& > (profile_matrix_));
+
+  mat[0][0] =  1.0250;
+  mat[0][1] =  0.0004;
+  mat[0][2] = -0.0254;
+  mat[1][0] =  0.0003;
+  mat[1][1] =  1.0022;
+  mat[1][2] = -0.0025;
+  mat[2][0] =  0.0049;
+  mat[2][1] = -0.0949;
+  mat[2][2] =  1.0900;
+
+  // disable HW crop/deskew
+  using namespace code_token::capability;
+  if (caps.adf && caps.adf->flags)
+    {
+      erase (*caps.adf->flags, adf::CRP);
+      erase (*caps.adf->flags, adf::SKEW);
+    }
+
+  read_back_ = false;
+}
+
+void
+DS_3x0::configure ()
+{
+  compound_scanner::configure ();
+
+  descriptors_["enable-resampling"]->active (false);
+  descriptors_["enable-resampling"]->read_only (true);
+
+  // autocrop/deskew parameter
+  add_options ()
+    ("lo-threshold", quantity (65.6))
+    ("hi-threshold", quantity (80.4))
     ("auto-kludge", toggle (false))
     ;
   descriptors_["lo-threshold"]->read_only (true);
@@ -314,7 +396,7 @@ DS_x0000::DS_x0000 (const connexion::ptr& cnx)
   mat[2][2] =  1.3745;
 }
 
-PX_Mxxx0::PX_Mxxx0 (const connexion::ptr& cnx)
+PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
   : compound_scanner (cnx)
 {
   information&  info (const_cast< information& > (info_));
@@ -335,11 +417,7 @@ PX_Mxxx0::PX_Mxxx0 (const connexion::ptr& cnx)
       info.product.assign (product.begin (), product.end ());
   }
 
-  // The reported adf->max_doc is apparently only intended for FAX
-  // purposes, independent of whether the device actually has one.
-  // Scanner use with scan areas exceeding adf->area is untested.
-  // Disable use of such overly large areas to be on the safe side.
-  // TODO Test to see if this can be removed.
+  // Disable long paper support
   if (info.adf)
     {
       info.adf->max_doc = info.adf->area;
@@ -347,9 +425,7 @@ PX_Mxxx0::PX_Mxxx0 (const connexion::ptr& cnx)
 
   // Disable 300dpi vertical resolution for performance reasons.
   // Acquiring at 400dpi is faster for some reason.
-  if ((   info.product_name () == "PX-M7050"
-       || info.product_name () == "PX-M7050FX")
-       && caps.rss)
+  if (caps.rss)
     {
       try
         {
@@ -369,18 +445,23 @@ PX_Mxxx0::PX_Mxxx0 (const connexion::ptr& cnx)
 
   if (HAVE_MAGICK)              /* enable resampling */
     {
-      constraint::ptr fb_res (from< range > ()
-                              -> bounds (50, 1200)
-                              -> default_value (*defs.rsm));
-      constraint::ptr adf_res (from< range > ()
-                               -> bounds (50, 600)
-                               -> default_value (*defs.rsm));
-      const_cast< constraint::ptr& > (fb_res_x_) = fb_res;
-      const_cast< constraint::ptr& > (adf_res_x_) = adf_res;
-      if (caps.rss)
+      if (info.flatbed)
         {
-          const_cast< constraint::ptr& > (fb_res_y_) = fb_res;
-          const_cast< constraint::ptr& > (adf_res_y_) = adf_res;
+          constraint::ptr fb_res (from< range > ()
+                                  -> bounds (50, info.flatbed->resolution)
+                                  -> default_value (*defs.rsm));
+          const_cast< constraint::ptr& > (fb_res_x_) = fb_res;
+          if (caps.rss)
+            const_cast< constraint::ptr& > (fb_res_y_) = fb_res;
+        }
+      if (info.adf)
+        {
+          constraint::ptr adf_res (from< range > ()
+                                   -> bounds (50, info.adf->resolution)
+                                   -> default_value (*defs.rsm));
+          const_cast< constraint::ptr& > (adf_res_x_) = adf_res;
+          if (caps.rss)
+            const_cast< constraint::ptr& > (adf_res_y_) = adf_res;
         }
     }
 
@@ -392,26 +473,58 @@ PX_Mxxx0::PX_Mxxx0 (const connexion::ptr& cnx)
   defs.bsz = 256 * 1024;
 
   // Color correction parameters
-
-  vector< double, 3 >& exp
-    (const_cast< vector< double, 3 >& > (gamma_exponent_));
+  vector< double, 3 > exp;
+  matrix< double, 3 > mat;
 
   exp[0] = 1.012;
   exp[1] = 0.991;
   exp[2] = 0.998;
 
-  matrix< double, 3 >& mat
-    (const_cast< matrix< double, 3 >& > (profile_matrix_));
+  mat[0][0] =  1.0559;  mat[0][1] =  0.0471;  mat[0][2] = -0.1030;
+  mat[1][0] =  0.0211;  mat[1][1] =  1.0724;  mat[1][2] = -0.0935;
+  mat[2][0] =  0.0091;  mat[2][1] = -0.1525;  mat[2][2] =  1.1434;
 
-  mat[0][0] =  1.0559;
-  mat[0][1] =  0.0471;
-  mat[0][2] = -0.1030;
-  mat[1][0] =  0.0211;
-  mat[1][1] =  1.0724;
-  mat[1][2] = -0.0935;
-  mat[2][0] =  0.0091;
-  mat[2][1] = -0.1525;
-  mat[2][2] =  1.1434;
+  static const vector< double, 3 > gamma_exponent_1 = exp;
+  static const matrix< double, 3 > profile_matrix_1 = mat;
+
+  static const std::map< std::string, const vector< double, 3 > >
+    gamma_exponent = boost::assign::map_list_of
+    ("PX-M7050",   gamma_exponent_1)
+    ("PX-M7050FX", gamma_exponent_1)
+    ("PX-M860F",   gamma_exponent_1)
+    ("WF-6590",    gamma_exponent_1)
+    ;
+
+  static const std::map< std::string, const matrix< double, 3 > >
+    profile_matrix = boost::assign::map_list_of
+    ("PX-M7050",   profile_matrix_1)
+    ("PX-M7050FX", profile_matrix_1)
+    ("PX-M860F",   profile_matrix_1)
+    ("WF-6590",    profile_matrix_1)
+    ;
+
+  try {
+    exp = gamma_exponent.at (info.product_name ());
+    mat = profile_matrix.at (info.product_name ());
+
+    vector< double, 3 >& ge
+      (const_cast< vector< double, 3 >& > (gamma_exponent_));
+    ge = exp;
+
+    matrix< double, 3 >& pm
+      (const_cast< matrix< double, 3 >& > (profile_matrix_));
+    pm = mat;
+  }
+  catch (const std::out_of_range&) {}
+}
+
+void
+PX_Mxxxx::configure ()
+{
+  compound_scanner::configure ();
+
+  descriptors_["enable-resampling"]->active (false);
+  descriptors_["enable-resampling"]->read_only (true);
 }
 
 DS_530_570W::DS_530_570W (const connexion::ptr& cnx)
@@ -506,7 +619,7 @@ DS_16x0::DS_16x0 (const connexion::ptr& cnx)
   defs.gmm = code_token::parameter::gmm::UG18;
 
   // Boost USB I/O throughput
-  defs.bsz = 1024 * 1024;
+  defs.bsz = 256 * 1024;
 
   // Color correction parameters
 
@@ -564,7 +677,7 @@ EP_30VA::EP_30VA (const connexion::ptr& cnx)
   defs.gmm = code_token::parameter::gmm::UG18;
 
   // Boost USB I/O throughput
-  defs.bsz = 256 * 1024;
+  defs.bsz = 1024 * 1024;
 
   // Color correction parameters
 

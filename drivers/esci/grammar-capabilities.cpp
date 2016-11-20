@@ -235,6 +235,18 @@ capabilities::can_load () const
   return (adf && find_(adf->flags, adf::LOAD));
 }
 
+bool
+capabilities::can_crop (const quad& src) const
+{
+  using namespace code_token::capability;
+
+  if (src == FB ) return (fb  && find_(fb->flags , fb::CRP ));
+  if (src == ADF) return (adf && find_(adf->flags, adf::CRP));
+  if (src == TPU) return (tpu && find_(tpu->flags, tpu::CRP));
+
+  return false;
+}
+
 utsushi::constraint::ptr
 capabilities::border_fill () const
 {

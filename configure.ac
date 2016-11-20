@@ -24,7 +24,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.62)
-AC_INIT([Utsushi], [0.22.2],
+AC_INIT([Utsushi], [0.23.0],
         [linux-scanner@epson.jp],
         [utsushi])
 

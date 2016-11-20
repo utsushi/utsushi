@@ -1113,32 +1113,33 @@ main (int argc, char *argv[])
       skip_blank = (skip_blank
                     && (quantity (0.) < skip_thresh));
 
-      /**/ if (xfer_raw == xfer_fmt)
-        {
-          str->push (make_shared< padding > ());
-        }
-#if HAVE_LIBJPEG
-      else if (xfer_jpg == xfer_fmt)
-        {
-          str->push (make_shared< jpeg::decompressor > ());
-        }
-#endif
-      else
-        {
-          log::alert
-            ("unsupported transfer format: '%1%'") % xfer_fmt;
-
-          if ("ASIS" != fmt)
-            BOOST_THROW_EXCEPTION
-              (runtime_error
-               ((format (SEC_("conversion from %1% to %2% is not supported"))
-                 % xfer_fmt
-                 % fmt)
-                .str ()));
-        }
 
       /**/ if ("ASIS" != fmt)
         {
+
+          /**/ if (xfer_raw == xfer_fmt)
+            {
+              str->push (make_shared< padding > ());
+            }
+#if HAVE_LIBJPEG
+          else if (xfer_jpg == xfer_fmt)
+            {
+              str->push (make_shared< jpeg::decompressor > ());
+            }
+#endif
+          else
+            {
+              log::alert
+                ("unsupported transfer format: '%1%'") % xfer_fmt;
+
+              BOOST_THROW_EXCEPTION
+                (runtime_error
+                 ((format (SEC_("conversion from %1% to %2% is not supported"))
+                   % xfer_fmt
+                   % fmt)
+                  .str ()));
+            }
+
           if (skip_blank)  str->push (blank_skip);
           str->push (make_shared< pnm > ());
           if (autocrop)    str->push (autocrop);

@@ -1120,7 +1120,8 @@ extended_scanner::add_scan_area_options (option::map& opts,
   bounding_box<quantity> bbox (bbox_tl / (1. * caps_.base_resolution ()),
                                bbox_br / (1. * caps_.base_resolution ()));
 
-  std::list< std::string > areas = media::within (bbox.width (),
+  std::list< std::string > areas = media::within (0, 0,
+                                                  bbox.width (),
                                                   bbox.height ());
   areas.push_back (SEC_N_("Manual"));
   areas.push_back (SEC_N_("Maximum"));

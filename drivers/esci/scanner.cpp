@@ -72,6 +72,12 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
         {
           sp = make_shared< DS_40 > (cnx);
         }
+      else if (   info.product_name () == "DS-310"
+               || info.product_name () == "DS-360W"
+               )
+        {
+          sp = make_shared< DS_3x0 > (cnx);
+        }
       else if (   info.product_name () == "DS-510"
                || info.product_name () == "DS-520"
                || info.product_name () == "DS-560"
@@ -119,7 +125,7 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
                || info.product_name () == "PID 08CF"
                )
         {
-          sp = make_shared< PX_Mxxx0 > (cnx);
+          sp = make_shared< PX_Mxxxx > (cnx);
         }
       else if (info.product_name () == "PID 111B")
         {

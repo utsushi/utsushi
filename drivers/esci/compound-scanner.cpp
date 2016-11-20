@@ -435,13 +435,17 @@ compound_scanner::compound_scanner (const connexion::ptr& cnx)
   , info_()                     // initialize reference data
   , caps_() , caps_flip_()
   , defs_() , defs_flip_()
-  , min_width_(0.05)
-  , min_height_(0.05)
+  , min_area_width_(0.05)
+  , min_area_height_(0.05)
   , read_back_(true)
   , streaming_flip_side_image_(false)
   , image_count_(0)
   , cancelled_(false)
   , auto_crop_(false)
+  , adf_duplex_min_doc_width_(0.)
+  , adf_duplex_min_doc_height_(0.)
+  , adf_duplex_max_doc_width_(0.)
+  , adf_duplex_max_doc_height_(0.)
 {
   {
     log::trace ("getting basic device information");
@@ -1628,7 +1632,7 @@ compound_scanner::update_scan_area_(const media& size, value::map& vm) const
 }
 
 void
-compound_scanner::update_scan_area_max_(value::map& vm)
+compound_scanner::update_scan_area_range_(value::map& vm)
 {
   string docsrc = vm["doc-source"];
   boost::optional< information::source > src;
@@ -1639,9 +1643,22 @@ compound_scanner::update_scan_area_max_(value::map& vm)
 
   if (!src) return;             // FIXME mention this in the log
 
+  double min_x = (docsrc == "ADF" ? info_.adf->min_doc[0] : 0);
+  double min_y = (docsrc == "ADF" ? info_.adf->min_doc[1] : 0);
   double max_x = src->area[0];
   double max_y = src->area[1];
 
+  if (vm.count ("duplex") && docsrc == "ADF")
+    {
+      toggle t = vm["duplex"];
+      if (t)
+        {
+          if (adf_duplex_min_doc_width_)  min_x = adf_duplex_min_doc_width_;
+          if (adf_duplex_min_doc_height_) min_y = adf_duplex_min_doc_height_;
+          if (adf_duplex_max_doc_width_)  max_x = adf_duplex_max_doc_width_;
+          if (adf_duplex_max_doc_height_) max_y = adf_duplex_max_doc_height_;
+        }
+    }
   if (vm.count ("long-paper-mode") && docsrc == "ADF")
     {
       toggle t = vm["long-paper-mode"];
@@ -1661,34 +1678,82 @@ compound_scanner::update_scan_area_max_(value::map& vm)
         }
     }
 
+  min_x /= 100;
+  min_y /= 100;
   max_x /= 100;
   max_y /= 100;
 
   dynamic_pointer_cast< range > (constraints_["tl-x"])->upper (max_x);
   dynamic_pointer_cast< range > (constraints_["tl-y"])->upper (max_y);
+  dynamic_pointer_cast< range > (constraints_["br-x"])->lower (min_x);
   dynamic_pointer_cast< range > (constraints_["br-x"])->upper (max_x);
+  dynamic_pointer_cast< range > (constraints_["br-y"])->lower (min_y);
   dynamic_pointer_cast< range > (constraints_["br-y"])->upper (max_y);
 
   constraints_["br-x"]->default_value (max_x);
   constraints_["br-y"]->default_value (max_y);
 
-  if (vm.count ("scan-area")
-      && (   vm["scan-area"] == value ("Maximum")
-          || vm["scan-area"] == value ("Auto Detect")
-          || vm["scan-area"] == value ("Manual")))
+  quad infosrc = quad ();
+  quad capsrc  = quad ();
+  {
+    /**/ if (docsrc == "ADF")
+      {
+        infosrc = code_token::information::ADF;
+        capsrc  = code_token::capability::ADF;
+      }
+    else if (docsrc == "Document Table")
+      {
+        infosrc = code_token::information::FB;
+        capsrc  = code_token::capability::FB;
+      }
+    else if (docsrc == "TPU")
+      {
+        infosrc = code_token::information::TPU;
+        capsrc  = code_token::capability::TPU;
+      }
+  }
+
+  std::list< std::string > areas = media::within (min_x, min_y, max_x, max_y);
+  areas.push_back (SEC_N_("Manual"));
+  areas.push_back (SEC_N_("Maximum"));
+  if (   info_.supports_size_detection (infosrc)
+      || caps_.can_crop (capsrc)
+      || (   HAVE_MAGICK_PP
+          && vm.count ("lo-threshold")
+          && vm.count ("hi-threshold"))
+    )
+    areas.push_back (SEC_N_("Auto Detect"));
+
+  dynamic_pointer_cast< store > (constraints_["scan-area"])->assign (areas.begin (), areas.end ());
+  constraints_["scan-area"]->default_value ("Manual");
+
+  if (vm.count ("scan-area"))
     {
-      if (vm.count ("tl-x")
-          && (*constraints_["tl-x"])(vm["tl-x"]) != vm["tl-x"])
-        vm["tl-x"] = constraints_["tl-x"]->default_value ();
-      if (vm.count ("tl-y")
-          && (*constraints_["tl-y"])(vm["tl-y"]) != vm["tl-y"])
-        vm["tl-y"] = constraints_["tl-y"]->default_value ();
-      if (vm.count ("br-x")
-          && (*constraints_["br-x"])(vm["br-x"]) != vm["br-x"])
-        vm["br-x"] = constraints_["br-x"]->default_value ();
-      if (vm.count ("br-y")
-          && (*constraints_["br-y"])(vm["br-y"]) != vm["br-y"])
-        vm["br-y"] = constraints_["br-y"]->default_value ();
+      if (   vm["scan-area"] != value ("Maximum")
+          && vm["scan-area"] != value ("Auto Detect")
+          && vm["scan-area"] != value ("Manual"))
+        {
+          if ((*constraints_["scan-area"])(vm["scan-area"]) != vm["scan-area"])
+            vm["scan-area"] = constraints_["scan-area"]->default_value ();
+        }
+      // scan-area's value may have been changed here
+      if (   vm["scan-area"] == value ("Maximum")
+          || vm["scan-area"] == value ("Auto Detect")
+          || vm["scan-area"] == value ("Manual"))
+        {
+          if (vm.count ("tl-x")
+              && (*constraints_["tl-x"])(vm["tl-x"]) != vm["tl-x"])
+            vm["tl-x"] = constraints_["tl-x"]->default_value ();
+          if (vm.count ("tl-y")
+              && (*constraints_["tl-y"])(vm["tl-y"]) != vm["tl-y"])
+            vm["tl-y"] = constraints_["tl-y"]->default_value ();
+          if (vm.count ("br-x")
+              && (*constraints_["br-x"])(vm["br-x"]) != vm["br-x"])
+            vm["br-x"] = constraints_["br-x"]->default_value ();
+          if (vm.count ("br-y")
+              && (*constraints_["br-y"])(vm["br-y"]) != vm["br-y"])
+            vm["br-y"] = constraints_["br-y"]->default_value ();
+        }
     }
 }
 
@@ -1707,11 +1772,12 @@ is_auto_updated (const value::map::key_type& k, const value::map& vm)
     }
   return false;
 }
+}
 
 // FIXME flaming hack to take changing constraints into account
 bool
-satisfies_changing_constraint (const value::map::value_type& p,
-                               const value::map& vm, const information& info)
+compound_scanner::satisfies_changing_constraint (const value::map::value_type& p,
+                               const value::map& vm, const information& info) const
 {
   value::map::key_type    k = p.first;
   value::map::mapped_type v = p.second;
@@ -1722,13 +1788,25 @@ satisfies_changing_constraint (const value::map::value_type& p,
       double max_x;
       double max_y;
 
-      if (vm.at ("doc-source") == value ("ADF")
-          && vm.count ("long-paper-mode"))
+      if (vm.at ("doc-source") == value ("ADF"))
         {
-          if (vm.at ("long-paper-mode") == value (toggle (true)))
+          double min_x = 0.;
+          double min_y = 0.;
+
+          if (   vm.count ("long-paper-mode")
+              && vm.at ("long-paper-mode") == value (toggle (true)))
             {
               max_x = info.adf->max_doc[0];
               max_y = info.adf->max_doc[1];
+            }
+          else if (   vm.count ("duplex")
+                   && vm.at ("duplex") == value (toggle (true)))
+            {
+              max_x = (adf_duplex_max_doc_width_  ? adf_duplex_max_doc_width_  : info.adf->area[0]);
+              max_y = (adf_duplex_max_doc_height_ ? adf_duplex_max_doc_height_ : info.adf->area[1]);
+
+              min_x = (adf_duplex_min_doc_width_  ? adf_duplex_min_doc_width_  : info.adf->min_doc[0]);
+              min_y = (adf_duplex_min_doc_height_ ? adf_duplex_min_doc_height_ : info.adf->min_doc[1]);
             }
           else
             {
@@ -1737,11 +1815,17 @@ satisfies_changing_constraint (const value::map::value_type& p,
             }
           max_x /= 100;
           max_y /= 100;
+          min_x /= 100;
+          min_y /= 100;
 
-          if (k == "tl-x" || k == "br-x")
+          if (k == "tl-x")
             return (q < max_x);
-          if (k == "tl-y" || k == "br-y")
+          if (k == "br-x")
+            return (q > min_x && q < max_x);
+          if (k == "tl-y")
             return (q < max_y);
+          if (k == "br-y")
+            return (q > min_y && q < max_y);
         }
      if (vm.at ("doc-source") == value ("TPU")
           && vm.count ("alternative"))
@@ -1766,7 +1850,6 @@ satisfies_changing_constraint (const value::map::value_type& p,
         }
     }
   return false;
-}
 }
 
 //! \todo Don't use non-standard map::at() accessor
@@ -1831,7 +1914,7 @@ compound_scanner::finalize (const value::map& vm)
       remove (old_opts, final_vm);
       insert (new_opts, final_vm);
     }
-  update_scan_area_max_(final_vm);
+  update_scan_area_range_(final_vm);
 
   {
     // Users should be shown the actual transfer-format value, *not*
@@ -1970,12 +2053,12 @@ compound_scanner::finalize (const value::map& vm)
     if (br_x < tl_x) std::swap (tl_x, br_x);
     if (br_y < tl_y) std::swap (tl_y, br_y);
 
-    if (br_x - tl_x < min_width_ || br_y - tl_y < min_height_)
+    if (br_x - tl_x < min_area_width_ || br_y - tl_y < min_area_height_)
       BOOST_THROW_EXCEPTION
         (constraint::violation
          ((format (CCB_("Scan area too small.\n"
                         "The area needs to be larger than %1% by %2%."))
-           % min_width_ % min_height_).str ()));
+           % min_area_width_ % min_area_height_).str ()));
   }
 
   {                             // finalize resolution options
@@ -2310,7 +2393,15 @@ compound_scanner::configure_adf_options ()
 {
   if (!info_.adf) return;
 
-  add_doc_source_options (adf_, *info_.adf, caps_.adf->flags,
+  integer min_x = 0;
+  integer min_y = 0;
+  if (info_.adf->min_doc.size ())
+    {
+      min_x = info_.adf->min_doc[0];
+      min_y = info_.adf->min_doc[0];
+    }
+
+  add_doc_source_options (adf_, *info_.adf, min_x, min_y, caps_.adf->flags,
                           adf_res_x_, adf_res_y_, caps_);
 
   if (caps_.has_duplex ())
@@ -2368,7 +2459,7 @@ compound_scanner::configure_flatbed_options ()
 {
   if (!info_.flatbed) return;
 
-  add_doc_source_options (flatbed_, *info_.flatbed, caps_.fb->flags,
+  add_doc_source_options (flatbed_, *info_.flatbed, 0, 0, caps_.fb->flags,
                           fb_res_x_, fb_res_y_, caps_);
 }
 
@@ -2379,7 +2470,7 @@ compound_scanner::configure_tpu_options ()
   if (!info_.tpu) return;
 
   source_capabilities src_caps;
-  add_doc_source_options (tpu_, *info_.tpu,
+  add_doc_source_options (tpu_, *info_.tpu, 0, 0,
                           caps_.tpu ? caps_.tpu->flags : src_caps,
                           tpu_res_x_, tpu_res_y_,
                           caps_);
@@ -2391,13 +2482,15 @@ compound_scanner::configure_tpu_options ()
 void
 compound_scanner::add_doc_source_options (option::map& opts,
                                           const information::source& src,
+                                          const integer& min_w,
+                                          const integer& min_h,
                                           const source_capabilities& src_caps,
                                           const constraint::ptr& sw_res_x,
                                           const constraint::ptr& sw_res_y,
                                           const capabilities& caps) const
 {
   add_resolution_options (opts, sw_res_x, sw_res_y, src);
-  add_scan_area_options (opts, src);
+  add_scan_area_options (opts, min_w, min_h, src);
   add_crop_option (opts, src, src_caps, caps);
   add_deskew_option (opts, src_caps);
   add_overscan_option (opts, src_caps);
@@ -2601,13 +2694,17 @@ compound_scanner::add_resolution_options (option::map& opts,
  */
 void
 compound_scanner::add_scan_area_options (option::map& opts,
+                                         const integer& min_w,
+                                         const integer& min_h,
                                          const information::source& src) const
 {
   if (src.area.empty ()) return;
 
   const std::vector< integer >& area (src.area);
 
-  std::list< std::string > areas = media::within (double (area[0]) / 100,
+  std::list< std::string > areas = media::within (double (min_w)   / 100,
+                                                  double (min_h)   / 100,
+                                                  double (area[0]) / 100,
                                                   double (area[1]) / 100);
   areas.push_back (SEC_N_("Manual"));
   areas.push_back (SEC_N_("Maximum"));
