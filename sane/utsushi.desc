@@ -401,6 +401,11 @@
 :usbid     "0x04b8" "0x1121"
 :status    :good
 
+:model     "PID 1122"
+:interface "USB"
+:usbid     "0x04b8" "0x1122"
+:status    :good
+
 :model     "PID 1123"
 :interface "USB"
 :usbid     "0x04b8" "0x1123"
