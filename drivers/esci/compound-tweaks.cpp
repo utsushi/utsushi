@@ -619,7 +619,7 @@ DS_16x0::DS_16x0 (const connexion::ptr& cnx)
   defs.gmm = code_token::parameter::gmm::UG18;
 
   // Boost USB I/O throughput
-  defs.bsz = 256 * 1024;
+  defs.bsz = 1024 * 1024;
 
   // Color correction parameters
 
@@ -677,7 +677,7 @@ EP_30VA::EP_30VA (const connexion::ptr& cnx)
   defs.gmm = code_token::parameter::gmm::UG18;
 
   // Boost USB I/O throughput
-  defs.bsz = 1024 * 1024;
+  defs.bsz = 256 * 1024;
 
   // Color correction parameters
 
