@@ -430,6 +430,7 @@ namespace information {
   const quad PB   = CODE_TOKEN (NUMBER , UPPER_P, UPPER_B, SPACE  );
   const quad PRD  = CODE_TOKEN (NUMBER , UPPER_P, UPPER_R, UPPER_D);
   const quad VER  = CODE_TOKEN (NUMBER , UPPER_V, UPPER_E, UPPER_R);
+  const quad PRV  = CODE_TOKEN (NUMBER , UPPER_P, UPPER_R, UPPER_V);
   const quad DSZ  = CODE_TOKEN (NUMBER , UPPER_D, UPPER_S, UPPER_Z);
   const quad EXT  = CODE_TOKEN (NUMBER , UPPER_E, UPPER_X, UPPER_T);
   const quad DLS  = CODE_TOKEN (NUMBER , UPPER_D, UPPER_L, UPPER_S);

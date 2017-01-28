@@ -134,6 +134,7 @@ struct information
   bool has_push_button;
   std::vector< byte > product;
   std::vector< byte > version;
+  std::vector< byte > product_version;
   integer device_buffer_size;
   std::vector< quad > extension;
   bool truncates_at_media_end;
