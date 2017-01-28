@@ -51,6 +51,7 @@ information::operator== (const information& rhs) const
           && has_push_button                 == rhs.has_push_button
           && product                         == rhs.product
           && version                         == rhs.version
+          && product_version                 == rhs.product_version
           && device_buffer_size              == rhs.device_buffer_size
           && extension                       == rhs.extension
           && truncates_at_media_end          == rhs.truncates_at_media_end

@@ -553,7 +553,7 @@ DS_530_570W::DS_530_570W (const connexion::ptr& cnx)
   defs.gmm = code_token::parameter::gmm::UG18;
 
   // Boost USB I/O throughput
-  defs.bsz = 256 * 1024;
+  defs.bsz = 1024 * 1024;
   caps.bsz = capabilities::range (1, *defs.bsz);
 
   // Color correction parameters

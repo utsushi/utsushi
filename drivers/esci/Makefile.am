@@ -194,9 +194,11 @@ driverdata_DATA += data/DS-560.dat
 driverdata_DATA += data/DS-530.dat
 driverdata_DATA += data/DS-570W.dat
 driverdata_DATA += data/DS-760.dat
+driverdata_DATA += data/DS-770.dat
 driverdata_DATA += data/DS-860.dat
 driverdata_DATA += data/DS-1610.dat
 driverdata_DATA += data/DS-1630.dat
+driverdata_DATA += data/DS-1660W.dat
 driverdata_DATA += data/DS-5500.dat
 driverdata_DATA += data/DS-6500.dat
 driverdata_DATA += data/DS-7500.dat
@@ -227,7 +229,7 @@ clone_dat = \
 	    $< > $@
 
 $(srcdir)/data/DS-310.dat: $(srcdir)/data/DS-360W.dat
-	$(clone_dat)
+	sed -e 's,DS-360W,DS-310 ,' $< > $@
 
 $(srcdir)/data/DS-520.dat: $(srcdir)/data/DS-510.dat
 	$(clone_dat)
@@ -236,16 +238,19 @@ $(srcdir)/data/DS-560.dat: $(srcdir)/data/DS-510.dat
 	$(clone_dat)
 
 $(srcdir)/data/DS-570W.dat: $(srcdir)/data/DS-530.dat
-	$(clone_dat)
+	sed -e 's,DS-530 ,DS-570W,' $< > $@
 
 $(srcdir)/data/DS-760.dat: $(srcdir)/data/DS-860.dat
+	$(clone_dat)
+
+$(srcdir)/data/DS-770.dat: $(srcdir)/data/DS-530.dat
 	$(clone_dat)
 
 $(srcdir)/data/DS-1610.dat: $(srcdir)/data/DS-1630.dat
 	$(clone_dat)
 
 $(srcdir)/data/DS-1660W.dat: $(srcdir)/data/DS-1630.dat
-	$(clone_dat)
+	sed -e 's,DS-1630 ,DS-1660W,' $< > $@
 
 $(srcdir)/data/DS-6500.dat: $(srcdir)/data/DS-7500.dat
 	$(clone_dat)

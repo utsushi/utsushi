@@ -66,6 +66,7 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
      ^  qi::matches [ token_(PB) ]
      ^ (token_(PRD) > this->bin_hex_data_)
      ^ (token_(VER) > this->bin_hex_data_)
+     ^ (token_(PRV) > this->bin_hex_data_)
      ^ (token_(DSZ) > this->positive_)
      ^ (token_(EXT) > token_(value::LIST) > +info_ext_token_)
      ^  qi::matches [ token_(DLS) ]
@@ -255,6 +256,7 @@ BOOST_FUSION_ADAPT_STRUCT
  (bool, has_push_button)
  (std::vector< ESCI_NS::byte >, product)
  (std::vector< ESCI_NS::byte >, version)
+ (std::vector< ESCI_NS::byte >, product_version)
  (ESCI_NS::integer, device_buffer_size)
  (std::vector< ESCI_NS::quad >, extension)
  (bool, truncates_at_media_end)
