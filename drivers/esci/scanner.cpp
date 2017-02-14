@@ -124,6 +124,10 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
                || info.product_name () == "PID 08CC"
                || info.product_name () == "PID 08CE"
                || info.product_name () == "PID 08CF"
+               || info.product_name () == "PID 1112"
+               || info.product_name () == "PID 1125"
+               || info.product_name () == "PID 1126"
+               || info.product_name () == "PID 1127"
                )
         {
           sp = make_shared< PX_Mxxxx > (cnx);

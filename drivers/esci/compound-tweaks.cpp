@@ -423,6 +423,19 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
       info.adf->max_doc = info.adf->area;
     }
 
+  // In some devices, ADF max scan area differ between simplex and duplex
+  if (   "PID 1126" == info.product_name ()
+      && info.adf)
+    {
+      info.adf->min_doc[1] = 826;
+
+      if (info.adf->duplex_passes)
+        {
+          adf_duplex_min_doc_height_ = 1011;
+          adf_duplex_max_doc_height_ = 1170;
+        }
+    }
+
   // Disable 300dpi vertical resolution for performance reasons.
   // Acquiring at 400dpi is faster for some reason.
   if (caps.rss)
@@ -487,12 +500,52 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
   static const vector< double, 3 > gamma_exponent_1 = exp;
   static const matrix< double, 3 > profile_matrix_1 = mat;
 
+  exp[0] = 1.009;
+  exp[1] = 0.992;
+  exp[2] = 0.999;
+
+  mat[0][0] =  1.0042;  mat[0][1] =  0.0009;  mat[0][2] = -0.0051;
+  mat[1][0] =  0.0094;  mat[1][1] =  1.0411;  mat[1][2] = -0.0505;
+  mat[2][0] =  0.0092;  mat[2][1] = -0.1000;  mat[2][2] =  1.0908;
+
+  static const vector< double, 3 > gamma_exponent_2 = exp;
+  static const matrix< double, 3 > profile_matrix_2 = mat;
+
+  exp[0] = 1.010;
+  exp[1] = 0.997;
+  exp[2] = 0.993;
+
+  mat[0][0] =  0.9864;  mat[0][1] =  0.0248;  mat[0][2] = -0.0112;
+  mat[1][0] =  0.0021;  mat[1][1] =  1.0100;  mat[1][2] = -0.0121;
+  mat[2][0] =  0.0139;  mat[2][1] = -0.1249;  mat[2][2] =  1.1110;
+
+  static const vector< double, 3 > gamma_exponent_3 = exp;
+  static const matrix< double, 3 > profile_matrix_3 = mat;
+
+  exp[0] = 1.014;
+  exp[1] = 0.993;
+  exp[2] = 0.993;
+
+  mat[0][0] =  0.9861;  mat[0][1] =  0.0260;  mat[0][2] = -0.0121;
+  mat[1][0] =  0.0044;  mat[1][1] =  1.0198;  mat[1][2] = -0.0242;
+  mat[2][0] =  0.0132;  mat[2][1] = -0.1264;  mat[2][2] =  1.1132;
+
+  static const vector< double, 3 > gamma_exponent_4 = exp;
+  static const matrix< double, 3 > profile_matrix_4 = mat;
+
   static const std::map< std::string, const vector< double, 3 > >
     gamma_exponent = boost::assign::map_list_of
     ("PX-M7050",   gamma_exponent_1)
     ("PX-M7050FX", gamma_exponent_1)
     ("PX-M860F",   gamma_exponent_1)
     ("WF-6590",    gamma_exponent_1)
+    //
+    ("PID 1112",   gamma_exponent_2)
+    //
+    ("PID 1125",   gamma_exponent_3)
+    ("PID 1127",   gamma_exponent_3)
+    //
+    ("PID 1126",   gamma_exponent_4)
     ;
 
   static const std::map< std::string, const matrix< double, 3 > >
@@ -501,6 +554,13 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
     ("PX-M7050FX", profile_matrix_1)
     ("PX-M860F",   profile_matrix_1)
     ("WF-6590",    profile_matrix_1)
+    //
+    ("PID 1112",   profile_matrix_2)
+    //
+    ("PID 1125",   profile_matrix_3)
+    ("PID 1127",   profile_matrix_3)
+    //
+    ("PID 1126",   profile_matrix_4)
     ;
 
   try {
