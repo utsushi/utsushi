@@ -330,6 +330,11 @@
 :usbid     "0x04b8" "0x110f"
 :status    :good
 
+:model     "PID 1112"
+:interface "USB"
+:usbid     "0x04b8" "0x1112"
+:status    :good
+
 :model     "PID 1113"
 :interface "USB"
 :usbid     "0x04b8" "0x1113"
@@ -416,3 +421,23 @@
 :usbid     "0x04b8" "0x1123"
 :status    :good
 :comment   "EP-30VA?"
+
+:model     "PID 1125"
+:interface "USB"
+:usbid     "0x04b8" "0x1125"
+:status    :good
+
+:model     "PID 1126"
+:interface "USB"
+:usbid     "0x04b8" "0x1126"
+:status    :good
+
+:model     "PID 1127"
+:interface "USB"
+:usbid     "0x04b8" "0x1127"
+:status    :good
+
+:model     "PID 112B"
+:interface "USB"
+:usbid     "0x04b8" "0x112b"
+:status    :good
