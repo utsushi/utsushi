@@ -225,7 +225,7 @@ public:
     }
     not_empty_.notify_one ();
 
-    return bp->size_;
+    return n;
   }
 
   void mark (traits::int_type c, const context& ctx)

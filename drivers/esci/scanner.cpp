@@ -73,7 +73,10 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
           sp = make_shared< DS_40 > (cnx);
         }
       else if (   info.product_name () == "DS-310"
+               || info.product_name () == "DS-320"
                || info.product_name () == "DS-360W"
+               || info.product_name () == "ES-200"
+               || info.product_name () == "ES-300W"
                )
         {
           sp = make_shared< DS_3x0 > (cnx);
