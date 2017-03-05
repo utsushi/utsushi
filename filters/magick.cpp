@@ -183,17 +183,17 @@ magick::magick ()
      SEC_N_("Threshold")
      )
     ("brightness", (from< range > ()
-                    -> lower (-1.0)
-                    -> upper ( 1.0)
-                    -> default_value (0.0)),
+                    -> lower (-100)
+                    -> upper ( 100)
+                    -> default_value (0)),
      attributes (tag::enhancement)(level::standard),
      SEC_("Brightness"),
      CCB_("Change brightness of the acquired image.")
      )
     ("contrast", (from< range > ()
-                  -> lower (-1.0)
-                  -> upper ( 1.0)
-                  -> default_value (0.0)),
+                  -> lower (-100)
+                  -> upper ( 100)
+                  -> default_value (0)),
      attributes (tag::enhancement)(level::standard),
      SEC_("Contrast"),
      CCB_("Change contrast of the acquired image.")
@@ -237,10 +237,10 @@ magick::freeze_options ()
     threshold_ = thr.amount< double > ();
 
     quantity brightness = value ((*option_)["brightness"]);
-    brightness_ = brightness.amount< double > ();
+    brightness_ = brightness.amount< double > () / 100;
 
     quantity contrast = value ((*option_)["contrast"]);
-    contrast_ = contrast.amount< double > ();
+    contrast_ = contrast.amount< double > () / 100;
 
     toggle c = value ((*option_)["color-correction"]);
     color_correction_ = c;

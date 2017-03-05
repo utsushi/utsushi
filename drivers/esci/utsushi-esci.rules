@@ -40,6 +40,7 @@ ATTRS{idProduct}=="015c", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="015d", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="015e", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="015f", ENV{utsushi_driver}="esci"
+ATTRS{idProduct}=="0162", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="0163", ENV{utsushi_driver}="esci"
 
 ATTRS{idProduct}=="08bc", ENV{utsushi_driver}="esci"

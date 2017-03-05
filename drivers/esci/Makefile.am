@@ -187,6 +187,7 @@ endif # enable_boost_unit_test_framework
 driverdata_DATA  =
 driverdata_DATA += data/DS-40.dat
 driverdata_DATA += data/DS-310.dat
+driverdata_DATA += data/DS-320.dat
 driverdata_DATA += data/DS-360W.dat
 driverdata_DATA += data/DS-510.dat
 driverdata_DATA += data/DS-520.dat
@@ -205,6 +206,8 @@ driverdata_DATA += data/DS-7500.dat
 driverdata_DATA += data/DS-50000.dat
 driverdata_DATA += data/DS-60000.dat
 driverdata_DATA += data/DS-70000.dat
+driverdata_DATA += data/ES-200.dat
+driverdata_DATA += data/ES-300W.dat
 driverdata_DATA += data/PX-M7050.dat
 driverdata_DATA += data/PX-M7050FX.dat
 driverdata_DATA += data/PX-M860F.dat
@@ -231,6 +234,9 @@ clone_dat = \
 $(srcdir)/data/DS-310.dat: $(srcdir)/data/DS-360W.dat
 	sed -e 's,DS-360W,DS-310 ,' $< > $@
 
+$(srcdir)/data/DS-320.dat: $(srcdir)/data/DS-360W.dat
+	sed -e 's,DS-360W,DS-320 ,' $< > $@
+
 $(srcdir)/data/DS-520.dat: $(srcdir)/data/DS-510.dat
 	$(clone_dat)
 
@@ -256,6 +262,12 @@ $(srcdir)/data/DS-6500.dat: $(srcdir)/data/DS-7500.dat
 	$(clone_dat)
 
 $(srcdir)/data/DS-60000.dat: $(srcdir)/data/DS-70000.dat
+	$(clone_dat)
+
+$(srcdir)/data/ES-200.dat: $(srcdir)/data/DS-360W.dat
+	sed -e 's,DS-360W,ES-200 ,' $< > $@
+
+$(srcdir)/data/ES-300W.dat: $(srcdir)/data/DS-360W.dat
 	$(clone_dat)
 
 $(srcdir)/data/PX-M7050FX.dat: $(srcdir)/data/PX-M7050.dat

@@ -91,6 +91,7 @@ test-suite.log
 /drivers/esci/data/DS-1610.dat
 /drivers/esci/data/DS-1660W.dat
 /drivers/esci/data/DS-310.dat
+/drivers/esci/data/DS-320.dat
 /drivers/esci/data/DS-520.dat
 /drivers/esci/data/DS-560.dat
 /drivers/esci/data/DS-570W.dat
@@ -98,6 +99,8 @@ test-suite.log
 /drivers/esci/data/DS-6500.dat
 /drivers/esci/data/DS-760.dat
 /drivers/esci/data/DS-770.dat
+/drivers/esci/data/ES-200.dat
+/drivers/esci/data/ES-300W.dat
 /drivers/esci/data/PX-M7050FX.dat
 /drivers/esci/data/WF-6590.dat
 /drivers/esci/verify
