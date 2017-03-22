@@ -41,6 +41,9 @@ class device
 {
 public:
   device (const std::string& interface, const std::string& path);
+  device (const std::string& interface,
+          uint16_t vendor_id, uint16_t product_id,
+          const std::string& serial_number = std::string ());
   ~device ();
 
   std::string subsystem () const;

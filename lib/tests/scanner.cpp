@@ -33,49 +33,63 @@ BOOST_AUTO_TEST_CASE (udi_validation)
   BOOST_CHECK (!scanner::info::is_valid (""));
 
   BOOST_CHECK (!scanner::info::is_valid (":"));
-  BOOST_CHECK (!scanner::info::is_valid ("cnx:"));
-  BOOST_CHECK (!scanner::info::is_valid (":drv"));
-  BOOST_CHECK (!scanner::info::is_valid ("cnx:drv"));
+  BOOST_CHECK (!scanner::info::is_valid ("drv:"));
+  BOOST_CHECK (!scanner::info::is_valid (":cnx"));
+  BOOST_CHECK (!scanner::info::is_valid ("drv:cnx"));
 
   BOOST_CHECK (!scanner::info::is_valid ("::"));
-  BOOST_CHECK ( scanner::info::is_valid ("cnx::"));
-  BOOST_CHECK ( scanner::info::is_valid (":drv:"));
+  BOOST_CHECK ( scanner::info::is_valid ("drv::"));
+  BOOST_CHECK ( scanner::info::is_valid (":cnx:"));
   BOOST_CHECK (!scanner::info::is_valid ("::path"));
 
-  BOOST_CHECK ( scanner::info::is_valid ("cnx:drv:"));
-  BOOST_CHECK ( scanner::info::is_valid ("cnx::path"));
-  BOOST_CHECK ( scanner::info::is_valid (":drv:path"));
-  BOOST_CHECK ( scanner::info::is_valid ("cnx:drv:path"));
+  BOOST_CHECK ( scanner::info::is_valid ("drv:cnx:"));
+  BOOST_CHECK ( scanner::info::is_valid ("drv::path"));
+  BOOST_CHECK ( scanner::info::is_valid (":cnx:path"));
+  BOOST_CHECK ( scanner::info::is_valid ("drv:cnx:path"));
 
-  BOOST_CHECK ( scanner::info::is_valid ("cnx-net::"));
-  BOOST_CHECK (!scanner::info::is_valid ("cnx_net::"));
-  BOOST_CHECK ( scanner::info::is_valid (":drv-net:"));
-  BOOST_CHECK (!scanner::info::is_valid (":drv_net:"));
-  BOOST_CHECK ( scanner::info::is_valid ("cnx-net:drv-net:path_net"));
+  BOOST_CHECK ( scanner::info::is_valid ("drv-net::"));
+  BOOST_CHECK (!scanner::info::is_valid ("drv_net::"));
+  BOOST_CHECK ( scanner::info::is_valid (":cnx-net:"));
+  BOOST_CHECK (!scanner::info::is_valid (":cnx_net:"));
+  BOOST_CHECK ( scanner::info::is_valid ("drv-net:cnx-net:path_net"));
 
   // Linux USB device below /sys
   BOOST_CHECK_NO_THROW
-    (scanner::info ("cnx:drv:/sys/devices/pci0000:00/0000:00:1a.2/usb7/7-1"));
+    (scanner::info ("drv:cnx:/sys/devices/pci0000:00/0000:00:1a.2/usb7/7-1"));
   // IPv4 numeric address with port number
   BOOST_CHECK_NO_THROW
-    (scanner::info ("ipv4:drv://192.168.0.0:1865"));
+    (scanner::info ("drv:ipv4://192.168.0.0:1865"));
   // IPv6 with leading zeroes replaced by a double colon
   BOOST_CHECK_NO_THROW
-    (scanner::info ("ipv6:drv://::1"));
+    (scanner::info ("drv:ipv6://::1"));
 }
 
-BOOST_AUTO_TEST_CASE (fragment_splitting)
+BOOST_AUTO_TEST_CASE (simple_splitting)
 {
-  scanner::info info ("cnx:drv:path");
+  scanner::info info ("drv:cnx:path?query#fragment");
 
   BOOST_CHECK_EQUAL ("cnx", info.connexion ());
   BOOST_CHECK_EQUAL ("drv", info.driver ());
   BOOST_CHECK_EQUAL ("path", info.path ());
+  BOOST_CHECK_EQUAL ("query", info.query ());
+  BOOST_CHECK_EQUAL ("fragment", info.fragment ());
+}
+
+BOOST_AUTO_TEST_CASE (no_such_splitting)
+{
+  scanner::info drv ("drv::path#fragment");
+  scanner::info cnx (":cnx:?query");
+
+  BOOST_CHECK_EQUAL ("", drv.connexion ());
+  BOOST_CHECK_EQUAL ("", drv.query ());
+  BOOST_CHECK_EQUAL ("", cnx.driver ());
+  BOOST_CHECK_EQUAL ("", cnx.path ());
+  BOOST_CHECK_EQUAL ("", cnx.fragment ());
 }
 
 BOOST_AUTO_TEST_CASE (driver_splicing)
 {
-  scanner::info info ("cnx::path");
+  scanner::info info (":cnx:path");
 
   BOOST_CHECK (!info.is_driver_set ());
 
@@ -87,10 +101,24 @@ BOOST_AUTO_TEST_CASE (driver_splicing)
   BOOST_CHECK_EQUAL (path, info.path());
 }
 
+BOOST_AUTO_TEST_CASE (connexion_splicing)
+{
+  scanner::info info ("drv::path");
+
+  BOOST_CHECK (info.connexion ().empty ());
+
+  std::string path = info.path ();
+  BOOST_CHECK_EQUAL ("path", path);
+
+  info.connexion ("cnx");
+  BOOST_CHECK_EQUAL ("cnx", info.connexion ());
+  BOOST_CHECK_EQUAL (path, info.path());
+}
+
 BOOST_AUTO_TEST_CASE (local_device)
 {
-  scanner::info local  ("usb:drv:04b8:0123");   // vendor/product ID
-  scanner::info remote ("ipv4:drv://192.168.0.0:1865");
+  scanner::info local  ("drv:usb:04b8:0123");   // vendor/product ID
+  scanner::info remote ("drv:ipv4://192.168.0.0:1865");
 
   BOOST_CHECK ( local .is_local ());
   BOOST_CHECK (!remote.is_local ());

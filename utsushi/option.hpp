@@ -150,6 +150,9 @@ public:
   //! Create a snapshot of all current option values
   value::map values () const;
 
+  //! Returns submap of option map with key
+  option::map::ptr submap (const utsushi::key& k);
+
   //! Change a bunch of option values atomically
   void assign (const value::map& vm);
 
@@ -163,8 +166,9 @@ public:
 
   void relink ();               //!< \todo Remove relink() wart
 
-protected:
   virtual bool validate (const value::map& vm) const;
+
+protected:
   virtual void finalize (const value::map& vm);
 
   void insert (const option::map& om);

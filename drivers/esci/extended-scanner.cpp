@@ -248,6 +248,8 @@ extended_scanner::extended_scanner (const connexion::ptr& cnx)
   , defs_(true)
   , acquire_(true)
   , stat_(true)
+  , min_area_width_(0.05)
+  , min_area_height_(0.05)
   , read_back_(true)
   , cancelled_(false)
   , locked_(false)
@@ -262,24 +264,62 @@ extended_scanner::extended_scanner (const connexion::ptr& cnx)
         << stat_;
 
   unlock_scanner ();
+
+  // increase default buffer size
+  buffer_size_ = 256 * 1024;
+}
+
+static quantity
+nearest_(const quantity& q, const constraint::ptr cp)
+{
+  /**/ if (dynamic_cast< range * > (cp.get ()))
+    {
+      range *rp = dynamic_cast< range * > (cp.get ());
+
+      /**/ if (q < rp->lower ()) return rp->lower ();
+      else if (q > rp->upper ()) return rp->upper ();
+      else return q;
+    }
+  else if (dynamic_cast< store * > (cp.get ()))
+    {
+      store *sp = dynamic_cast< store * > (cp.get ());
+
+      store::const_iterator it = sp->begin ();
+      store::const_iterator rv = sp->begin ();
+      quantity diff;
+
+      while (sp->end () != it)
+        {
+          if (sp->begin () == it)
+            {
+              diff = abs (q - *it);
+              rv   = it;
+            }
+          else
+            {
+              quantity d = abs (q - *it);
+              if (d < diff)
+                {
+                  diff = d;
+                  rv = it;
+                }
+            }
+          ++it;
+        }
+      if (sp->end () != sp->begin ()) return *rv;
+    }
+
+  log::error ("no nearest value found, returning as is");
+
+  return q;
 }
 
 void
 extended_scanner::configure ()
 {
   configure_doc_source_options ();
-  {
-    add_options ()
-      ("resolution", (from< range > ()
-                      -> lower (int_cast (caps_.min_resolution ()))
-                      -> upper (int_cast (caps_.max_resolution ()))
-                      -> default_value
-                      (quantity (int_cast (defs_.resolution ().x ())))
-                      ),
-       attributes (tag::general)(level::standard),
-       SEC_N_("Resolution")
-       );
-  }
+  add_resolution_options ();
+
   {
     add_options ()
       ("image-type", (from< store > ()
@@ -307,7 +347,7 @@ extended_scanner::configure ()
        );
   }
 
-  if (caps_.command_level () != "D7")
+  if (caps_.command_level ().at (0) != 'D')
     add_options ()
       ("gamma-correction",
        (gamma_corrections ()
@@ -324,7 +364,7 @@ extended_scanner::configure ()
        attributes (),
        CCB_N_("Gamma")
        );
-  if (caps_.command_level () != "D7")
+  if (caps_.command_level ().at (0) != 'D')
     add_options ()
       ("color-correction",
        (color_corrections ()
@@ -335,7 +375,7 @@ extended_scanner::configure ()
        );
   else
     configure_color_correction ();
-  if (caps_.command_level () != "D7")
+  if (caps_.command_level ().at (0) != 'D')
     add_options ()
       ("auto-area-segmentation", toggle (defs_.auto_area_segmentation ()),
        attributes (tag::enhancement)(level::standard),
@@ -354,7 +394,7 @@ extended_scanner::configure ()
        SEC_N_("Threshold")
        );
   }
-  if (caps_.command_level () != "D7")
+  if (caps_.command_level ().at (0) != 'D')
     add_options ()
       ("dither-pattern",
        (dither_patterns ()
@@ -363,7 +403,7 @@ extended_scanner::configure ()
        attributes (tag::enhancement),
        CCB_N_("Dither Pattern")
        );
-  if (caps_.command_level () != "D7")
+  if (caps_.command_level ().at (0) != 'D')
     add_options ()
       ("sharpness", (from < range > ()
                      -> lower (int8_t (SMOOTHER))
@@ -375,7 +415,7 @@ extended_scanner::configure ()
        CCB_N_("Emphasize the edges in an image more by choosing a larger"
               " value, less by selecting a smaller value.")
        );
-  if (caps_.command_level () != "D7")
+  if (caps_.command_level ().at (0) != 'D')
     add_options ()
       ("brightness", (from< range > ()
                       -> lower (int8_t (DARKEST))
@@ -387,7 +427,7 @@ extended_scanner::configure ()
        CCB_N_("Make images look lighter with a larger value or darker with"
               " a smaller value.")
        );
-  if (caps_.command_level () != "D7")
+  if (caps_.command_level ().at (0) != 'D')
     add_options ()
       ("mirror", toggle (defs_.mirroring ()),
        attributes (tag::enhancement)(level::standard),
@@ -940,8 +980,8 @@ extended_scanner::set_up_transfer_size ()
 
     if (lc && lc != parm_.line_count ())
       log::error ("line-count: using %2% instead of %1%")
-        % lc
-        % parm_.line_count ()
+        % uint32_t (lc)
+        % uint32_t (parm_.line_count ())
         ;
   }
 }
@@ -1015,6 +1055,83 @@ extended_scanner::finalize (const value::map& vm)
         }
       update_scan_area_(size, final_vm);
     }
+
+  {                             // minimal scan area check
+    quantity tl_x = final_vm["tl-x"];
+    quantity tl_y = final_vm["tl-y"];
+    quantity br_x = final_vm["br-x"];
+    quantity br_y = final_vm["br-y"];
+
+    if (br_x < tl_x) std::swap (tl_x, br_x);
+    if (br_y < tl_y) std::swap (tl_y, br_y);
+
+    if (br_x - tl_x < min_area_width_ || br_y - tl_y < min_area_height_)
+      BOOST_THROW_EXCEPTION
+        (constraint::violation
+         ((format (CCB_("Scan area too small.\n"
+                        "The area needs to be larger than %1% by %2%."))
+           % min_area_width_ % min_area_height_).str ()));
+  }
+
+  {                             // finalize resolution options
+    boost::optional< toggle > resample;
+    {
+      if (final_vm.count ("enable-resampling"))
+        {
+          toggle t = final_vm["enable-resampling"];
+          resample = t;
+        }
+    }
+
+    if (resample)
+      {
+        // Both may be absent but if one exists, the other does not.
+        if (final_vm.count ("sw-resolution"))
+          {
+            descriptors_["sw-resolution"]->read_only (false);
+            descriptors_["sw-resolution"]->active (*resample);
+          }
+
+        if (final_vm.count ("resolution"))
+          {
+            descriptors_["resolution"]->active (!*resample);
+          }
+
+        if (*resample)          // update device resolutions
+          {
+            if (final_vm.count ("resolution"))
+              {
+                quantity q;
+
+                if (final_vm.count ("sw-resolution"))
+                  {
+                    q = final_vm["sw-resolution"];
+                  }
+
+                BOOST_ASSERT (quantity () != q);
+
+                final_vm["resolution"]
+                  = nearest_(q, constraints_["resolution"]);
+              }
+          }
+      }
+
+    if (resample)
+      {
+        if (!*resample)         // follow device resolutions
+          {
+            if (final_vm.count ("sw-resolution"))
+              {
+                if (final_vm.count ("resolution"))
+                  {
+                    final_vm["sw-resolution"]
+                      = nearest_(final_vm["resolution"],
+                                 constraints_["sw-resolution"]);
+                  }
+              }
+          }
+      }
+  }
 
   option::map::finalize (final_vm);
   relink ();
@@ -1111,6 +1228,75 @@ extended_scanner::configure_doc_source_options ()
 }
 
 void
+extended_scanner::add_resolution_options ()
+{
+  uint32_t max = caps_.max_resolution ();
+
+  if (!max)
+    max = std::numeric_limits< uint32_t >::max ();
+
+  constraint::ptr cp;
+
+  if (   caps_.product_name () == "GT-S650"
+      || caps_.product_name () == "Perfection V19"
+      || caps_.product_name () == "Perfection V39")
+  {
+    constraint::ptr r (from< store > ()
+                       -> alternative (300)
+                       -> alternative (600)
+                       -> alternative (1200)
+                       -> alternative (2400)
+                       -> alternative (4800)
+                       -> default_value (300));
+    const_cast< constraint::ptr& > (cp) = r;
+  }
+  else
+  {
+    constraint::ptr r (from< range > ()
+                       -> bounds (int_cast (caps_.min_resolution ()),
+                                  int_cast (caps_.max_resolution ()))
+                       -> default_value (quantity (int_cast (defs_.resolution ().x ()))));
+    const_cast< constraint::ptr& > (cp) = r;
+  }
+
+  if (cp)
+  {
+    add_options ()
+      ("resolution", cp,
+       attributes (tag::general)(level::standard),
+       SEC_N_("Resolution")
+        );
+  }
+  else
+  {
+    log::brief ("no hardware resolution options");
+  }
+
+  if (res_)
+    {
+      // repeat the above for software-emulated resolution options
+
+      add_options ()
+        ("enable-resampling", toggle (true),
+         attributes (tag::general),
+         SEC_N_("Enable Resampling"),
+         CCB_N_("This option provides the user with a wider range of supported"
+                " resolutions.  Resolutions not supported by the hardware will"
+                " be achieved through image processing methods.")
+          );
+      add_options ()
+        ("sw-resolution", res_,
+         attributes (tag::general)(level::standard).emulate (true),
+         SEC_N_("Resolution")
+          );
+    }
+  else
+    {
+      log::brief ("no software resolution options");
+    }
+}
+
+void
 extended_scanner::add_scan_area_options (option::map& opts,
                                          const source_value& src)
 {
@@ -1146,7 +1332,7 @@ extended_scanner::add_scan_area_options (option::map& opts,
      SEC_N_("Top Left X")
      )
     ("br-x", (from< range > ()
-              -> offset (bbox.offset ().x ())
+              -> offset (0.1 + bbox.offset ().x ())
               -> extent (bbox.width ())
               -> default_value (bbox.bottom_right ().x ())
               ),
@@ -1162,7 +1348,7 @@ extended_scanner::add_scan_area_options (option::map& opts,
      SEC_N_("Top Left Y")
      )
     ("br-y", (from< range > ()
-              -> offset (bbox.offset ().y ())
+              -> offset (0.1 + bbox.offset ().y ())
               -> extent (bbox.height ())
               -> default_value (bbox.bottom_right ().y ())
               ),
@@ -1332,7 +1518,7 @@ extended_scanner::clip_to_max_pixel_width (uint32_t tl_x, uint32_t br_x)
 void
 extended_scanner::configure_color_correction ()
 {
-  if (caps_.command_level () != "D7")
+  if (caps_.command_level ().at (0) != 'D')
     return;
 
   matrix< double, 3 > mat;
@@ -1360,6 +1546,12 @@ extended_scanner::configure_color_correction ()
   mat[2][0] =  0.0048;  mat[2][1] = -0.0624;  mat[2][2] =  1.0576;
 
   static const matrix< double, 3 > profile_matrix_4 = mat;
+
+  mat[0][0] =  1.0824;  mat[0][1] =  0.0085;  mat[0][2] = -0.0909;
+  mat[1][0] =  0.0339;  mat[1][1] =  1.1043;  mat[1][2] = -0.1382;
+  mat[2][0] =  0.0087;  mat[2][1] = -0.1557;  mat[2][2] =  1.1470;
+
+  static const matrix< double, 3 > profile_matrix_5 = mat;
 
   static const std::map< std::string, const matrix< double, 3 > >
     profile_matrix = boost::assign::map_list_of
@@ -1402,6 +1594,10 @@ extended_scanner::configure_color_correction ()
     ("PID 1120", profile_matrix_4)
     ("PID 1121", profile_matrix_4)
     ("PID 1122", profile_matrix_4)
+    //
+    ("GT-S650",        profile_matrix_5)
+    ("Perfection V19", profile_matrix_5)
+    ("Perfection V39", profile_matrix_5)
     ;
 
   try {

@@ -43,7 +43,7 @@ using std::invalid_argument;
 using std::runtime_error;
 using boost::filesystem::path;
 
-typedef void (*scanner_factory) (scanner::ptr&, connexion::ptr);
+typedef void (*scanner_factory) (const scanner::info&, scanner::ptr&);
 
 scanner_factory
 get_scanner_factory (const lt_dlhandle& handle)
@@ -53,7 +53,7 @@ get_scanner_factory (const lt_dlhandle& handle)
 }
 
 scanner::ptr
-scanner::create (connexion::ptr cnx, const scanner::info& info)
+scanner::create (const scanner::info& info)
 {
   if (!info.is_driver_set ())
     {
@@ -99,8 +99,8 @@ scanner::create (connexion::ptr cnx, const scanner::info& info)
     run_time rt;
     run_time::sequence_type search (rt.load_dirs (run_time::pkg, "driver"));
 
-  run_time::sequence_type::const_iterator it;
-  for (it = search.begin (); !handle && it != search.end (); ++it)
+    run_time::sequence_type::const_iterator it;
+    for (it = search.begin (); !handle && it != search.end (); ++it)
     {
       path p (*it);
 
@@ -132,7 +132,7 @@ scanner::create (connexion::ptr cnx, const scanner::info& info)
   if (!factory) BOOST_THROW_EXCEPTION (runtime_error (error));
 
   scanner::ptr rv;
-  factory (rv, cnx);
+  factory (info, rv);
   return rv;
 }
 
@@ -145,12 +145,25 @@ scanner::scanner (connexion::ptr cnx)
 
 scanner::info::info (const std::string& udi)
   : udi_(udi)
+  , usb_vendor_id_(0)
+  , usb_product_id_(0)
+  , dump_connexion_(false)
 {
   if (!is_valid (udi_))
     {
       BOOST_THROW_EXCEPTION
         (invalid_argument
          ((format ("syntax error: invalid UDI '%1%'") % udi_).str ()));
+    }
+
+  // Warn about old-style UDIs and fix them up.
+  // FIXME: remove this check in a future release.
+  if (connexion () == "esci"
+      || driver () == "usb" || driver () == "networkscan")
+    {
+      log::error ("detected deprecated old-style UDI: '%1%'") % udi_;
+      udi_ = connexion () + separator + driver () + separator + path ();
+      log::error ("Using: '%1%'") % udi_;
     }
 }
 
@@ -234,14 +247,38 @@ scanner::info::vendor (const std::string& vendor)
   vendor_ = vendor;
 }
 
+uint16_t
+scanner::info::usb_vendor_id () const
+{
+  return usb_vendor_id_;
+}
+
+uint16_t
+scanner::info::usb_product_id () const
+{
+  return usb_product_id_;
+}
+
+void
+scanner::info::usb_vendor_id (const uint16_t& vid)
+{
+  usb_vendor_id_ = vid;
+}
+
+void
+scanner::info::usb_product_id (const uint16_t& pid)
+{
+  usb_product_id_ = pid;
+}
+
 std::string
-scanner::info::connexion () const
+scanner::info::driver () const
 {
   return udi_.substr (0, udi_.find (separator));
 }
 
 std::string
-scanner::info::driver () const
+scanner::info::connexion () const
 {
   std::string::size_type pos1 = udi_.find (separator) + 1;
   std::string::size_type pos2 = udi_.find (separator, pos1);
@@ -252,16 +289,30 @@ scanner::info::driver () const
 void
 scanner::info::driver (const std::string& driver)
 {
-  std::string::size_type pos1 = udi_.find (separator) + 1;
-
   if (is_driver_set ())
     {
-      std::string::size_type pos2 = udi_.find (separator, pos1);
-      udi_.replace (pos1, pos2 - pos1, driver);
+      std::string::size_type pos = udi_.find (separator);
+      udi_.replace (0, pos, driver);
     }
   else
     {
-      udi_.insert (pos1, driver);
+      udi_.insert (0, driver);
+    }
+}
+
+void
+scanner::info::connexion (const std::string& connexion)
+{
+  std::string::size_type pos1 = udi_.find (separator) + 1;
+
+  if (!this->connexion ().empty ())
+    {
+      std::string::size_type pos2 = udi_.find (separator, pos1);
+      udi_.replace (pos1, pos2 - pos1, connexion);
+    }
+  else
+    {
+      udi_.insert (pos1, connexion);
     }
 }
 
@@ -281,9 +332,31 @@ std::string
 scanner::info::path () const
 {
   std::string::size_type pos1 = udi_.find (separator) + 1;
-  std::string::size_type pos2 = udi_.find (separator, pos1);
+  std::string::size_type pos2 = udi_.find (separator, pos1) + 1;
+  std::string::size_type pos3 = udi_.find_first_of ("?#", pos2);
 
-  return udi_.substr (pos2 + 1);
+  return udi_.substr (pos2, pos3 - pos2);
+}
+
+std::string
+scanner::info::query () const
+{
+  std::string::size_type pos1 = udi_.find ('?');
+  std::string::size_type pos2 = udi_.find ('#');
+
+  return (std::string::npos != pos1
+          ? udi_.substr (pos1 + 1, pos2 - pos1 - 1)
+          : std::string ());
+}
+
+std::string
+scanner::info::fragment () const
+{
+  std::string::size_type pos = udi_.find ('#');
+
+  return (std::string::npos != pos
+          ? udi_.substr (pos + 1)
+          : std::string ());
 }
 
 std::string
@@ -305,6 +378,24 @@ scanner::info::is_local () const
 }
 
 bool
+scanner::info::is_same_usb_device (const uint16_t& vid, const uint16_t& pid) const
+{
+  return (usb_vendor_id () == vid && usb_product_id () == pid);
+}
+
+void
+scanner::info::enable_debug (const bool debug)
+{
+  dump_connexion_ = debug;
+}
+
+bool
+scanner::info::enable_debug () const
+{
+  return dump_connexion_;
+}
+
+bool
 scanner::info::is_valid (const std::string& udi)
 {
   using std::string;
@@ -319,27 +410,33 @@ scanner::info::is_valid (const std::string& udi)
   if (string::npos == sep1)
     return false;
 
-  const string cnx (udi.substr (0, sep1));
+  const string drv (udi.substr (0, sep1));
   sep1 += 1;
 
   string::size_type sep2 = udi.find (separator, sep1);
   if (string::npos == sep2)
     return false;
 
-  const string drv (udi.substr (sep1, sep2 - sep1));
+  const string cnx (udi.substr (sep1, sep2 - sep1));
   sep2 += 1;
 
-  if (cnx.empty () && drv.empty ())
+  if (drv.empty () && cnx.empty ())
     return false;
 
   const regex scheme ("[[:alpha:]][-+.[:alnum:]]*");
 
-  if (!cnx.empty () && !regex_match (cnx, scheme))
-    return false;
   if (!drv.empty () && !regex_match (drv, scheme))
+    return false;
+  if (!cnx.empty () && !regex_match (cnx, scheme))
     return false;
 
   return true;
+}
+
+bool
+scanner::info::operator== (const scanner::info& rhs) const
+{
+  return (udi_ == rhs.udi_);
 }
 
 const char scanner::info::separator = ':';

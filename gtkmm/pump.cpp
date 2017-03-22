@@ -38,6 +38,22 @@ pump::pump (idevice::ptr idev)
   connect_< input > (in, idev_ptr_);
 }
 
+pump::~pump ()
+{
+  acq_marker_connection_[in].disconnect ();
+  gui_marker_connection_[in].disconnect ();
+  acq_update_connection_[in].disconnect ();
+  gui_update_connection_[in].disconnect ();
+
+  acq_marker_connection_[out].disconnect ();
+  gui_marker_connection_[out].disconnect ();
+  acq_update_connection_[out].disconnect ();
+  gui_update_connection_[out].disconnect ();
+
+  acq_notify_connection_.disconnect ();
+  gui_notify_connection_.disconnect ();
+}
+
 void
 pump::start (odevice::ptr odev)
 {

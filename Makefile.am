@@ -31,6 +31,7 @@ SUBDIRS += filters
 if with_gtkmm
 SUBDIRS += gtkmm
 endif
+SUBDIRS += drivers
 SUBDIRS += drivers/esci
 if WITH_SANE
 SUBDIRS += sane

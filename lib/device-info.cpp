@@ -25,6 +25,9 @@
 
 #include "utsushi/device-info.hpp"
 
+#include "utsushi/cstdint.hpp"
+#include "utsushi/regex.hpp"
+
 #if HAVE_LIBUDEV
 #include "udev.hpp"
 #endif
@@ -35,6 +38,24 @@ device_info::ptr
 device_info::create (const std::string& interface, const std::string& path)
 {
   device_info::ptr rv;
+
+  if (!rv && interface == "usb")
+    {
+      const regex re (  "(0x)?([[:xdigit:]]{1,4})"      // VID
+                       ":(0x)?([[:xdigit:]]{1,4})"      // PID
+                      "(:(.*))?");                      // serial
+      smatch m;
+      if (regex_match (path, m, re))
+        {
+          uint16_t vid = strtol (m[2].str().c_str (), NULL, 16);
+          uint16_t pid = strtol (m[4].str().c_str (), NULL, 16);
+
+#if HAVE_LIBUDEV
+          rv = make_shared< udev_::device > (interface, vid, pid,
+                                             m[6].str ());
+#endif
+        }
+    }
 
 #if HAVE_LIBUDEV
   if (!rv) rv = make_shared< udev_::device > (interface, path);

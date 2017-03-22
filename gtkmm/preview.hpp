@@ -60,8 +60,8 @@ class preview : public Gtk::HBox, public odevice
   odevice::ptr  odevice_;
   stream::ptr   stream_;
 
-  option::map::ptr control_;    //! \todo replace control_ to current_
-  option::map::ptr current_;
+  option::map::ptr opts_;
+  option::map::ptr ui_control_;
 
 public:
   preview (BaseObjectType *ptr, Glib::RefPtr<Gtk::Builder>& builder);

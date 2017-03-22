@@ -24,7 +24,7 @@ dnl  Process this file with autoconf to make a configure file.
 dnl  preamble
 
 AC_PREREQ(2.62)
-AC_INIT([Utsushi], [0.27.0],
+AC_INIT([Utsushi], [0.28.0],
         [linux-scanner@epson.jp],
         [utsushi])
 
@@ -627,6 +627,7 @@ AC_CONFIG_FILES([
   connexions/Makefile
   doc/Makefile
   doc/tests/Makefile
+  drivers/Makefile
   drivers/esci/Makefile
   drivers/esci/tests/Makefile
   filters/Makefile

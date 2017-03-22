@@ -23,6 +23,7 @@
 #endif
 
 #include <cerrno>
+#include <cstdio>
 #include <cstring>
 #include <iomanip>
 #include <sstream>
@@ -31,6 +32,10 @@
 #include <boost/throw_exception.hpp>
 
 #include "udev.hpp"
+
+#include "utsushi/log.hpp"
+
+using utsushi::log;
 
 namespace udev_ {
 
@@ -84,10 +89,8 @@ namespace {
 //! Handle to udev config file content, needed by all udev API calls
 struct udev *ctx_(nullptr);
 
-}       // namespace
-
-device::device (const std::string& interface,
-                const std::string& path)
+void
+acquire_ctx ()
 {
   if (ctx_)
     {
@@ -107,8 +110,65 @@ device::device (const std::string& interface,
             (std::runtime_error ("cannot initialize libudev"));
         }
     }
+}
 
+void
+release_ctx ()
+{
+  /*! \todo Release context if possible but this requires version 183
+   *        or later which changed the return value of udev_unref().
+   *        Versions before 183, i.e. before libudev1, return nothing.
+   *
+   *  ctx_ = udev_unref (ctx_);
+   */
+}
+
+}       // namespace
+
+device::device (const std::string& interface,
+                const std::string& path)
+{
+  acquire_ctx ();
   dev_ = udev_device_new_from_syspath (ctx_, path.c_str ());
+  if (!dev_)
+    {
+      BOOST_THROW_EXCEPTION
+        (std::runtime_error (strerror (ENODEV)));
+    }
+}
+
+device::device (const std::string& subsystem,
+                uint16_t vendor_id, uint16_t product_id,
+                const std::string& serial_number)
+{
+  acquire_ctx ();
+
+  struct udev_enumerate *it = udev_enumerate_new (ctx_);
+  udev_enumerate_add_match_subsystem (it, subsystem.c_str ());
+
+  char vid[4+1]; snprintf (vid, sizeof (vid), "%04x", vendor_id);
+  char pid[4+1]; snprintf (pid, sizeof (pid), "%04x", product_id);
+  udev_enumerate_add_match_sysattr (it, "idVendor", vid);
+  udev_enumerate_add_match_sysattr (it, "idProduct", pid);
+
+  if (!serial_number.empty ())
+    udev_enumerate_add_match_property (it, "ID_SERIAL_SHORT",
+                                       serial_number.c_str ());
+
+  udev_enumerate_scan_devices (it);
+  struct udev_list_entry * entry = udev_enumerate_get_list_entry (it);
+  const char * path = udev_list_entry_get_name (entry);
+
+  if (udev_list_entry_get_next (entry))
+    log::brief ("udev: multiple matches for %1%:%2%:%3%")
+      % subsystem % vid % pid;
+
+  log::brief ("udev: mapping %1%:%2%:%3% to %4%")
+    % subsystem % vid % pid % path;
+
+  dev_ = udev_device_new_from_syspath (ctx_, path);
+  udev_enumerate_unref (it);
+
   if (!dev_)
     {
       BOOST_THROW_EXCEPTION
@@ -119,12 +179,7 @@ device::device (const std::string& interface,
 device::~device ()
 {
   udev_device_unref (dev_);
-  /*! \todo Release context if possible but this requires version 183
-   *        or later which changed the return value of udev_unref().
-   *        Versions before 183, i.e. before libudev1, return nothing.
-   *
-   *  ctx_ = udev_unref (ctx_);
-   */
+  release_ctx ();
 }
 
 std::string

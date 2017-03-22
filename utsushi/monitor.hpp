@@ -23,6 +23,7 @@
 #define utsushi_monitor_hpp_
 
 #include <istream>
+#include <list>
 #include <set>
 #include <string>
 
@@ -44,7 +45,7 @@ class monitor
   typedef scanner::info key_type;
 
 public:
-  typedef std::set< key_type > container_type;
+  typedef std::list< key_type > container_type;
   typedef container_type::size_type size_type;
   typedef container_type::const_iterator const_iterator;
 

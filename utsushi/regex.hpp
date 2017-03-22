@@ -52,6 +52,7 @@ namespace utsushi {
 using NAMESPACE::cmatch;
 using NAMESPACE::regex;
 using NAMESPACE::regex_match;
+using NAMESPACE::sregex_iterator;
 using NAMESPACE::smatch;
 
 }       // namespace utsushi

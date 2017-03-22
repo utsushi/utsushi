@@ -251,6 +251,21 @@ option::map::values () const
   return vm;
 }
 
+option::map::ptr
+option::map::submap (const utsushi::key& k)
+{
+  option::map::ptr sm;
+  try
+    {
+      sm = submaps_.at (k);
+    }
+  catch (const std::out_of_range&)
+    {
+      log::error ("No such submap [%1%]") % k;
+    }
+  return sm;
+}
+
 void
 option::map::assign (const value::map& vm)
 {

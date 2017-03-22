@@ -61,7 +61,6 @@
 #include <utsushi/stream.hpp>
 #include <utsushi/value.hpp>
 
-#include "../connexions/hexdump.hpp"
 #include "../filters/autocrop.hpp"
 #include "../filters/deskew.hpp"
 #include "../filters/g3fax.hpp"
@@ -177,12 +176,10 @@ create (const std::string& udi, bool debug)
                          % udi).str ()));
     }
 
-  connexion::ptr cnx (connexion::create (it->connexion (), it->path ()));
+  scanner::info info (*it);
+  info.enable_debug (debug);
 
-  if (debug)
-    cnx = make_shared< _cnx_::hexdump > (cnx);
-
-  scanner::ptr rv = scanner::create (cnx, *it);
+  scanner::ptr rv = scanner::create (info);
 
   if (rv) return rv;
 
@@ -318,7 +315,8 @@ public:
 
   void operator() (const option& opt) const
   {
-    if (opt.is_read_only ()) return;
+    if (opt.is_read_only ())
+      return;
 
     value val (opt);
     option_visitor v (desc_, opt, option_blacklist_, resampling_);
