@@ -29,6 +29,11 @@
 #include <utsushi/connexion.hpp>
 
 namespace utsushi {
+
+extern "C" {
+  void libcnx_hexdump_LTX_factory (connexion::ptr& cnx);
+}
+
 namespace _cnx_ {
 
 class hexdump

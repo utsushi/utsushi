@@ -29,9 +29,11 @@
 #include "compound-scanner.hpp"
 #include "compound-tweaks.hpp"
 #include "extended-scanner.hpp"
+#include "extended-tweaks.hpp"
 #include "getter.hpp"
 #include "scanner.hpp"
 #include "scanner-inquiry.hpp"
+#include "get-extended-status.hpp"
 
 #ifdef HAVE_STANDARD_SCANNER
 #include "standard-scanner.hpp"
@@ -41,9 +43,27 @@ namespace utsushi {
 
 extern "C" {
 
-void
-libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
+bool
+is_interpreter (const std::string& cnx)
 {
+  return !(cnx == "usb" || cnx == "networkscan");
+}
+
+void
+libdrv_esci_LTX_scanner_factory (const scanner::info& info, scanner::ptr& rv)
+{
+  std::string cnx_type = info.connexion ();
+  std::string cnx_path = info.path ();
+  bool cnx_debug = info.enable_debug ();
+
+  if (is_interpreter (cnx_type))        // expand shorthand notation
+    {
+      cnx_type.insert (0, "esci-");
+      if (0 != cnx_path.find ("usb:"))
+        cnx_path.insert (0, "usb:");
+    }
+  connexion::ptr cnx (connexion::create (cnx_type, cnx_path, cnx_debug));
+
   using namespace _drv_;
 
   esci::scanner::ptr sp;
@@ -168,7 +188,22 @@ libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx)
           *cnx << ESC_F;
           if (ESC_F.supports_extended_commands ())
             {
-              sp = make_shared< extended_scanner > (cnx);
+              get_extended_status ESC_f;
+
+              *cnx << ESC_f;
+
+              log::brief ("detected a '%1%'") % ESC_f.product_name ();
+
+              /**/ if (   ESC_f.product_name () == "GT-S650"
+                       || ESC_f.product_name () == "Perfection V19"
+                       || ESC_f.product_name () == "Perfection V39")
+                {
+                  sp = make_shared< GT_S650 > (cnx);
+                }
+              else
+                {
+                  sp = make_shared< extended_scanner > (cnx);
+                }
             }
 #ifdef HAVE_STANDARD_SCANNER
           else

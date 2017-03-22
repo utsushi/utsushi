@@ -43,6 +43,8 @@ public:
 
   pump (idevice::ptr idev);
 
+  ~pump ();
+
   void start (odevice::ptr odev);
   void start (stream::ptr str);
 

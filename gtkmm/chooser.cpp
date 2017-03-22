@@ -31,7 +31,6 @@
 
 #include <gtkmm/main.h>
 
-#include <utsushi/connexion.hpp>
 #include <utsushi/format.hpp>
 #include <utsushi/log.hpp>
 #include <utsushi/i18n.hpp>
@@ -162,22 +161,15 @@ chooser::create_device (const std::set<scanner::info>& devices,
     std::string  why;
     try
       {
-        // FIXME This is a bit clunky but both calls may be time
+        // FIXME This is a bit clunky but scanner creation may be time
         //       consuming and cannot be put in a separate thread if
-        //       the connexion and/or the scanner objects are run via
-        //       process separation.  The child process would exit at
-        //       the end of the thread.
+        //       the scanner object is run via process separation.
+        //       The child process would exit at thread end.
 
         while (Gtk::Main::events_pending ())
           Gtk::Main::iteration ();
 
-        connexion::ptr cnx (connexion::create (it->connexion (),
-                                               it->path ()));
-
-        while (Gtk::Main::events_pending ())
-          Gtk::Main::iteration ();
-
-        ptr = scanner::create (cnx, *it);
+        ptr = scanner::create (*it);
       }
     catch (const std::exception& e)
       {

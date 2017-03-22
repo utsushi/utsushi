@@ -81,6 +81,7 @@ protected:
   const option::map& doc_source_options (const value& v) const;
 
   void configure_doc_source_options ();
+  void add_resolution_options ();
   void add_scan_area_options (option::map& opts, const source_value& src);
 
   media probe_media_size_(const string& doc_source);
@@ -98,12 +99,19 @@ protected:
   void lock_scanner ();
   void unlock_scanner ();
 
-private:
   const get_extended_identity caps_;
   const get_scan_parameters   defs_;
 
+  // Preferred resolution constraints for when software emulation is
+  // available
+  const constraint::ptr res_;
+  //! @}
+
   start_extended_scan acquire_;
   get_scanner_status  stat_;
+
+  const quantity min_area_width_;
+  const quantity min_area_height_;
 
   set_scan_parameters parm_;
   bool read_back_;              //!< \todo Move to base class

@@ -32,10 +32,10 @@
 namespace utsushi {
 
 extern "C" {
-  //! Create a suitable scanner object for the device at \a cnx
-  /*! This factory method contains all the smarts needed to divine an
-   *  appropriate scanner subclass for the device that's dangling off
-   *  the end of a connexion \a cnx.  It has a basic understanding of
+  //! Create a suitable scanner object from the given \a info
+  /*! This factory method contains all the smarts needed to set up a
+   *  connexion and determine an appropriate scanner subclass for a
+   *  device for the \a info given.  It has a basic understanding of
    *  the most fundamental bits of all supported protocol variants as
    *  well as detailed knowledge of the scanner class hierarchy that
    *  captures all the device (family) specific idiosyncracies.
@@ -46,7 +46,8 @@ extern "C" {
    *  When unable to instantiate a suitable scanner object, the \a rv
    *  return value is not modified.
    */
-  void libdrv_esci_LTX_scanner_factory (scanner::ptr& rv, connexion::ptr cnx);
+  void libdrv_esci_LTX_scanner_factory (const scanner::info& info,
+                                        scanner::ptr& rv);
 }
 
 namespace _drv_ {

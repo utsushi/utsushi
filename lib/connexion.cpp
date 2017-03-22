@@ -45,6 +45,7 @@
 #include "utsushi/run-time.hpp"
 #include "utsushi/thread.hpp"
 #include "connexions/usb.hpp"
+#include "connexions/hexdump.hpp"
 
 namespace fs = boost::filesystem;
 
@@ -54,7 +55,7 @@ const double seconds = 1.0;
 namespace utsushi
 {
   connexion::ptr
-  connexion::create (const std::string& type, const std::string& path)
+  connexion::create (const std::string& type, const std::string& path, const bool debug)
   {
     ptr cnx;
    /**/ if ("usb" == type)
@@ -68,9 +69,15 @@ namespace utsushi
 
         libcnx_usb_LTX_factory (cnx, type, path);
       }
-    else
+    else if (!type.empty ())
       {
         cnx = make_shared< ipc::connexion > (type, path);
+      }
+
+    if (debug)
+      {
+        // same as usb. see comment above.
+        libcnx_hexdump_LTX_factory (cnx);
       }
 
     if (!cnx)

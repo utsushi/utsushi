@@ -45,12 +45,12 @@ public:
   typedef signal< void (traits::int_type) >       marker_signal_type;
   typedef signal< void (streamsize, streamsize) > update_signal_type;
 
-  connection connect_marker (const marker_signal_type::slot_type& slot) const
+  virtual connection connect_marker (const marker_signal_type::slot_type& slot) const
   {
     return signal_marker_.connect (slot);
   }
 
-  connection connect_update (const update_signal_type::slot_type& slot) const
+  virtual connection connect_update (const update_signal_type::slot_type& slot) const
   {
     return signal_update_.connect (slot);
   }

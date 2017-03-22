@@ -28,6 +28,7 @@ SUBDIRS += tests
 
 AM_CPPFLAGS += -DFUSION_MAX_VECTOR_SIZE=22
 AM_CPPFLAGS += -DESCI_GRAMMAR_TRACE=1
+AM_CPPFLAGS += -DPKGLIBDIR="\"$(pkglibdir)\""
 AM_LDFLAGS  += $(BOOST_LDFLAGS)
 
 driver = esci
@@ -61,6 +62,8 @@ libdrv_esci_la_SOURCES += constant.hpp
 libdrv_esci_la_SOURCES += exception.hpp
 libdrv_esci_la_SOURCES += extended-scanner.cpp
 libdrv_esci_la_SOURCES += extended-scanner.hpp
+libdrv_esci_la_SOURCES += extended-tweaks.cpp
+libdrv_esci_la_SOURCES += extended-tweaks.hpp
 libdrv_esci_la_SOURCES += get-command-parameters.cpp
 libdrv_esci_la_SOURCES += get-command-parameters.hpp
 libdrv_esci_la_SOURCES += get-extended-identity.cpp
@@ -154,6 +157,37 @@ exec_udev_rulesdir = $(UDEV_SYSCONFDIR)/rules.d
 exec_udev_rules_DATA = utsushi-esci.rules
 
 endif # enable_udev_config
+
+driverexeclibdir = $(pkglibexecdir)
+
+AM_INSTALLCHECK_STD_OPTIONS_EXEMPT = $(driverexeclib_PROGRAMS)
+
+# WARNING: The esci-interpreter cannot link with any of the Utsushi
+#          libraries, directly or indirectly, for licensing reasons.
+
+driverexeclib_PROGRAMS = esci-interpreter
+
+esci_interpreter_CPPFLAGS  = $(AM_CPPFLAGS)
+esci_interpreter_CPPFLAGS += $(BOOST_CPPFLAGS)
+esci_interpreter_CPPFLAGS += $(LTDLINCL)
+esci_interpreter_CXXFLAGS  = $(AM_CXXFLAGS)
+esci_interpreter_CXXFLAGS += $(LIBUSB_CFLAGS)
+esci_interpreter_CXXFLAGS += $(LIBUDEV_CFLAGS)
+esci_interpreter_LDADD     =
+esci_interpreter_LDADD    += $(LIBLTDL)
+esci_interpreter_LDADD    += $(LIBUSB_LIBS)
+esci_interpreter_LDADD    += $(LIBUDEV_LIBS)
+esci_interpreter_SOURCES   =
+esci_interpreter_SOURCES  += interpreter.cpp
+esci_interpreter_SOURCES  += interpreter.hpp
+esci_interpreter_SOURCES  += connexion.cpp
+esci_interpreter_SOURCES  += connexion.hpp
+esci_interpreter_SOURCES  += machine.cpp
+esci_interpreter_SOURCES  += machine.hpp
+esci_interpreter_SOURCES  += usb.cpp
+esci_interpreter_SOURCES  += usb.hpp
+esci_interpreter_SOURCES  += udev.cpp
+esci_interpreter_SOURCES  += udev.hpp
 
 if enable_boost_unit_test_framework
 

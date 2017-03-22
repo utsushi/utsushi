@@ -674,6 +674,17 @@ dialog::on_scan (void)
         str->push (make_shared< pdf > (gen));
       }
   }
+
+  // Make pump just before starting scan
+  pump_ = make_shared< pump > (idevice_);
+
+  pump_->signal_marker (pump::in)
+    .connect (sigc::mem_fun (*this, &dialog::on_scan_update));
+  pump_->signal_marker (pump::out)
+    .connect (sigc::mem_fun (*this, &dialog::on_scan_update));
+  pump_->signal_notify ()
+    .connect (sigc::mem_fun (*this, &dialog::on_notify));
+
   {
     scan_started_ = false;
     rewire_dialog (true);
@@ -818,14 +829,6 @@ dialog::on_device_changed (utsushi::scanner::ptr idev)
 
   signal_options_changed_.emit (opts_, option_blacklist);
 
-  pump_ = make_shared< pump > (idev);
-
-  pump_->signal_marker (pump::in)
-    .connect (sigc::mem_fun (*this, &dialog::on_scan_update));
-  pump_->signal_marker (pump::out)
-    .connect (sigc::mem_fun (*this, &dialog::on_scan_update));
-  pump_->signal_notify ()
-    .connect (sigc::mem_fun (*this, &dialog::on_notify));
 
   set_sensitive ();
 }

@@ -97,6 +97,7 @@ AM_CPPFLAGS += -DPKGDATADIR="\"$(pkgdatadir)\""
 AM_CPPFLAGS += -DLOCALEDIR="\"$(localedir)\""
 AM_CPPFLAGS += -DPKGSYSCONFDIR="\"$(pkgsysconfdir)\""
 AM_CPPFLAGS += -DPKGCONFFILE="\"$(PACKAGE_TARNAME).conf\""
+AM_CPPFLAGS += -DCOMBOCONFFILE="\"combo.conf\""
 AM_CXXFLAGS += $(LIBUDEV_CFLAGS)
 ## FIXME: remove once the USB connexion has become a proper plugin
 AM_CXXFLAGS += $(LIBUSB_CFLAGS)

@@ -34,6 +34,15 @@
 namespace utsushi {
 namespace _cnx_ {
 
+extern "C" {
+
+  void
+  libcnx_hexdump_LTX_factory (connexion::ptr& cnx)
+  {
+    cnx = make_shared< hexdump > (cnx);
+  }
+}
+
 using namespace std;
 
 void

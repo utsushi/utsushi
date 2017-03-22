@@ -37,7 +37,7 @@ public:
   typedef shared_ptr< scanner > ptr;
 
   class info;
-  static ptr create (connexion::ptr cnx, const scanner::info& info);
+  static ptr create (const scanner::info& info);
 
 protected:
   scanner (connexion::ptr cnx);
@@ -63,7 +63,7 @@ protected:
  *  stays as close as possible to the URI specification but there is
  *  one important difference.  Rather than using a single \em scheme,
  *  UDI's use \em two.  This comes about because access to a typical
- *  scanner device involves both a wire protocol as well as a device
+ *  scanner device involves both a device protocol as well as a wire
  *  protocol.  Using Augmented Backus-Naur Form (ABNF), one could
  *  define:
  *  \verbatim
@@ -79,14 +79,14 @@ protected:
  *  UDI definition becomes:
  *  \verbatim
   UDI       = protocols ":" hier-part [ "?" query ] [ "#" fragment ]
-  protocols = connexion ":" driver
-            / connexion ":"
-            / ":" driver
+  protocols = driver ":" connexion
+            / driver ":"
+            / ":" connexion
   connexion = scheme
   driver    = scheme
   \endverbatim
- *  where the \c connexion and \c driver parts refer to the wire and
- *  device protocols, respectively.
+ *  where the \c driver and \c connexion parts refer to the device and
+ *  wire protocols, respectively.
  *
  *  \sa http://tools.ietf.org/html/rfc3986
  */
@@ -113,16 +113,28 @@ public:
   void vendor (const std::string& vendor);
   //! @}
 
+  //! \name Interface-Specific Information
+  //! @{
+  uint16_t usb_vendor_id () const;
+  uint16_t usb_product_id () const;
+
+  void usb_vendor_id (const uint16_t& vid);
+  void usb_product_id (const uint16_t& pid);
+  //! @}
+
   //! \name UDI Component Information
   //! @{
-  std::string connexion () const;
   std::string driver () const;
+  std::string connexion () const;
 
   void driver (const std::string& driver);
+  void connexion (const std::string& connexion);
 
   std::string host () const;
   std::string port () const;
   std::string path () const;
+  std::string query () const;
+  std::string fragment () const;
   //! @}
 
   //! Obtain a unique device identifier string
@@ -145,6 +157,14 @@ public:
    */
   bool is_local () const;
 
+  //! check same usb device
+  bool is_same_usb_device (const uint16_t& vid, const uint16_t& pid) const;
+
+  //! set debug mode
+  void enable_debug (const bool debug);
+  //! check debug mode
+  bool enable_debug () const;
+
   //! Check whether a given \a udi is syntactically valid
   /*! \todo Implement parsing of the part that follows \c protocols
    */
@@ -152,6 +172,8 @@ public:
 
   //! Character used to separate \c protocols and \c hier-part
   static const char separator;
+
+  bool operator== (const scanner::info& rhs) const;
 
 private:
 
@@ -163,6 +185,11 @@ private:
   std::string type_;
   std::string model_;
   std::string vendor_;
+
+  uint16_t usb_vendor_id_;
+  uint16_t usb_product_id_;
+
+  bool dump_connexion_;
 };
 
 }       // namespace utsushi

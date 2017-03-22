@@ -207,6 +207,8 @@ run_time::load_dirs (scope s, const std::string& component) const
       /**/ if ("driver" == component)
         {
           rv.push_back ((impl::instance_->top_builddir_
+                         / "drivers").string ());
+          rv.push_back ((impl::instance_->top_builddir_
                          / "drivers" / "esci").string ());
         }
       else

@@ -53,6 +53,8 @@ using boost::filesystem::exists;
 class monitor::impl
 {
 public:
+  typedef std::vector<std::pair<int, int> > id_list;
+
   impl ();
 
   static impl *instance_;
@@ -114,13 +116,17 @@ monitor::max_size () const
 monitor::const_iterator
 monitor::find (const scanner::info& info) const
 {
-  return impl::instance_->devices_.find (info);
+  return std::find (impl::instance_->devices_.begin (),
+                    impl::instance_->devices_.end (),
+                    info);
 }
 
 monitor::size_type
 monitor::count (const scanner::info& info) const
 {
-  return impl::instance_->devices_.count (info);
+  return std::count (impl::instance_->devices_.begin (),
+                     impl::instance_->devices_.end (),
+                     info);
 }
 
 monitor::container_type
@@ -222,22 +228,27 @@ monitor::read (std::istream& istr)
       it = kv.find (*jt + ".vendor");
       if (kv.end () != it) info.vendor (it->second);
 
-      rv.insert (info);
+      rv.push_back (info);
     }
 
   return rv;
 }
 
 static void
-add_sane_udev (std::set<scanner::info>& devices, const char *key,
+add_sane_udev (monitor::container_type& devices, const char *key,
                const char *val);
 
 static void
-add_conf_file  (std::set<scanner::info>& devices);
+add_conf_file  (monitor::container_type& devices, const std::string& conffile);
+
+static void
+configure_combo_device (monitor::container_type& devices);
 
 monitor::impl::impl ()
 {
-  add_conf_file (devices_);
+  add_conf_file (devices_, COMBOCONFFILE);
+
+  add_conf_file (devices_, PKGCONFFILE);
 
   //  Pick up on any scanner devices that are tagged courtesy of the
   //  SANE project.  These functions assume that tags are set on the
@@ -247,12 +258,14 @@ monitor::impl::impl ()
   //  that when creating a scanner::info object.
 
   add_sane_udev (devices_, "libsane_matched", "yes");
+
+  configure_combo_device (devices_);
 }
 
 #if (!HAVE_LIBUDEV)
 
 static void
-add_sane_udev (std::set<scanner::info>& devices, const char *key,
+add_sane_udev (monitor::container_type& devices, const char *key,
                const char *val)
 {}
 
@@ -348,7 +361,7 @@ is_usb_scanner_maybe (struct udev_device *dev)
      \todo  Beef up error checking/handling.
  */
 static void
-add_sane_udev (std::set<scanner::info>& devices, const char *key,
+add_sane_udev (monitor::container_type& devices, const char *key,
                const char *val)
 {
   using std::string;
@@ -399,14 +412,21 @@ add_sane_udev (std::set<scanner::info>& devices, const char *key,
                       const char *drv =
                         udev_device_get_property_value (dev, "utsushi_driver");
 
-                      std::string cnx ("usb");
-                      scanner::info info (cnx + "::"
+                      std::string cnx (":usb:");
+                      scanner::info info (cnx
                                           + udev_device_get_syspath (*it));
                       if (mdl) info.model (mdl);
                       if (vnd) info.vendor (vnd);
                       if (drv) info.driver (drv);
 
-                      devices.insert (info);
+                      int vid = 0;
+                      int pid = 0;
+                      udev_::get_sysattr (dev, "idVendor", vid);
+                      udev_::get_sysattr (dev, "idProduct", pid);
+                      info.usb_vendor_id (vid);
+                      info.usb_product_id (pid);
+
+                      devices.push_back (info);
                     }
                   udev_device_unref (*it);
                 }
@@ -435,10 +455,10 @@ add_sane_udev (std::set<scanner::info>& devices, const char *key,
  *  \todo  Read other files that the system wide configuration
  */
 static void
-add_conf_file (monitor::container_type& devices)
+add_conf_file (monitor::container_type& devices, const std::string& conffile)
 {
   run_time rt;
-  std::string name (rt.conf_file (run_time::sys, PKGCONFFILE));
+  std::string name (rt.conf_file (run_time::sys, conffile));
   std::ifstream ifs (name.c_str ());
 
   if (!ifs.is_open ())
@@ -455,7 +475,109 @@ add_conf_file (monitor::container_type& devices)
     }
 
   monitor::container_type rv = monitor::read (ifs);
-  devices.insert (rv.begin (), rv.end ());
+  devices.splice (devices.end (), rv);
+}
+
+//! parse combo udi and get usb vid/pid
+static monitor::impl::id_list
+parse_usb_ids (const std::string query)
+{
+  monitor::impl::id_list result;
+
+  const std::string ex_kv ("([^&=]+)=([^&]+)");
+  regex re_kv (ex_kv);
+  sregex_iterator p (query.begin(), query.end(), re_kv);
+  sregex_iterator end;
+  for (; p != end; ++p)
+    {
+      const std::string ex_usbid ("[[:graph:]]+:usb:([[:xdigit:]]+):([[:xdigit:]]+)$");
+      const std::string path (p->str(2));
+      regex re_usbid (ex_usbid);
+      sregex_iterator q (path.begin(), path.end(), re_usbid);
+      for (; q != end; ++q)
+        {
+          int vid;
+          int pid;
+          std::stringstream ss;
+          ss << std::hex << q->str(1) << std::endl;
+          ss >> vid;
+          ss << std::hex << q->str(2) << std::endl;
+          ss >> pid;
+          result.push_back (std::make_pair (vid, pid));
+        }
+    }
+  return result;
+}
+
+//! parse combo udi and get usb vid/pid
+static bool
+is_all_device_connected (const monitor::container_type& devices,
+                         const monitor::impl::id_list& usbids)
+{
+  // check all combo device existence
+  monitor::impl::id_list::const_iterator id;
+  for (id = usbids.begin (); id != usbids.end (); ++id)
+  {
+    monitor::container_type::const_iterator it =
+      std::find_if (devices.begin (), devices.end (),
+                    bind (&scanner::info::is_same_usb_device,
+                          _1, id->first, id->second));
+    if (devices.end () == it)
+    {
+      return false;
+    }
+  }
+  return true;
+}
+
+//! configure combo device entry
+static void
+configure_combo_device (monitor::container_type& devices)
+{
+  monitor::container_type::iterator it;
+  for (it = devices.begin (); devices.end () != it;)
+    {
+      if (   it->is_driver_set ()
+          && 0 == it->driver ().compare ("combo"))
+        {
+          monitor::impl::id_list usbids = parse_usb_ids (it->query ());
+
+          if (is_all_device_connected (devices, usbids))
+            {
+              // this combo entry is valid
+              log::debug ("all combo device found.");
+              bool first_device (true);
+              monitor::impl::id_list::const_iterator id;
+              // delete matching udev device entry
+              for (id = usbids.begin (); id != usbids.end (); ++id)
+                {
+                  monitor::container_type::iterator target =
+                    std::find_if (devices.begin (), devices.end (),
+                                  bind (&scanner::info::is_same_usb_device,
+                                        _1, id->first, id->second));
+                  log::debug ("delete %1%(%2%)") % target->name () % target->driver ();
+                  if (first_device)
+                    {
+                      log::debug ("first device: rename to %1%") % target->name ();
+                      // rename combo device
+                      it->name (target->name ());
+                      first_device = false;
+                    }
+                  devices.erase (target);
+                }
+              ++it;
+            }
+          else
+            {
+              log::debug ("some device not found. delete %1%") % it->name ();
+              it = devices.erase (it);
+            }
+        }
+      else
+        {
+          ++it;
+        }
+    }
 }
 
 }       // namespace utsushi

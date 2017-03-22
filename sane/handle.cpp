@@ -494,8 +494,7 @@ on_notify (iocache::ptr p, utsushi::log::priority level,
 
 handle::handle(const scanner::info& info)
   : name_(info.name () + " (" + info.udi () + ")")
-  , idev_(scanner::create (connexion::create (info.connexion (),
-                                              info.path ()), info))
+  , idev_(scanner::create (info))
   , pump_(make_shared< pump > (idev_))
   , last_marker_(traits::eos ())
   , work_in_progress_(false)

@@ -26,6 +26,7 @@
 #
 #    sed 's|\.xsl$|.cpp|; /Makefile\.am$/d; /^tools\//d; /^tests\//d; /\/tests\//d'
 
+drivers/combo.cpp
 drivers/esci/compound-scanner.cpp
 drivers/esci/compound-tweaks.cpp
 drivers/esci/compound.cpp

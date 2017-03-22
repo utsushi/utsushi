@@ -51,7 +51,8 @@ public:
                      double timeout) = 0;
 
   static connexion::ptr create (const std::string& type,
-                                const std::string& path);
+                                const std::string& path,
+                                const bool debug = false);
 };
 
 namespace ipc {

@@ -103,6 +103,7 @@ test-suite.log
 /drivers/esci/data/ES-300W.dat
 /drivers/esci/data/PX-M7050FX.dat
 /drivers/esci/data/WF-6590.dat
+/drivers/esci/esci-interpreter
 /drivers/esci/verify
 /filters/doc-locate
 /filters/tests/reorient.box

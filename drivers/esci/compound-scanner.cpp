@@ -2735,7 +2735,7 @@ compound_scanner::add_scan_area_options (option::map& opts,
      SEC_N_("Top Left Y")
      )
     ("br-x", (from< utsushi::range > ()
-              -> lower (0.)
+              -> lower (min_w / 100)
               -> upper (double (area[0]) / 100)
               -> default_value (double (area[0]) / 100)
               ),
@@ -2743,7 +2743,7 @@ compound_scanner::add_scan_area_options (option::map& opts,
      SEC_N_("Bottom Right X")
      )
     ("br-y", (from< utsushi::range > ()
-              -> lower (0.)
+              -> lower (min_h / 100)
               -> upper (double (area[1]) / 100)
               -> default_value (double (area[1]) / 100)
               ),

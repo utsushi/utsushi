@@ -61,6 +61,7 @@ libsane___BACKEND_NAME__la_LIBADD   = ../lib/libutsushi.la
 libsane___BACKEND_NAME__la_LIBADD  += ../filters/libflt-all.la
 ##  FIXME: drop when connexions have been turned into proper plugins
 libsane___BACKEND_NAME__la_LIBADD  += ../connexions/libcnx-usb.la
+libsane___BACKEND_NAME__la_LIBADD  += ../connexions/libcnx-hexdump.la
 EXTRA_libsane___BACKEND_NAME__la_DEPENDENCIES  = sane-api.sym
 
 AM_CPPFLAGS += -DBACKEND_NAME=$(BACKEND_NAME)

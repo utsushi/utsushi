@@ -150,16 +150,16 @@ preview::set_sensitive ()
   if (!ui_) return;
 
   toggle too_long = false;
-  if (control_ && control_->count ("long-paper-mode"))
+  if (ui_control_ && ui_control_->count ("long-paper-mode"))
     {
       // FIXME should be taken care of by the driver but it is
       //       checking resolution violations too late
-      if (control_->count ("doc-source"))
+      if (ui_control_->count ("doc-source"))
         {
-          string s = value ((*control_)["doc-source"]);
+          string s = value ((*ui_control_)["doc-source"]);
           if (s == "ADF")
             {
-              too_long = value ((*control_)["long-paper-mode"]);
+              too_long = value ((*ui_control_)["long-paper-mode"]);
             }
         }
     }
@@ -240,18 +240,16 @@ preview::on_area_updated (int x, int y, int width, int height)
 void
 preview::on_refresh ()
 {
-  //! \todo replace control_ to current_
-
   value resampling;
   try {
-    resampling = (*control_)["enable-resampling"];
-    (*control_)["enable-resampling"] = toggle (false);
+    resampling = (*opts_)["device/enable-resampling"];
+    (*opts_)["device/enable-resampling"] = toggle (false);
   }
   catch (const std::out_of_range&){}
 
   value resolution;
   try {
-    option opt ((*control_)["resolution"]);
+    option opt ((*opts_)["device/resolution"]);
 
     resolution = opt;
     opt = opt.constraint ()->default_value ();
@@ -260,15 +258,15 @@ preview::on_refresh ()
 
   value image_count;
   try {
-    image_count = (*control_)["image-count"];
-    (*control_)["image-count"] = 1;
+    image_count = (*opts_)["device/image-count"];
+    (*opts_)["device/image-count"] = 1;
   }
   catch (const std::out_of_range&){}
 
   value duplex;
   try {
-    duplex = (*control_)["duplex"];
-    (*control_)["duplex"] = toggle (false);
+    duplex = (*opts_)["device/duplex"];
+    (*opts_)["device/duplex"] = toggle (false);
   }
   catch (const std::out_of_range&){}
 
@@ -289,16 +287,16 @@ preview::on_refresh ()
         }
       if (magick)
         {
-          bilevel = ((*current_)["magick/image-type"] == "Monochrome");
-          string type = value ((*current_)["magick/image-type"]);
+          bilevel = ((*opts_)["magick/image-type"] == "Monochrome");
+          string type = value ((*opts_)["magick/image-type"]);
           if (bilevel)                // use software thresholding
             {
               type = std::string ("Grayscale");
             }
 
-          image_type = (*control_)["image-type"];
+          image_type = (*opts_)["device/image-type"];
           try {
-            (*control_)["image-type"] = type;
+            (*opts_)["device/image-type"] = type;
           }
           catch (const std::out_of_range&) {
             image_type = value ();
@@ -310,11 +308,11 @@ preview::on_refresh ()
       quantity height = -1.0;
       try
         {
-          force_extent = value ((*control_)["force-extent"]);
-          width   = value ((*control_)["br-x"]);
-          width  -= value ((*control_)["tl-x"]);
-          height  = value ((*control_)["br-y"]);
-          height -= value ((*control_)["tl-y"]);
+          force_extent = value ((*opts_)["device/force-extent"]);
+          width   = value ((*opts_)["device/br-x"]);
+          width  -= value ((*opts_)["device/tl-x"]);
+          height  = value ((*opts_)["device/br-y"]);
+          height -= value ((*opts_)["device/tl-y"]);
         }
       catch (const std::out_of_range&)
         {
@@ -330,8 +328,8 @@ preview::on_refresh ()
 
       if (magick)
         {
-          (*magick->options ())["resolution-x"] = value ((*control_)["resolution"]);
-          (*magick->options ())["resolution-y"] = value ((*control_)["resolution"]);
+          (*magick->options ())["resolution-x"] = value ((*opts_)["device/resolution"]);
+          (*magick->options ())["resolution-y"] = value ((*opts_)["device/resolution"]);
           (*magick->options ())["force-extent"] = force_extent;
           (*magick->options ())["width"]  = width;
           (*magick->options ())["height"] = height;
@@ -345,7 +343,7 @@ preview::on_refresh ()
       try
         {
           (*jpeg_compress->options ())["quality"]
-            = value ((*control_)["jpeg-quality"]);
+            = value ((*opts_)["device/jpeg-quality"]);
         }
       catch (const std::out_of_range&)
         {
@@ -423,23 +421,23 @@ preview::on_refresh ()
 
   if (value () != image_type)
     {
-      (*control_)["image-type"] = image_type;
+      (*opts_)["device/image-type"] = image_type;
     }
   if (value () != duplex)
     {
-      (*control_)["duplex"] = duplex;
+      (*opts_)["device/duplex"] = duplex;
     }
   if (value () != image_count)
     {
-      (*control_)["image-count"] = image_count;
+      (*opts_)["device/image-count"] = image_count;
     }
   if (value () != resolution)
     {
-      (*control_)["resolution"] = resolution;
+      (*opts_)["device/resolution"] = resolution;
     }
   if (value () != resampling)
     {
-      (*control_)["enable-resampling"] = resampling;
+      (*opts_)["device/enable-resampling"] = resampling;
     }
 }
 
@@ -484,7 +482,7 @@ preview::on_device_changed (scanner::ptr s)
   // keep the base class APIs apart until convinced that the preview
   // really needs the scanner API
   idevice_ = s;
-  control_ = s->options ();
+  ui_control_ = s->options ();
 
   pixbuf_.reset ();
   image_.clear ();
@@ -494,7 +492,9 @@ preview::on_device_changed (scanner::ptr s)
 void
 preview::on_values_changed (option::map::ptr om)
 {
-  current_ = om;
+  opts_ = om;
+  ui_control_ = om->submap (utsushi::key ("device"));
+
   set_sensitive ();
 }
 
