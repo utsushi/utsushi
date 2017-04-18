@@ -1127,7 +1127,10 @@ compound_scanner::set_up_doc_source ()
 
       if (v == value (toggle ()) || v == value ("Off"))
         {
-          // nothing to be done
+          if (caps_.has_double_feed_off_command ())
+            {
+              src_opts.push_back (adf::DFL0);
+            }
         }
       else if (v == value (toggle (true)) || v == value ("Normal"))
         {

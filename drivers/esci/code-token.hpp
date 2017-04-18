@@ -440,6 +440,8 @@ namespace information {
   const quad AFM  = CODE_TOKEN (NUMBER , UPPER_A, UPPER_F, UPPER_M);
   const quad DFM  = CODE_TOKEN (NUMBER , UPPER_D, UPPER_F, UPPER_M);
   const quad CRR  = CODE_TOKEN (NUMBER , UPPER_C, UPPER_R, UPPER_R);
+  const quad SRD  = CODE_TOKEN (NUMBER , UPPER_S, UPPER_R, UPPER_D);
+  const quad JOB  = CODE_TOKEN (NUMBER , UPPER_J, UPPER_O, UPPER_B);
 
   //! Automatic document feeder features
   namespace adf {
@@ -539,6 +541,16 @@ namespace information {
 
   }   // namespace ext
 
+  namespace job {
+
+    // token values
+    const quad STD  = CODE_TOKEN (UPPER_S, UPPER_T, UPPER_D, SPACE  );
+    const quad AFM  = CODE_TOKEN (UPPER_A, UPPER_F, UPPER_M, SPACE  );
+    const quad CONT = CODE_TOKEN (UPPER_C, UPPER_O, UPPER_N, UPPER_T);
+    const quad END  = CODE_TOKEN (UPPER_E, UPPER_N, UPPER_D, SPACE  );
+
+  }   // namespace job
+
 }     // namespace information
 
 //! Finding out what a device can and cannot do
@@ -608,6 +620,7 @@ namespace capability {
 
     const quad DPLX = CODE_TOKEN (UPPER_D, UPPER_P, UPPER_L, UPPER_X);
     const quad PEDT = CODE_TOKEN (UPPER_P, UPPER_E, UPPER_D, UPPER_T);
+    const quad DFL0 = CODE_TOKEN (UPPER_D, UPPER_F, UPPER_L, DIGIT_0);
     const quad DFL1 = CODE_TOKEN (UPPER_D, UPPER_F, UPPER_L, DIGIT_1);
     const quad DFL2 = CODE_TOKEN (UPPER_D, UPPER_F, UPPER_L, DIGIT_2);
     const quad LDF  = CODE_TOKEN (UPPER_L, UPPER_D, UPPER_F, SPACE  );

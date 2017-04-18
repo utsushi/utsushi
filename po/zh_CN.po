@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2017-03-10 11:46+0900\n"
+"POT-Creation-Date: 2017-04-14 09:48+0900\n"
 "PO-Revision-Date: 2016-02-24 09:02+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Simplified Chinese\n"
@@ -31,10 +31,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 1.7.3\n"
 
-#: drivers/combo.cpp:234 drivers/esci/compound-scanner.cpp:2579
-#: drivers/esci/compound-scanner.cpp:2614
-#: drivers/esci/compound-scanner.cpp:2649
-#: drivers/esci/compound-scanner.cpp:2684
+#: drivers/combo.cpp:234 drivers/esci/compound-scanner.cpp:2582
+#: drivers/esci/compound-scanner.cpp:2617
+#: drivers/esci/compound-scanner.cpp:2652
+#: drivers/esci/compound-scanner.cpp:2687
 #: drivers/esci/extended-scanner.cpp:1267
 #: drivers/esci/extended-scanner.cpp:1290
 msgid "Resolution"
@@ -184,31 +184,31 @@ msgstr "装入"
 msgid "Loading..."
 msgstr "正在载入..."
 
-#: drivers/esci/compound-scanner.cpp:1719
-#: drivers/esci/compound-scanner.cpp:2713
+#: drivers/esci/compound-scanner.cpp:1722
+#: drivers/esci/compound-scanner.cpp:2716
 #: drivers/esci/extended-scanner.cpp:1314
 msgid "Manual"
 msgstr "手动"
 
-#: drivers/esci/compound-scanner.cpp:1720
-#: drivers/esci/compound-scanner.cpp:2714
+#: drivers/esci/compound-scanner.cpp:1723
+#: drivers/esci/compound-scanner.cpp:2717
 #: drivers/esci/extended-scanner.cpp:1315
 msgid "Maximum"
 msgstr "最大"
 
-#: drivers/esci/compound-scanner.cpp:1727
-#: drivers/esci/compound-scanner.cpp:2716
-#: drivers/esci/compound-scanner.cpp:2783
+#: drivers/esci/compound-scanner.cpp:1730
+#: drivers/esci/compound-scanner.cpp:2719
+#: drivers/esci/compound-scanner.cpp:2786
 #: drivers/esci/extended-scanner.cpp:1317
 msgid "Auto Detect"
 msgstr "自动侦测"
 
-#: drivers/esci/compound-scanner.cpp:1942
-#: drivers/esci/grammar-capabilities.cpp:543
+#: drivers/esci/compound-scanner.cpp:1945
+#: drivers/esci/grammar-capabilities.cpp:554
 msgid "RAW"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2063
+#: drivers/esci/compound-scanner.cpp:2066
 #: drivers/esci/extended-scanner.cpp:1071
 #, boost-format
 msgid ""
@@ -216,64 +216,64 @@ msgid ""
 "The area needs to be larger than %1% by %2%."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2369
+#: drivers/esci/compound-scanner.cpp:2372
 #, boost-format
 msgid ""
 "Resolution too high for selected area.\n"
 "Choose a resolution no larger than %1%"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2416
+#: drivers/esci/compound-scanner.cpp:2419
 #: drivers/esci/extended-scanner.cpp:1187
 msgid "Duplex"
 msgstr "双面"
 
-#: drivers/esci/compound-scanner.cpp:2428
+#: drivers/esci/compound-scanner.cpp:2431
 msgid "Image Count"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2440
+#: drivers/esci/compound-scanner.cpp:2443
 msgid "Detect Double Feed"
 msgstr "探测双重进纸"
 
-#: drivers/esci/compound-scanner.cpp:2451
+#: drivers/esci/compound-scanner.cpp:2454
 msgid "Long Paper Mode"
 msgstr "加长纸张模式"
 
-#: drivers/esci/compound-scanner.cpp:2452
+#: drivers/esci/compound-scanner.cpp:2455
 msgid ""
 "Select this mode if you want to scan documents longer than what the ADF "
 "would normally support.  Please note that it only supports automatic "
 "detection of the document height."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2575
-#: drivers/esci/compound-scanner.cpp:2645
+#: drivers/esci/compound-scanner.cpp:2578
+#: drivers/esci/compound-scanner.cpp:2648
 msgid "Bind X and Y resolutions"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2583
-#: drivers/esci/compound-scanner.cpp:2598
-#: drivers/esci/compound-scanner.cpp:2653
-#: drivers/esci/compound-scanner.cpp:2668
+#: drivers/esci/compound-scanner.cpp:2586
+#: drivers/esci/compound-scanner.cpp:2601
+#: drivers/esci/compound-scanner.cpp:2656
+#: drivers/esci/compound-scanner.cpp:2671
 #, fuzzy
 msgid "X Resolution"
 msgstr "分辨率"
 
-#: drivers/esci/compound-scanner.cpp:2587
-#: drivers/esci/compound-scanner.cpp:2602
-#: drivers/esci/compound-scanner.cpp:2657
-#: drivers/esci/compound-scanner.cpp:2672
+#: drivers/esci/compound-scanner.cpp:2590
+#: drivers/esci/compound-scanner.cpp:2605
+#: drivers/esci/compound-scanner.cpp:2660
+#: drivers/esci/compound-scanner.cpp:2675
 #, fuzzy
 msgid "Y Resolution"
 msgstr "分辨率"
 
-#: drivers/esci/compound-scanner.cpp:2632
+#: drivers/esci/compound-scanner.cpp:2635
 #: drivers/esci/extended-scanner.cpp:1282
 msgid "Enable Resampling"
 msgstr "启用重新采样"
 
-#: drivers/esci/compound-scanner.cpp:2633
+#: drivers/esci/compound-scanner.cpp:2636
 #: drivers/esci/extended-scanner.cpp:1283
 msgid ""
 "This option provides the user with a wider range of supported resolutions.  "
@@ -281,49 +281,49 @@ msgid ""
 "processing methods."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2723
+#: drivers/esci/compound-scanner.cpp:2726
 #: drivers/esci/extended-scanner.cpp:1324
 msgid "Scan Area"
 msgstr "扫描区域"
 
-#: drivers/esci/compound-scanner.cpp:2731
+#: drivers/esci/compound-scanner.cpp:2734
 #: drivers/esci/extended-scanner.cpp:1332
 msgid "Top Left X"
 msgstr "左上 X"
 
-#: drivers/esci/compound-scanner.cpp:2739
+#: drivers/esci/compound-scanner.cpp:2742
 #: drivers/esci/extended-scanner.cpp:1348
 msgid "Top Left Y"
 msgstr "左上 Y"
 
-#: drivers/esci/compound-scanner.cpp:2747
+#: drivers/esci/compound-scanner.cpp:2750
 #: drivers/esci/extended-scanner.cpp:1340
 msgid "Bottom Right X"
 msgstr "右下 X"
 
-#: drivers/esci/compound-scanner.cpp:2755
+#: drivers/esci/compound-scanner.cpp:2758
 #: drivers/esci/extended-scanner.cpp:1356
 msgid "Bottom Right Y"
 msgstr "右下 Y"
 
-#: drivers/esci/compound-scanner.cpp:2791
+#: drivers/esci/compound-scanner.cpp:2794
 msgid "Crop"
 msgstr "裁剪"
 
-#: drivers/esci/compound-scanner.cpp:2803
+#: drivers/esci/compound-scanner.cpp:2806
 msgid "Crop Adjustment"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2827 gtkmm/dialog.cpp:778
+#: drivers/esci/compound-scanner.cpp:2830 gtkmm/dialog.cpp:778
 #: sane/handle.cpp:545 src/scan-cli.cpp:644
 msgid "Deskew"
 msgstr "纠正倾斜"
 
-#: drivers/esci/compound-scanner.cpp:2855
+#: drivers/esci/compound-scanner.cpp:2858
 msgid "Overscan"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:3260
+#: drivers/esci/compound-scanner.cpp:3263
 msgid ""
 "Authentication is required.\n"
 "Unfortunately, this version of the driver does not support authentication "
@@ -332,12 +332,12 @@ msgstr ""
 "需要验证。\n"
 "可惜,此版本的驱动程序不支持验证。"
 
-#: drivers/esci/compound-scanner.cpp:3264
+#: drivers/esci/compound-scanner.cpp:3267
 #, boost-format
 msgid "Unknown device error: %1%/%2%"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:3354
+#: drivers/esci/compound-scanner.cpp:3357
 #: drivers/esci/extended-scanner.cpp:206 sane/backend.cpp:288
 msgid ""
 "The Automatic Document Feeder is open.\n"
@@ -346,7 +346,7 @@ msgstr ""
 "关闭自动文稿进纸器。\n"
 "如果在自动文稿进纸器中有文稿，请移除然后重新装上。"
 
-#: drivers/esci/compound-scanner.cpp:3357
+#: drivers/esci/compound-scanner.cpp:3360
 #: drivers/esci/extended-scanner.cpp:201 sane/backend.cpp:274
 msgid ""
 "A paper jam occurred.\n"
@@ -358,12 +358,12 @@ msgstr ""
 "打开自动文稿进纸器并移除卡纸。\n"
 "如果在自动文稿进纸器中有文稿，请移除然后重新装上。"
 
-#: drivers/esci/compound-scanner.cpp:3362
+#: drivers/esci/compound-scanner.cpp:3365
 #: drivers/esci/extended-scanner.cpp:198 sane/backend.cpp:269
 msgid "Please load the document(s) into the Automatic Document Feeder."
 msgstr "请在自动文稿进纸器中放入文稿。"
 
-#: drivers/esci/compound-scanner.cpp:3365
+#: drivers/esci/compound-scanner.cpp:3368
 #: drivers/esci/extended-scanner.cpp:209 sane/backend.cpp:281
 msgid ""
 "A multi page feed occurred in the auto document feeder. Open the cover, "
@@ -373,7 +373,7 @@ msgstr ""
 "一张多面纸插入在自动文稿进纸器中。打开盖子，移除文稿，然后再试一次。如果文稿"
 "仍然存在，移除它们然后重新载入。"
 
-#: drivers/esci/compound-scanner.cpp:3370
+#: drivers/esci/compound-scanner.cpp:3373
 #: drivers/esci/extended-scanner.cpp:214
 msgid ""
 "A fatal ADF error has occurred.\n"
@@ -381,7 +381,7 @@ msgid ""
 "dialog or application in order to be able to scan."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:3384
+#: drivers/esci/compound-scanner.cpp:3387
 msgid "A fatal error has occurred"
 msgstr ""
 
@@ -458,7 +458,7 @@ msgstr ""
 
 #: drivers/esci/extended-scanner.cpp:121
 #: drivers/esci/grammar-capabilities.cpp:260
-#: drivers/esci/grammar-capabilities.cpp:399
+#: drivers/esci/grammar-capabilities.cpp:410
 msgid "None"
 msgstr "无"
 
@@ -519,19 +519,19 @@ msgid "Unknown device error"
 msgstr ""
 
 #: drivers/esci/extended-scanner.cpp:326
-#: drivers/esci/grammar-capabilities.cpp:664 gtkmm/dialog.cpp:794
+#: drivers/esci/grammar-capabilities.cpp:675 gtkmm/dialog.cpp:794
 #: sane/handle.cpp:588 src/scan-cli.cpp:664
 msgid "Monochrome"
 msgstr "单色"
 
 #: drivers/esci/extended-scanner.cpp:327
-#: drivers/esci/grammar-capabilities.cpp:665 gtkmm/dialog.cpp:795
+#: drivers/esci/grammar-capabilities.cpp:676 gtkmm/dialog.cpp:795
 #: sane/handle.cpp:589 src/scan-cli.cpp:665
 msgid "Grayscale"
 msgstr "灰度"
 
 #: drivers/esci/extended-scanner.cpp:328
-#: drivers/esci/grammar-capabilities.cpp:662 drivers/esci/scanner.cpp:246
+#: drivers/esci/grammar-capabilities.cpp:673 drivers/esci/scanner.cpp:247
 #: gtkmm/dialog.cpp:796 sane/handle.cpp:590 src/scan-cli.cpp:666
 msgid "Color"
 msgstr "彩色"
@@ -641,39 +641,39 @@ msgstr "普通"
 msgid "Thin"
 msgstr "细"
 
-#: drivers/esci/grammar-capabilities.cpp:449
+#: drivers/esci/grammar-capabilities.cpp:460
 msgid "Red"
 msgstr "红色"
 
-#: drivers/esci/grammar-capabilities.cpp:450
+#: drivers/esci/grammar-capabilities.cpp:461
 msgid "Green"
 msgstr "绿色"
 
-#: drivers/esci/grammar-capabilities.cpp:451
+#: drivers/esci/grammar-capabilities.cpp:462
 msgid "Blue"
 msgstr "蓝色"
 
-#: drivers/esci/grammar-capabilities.cpp:544 gtkmm/file-chooser.cpp:453
+#: drivers/esci/grammar-capabilities.cpp:555 gtkmm/file-chooser.cpp:453
 msgid "JPEG"
 msgstr ""
 
-#: drivers/esci/scanner.cpp:243
+#: drivers/esci/scanner.cpp:244
 msgid "ADF - Double-sided"
 msgstr "自动文稿进纸器 - 双面"
 
-#: drivers/esci/scanner.cpp:244
+#: drivers/esci/scanner.cpp:245
 msgid "ADF - Single-sided"
 msgstr "自动文稿进纸器 - 单面"
 
-#: drivers/esci/scanner.cpp:245
+#: drivers/esci/scanner.cpp:246
 msgid "Black & White"
 msgstr "黑白"
 
-#: drivers/esci/scanner.cpp:247
+#: drivers/esci/scanner.cpp:248
 msgid "Mode"
 msgstr "模式"
 
-#: drivers/esci/scanner.cpp:248
+#: drivers/esci/scanner.cpp:249
 msgid "Text/Line Art"
 msgstr "文本/线画"
 

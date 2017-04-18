@@ -186,6 +186,7 @@ protected:
   qi::rule< Iterator, quad () > info_adf_algn_token_;
   qi::rule< Iterator, quad () > info_fb_algn_token_;
   qi::rule< Iterator, quad () > info_ext_token_;
+  qi::rule< Iterator, quad () > info_job_token_;
 };
 
 extern template class basic_grammar_information< default_iterator_type >;

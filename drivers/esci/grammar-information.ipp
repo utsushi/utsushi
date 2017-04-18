@@ -76,6 +76,8 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
      ^  qi::matches [ token_(AFM) ]
      ^ (token_(DFM) > this->positive_)
      ^ (token_(CRR) > (this->positive_range_ | this->positive_list_))
+     ^  qi::matches [ token_(SRD) ]
+     ^ (token_(JOB) > token_(value::LIST) > +info_job_token_)
        )
     > qi::eoi
     ;
@@ -168,6 +170,15 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
     > token_
     ;
 
+  info_job_token_ %=
+    &(  token_(job::STD)
+      | token_(job::AFM)
+      | token_(job::CONT)
+      | token_(job::END)
+      )
+    > token_
+    ;
+
   positive_list_ %=
     token_(value::LIST)
     > +this->positive_
@@ -193,6 +204,7 @@ basic_grammar_information< Iterator >::basic_grammar_information ()
   ESCI_GRAMMAR_TRACE_NODE (info_adf_algn_token_);
   ESCI_GRAMMAR_TRACE_NODE (info_fb_algn_token_);
   ESCI_GRAMMAR_TRACE_NODE (info_ext_token_);
+  ESCI_GRAMMAR_TRACE_NODE (info_job_token_);
 
   ESCI_GRAMMAR_TRACE_NODE (positive_list_);
   ESCI_GRAMMAR_TRACE_NODE (positive_range_);
