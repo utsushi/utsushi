@@ -56,6 +56,11 @@
 :usbid     "0x04b8" "0x014d"
 :status    :good
 
+:model     "DS-780N"
+:interface "USB"
+:usbid     "0x04b8" "0x0164"
+:status    :good
+
 :model     "DS-860"
 :interface "USB"
 :usbid     "0x04b8" "0x014d"

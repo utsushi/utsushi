@@ -49,6 +49,7 @@ ATTRS{idProduct}=="015e", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="015f", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="0162", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="0163", ENV{utsushi_driver}="esci"
+#  DS-780N
 ATTRS{idProduct}=="0164", ENV{utsushi_driver}="esci"
 
 #  PX-M7050 Series, WF-8510/8590 Series
