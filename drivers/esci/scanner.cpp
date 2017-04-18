@@ -132,6 +132,7 @@ libdrv_esci_LTX_scanner_factory (const scanner::info& info, scanner::ptr& rv)
       else if (   info.product_name () == "DS-530"
                || info.product_name () == "DS-570W"
                || info.product_name () == "DS-770"
+               || info.product_name () == "DS-780N"
                )
         {
           sp = make_shared< DS_530_570W > (cnx);

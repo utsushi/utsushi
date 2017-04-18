@@ -406,6 +406,11 @@ magick::arguments (const context& ctx)
   if (   0 != brightness_
       || 0 != contrast_)
     {
+      if ( 1 - contrast_ <= 0.0)
+      {
+        contrast_ = 0.999;
+      }
+      
       double a = 1 / (1 - contrast_);
       double b = (brightness_ - contrast_) * a / 2;
       size_t mat_size = ((HAVE_IMAGE_MAGICK) ? 6 : 5);

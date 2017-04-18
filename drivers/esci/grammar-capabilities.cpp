@@ -386,6 +386,17 @@ capabilities::double_feed () const
   return constraint::ptr ();
 }
 
+bool
+capabilities::has_double_feed_off_command () const
+{
+  using namespace code_token::capability::adf;
+  using utsushi::constraint;
+
+  if (!adf || !adf->flags) return false;
+
+  return bool (std::count (adf->flags->begin (), adf->flags->end (), DFL0));
+}
+
 utsushi::constraint::ptr
 capabilities::dropouts () const
 {

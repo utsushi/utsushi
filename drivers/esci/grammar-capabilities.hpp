@@ -66,6 +66,7 @@ struct capabilities
   utsushi::constraint::ptr crop_adjustment () const;
   utsushi::constraint::ptr document_sources (const quad& default_value) const;
   utsushi::constraint::ptr double_feed () const;
+  bool has_double_feed_off_command () const;
   utsushi::constraint::ptr dropouts () const;
   quad get_dropout (const quad& gray, const string& color) const;
   bool has_dropout (const quad& gray) const;

@@ -152,6 +152,7 @@ basic_grammar_capabilities< Iterator >::basic_grammar_capabilities ()
   caps_adf_token_ %=
     &(  token_(adf::DPLX)
       | token_(adf::PEDT)
+      | token_(adf::DFL0)
       | token_(adf::DFL1)
       | token_(adf::DFL2)
       | token_(adf::LDF )
