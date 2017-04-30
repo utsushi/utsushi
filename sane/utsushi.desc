@@ -447,6 +447,11 @@
 :usbid     "0x04b8" "0x1127"
 :status    :good
 
+:model     "PID 1128"
+:interface "USB"
+:usbid     "0x04b8" "0x1128"
+:status    :good
+
 :model     "PID 112B"
 :interface "USB"
 :usbid     "0x04b8" "0x112b"
