@@ -119,6 +119,7 @@ ATTRS{idProduct}=="1123", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="1125", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="1126", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="1127", ENV{utsushi_driver}="esci"
+ATTRS{idProduct}=="1128", ENV{utsushi_driver}="esci"
 ATTRS{idProduct}=="112b", ENV{utsushi_driver}="esci"
 
 ATTRS{idProduct}=="013c", ENV{utsushi_driver}="esci:gt-s650", ENV{firmware_file}="esfw010c.bin"

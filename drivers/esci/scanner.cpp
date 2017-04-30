@@ -133,6 +133,8 @@ libdrv_esci_LTX_scanner_factory (const scanner::info& info, scanner::ptr& rv)
                || info.product_name () == "DS-570W"
                || info.product_name () == "DS-770"
                || info.product_name () == "DS-780N"
+               || info.product_name () == "ES-400"
+               || info.product_name () == "ES-500W"
                )
         {
           sp = make_shared< DS_530_570W > (cnx);
@@ -152,6 +154,7 @@ libdrv_esci_LTX_scanner_factory (const scanner::info& info, scanner::ptr& rv)
                || info.product_name () == "PID 1125"
                || info.product_name () == "PID 1126"
                || info.product_name () == "PID 1127"
+               || info.product_name () == "PID 1128"
                )
         {
           sp = make_shared< PX_Mxxxx > (cnx);
