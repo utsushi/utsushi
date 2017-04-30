@@ -242,6 +242,8 @@ driverdata_DATA += data/DS-60000.dat
 driverdata_DATA += data/DS-70000.dat
 driverdata_DATA += data/ES-200.dat
 driverdata_DATA += data/ES-300W.dat
+driverdata_DATA += data/ES-400.dat
+driverdata_DATA += data/ES-500W.dat
 driverdata_DATA += data/PX-M7050.dat
 driverdata_DATA += data/PX-M7050FX.dat
 driverdata_DATA += data/PX-M860F.dat
@@ -303,6 +305,12 @@ $(srcdir)/data/ES-200.dat: $(srcdir)/data/DS-360W.dat
 
 $(srcdir)/data/ES-300W.dat: $(srcdir)/data/DS-360W.dat
 	$(clone_dat)
+
+$(srcdir)/data/ES-400.dat: $(srcdir)/data/DS-530.dat
+	$(clone_dat)
+
+$(srcdir)/data/ES-500W.dat: $(srcdir)/data/DS-530.dat
+	sed -e 's,DS-530 ,ES-500W,' $< > $@
 
 $(srcdir)/data/PX-M7050FX.dat: $(srcdir)/data/PX-M7050.dat
 	sed -e 's,PID 08BC,PID 08CC,' $< > $@

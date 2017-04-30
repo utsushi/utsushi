@@ -533,6 +533,17 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
   static const vector< double, 3 > gamma_exponent_4 = exp;
   static const matrix< double, 3 > profile_matrix_4 = mat;
 
+  exp[0] = 1.008;
+  exp[1] = 0.994;
+  exp[2] = 0.998;
+
+  mat[0][0] =  0.9948;  mat[0][1] =  0.0085;  mat[0][2] = -0.0033;
+  mat[1][0] =  0.0001;  mat[1][1] =  0.9999;  mat[1][2] =  0.0000;
+  mat[2][0] =  0.0038;  mat[2][1] = -0.0579;  mat[2][2] =  1.0541;
+
+  static const vector< double, 3 > gamma_exponent_5 = exp;
+  static const matrix< double, 3 > profile_matrix_5 = mat;
+
   static const std::map< std::string, const vector< double, 3 > >
     gamma_exponent = boost::assign::map_list_of
     ("PX-M7050",   gamma_exponent_1)
@@ -546,6 +557,8 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
     ("PID 1127",   gamma_exponent_3)
     //
     ("PID 1126",   gamma_exponent_4)
+    //
+    ("PID 1128",   gamma_exponent_5)
     ;
 
   static const std::map< std::string, const matrix< double, 3 > >
@@ -561,6 +574,8 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
     ("PID 1127",   profile_matrix_3)
     //
     ("PID 1126",   profile_matrix_4)
+    //
+    ("PID 1128",   profile_matrix_5)
     ;
 
   try {
