@@ -111,6 +111,11 @@
 :usbid     "0x04b8" "0x1109"
 :status    :good
 
+:model     "ES-400"
+:interface "USB"
+:usbid     "0x04b8" "0x0156"
+:status    :good
+
 :model     "ET-2500"
 :interface "USB"
 :usbid     "0x04b8" "0x1105"
@@ -278,11 +283,6 @@
 :model     "PID 0155"
 :interface "USB"
 :usbid     "0x04b8" "0x0155"
-:status    :good
-
-:model     "PID 0156"
-:interface "USB"
-:usbid     "0x04b8" "0x0156"
 :status    :good
 
 :model     "PID 0157"
