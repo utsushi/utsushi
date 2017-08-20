@@ -1,5 +1,5 @@
 ;;;  utsushi.desc                               -*- emacs-lisp -*- (sort of)
-;;;  Copyright (C) 2015, 2016 Meeuwissen
+;;;  Copyright (C) 2015-2017  Olaf Meeuwissen
 ;;;
 ;;;  License: GPL-3.0+
 ;;;  Author : Olaf Meeuwissen
@@ -452,7 +452,49 @@
 :usbid     "0x04b8" "0x1128"
 :status    :good
 
+:model     "PID 1129"
+:interface "USB"
+:usbid     "0x04b8" "0x1129b"
+:status    :good
+:comment   "L61x0?"
+
+:model     "PID 112A"
+:interface "USB"
+:usbid     "0x04b8" "0x112a"
+:status    :good
+:comment   "L61x0?"
+
 :model     "PID 112B"
 :interface "USB"
 :usbid     "0x04b8" "0x112b"
 :status    :good
+
+:model     "PID 1130"
+:interface "USB"
+:usbid     "0x04b8" "0x1130"
+:status    :good
+:comment   "L61x0?"
+
+:model     "PID 1131"
+:interface "USB"
+:usbid     "0x04b8" "0x1131"
+:status    :good
+:comment   "EP-8xxA?"
+
+:model     "PID 1133"
+:interface "USB"
+:usbid     "0x04b8" "0x1133"
+:status    :good
+:comment   "EP-810A?"
+
+:model     "PID 1134"
+:interface "USB"
+:usbid     "0x04b8" "0x1134"
+:status    :good
+:comment   "EP-710A?"
+
+:model     "PID 1135"
+:interface "USB"
+:usbid     "0x04b8" "0x1135"
+:status    :good
+:comment   "L61x0?"
