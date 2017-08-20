@@ -533,17 +533,7 @@ decompressor::fill_input_buffer ()
 {
   reclaim_space ();
 
-  if (!decompressing_)
-    {
-      log::error ("Premature end of JPEG data");
-
-      static const JOCTET jpeg_eoi[] = { 0xFF, JPEG_EOI };
-
-      smgr_.next_input_byte = jpeg_eoi;
-      smgr_.bytes_in_buffer = sizeof (jpeg_eoi) / sizeof (*jpeg_eoi);
-
-      return true;
-    }
+  //jpegデータの一部が分割されて送られてきても正常に動作するように変更
 
   return false;
 }
