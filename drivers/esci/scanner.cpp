@@ -159,13 +159,34 @@ libdrv_esci_LTX_scanner_factory (const scanner::info& info, scanner::ptr& rv)
         {
           sp = make_shared< PX_Mxxxx > (cnx);
         }
-      else if (info.product_name () == "PID 111B")
+      else if (info.product_name () == "PID 111B"
+	    || info.product_name () == "PID 1131"
+	    )
         {
-          sp = make_shared< EP_879A > (cnx);
+          sp = make_shared< EP_8xxA > (cnx);
         }
-      else if (info.product_name () == "PID 1123")
+      else if (info.product_name () == "PID 1123"
+	    )
         {
           sp = make_shared< EP_30VA > (cnx);
+        }
+      else if (info.product_name () == "PID 1133"
+	    )
+        {
+          sp = make_shared< EP_810A > (cnx);
+        }
+      else if (info.product_name () == "PID 1134"
+	    )
+        {
+          sp = make_shared< EP_710A > (cnx);
+        }
+      else if (info.product_name () == "PID 1129"
+	    || info.product_name () == "PID 112A"
+            || info.product_name () == "PID 1130"
+            || info.product_name () == "PID 1135"
+	    )
+        {
+          sp = make_shared< L61x0 > (cnx);
         }
       else
         {
