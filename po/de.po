@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2017-07-27 14:37+0900\n"
+"POT-Creation-Date: 2017-10-04 08:19+0900\n"
 "PO-Revision-Date: 2016-02-24 09:02+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: German\n"
@@ -31,10 +31,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 1.7.3\n"
 
-#: drivers/combo.cpp:234 drivers/esci/compound-scanner.cpp:2578
-#: drivers/esci/compound-scanner.cpp:2613
-#: drivers/esci/compound-scanner.cpp:2648
-#: drivers/esci/compound-scanner.cpp:2683
+#: drivers/combo.cpp:234 drivers/esci/compound-scanner.cpp:2587
+#: drivers/esci/compound-scanner.cpp:2622
+#: drivers/esci/compound-scanner.cpp:2657
+#: drivers/esci/compound-scanner.cpp:2692
 #: drivers/esci/extended-scanner.cpp:1265
 #: drivers/esci/extended-scanner.cpp:1288
 msgid "Resolution"
@@ -132,78 +132,78 @@ msgstr "Einlegen"
 msgid "Loading..."
 msgstr "Laden..."
 
-#: drivers/esci/compound-scanner.cpp:1720
-#: drivers/esci/compound-scanner.cpp:2712
+#: drivers/esci/compound-scanner.cpp:1729
+#: drivers/esci/compound-scanner.cpp:2721
 #: drivers/esci/extended-scanner.cpp:1312
 msgid "Manual"
 msgstr "Manuelle Zufuhr"
 
-#: drivers/esci/compound-scanner.cpp:1721
-#: drivers/esci/compound-scanner.cpp:2713
+#: drivers/esci/compound-scanner.cpp:1730
+#: drivers/esci/compound-scanner.cpp:2722
 #: drivers/esci/extended-scanner.cpp:1313
 msgid "Maximum"
 msgstr "Maximal"
 
-#: drivers/esci/compound-scanner.cpp:1728
-#: drivers/esci/compound-scanner.cpp:2715
-#: drivers/esci/compound-scanner.cpp:2782
+#: drivers/esci/compound-scanner.cpp:1737
+#: drivers/esci/compound-scanner.cpp:2724
+#: drivers/esci/compound-scanner.cpp:2791
 #: drivers/esci/extended-scanner.cpp:1315
 msgid "Auto Detect"
 msgstr "Automatische Erkennung"
 
-#: drivers/esci/compound-scanner.cpp:2415
+#: drivers/esci/compound-scanner.cpp:2424
 #: drivers/esci/extended-scanner.cpp:1185
 msgid "Duplex"
 msgstr "Duplex"
 
-#: drivers/esci/compound-scanner.cpp:2439
+#: drivers/esci/compound-scanner.cpp:2448
 msgid "Detect Double Feed"
 msgstr "Doppeleinzugsfehler"
 
-#: drivers/esci/compound-scanner.cpp:2450
+#: drivers/esci/compound-scanner.cpp:2459
 msgid "Long Paper Mode"
 msgstr "Langpapiermodus"
 
-#: drivers/esci/compound-scanner.cpp:2631
+#: drivers/esci/compound-scanner.cpp:2640
 #: drivers/esci/extended-scanner.cpp:1280
 msgid "Enable Resampling"
 msgstr "Neuberechnung aktivieren"
 
-#: drivers/esci/compound-scanner.cpp:2722
+#: drivers/esci/compound-scanner.cpp:2731
 #: drivers/esci/extended-scanner.cpp:1322
 msgid "Scan Area"
 msgstr "Scanbereich"
 
-#: drivers/esci/compound-scanner.cpp:2730
+#: drivers/esci/compound-scanner.cpp:2739
 #: drivers/esci/extended-scanner.cpp:1330
 msgid "Top Left X"
 msgstr "X oben links"
 
-#: drivers/esci/compound-scanner.cpp:2738
+#: drivers/esci/compound-scanner.cpp:2747
 #: drivers/esci/extended-scanner.cpp:1346
 msgid "Top Left Y"
 msgstr "Y oben links"
 
-#: drivers/esci/compound-scanner.cpp:2746
+#: drivers/esci/compound-scanner.cpp:2755
 #: drivers/esci/extended-scanner.cpp:1338
 msgid "Bottom Right X"
 msgstr "X unten rechts"
 
-#: drivers/esci/compound-scanner.cpp:2754
+#: drivers/esci/compound-scanner.cpp:2763
 #: drivers/esci/extended-scanner.cpp:1354
 msgid "Bottom Right Y"
 msgstr "Y unten rechts"
 
-#: drivers/esci/compound-scanner.cpp:2790
+#: drivers/esci/compound-scanner.cpp:2799
 msgid "Crop"
 msgstr "Zuschneiden"
 
-#: drivers/esci/compound-scanner.cpp:2826 gtkmm/dialog.cpp:778
+#: drivers/esci/compound-scanner.cpp:2835 gtkmm/dialog.cpp:778
 #: sane/handle.cpp:545 src/scan-cli.cpp:644
 msgid "Deskew"
 msgstr "Entzerren"
 
-#: drivers/esci/compound-scanner.cpp:3259
+#: drivers/esci/compound-scanner.cpp:3268
 msgid ""
 "Authentication is required.\n"
 "Unfortunately, this version of the driver does not support authentication "
@@ -212,7 +212,7 @@ msgstr ""
 "Authentifizierung ist erforderlich.\n"
 "Leider unterstützt diese Version des Treibers noch keine Authentifizierung."
 
-#: drivers/esci/compound-scanner.cpp:3353
+#: drivers/esci/compound-scanner.cpp:3362
 #: drivers/esci/extended-scanner.cpp:206 sane/backend.cpp:288
 msgid ""
 "The Automatic Document Feeder is open.\n"
@@ -221,7 +221,7 @@ msgstr ""
 "Der automatische Vorlageneinzug ist offen.\n"
 "Schließen Sie ihn."
 
-#: drivers/esci/compound-scanner.cpp:3356
+#: drivers/esci/compound-scanner.cpp:3365
 #: drivers/esci/extended-scanner.cpp:201 sane/backend.cpp:274
 msgid ""
 "A paper jam occurred.\n"
@@ -233,12 +233,12 @@ msgstr ""
 "Sie das Papier. Befinden sich Dokumente im ADF, entfernen Sie sie und legen "
 "Sie sie erneut ein."
 
-#: drivers/esci/compound-scanner.cpp:3361
+#: drivers/esci/compound-scanner.cpp:3370
 #: drivers/esci/extended-scanner.cpp:198 sane/backend.cpp:269
 msgid "Please load the document(s) into the Automatic Document Feeder."
 msgstr "Legen Sie die Vorlage(n) in den automatischen Vorlageneinzug ein."
 
-#: drivers/esci/compound-scanner.cpp:3364
+#: drivers/esci/compound-scanner.cpp:3373
 #: drivers/esci/extended-scanner.cpp:209 sane/backend.cpp:281
 msgid ""
 "A multi page feed occurred in the auto document feeder. Open the cover, "
@@ -264,24 +264,24 @@ msgstr "Gerät ausgelastet"
 
 #: drivers/esci/extended-scanner.cpp:121
 #: drivers/esci/grammar-capabilities.cpp:260
-#: drivers/esci/grammar-capabilities.cpp:410
+#: drivers/esci/grammar-capabilities.cpp:423
 msgid "None"
 msgstr "Kein"
 
 #: drivers/esci/extended-scanner.cpp:326
-#: drivers/esci/grammar-capabilities.cpp:675 gtkmm/dialog.cpp:794
+#: drivers/esci/grammar-capabilities.cpp:688 gtkmm/dialog.cpp:794
 #: sane/handle.cpp:588 src/scan-cli.cpp:664
 msgid "Monochrome"
 msgstr "Monochrom"
 
 #: drivers/esci/extended-scanner.cpp:327
-#: drivers/esci/grammar-capabilities.cpp:676 gtkmm/dialog.cpp:795
+#: drivers/esci/grammar-capabilities.cpp:689 gtkmm/dialog.cpp:795
 #: sane/handle.cpp:589 src/scan-cli.cpp:665
 msgid "Grayscale"
 msgstr "Graustufen"
 
 #: drivers/esci/extended-scanner.cpp:328
-#: drivers/esci/grammar-capabilities.cpp:673 drivers/esci/scanner.cpp:271
+#: drivers/esci/grammar-capabilities.cpp:686 drivers/esci/scanner.cpp:284
 #: gtkmm/dialog.cpp:796 sane/handle.cpp:590 src/scan-cli.cpp:666
 msgid "Color"
 msgstr "Farbe"
@@ -312,47 +312,56 @@ msgstr "Weiß"
 msgid "Black"
 msgstr "Schwarz"
 
-#: drivers/esci/grammar-capabilities.cpp:366
+#: drivers/esci/grammar-capabilities.cpp:368
+#: drivers/esci/grammar-capabilities.cpp:383
 msgid "Off"
 msgstr "Aus"
 
-#: drivers/esci/grammar-capabilities.cpp:367
+#: drivers/esci/grammar-capabilities.cpp:369
 msgid "Normal"
 msgstr "Normal"
 
-#: drivers/esci/grammar-capabilities.cpp:368
+#: drivers/esci/grammar-capabilities.cpp:370
 msgid "Thin"
 msgstr "Dünn"
 
-#: drivers/esci/grammar-capabilities.cpp:460
+#: drivers/esci/grammar-capabilities.cpp:384
+msgid "On"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:385
+msgid "Paper Protection"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:473
 msgid "Red"
 msgstr "Rot"
 
-#: drivers/esci/grammar-capabilities.cpp:461
+#: drivers/esci/grammar-capabilities.cpp:474
 msgid "Green"
 msgstr "Grün"
 
-#: drivers/esci/grammar-capabilities.cpp:462
+#: drivers/esci/grammar-capabilities.cpp:475
 msgid "Blue"
 msgstr "Blau"
 
-#: drivers/esci/scanner.cpp:268
+#: drivers/esci/scanner.cpp:281
 msgid "ADF - Double-sided"
 msgstr "ADF-Doppelseitig"
 
-#: drivers/esci/scanner.cpp:269
+#: drivers/esci/scanner.cpp:282
 msgid "ADF - Single-sided"
 msgstr "ADF-Einseitig"
 
-#: drivers/esci/scanner.cpp:270
+#: drivers/esci/scanner.cpp:283
 msgid "Black & White"
 msgstr "Schwarzweiß"
 
-#: drivers/esci/scanner.cpp:272
+#: drivers/esci/scanner.cpp:285
 msgid "Mode"
 msgstr "Modus"
 
-#: drivers/esci/scanner.cpp:273
+#: drivers/esci/scanner.cpp:286
 msgid "Text/Line Art"
 msgstr "Text/Strichzeichnung"
 
