@@ -36,6 +36,10 @@
 :usbid     "0x04b8" "0x0152"
 :status    :good
 
+:model     "DS-410"
+:interface "USB"
+:status    :good
+
 :model     "DS-510"
 :interface "USB"
 :usbid     "0x04b8" "0x014c"
@@ -46,14 +50,26 @@
 :usbid     "0x04b8" "0x0154"
 :status    :good
 
+:model     "DS-535"
+:interface "USB"
+:status    :good
+
 :model     "DS-560"
 :interface "USB"
 :usbid     "0x04b8" "0x0150"
 :status    :good
 
+:model     "DS-575W"
+:interface "USB"
+:status    :good
+
 :model     "DS-760"
 :interface "USB"
 :usbid     "0x04b8" "0x014d"
+:status    :good
+
+:model     "DS-775"
+:interface "USB"
 :status    :good
 
 :model     "DS-780N"
@@ -330,6 +346,30 @@
 :usbid     "0x04b8" "0x0163"
 :status    :good
 
+:model     "PID 0165"
+:interface "USB"
+:usbid     "0x04b8" "0x0165"
+:status    :good
+:comment   "propably one of DS-410, DS-535, DS-575W, DS-775"
+
+:model     "PID 0167"
+:interface "USB"
+:usbid     "0x04b8" "0x0167"
+:status    :good
+:comment   "propably one of DS-410, DS-535, DS-575W, DS-775"
+
+:model     "PID 0168"
+:interface "USB"
+:usbid     "0x04b8" "0x0168"
+:status    :good
+:comment   "propably one of DS-410, DS-535, DS-575W, DS-775"
+
+:model     "PID 0169"
+:interface "USB"
+:usbid     "0x04b8" "0x0169"
+:status    :good
+:comment   "propably one of DS-410, DS-535, DS-575W, DS-775"
+
 :model     "PID 110D"
 :interface "USB"
 :usbid     "0x04b8" "0x110d"
@@ -468,6 +508,13 @@
 :interface "USB"
 :usbid     "0x04b8" "0x112b"
 :status    :good
+:comment   "ET-77xx?"
+
+:model     "PID 112C"
+:interface "USB"
+:usbid     "0x04b8" "0x112c"
+:status    :good
+:comment   "ET-77xx?"
 
 :model     "PID 1130"
 :interface "USB"
