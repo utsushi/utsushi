@@ -101,6 +101,10 @@ libdrv_esci_LTX_scanner_factory (const scanner::info& info, scanner::ptr& rv)
         {
           sp = make_shared< DS_3x0 > (cnx);
         }
+      else if (info.product_name () == "DS-410")
+        {
+          sp = make_shared< DS_4x0 > (cnx);
+        }
       else if (   info.product_name () == "DS-510"
                || info.product_name () == "DS-520"
                || info.product_name () == "DS-560"
@@ -135,6 +139,9 @@ libdrv_esci_LTX_scanner_factory (const scanner::info& info, scanner::ptr& rv)
                || info.product_name () == "DS-780N"
                || info.product_name () == "ES-400"
                || info.product_name () == "ES-500W"
+               || info.product_name () == "DS-535"
+               || info.product_name () == "DS-775"
+               || info.product_name () == "DS-575W"
                )
         {
           sp = make_shared< DS_530_570W > (cnx);
@@ -187,6 +194,12 @@ libdrv_esci_LTX_scanner_factory (const scanner::info& info, scanner::ptr& rv)
 	    )
         {
           sp = make_shared< L61x0 > (cnx);
+        }
+      else if (   info.product_name () == "PID 112B"
+	       || info.product_name () == "PID 112C"
+              )
+        {
+          sp = make_shared< ET_77xx > (cnx);
         }
       else
         {

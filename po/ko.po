@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2017-07-27 14:37+0900\n"
+"POT-Creation-Date: 2017-10-10 21:14+0000\n"
 "PO-Revision-Date: 2016-02-24 09:02+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Korean\n"
@@ -31,10 +31,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 1.7.3\n"
 
-#: drivers/combo.cpp:234 drivers/esci/compound-scanner.cpp:2582
-#: drivers/esci/compound-scanner.cpp:2617
-#: drivers/esci/compound-scanner.cpp:2652
-#: drivers/esci/compound-scanner.cpp:2687
+#: drivers/combo.cpp:234 drivers/esci/compound-scanner.cpp:2591
+#: drivers/esci/compound-scanner.cpp:2626
+#: drivers/esci/compound-scanner.cpp:2661
+#: drivers/esci/compound-scanner.cpp:2696
 #: drivers/esci/extended-scanner.cpp:1267
 #: drivers/esci/extended-scanner.cpp:1290
 msgid "Resolution"
@@ -184,31 +184,31 @@ msgstr "급지"
 msgid "Loading..."
 msgstr "불러오기..."
 
-#: drivers/esci/compound-scanner.cpp:1722
-#: drivers/esci/compound-scanner.cpp:2716
+#: drivers/esci/compound-scanner.cpp:1731
+#: drivers/esci/compound-scanner.cpp:2725
 #: drivers/esci/extended-scanner.cpp:1314
 msgid "Manual"
 msgstr "수동"
 
-#: drivers/esci/compound-scanner.cpp:1723
-#: drivers/esci/compound-scanner.cpp:2717
+#: drivers/esci/compound-scanner.cpp:1732
+#: drivers/esci/compound-scanner.cpp:2726
 #: drivers/esci/extended-scanner.cpp:1315
 msgid "Maximum"
 msgstr "최대"
 
-#: drivers/esci/compound-scanner.cpp:1730
-#: drivers/esci/compound-scanner.cpp:2719
-#: drivers/esci/compound-scanner.cpp:2786
+#: drivers/esci/compound-scanner.cpp:1739
+#: drivers/esci/compound-scanner.cpp:2728
+#: drivers/esci/compound-scanner.cpp:2795
 #: drivers/esci/extended-scanner.cpp:1317
 msgid "Auto Detect"
 msgstr "자동 감지"
 
-#: drivers/esci/compound-scanner.cpp:1945
-#: drivers/esci/grammar-capabilities.cpp:554
+#: drivers/esci/compound-scanner.cpp:1954
+#: drivers/esci/grammar-capabilities.cpp:567
 msgid "RAW"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2066
+#: drivers/esci/compound-scanner.cpp:2075
 #: drivers/esci/extended-scanner.cpp:1071
 #, boost-format
 msgid ""
@@ -216,64 +216,64 @@ msgid ""
 "The area needs to be larger than %1% by %2%."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2372
+#: drivers/esci/compound-scanner.cpp:2381
 #, boost-format
 msgid ""
 "Resolution too high for selected area.\n"
 "Choose a resolution no larger than %1%"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2419
+#: drivers/esci/compound-scanner.cpp:2428
 #: drivers/esci/extended-scanner.cpp:1187
 msgid "Duplex"
 msgstr "양면"
 
-#: drivers/esci/compound-scanner.cpp:2431
+#: drivers/esci/compound-scanner.cpp:2440
 msgid "Image Count"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2443
+#: drivers/esci/compound-scanner.cpp:2452
 msgid "Detect Double Feed"
 msgstr "이중 급지 감지"
 
-#: drivers/esci/compound-scanner.cpp:2454
+#: drivers/esci/compound-scanner.cpp:2463
 msgid "Long Paper Mode"
 msgstr "긴 용지 모드"
 
-#: drivers/esci/compound-scanner.cpp:2455
+#: drivers/esci/compound-scanner.cpp:2464
 msgid ""
 "Select this mode if you want to scan documents longer than what the ADF "
 "would normally support.  Please note that it only supports automatic "
 "detection of the document height."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2578
-#: drivers/esci/compound-scanner.cpp:2648
+#: drivers/esci/compound-scanner.cpp:2587
+#: drivers/esci/compound-scanner.cpp:2657
 msgid "Bind X and Y resolutions"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2586
-#: drivers/esci/compound-scanner.cpp:2601
-#: drivers/esci/compound-scanner.cpp:2656
-#: drivers/esci/compound-scanner.cpp:2671
+#: drivers/esci/compound-scanner.cpp:2595
+#: drivers/esci/compound-scanner.cpp:2610
+#: drivers/esci/compound-scanner.cpp:2665
+#: drivers/esci/compound-scanner.cpp:2680
 #, fuzzy
 msgid "X Resolution"
 msgstr "해상도"
 
-#: drivers/esci/compound-scanner.cpp:2590
-#: drivers/esci/compound-scanner.cpp:2605
-#: drivers/esci/compound-scanner.cpp:2660
-#: drivers/esci/compound-scanner.cpp:2675
+#: drivers/esci/compound-scanner.cpp:2599
+#: drivers/esci/compound-scanner.cpp:2614
+#: drivers/esci/compound-scanner.cpp:2669
+#: drivers/esci/compound-scanner.cpp:2684
 #, fuzzy
 msgid "Y Resolution"
 msgstr "해상도"
 
-#: drivers/esci/compound-scanner.cpp:2635
+#: drivers/esci/compound-scanner.cpp:2644
 #: drivers/esci/extended-scanner.cpp:1282
 msgid "Enable Resampling"
 msgstr "다시 샘플링 사용"
 
-#: drivers/esci/compound-scanner.cpp:2636
+#: drivers/esci/compound-scanner.cpp:2645
 #: drivers/esci/extended-scanner.cpp:1283
 msgid ""
 "This option provides the user with a wider range of supported resolutions.  "
@@ -281,49 +281,49 @@ msgid ""
 "processing methods."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2726
+#: drivers/esci/compound-scanner.cpp:2735
 #: drivers/esci/extended-scanner.cpp:1324
 msgid "Scan Area"
 msgstr "스캔 영역"
 
-#: drivers/esci/compound-scanner.cpp:2734
+#: drivers/esci/compound-scanner.cpp:2743
 #: drivers/esci/extended-scanner.cpp:1332
 msgid "Top Left X"
 msgstr "왼쪽 위 X"
 
-#: drivers/esci/compound-scanner.cpp:2742
+#: drivers/esci/compound-scanner.cpp:2751
 #: drivers/esci/extended-scanner.cpp:1348
 msgid "Top Left Y"
 msgstr "왼쪽 위 Y"
 
-#: drivers/esci/compound-scanner.cpp:2750
+#: drivers/esci/compound-scanner.cpp:2759
 #: drivers/esci/extended-scanner.cpp:1340
 msgid "Bottom Right X"
 msgstr "오른쪽 아래 X"
 
-#: drivers/esci/compound-scanner.cpp:2758
+#: drivers/esci/compound-scanner.cpp:2767
 #: drivers/esci/extended-scanner.cpp:1356
 msgid "Bottom Right Y"
 msgstr "오른쪽 아래 Y"
 
-#: drivers/esci/compound-scanner.cpp:2794
+#: drivers/esci/compound-scanner.cpp:2803
 msgid "Crop"
 msgstr "자르기"
 
-#: drivers/esci/compound-scanner.cpp:2806
+#: drivers/esci/compound-scanner.cpp:2815
 msgid "Crop Adjustment"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2830 gtkmm/dialog.cpp:778
+#: drivers/esci/compound-scanner.cpp:2839 gtkmm/dialog.cpp:778
 #: sane/handle.cpp:545 src/scan-cli.cpp:644
 msgid "Deskew"
 msgstr "기울임"
 
-#: drivers/esci/compound-scanner.cpp:2858
+#: drivers/esci/compound-scanner.cpp:2867
 msgid "Overscan"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:3263
+#: drivers/esci/compound-scanner.cpp:3272
 msgid ""
 "Authentication is required.\n"
 "Unfortunately, this version of the driver does not support authentication "
@@ -332,12 +332,12 @@ msgstr ""
 "인증이 필요합니다.\n"
 "유감스럽게도 이 버전의 드라이버는 아직 인증을 지원하지 않습니다."
 
-#: drivers/esci/compound-scanner.cpp:3267
+#: drivers/esci/compound-scanner.cpp:3276
 #, boost-format
 msgid "Unknown device error: %1%/%2%"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:3357
+#: drivers/esci/compound-scanner.cpp:3366
 #: drivers/esci/extended-scanner.cpp:206 sane/backend.cpp:288
 msgid ""
 "The Automatic Document Feeder is open.\n"
@@ -346,7 +346,7 @@ msgstr ""
 "자동 문서 공급 장치를 닫으십시오.\n"
 "ADF에 문서가 장착되어 있으면 제거하고 다시 장착하십시오."
 
-#: drivers/esci/compound-scanner.cpp:3360
+#: drivers/esci/compound-scanner.cpp:3369
 #: drivers/esci/extended-scanner.cpp:201 sane/backend.cpp:274
 msgid ""
 "A paper jam occurred.\n"
@@ -357,12 +357,12 @@ msgstr ""
 "용지가 걸렸습니다.\n"
 "자동 문서 공급 장치를 열고 걸린 용지를 제거하십시오."
 
-#: drivers/esci/compound-scanner.cpp:3365
+#: drivers/esci/compound-scanner.cpp:3374
 #: drivers/esci/extended-scanner.cpp:198 sane/backend.cpp:269
 msgid "Please load the document(s) into the Automatic Document Feeder."
 msgstr "자동 문서 공급 장치에 문서를 급지하여 주십시오."
 
-#: drivers/esci/compound-scanner.cpp:3368
+#: drivers/esci/compound-scanner.cpp:3377
 #: drivers/esci/extended-scanner.cpp:209 sane/backend.cpp:281
 msgid ""
 "A multi page feed occurred in the auto document feeder. Open the cover, "
@@ -373,7 +373,7 @@ msgstr ""
 "거한 다음 다시 시도하십시오. 만약 트레이에 문서가 남아 있으면 제거한 후 다시 "
 "급지하십시오."
 
-#: drivers/esci/compound-scanner.cpp:3373
+#: drivers/esci/compound-scanner.cpp:3382
 #: drivers/esci/extended-scanner.cpp:214
 msgid ""
 "A fatal ADF error has occurred.\n"
@@ -381,16 +381,16 @@ msgid ""
 "dialog or application in order to be able to scan."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:3387
+#: drivers/esci/compound-scanner.cpp:3396
 msgid "A fatal error has occurred"
 msgstr ""
 
-#: drivers/esci/compound-tweaks.cpp:109 drivers/esci/compound-tweaks.cpp:274
+#: drivers/esci/compound-tweaks.cpp:111 drivers/esci/compound-tweaks.cpp:356
 #: drivers/esci/extended-scanner.cpp:335
 msgid "Speed"
 msgstr ""
 
-#: drivers/esci/compound-tweaks.cpp:110 drivers/esci/compound-tweaks.cpp:275
+#: drivers/esci/compound-tweaks.cpp:112 drivers/esci/compound-tweaks.cpp:357
 msgid "Optimize image acquisition for speed"
 msgstr ""
 
@@ -460,7 +460,7 @@ msgstr ""
 
 #: drivers/esci/extended-scanner.cpp:121
 #: drivers/esci/grammar-capabilities.cpp:260
-#: drivers/esci/grammar-capabilities.cpp:410
+#: drivers/esci/grammar-capabilities.cpp:423
 msgid "None"
 msgstr "사용 안 함"
 
@@ -521,19 +521,19 @@ msgid "Unknown device error"
 msgstr ""
 
 #: drivers/esci/extended-scanner.cpp:326
-#: drivers/esci/grammar-capabilities.cpp:675 gtkmm/dialog.cpp:794
+#: drivers/esci/grammar-capabilities.cpp:688 gtkmm/dialog.cpp:794
 #: sane/handle.cpp:588 src/scan-cli.cpp:664
 msgid "Monochrome"
 msgstr "모노크롬"
 
 #: drivers/esci/extended-scanner.cpp:327
-#: drivers/esci/grammar-capabilities.cpp:676 gtkmm/dialog.cpp:795
+#: drivers/esci/grammar-capabilities.cpp:689 gtkmm/dialog.cpp:795
 #: sane/handle.cpp:589 src/scan-cli.cpp:665
 msgid "Grayscale"
 msgstr "그레이스케일"
 
 #: drivers/esci/extended-scanner.cpp:328
-#: drivers/esci/grammar-capabilities.cpp:673 drivers/esci/scanner.cpp:271
+#: drivers/esci/grammar-capabilities.cpp:686 drivers/esci/scanner.cpp:284
 #: gtkmm/dialog.cpp:796 sane/handle.cpp:590 src/scan-cli.cpp:666
 msgid "Color"
 msgstr "컬러"
@@ -631,51 +631,60 @@ msgstr "흰색"
 msgid "Black"
 msgstr "검정색"
 
-#: drivers/esci/grammar-capabilities.cpp:366
+#: drivers/esci/grammar-capabilities.cpp:368
+#: drivers/esci/grammar-capabilities.cpp:383
 msgid "Off"
 msgstr "사용 안 함"
 
-#: drivers/esci/grammar-capabilities.cpp:367
+#: drivers/esci/grammar-capabilities.cpp:369
 msgid "Normal"
 msgstr "표준"
 
-#: drivers/esci/grammar-capabilities.cpp:368
+#: drivers/esci/grammar-capabilities.cpp:370
 msgid "Thin"
 msgstr "얇은 용지"
 
-#: drivers/esci/grammar-capabilities.cpp:460
+#: drivers/esci/grammar-capabilities.cpp:384
+msgid "On"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:385
+msgid "Paper Protection"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:473
 msgid "Red"
 msgstr "적색"
 
-#: drivers/esci/grammar-capabilities.cpp:461
+#: drivers/esci/grammar-capabilities.cpp:474
 msgid "Green"
 msgstr "녹색"
 
-#: drivers/esci/grammar-capabilities.cpp:462
+#: drivers/esci/grammar-capabilities.cpp:475
 msgid "Blue"
 msgstr "청색"
 
-#: drivers/esci/grammar-capabilities.cpp:555 gtkmm/file-chooser.cpp:453
+#: drivers/esci/grammar-capabilities.cpp:568 gtkmm/file-chooser.cpp:453
 msgid "JPEG"
 msgstr ""
 
-#: drivers/esci/scanner.cpp:268
+#: drivers/esci/scanner.cpp:281
 msgid "ADF - Double-sided"
 msgstr "ADF - 양면"
 
-#: drivers/esci/scanner.cpp:269
+#: drivers/esci/scanner.cpp:282
 msgid "ADF - Single-sided"
 msgstr "ADF - 단면"
 
-#: drivers/esci/scanner.cpp:270
+#: drivers/esci/scanner.cpp:283
 msgid "Black & White"
 msgstr "흑백"
 
-#: drivers/esci/scanner.cpp:272
+#: drivers/esci/scanner.cpp:285
 msgid "Mode"
 msgstr "모드"
 
-#: drivers/esci/scanner.cpp:273
+#: drivers/esci/scanner.cpp:286
 msgid "Text/Line Art"
 msgstr "텍스트/라인 아트"
 

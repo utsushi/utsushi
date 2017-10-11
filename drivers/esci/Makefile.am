@@ -227,9 +227,12 @@ driverdata_DATA += data/DS-510.dat
 driverdata_DATA += data/DS-520.dat
 driverdata_DATA += data/DS-560.dat
 driverdata_DATA += data/DS-530.dat
+driverdata_DATA += data/DS-535.dat
 driverdata_DATA += data/DS-570W.dat
+driverdata_DATA += data/DS-575W.dat
 driverdata_DATA += data/DS-760.dat
 driverdata_DATA += data/DS-770.dat
+driverdata_DATA += data/DS-775.dat
 driverdata_DATA += data/DS-860.dat
 driverdata_DATA += data/DS-1610.dat
 driverdata_DATA += data/DS-1630.dat
@@ -317,3 +320,12 @@ $(srcdir)/data/PX-M7050FX.dat: $(srcdir)/data/PX-M7050.dat
 
 $(srcdir)/data/WF-6590.dat: $(srcdir)/data/PX-M860F.dat
 	sed -e 's,PID 08CE,PID 08CF,' $< > $@
+
+$(srcdir)/data/DS-535.dat: $(srcdir)/data/DS-530.dat
+	$(clone_dat)
+
+$(srcdir)/data/DS-775.dat: $(srcdir)/data/DS-530.dat
+	$(clone_dat)
+
+$(srcdir)/data/DS-575W.dat: $(srcdir)/data/DS-530.dat
+	sed -e 's,DS-530 ,DS-575W,' $< > $@

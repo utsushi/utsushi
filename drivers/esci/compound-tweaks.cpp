@@ -34,6 +34,8 @@
 #include "code-token.hpp"
 #include "compound-tweaks.hpp"
 
+#include "utsushi/log.hpp"
+
 namespace utsushi {
 namespace _drv_ {
 namespace esci {
@@ -193,6 +195,86 @@ DS_3x0::DS_3x0 (const connexion::ptr& cnx)
 
 void
 DS_3x0::configure ()
+{
+  compound_scanner::configure ();
+
+  descriptors_["enable-resampling"]->active (false);
+  descriptors_["enable-resampling"]->read_only (true);
+
+  // autocrop/deskew parameter
+  add_options ()
+    ("lo-threshold", quantity (65.6))
+    ("hi-threshold", quantity (80.4))
+    ("auto-kludge", toggle (false))
+    ;
+  descriptors_["lo-threshold"]->read_only (true);
+  descriptors_["hi-threshold"]->read_only (true);
+  descriptors_["auto-kludge"]->read_only (true);
+}
+
+DS_4x0::DS_4x0 (const connexion::ptr& cnx)
+  : compound_scanner (cnx)
+{
+  capabilities& caps (const_cast< capabilities& > (caps_));
+  parameters&   defs (const_cast< parameters& > (defs_));
+
+  // Both resolution settings need to be identical
+  caps.rss = boost::none;
+
+  if (HAVE_MAGICK)              /* enable resampling */
+    {
+      constraint::ptr res (from< range > ()
+                           -> bounds (50, 600)
+                           -> default_value (*defs.rsm));
+      const_cast< constraint::ptr& > (adf_res_x_) = res;
+      if (caps.rss)
+        {
+          const_cast< constraint::ptr& > (adf_res_y_) = res;
+        }
+    }
+
+  // Assume people prefer brighter colors over B/W
+  defs.col = code_token::parameter::col::C024;
+  defs.gmm = code_token::parameter::gmm::UG18;
+
+  // Boost USB I/O throughput
+  defs.bsz = 1024 * 1024;
+  caps.bsz = capabilities::range (1, *defs.bsz);
+
+  // Color correction parameters
+
+  vector< double, 3 >& exp
+    (const_cast< vector< double, 3 >& > (gamma_exponent_));
+  exp[0] = 1.012;
+  exp[1] = 0.987;
+  exp[2] = 1.001;
+
+  matrix< double, 3 >& mat
+    (const_cast< matrix< double, 3 >& > (profile_matrix_));
+
+  mat[0][0] =  1.0431;
+  mat[0][1] =  0.0002;
+  mat[0][2] = -0.0433;
+  mat[1][0] =  0.0163;
+  mat[1][1] =  1.1176;
+  mat[1][2] = -0.1339;
+  mat[2][0] =  0.0061;
+  mat[2][1] = -0.1784;
+  mat[2][2] =  1.1723;
+
+  // disable HW crop/deskew
+  using namespace code_token::capability;
+  if (caps.adf && caps.adf->flags)
+    {
+      erase (*caps.adf->flags, adf::CRP);
+      erase (*caps.adf->flags, adf::SKEW);
+    }
+
+  read_back_ = false;
+}
+
+void
+DS_4x0::configure ()
 {
   compound_scanner::configure ();
 
@@ -1022,6 +1104,64 @@ L61x0::L61x0 (const connexion::ptr& cnx)
 
 void
 L61x0::configure ()
+{
+  compound_scanner::configure ();
+
+  descriptors_["enable-resampling"]->active (false);
+  descriptors_["enable-resampling"]->read_only (true);
+}
+
+ET_77xx::ET_77xx (const connexion::ptr& cnx)
+  : compound_scanner (cnx)
+{
+  capabilities& caps (const_cast< capabilities& > (caps_));
+  parameters&   defs (const_cast< parameters& > (defs_));
+
+  if (HAVE_MAGICK)              /* enable resampling */
+    {
+      constraint::ptr res (from< range > ()
+                           -> bounds (50, 1200)
+                           -> default_value (*defs.rsm));
+      const_cast< constraint::ptr& > (fb_res_x_) = res;
+
+      if (caps.rss)
+        {
+          const_cast< constraint::ptr& > (fb_res_y_) = res;
+        }
+    }
+
+  // Assume people prefer brighter colors over B/W
+  defs.col = code_token::parameter::col::C024;
+  defs.gmm = code_token::parameter::gmm::UG18;
+
+  // Boost USB I/O throughput
+  defs.bsz = 1024 * 1024;
+
+  // Color correction parameters
+
+  vector< double, 3 >& exp
+    (const_cast< vector< double, 3 >& > (gamma_exponent_));
+
+  exp[0] = 1.014;
+  exp[1] = 0.990;
+  exp[2] = 0.997;
+
+  matrix< double, 3 >& mat
+    (const_cast< matrix< double, 3 >& > (profile_matrix_));
+
+  mat[0][0] =  0.9803;
+  mat[0][1] =  0.0341;
+  mat[0][2] = -0.0144;
+  mat[1][0] =  0.0080;
+  mat[1][1] =  1.0308;
+  mat[1][2] = -0.0388;
+  mat[2][0] =  0.0112;
+  mat[2][1] = -0.1296;
+  mat[2][2] =  1.1184;
+}
+
+void
+ET_77xx::configure ()
 {
   compound_scanner::configure ();
 

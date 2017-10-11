@@ -358,6 +358,8 @@ capabilities::double_feed () const
 
   bool dfl1 (std::count (adf->flags->begin (), adf->flags->end (), DFL1));
   bool dfl2 (std::count (adf->flags->begin (), adf->flags->end (), DFL2));
+  bool sdf  (std::count (adf->flags->begin (), adf->flags->end (), SDF ));
+  bool spp  (std::count (adf->flags->begin (), adf->flags->end (), SPP ));
 
   if (dfl1 && dfl2)
     {
@@ -373,6 +375,17 @@ capabilities::double_feed () const
   if (dfl1)
     {
       return make_shared< constraint > (toggle ());
+    }
+  if (sdf && spp)
+    {
+    store::ptr s = make_shared< store > ();
+
+      s -> alternative (SEC_N_("Off"))
+        -> alternative (SEC_N_("On"))
+        -> alternative (SEC_("Paper Protection"))
+        -> default_value (s->front ());
+
+      return s;
     }
   if (dfl2)
     {

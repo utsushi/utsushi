@@ -103,6 +103,9 @@ test-suite.log
 /drivers/esci/data/ES-300W.dat
 /drivers/esci/data/ES-400.dat
 /drivers/esci/data/ES-500W.dat
+/drivers/esci/data/ES-535.dat
+/drivers/esci/data/ES-775.dat
+/drivers/esci/data/ES-575W.dat
 /drivers/esci/data/PX-M7050FX.dat
 /drivers/esci/data/WF-6590.dat
 /drivers/esci/esci-interpreter

@@ -624,6 +624,8 @@ namespace capability {
     const quad DFL1 = CODE_TOKEN (UPPER_D, UPPER_F, UPPER_L, DIGIT_1);
     const quad DFL2 = CODE_TOKEN (UPPER_D, UPPER_F, UPPER_L, DIGIT_2);
     const quad LDF  = CODE_TOKEN (UPPER_L, UPPER_D, UPPER_F, SPACE  );
+    const quad SDF  = CODE_TOKEN (UPPER_S, UPPER_D, UPPER_F, SPACE  );
+    const quad SPP  = CODE_TOKEN (UPPER_S, UPPER_P, UPPER_P, SPACE  );
     const quad FAST = CODE_TOKEN (UPPER_F, UPPER_A, UPPER_S, UPPER_T);
     const quad SLOW = CODE_TOKEN (UPPER_S, UPPER_L, UPPER_O, UPPER_W);
     const quad BGWH = CODE_TOKEN (UPPER_B, UPPER_G, UPPER_W, UPPER_H);

@@ -50,6 +50,9 @@ DERIVED_COMPOUND_(compound_scanner, DS_40,
 DERIVED_COMPOUND_(compound_scanner, DS_3x0,
                   void configure ();
 );
+DERIVED_COMPOUND_(compound_scanner, DS_4x0,
+                  void configure ();
+);
 DERIVED_COMPOUND_(compound_scanner, DS_5x0,
                   void configure ();
 );
@@ -79,6 +82,9 @@ DERIVED_COMPOUND_(compound_scanner, EP_710A,
                   void configure ();
 );
 DERIVED_COMPOUND_(compound_scanner, L61x0,
+                  void configure ();
+);
+DERIVED_COMPOUND_(compound_scanner, ET_77xx,
                   void configure ();
 );
 

@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2017-07-27 14:37+0900\n"
+"POT-Creation-Date: 2017-10-10 21:14+0000\n"
 "PO-Revision-Date: 2016-02-24 09:02+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Dutch\n"
@@ -31,10 +31,10 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 1.7.3\n"
 
-#: drivers/combo.cpp:234 drivers/esci/compound-scanner.cpp:2582
-#: drivers/esci/compound-scanner.cpp:2617
-#: drivers/esci/compound-scanner.cpp:2652
-#: drivers/esci/compound-scanner.cpp:2687
+#: drivers/combo.cpp:234 drivers/esci/compound-scanner.cpp:2591
+#: drivers/esci/compound-scanner.cpp:2626
+#: drivers/esci/compound-scanner.cpp:2661
+#: drivers/esci/compound-scanner.cpp:2696
 #: drivers/esci/extended-scanner.cpp:1267
 #: drivers/esci/extended-scanner.cpp:1290
 msgid "Resolution"
@@ -184,31 +184,31 @@ msgstr "Laden"
 msgid "Loading..."
 msgstr "Laden..."
 
-#: drivers/esci/compound-scanner.cpp:1722
-#: drivers/esci/compound-scanner.cpp:2716
+#: drivers/esci/compound-scanner.cpp:1731
+#: drivers/esci/compound-scanner.cpp:2725
 #: drivers/esci/extended-scanner.cpp:1314
 msgid "Manual"
 msgstr "Gleuf voor handinvoer"
 
-#: drivers/esci/compound-scanner.cpp:1723
-#: drivers/esci/compound-scanner.cpp:2717
+#: drivers/esci/compound-scanner.cpp:1732
+#: drivers/esci/compound-scanner.cpp:2726
 #: drivers/esci/extended-scanner.cpp:1315
 msgid "Maximum"
 msgstr "Maximum"
 
-#: drivers/esci/compound-scanner.cpp:1730
-#: drivers/esci/compound-scanner.cpp:2719
-#: drivers/esci/compound-scanner.cpp:2786
+#: drivers/esci/compound-scanner.cpp:1739
+#: drivers/esci/compound-scanner.cpp:2728
+#: drivers/esci/compound-scanner.cpp:2795
 #: drivers/esci/extended-scanner.cpp:1317
 msgid "Auto Detect"
 msgstr "Automatisch detecteren"
 
-#: drivers/esci/compound-scanner.cpp:1945
-#: drivers/esci/grammar-capabilities.cpp:554
+#: drivers/esci/compound-scanner.cpp:1954
+#: drivers/esci/grammar-capabilities.cpp:567
 msgid "RAW"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2066
+#: drivers/esci/compound-scanner.cpp:2075
 #: drivers/esci/extended-scanner.cpp:1071
 #, boost-format
 msgid ""
@@ -216,64 +216,64 @@ msgid ""
 "The area needs to be larger than %1% by %2%."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2372
+#: drivers/esci/compound-scanner.cpp:2381
 #, boost-format
 msgid ""
 "Resolution too high for selected area.\n"
 "Choose a resolution no larger than %1%"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2419
+#: drivers/esci/compound-scanner.cpp:2428
 #: drivers/esci/extended-scanner.cpp:1187
 msgid "Duplex"
 msgstr "Duplex"
 
-#: drivers/esci/compound-scanner.cpp:2431
+#: drivers/esci/compound-scanner.cpp:2440
 msgid "Image Count"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2443
+#: drivers/esci/compound-scanner.cpp:2452
 msgid "Detect Double Feed"
 msgstr "Dubbele invoer detecteren"
 
-#: drivers/esci/compound-scanner.cpp:2454
+#: drivers/esci/compound-scanner.cpp:2463
 msgid "Long Paper Mode"
 msgstr "Modus lang papier"
 
-#: drivers/esci/compound-scanner.cpp:2455
+#: drivers/esci/compound-scanner.cpp:2464
 msgid ""
 "Select this mode if you want to scan documents longer than what the ADF "
 "would normally support.  Please note that it only supports automatic "
 "detection of the document height."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2578
-#: drivers/esci/compound-scanner.cpp:2648
+#: drivers/esci/compound-scanner.cpp:2587
+#: drivers/esci/compound-scanner.cpp:2657
 msgid "Bind X and Y resolutions"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2586
-#: drivers/esci/compound-scanner.cpp:2601
-#: drivers/esci/compound-scanner.cpp:2656
-#: drivers/esci/compound-scanner.cpp:2671
+#: drivers/esci/compound-scanner.cpp:2595
+#: drivers/esci/compound-scanner.cpp:2610
+#: drivers/esci/compound-scanner.cpp:2665
+#: drivers/esci/compound-scanner.cpp:2680
 #, fuzzy
 msgid "X Resolution"
 msgstr "Resolutie"
 
-#: drivers/esci/compound-scanner.cpp:2590
-#: drivers/esci/compound-scanner.cpp:2605
-#: drivers/esci/compound-scanner.cpp:2660
-#: drivers/esci/compound-scanner.cpp:2675
+#: drivers/esci/compound-scanner.cpp:2599
+#: drivers/esci/compound-scanner.cpp:2614
+#: drivers/esci/compound-scanner.cpp:2669
+#: drivers/esci/compound-scanner.cpp:2684
 #, fuzzy
 msgid "Y Resolution"
 msgstr "Resolutie"
 
-#: drivers/esci/compound-scanner.cpp:2635
+#: drivers/esci/compound-scanner.cpp:2644
 #: drivers/esci/extended-scanner.cpp:1282
 msgid "Enable Resampling"
 msgstr "Nieuwe kleurschakeling inschakelen"
 
-#: drivers/esci/compound-scanner.cpp:2636
+#: drivers/esci/compound-scanner.cpp:2645
 #: drivers/esci/extended-scanner.cpp:1283
 msgid ""
 "This option provides the user with a wider range of supported resolutions.  "
@@ -281,49 +281,49 @@ msgid ""
 "processing methods."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2726
+#: drivers/esci/compound-scanner.cpp:2735
 #: drivers/esci/extended-scanner.cpp:1324
 msgid "Scan Area"
 msgstr "Scangebied"
 
-#: drivers/esci/compound-scanner.cpp:2734
+#: drivers/esci/compound-scanner.cpp:2743
 #: drivers/esci/extended-scanner.cpp:1332
 msgid "Top Left X"
 msgstr "Linkerbovenhoek X"
 
-#: drivers/esci/compound-scanner.cpp:2742
+#: drivers/esci/compound-scanner.cpp:2751
 #: drivers/esci/extended-scanner.cpp:1348
 msgid "Top Left Y"
 msgstr "Linkerbovenhoek Y"
 
-#: drivers/esci/compound-scanner.cpp:2750
+#: drivers/esci/compound-scanner.cpp:2759
 #: drivers/esci/extended-scanner.cpp:1340
 msgid "Bottom Right X"
 msgstr "Rechteronderhoek X"
 
-#: drivers/esci/compound-scanner.cpp:2758
+#: drivers/esci/compound-scanner.cpp:2767
 #: drivers/esci/extended-scanner.cpp:1356
 msgid "Bottom Right Y"
 msgstr "Rechteronderhoek Y"
 
-#: drivers/esci/compound-scanner.cpp:2794
+#: drivers/esci/compound-scanner.cpp:2803
 msgid "Crop"
 msgstr "Bijsnijden"
 
-#: drivers/esci/compound-scanner.cpp:2806
+#: drivers/esci/compound-scanner.cpp:2815
 msgid "Crop Adjustment"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:2830 gtkmm/dialog.cpp:778
+#: drivers/esci/compound-scanner.cpp:2839 gtkmm/dialog.cpp:778
 #: sane/handle.cpp:545 src/scan-cli.cpp:644
 msgid "Deskew"
 msgstr "Recht zetten"
 
-#: drivers/esci/compound-scanner.cpp:2858
+#: drivers/esci/compound-scanner.cpp:2867
 msgid "Overscan"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:3263
+#: drivers/esci/compound-scanner.cpp:3272
 msgid ""
 "Authentication is required.\n"
 "Unfortunately, this version of the driver does not support authentication "
@@ -333,12 +333,12 @@ msgstr ""
 "Helaas wordt verificatie nog niet ondersteund door deze versie van het "
 "stuurprogramma."
 
-#: drivers/esci/compound-scanner.cpp:3267
+#: drivers/esci/compound-scanner.cpp:3276
 #, boost-format
 msgid "Unknown device error: %1%/%2%"
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:3357
+#: drivers/esci/compound-scanner.cpp:3366
 #: drivers/esci/extended-scanner.cpp:206 sane/backend.cpp:288
 msgid ""
 "The Automatic Document Feeder is open.\n"
@@ -347,7 +347,7 @@ msgstr ""
 "De automatische documententoevoerderer is geopend.\n"
 "Sluit hem."
 
-#: drivers/esci/compound-scanner.cpp:3360
+#: drivers/esci/compound-scanner.cpp:3369
 #: drivers/esci/extended-scanner.cpp:201 sane/backend.cpp:274
 msgid ""
 "A paper jam occurred.\n"
@@ -360,12 +360,12 @@ msgstr ""
 "automatische documenttoevoerder werden geplaatst, moeten eruit worden "
 "gehaald en daarna teruggeplaatst."
 
-#: drivers/esci/compound-scanner.cpp:3365
+#: drivers/esci/compound-scanner.cpp:3374
 #: drivers/esci/extended-scanner.cpp:198 sane/backend.cpp:269
 msgid "Please load the document(s) into the Automatic Document Feeder."
 msgstr "Laad document(en) in de automatische documententoevoerder."
 
-#: drivers/esci/compound-scanner.cpp:3368
+#: drivers/esci/compound-scanner.cpp:3377
 #: drivers/esci/extended-scanner.cpp:209 sane/backend.cpp:281
 msgid ""
 "A multi page feed occurred in the auto document feeder. Open the cover, "
@@ -377,7 +377,7 @@ msgstr ""
 "opnieuw. Als er zich nog pagina's in de toevoerder bevinden, verwijdert u "
 "deze en laadt u ze opnieuw."
 
-#: drivers/esci/compound-scanner.cpp:3373
+#: drivers/esci/compound-scanner.cpp:3382
 #: drivers/esci/extended-scanner.cpp:214
 msgid ""
 "A fatal ADF error has occurred.\n"
@@ -385,16 +385,16 @@ msgid ""
 "dialog or application in order to be able to scan."
 msgstr ""
 
-#: drivers/esci/compound-scanner.cpp:3387
+#: drivers/esci/compound-scanner.cpp:3396
 msgid "A fatal error has occurred"
 msgstr ""
 
-#: drivers/esci/compound-tweaks.cpp:109 drivers/esci/compound-tweaks.cpp:274
+#: drivers/esci/compound-tweaks.cpp:111 drivers/esci/compound-tweaks.cpp:356
 #: drivers/esci/extended-scanner.cpp:335
 msgid "Speed"
 msgstr ""
 
-#: drivers/esci/compound-tweaks.cpp:110 drivers/esci/compound-tweaks.cpp:275
+#: drivers/esci/compound-tweaks.cpp:112 drivers/esci/compound-tweaks.cpp:357
 msgid "Optimize image acquisition for speed"
 msgstr ""
 
@@ -464,7 +464,7 @@ msgstr ""
 
 #: drivers/esci/extended-scanner.cpp:121
 #: drivers/esci/grammar-capabilities.cpp:260
-#: drivers/esci/grammar-capabilities.cpp:410
+#: drivers/esci/grammar-capabilities.cpp:423
 msgid "None"
 msgstr "Geen"
 
@@ -525,19 +525,19 @@ msgid "Unknown device error"
 msgstr ""
 
 #: drivers/esci/extended-scanner.cpp:326
-#: drivers/esci/grammar-capabilities.cpp:675 gtkmm/dialog.cpp:794
+#: drivers/esci/grammar-capabilities.cpp:688 gtkmm/dialog.cpp:794
 #: sane/handle.cpp:588 src/scan-cli.cpp:664
 msgid "Monochrome"
 msgstr "Monochroom"
 
 #: drivers/esci/extended-scanner.cpp:327
-#: drivers/esci/grammar-capabilities.cpp:676 gtkmm/dialog.cpp:795
+#: drivers/esci/grammar-capabilities.cpp:689 gtkmm/dialog.cpp:795
 #: sane/handle.cpp:589 src/scan-cli.cpp:665
 msgid "Grayscale"
 msgstr "Grijs"
 
 #: drivers/esci/extended-scanner.cpp:328
-#: drivers/esci/grammar-capabilities.cpp:673 drivers/esci/scanner.cpp:271
+#: drivers/esci/grammar-capabilities.cpp:686 drivers/esci/scanner.cpp:284
 #: gtkmm/dialog.cpp:796 sane/handle.cpp:590 src/scan-cli.cpp:666
 msgid "Color"
 msgstr "Kleuren"
@@ -635,51 +635,60 @@ msgstr "Wit"
 msgid "Black"
 msgstr "Zwart"
 
-#: drivers/esci/grammar-capabilities.cpp:366
+#: drivers/esci/grammar-capabilities.cpp:368
+#: drivers/esci/grammar-capabilities.cpp:383
 msgid "Off"
 msgstr "Uit"
 
-#: drivers/esci/grammar-capabilities.cpp:367
+#: drivers/esci/grammar-capabilities.cpp:369
 msgid "Normal"
 msgstr "Normaal"
 
-#: drivers/esci/grammar-capabilities.cpp:368
+#: drivers/esci/grammar-capabilities.cpp:370
 msgid "Thin"
 msgstr "Dun"
 
-#: drivers/esci/grammar-capabilities.cpp:460
+#: drivers/esci/grammar-capabilities.cpp:384
+msgid "On"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:385
+msgid "Paper Protection"
+msgstr ""
+
+#: drivers/esci/grammar-capabilities.cpp:473
 msgid "Red"
 msgstr "Rood"
 
-#: drivers/esci/grammar-capabilities.cpp:461
+#: drivers/esci/grammar-capabilities.cpp:474
 msgid "Green"
 msgstr "Groen"
 
-#: drivers/esci/grammar-capabilities.cpp:462
+#: drivers/esci/grammar-capabilities.cpp:475
 msgid "Blue"
 msgstr "Blauw"
 
-#: drivers/esci/grammar-capabilities.cpp:555 gtkmm/file-chooser.cpp:453
+#: drivers/esci/grammar-capabilities.cpp:568 gtkmm/file-chooser.cpp:453
 msgid "JPEG"
 msgstr ""
 
-#: drivers/esci/scanner.cpp:268
+#: drivers/esci/scanner.cpp:281
 msgid "ADF - Double-sided"
 msgstr "ADF - Dubbelzijdig"
 
-#: drivers/esci/scanner.cpp:269
+#: drivers/esci/scanner.cpp:282
 msgid "ADF - Single-sided"
 msgstr "ADF - Enkelzijdig"
 
-#: drivers/esci/scanner.cpp:270
+#: drivers/esci/scanner.cpp:283
 msgid "Black & White"
 msgstr "Zwart-wit"
 
-#: drivers/esci/scanner.cpp:272
+#: drivers/esci/scanner.cpp:285
 msgid "Mode"
 msgstr "Modus"
 
-#: drivers/esci/scanner.cpp:273
+#: drivers/esci/scanner.cpp:286
 msgid "Text/Line Art"
 msgstr "Tekst/lijntekeningen"
 

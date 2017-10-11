@@ -1140,6 +1140,15 @@ compound_scanner::set_up_doc_source ()
         {
           src_opts.push_back (adf::DFL2);
         }
+      else if (v == value ("On"))
+        {
+          src_opts.push_back (adf::SDF);
+        }
+      else if (v == value ("Paper protection"))
+        {
+          src_opts.push_back (adf::SDF);
+	  src_opts.push_back (adf::SPP);
+        }
       else
         log::error
           ("double-feed:detection: unsupported value '%1%'")
@@ -1470,7 +1479,7 @@ compound_scanner::queue_image_data_()
   if (cancelled_)
     {
       cancel ();            // notify idevice::read()
-      *cnx_ << acquire_.finish ();
+      //*cnx_ << acquire_.finish ();
     }
 
   if (buf.is_flip_side ())
