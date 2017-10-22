@@ -23,6 +23,7 @@
 #endif
 
 #include <cstring>
+#include <iostream>
 
 #include "utsushi/string.hpp"
 

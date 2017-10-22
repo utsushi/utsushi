@@ -22,6 +22,7 @@
 #include <config.h>
 #endif
 
+#include <iostream>
 #include "utsushi/toggle.hpp"
 
 namespace utsushi {
