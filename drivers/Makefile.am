@@ -28,7 +28,7 @@ driverlibdir    = $(pkglibdir)
 driverdatadir   = $(pkgsysconfdir)
 driver_ldflags  = $(AM_LDFLAGS)
 driver_ldflags += -export-dynamic
-driver_ldflags += -export-symbols-regex libdrv_$(driver)_LTX_factory
+driver_ldflags += -export-symbols-regex libdrv_$(driver)_LTX_scanner_factory
 
 driverlib_LTLIBRARIES = libdrv-combo.la
 
