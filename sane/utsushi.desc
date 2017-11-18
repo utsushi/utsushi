@@ -516,6 +516,11 @@
 :status    :good
 :comment   "ET-77xx?"
 
+:model     "PID 112D"
+:interface "USB"
+:usbid     "0x04b8" "0x112d"
+:status    :good
+
 :model     "PID 1130"
 :interface "USB"
 :usbid     "0x04b8" "0x1130"
@@ -527,6 +532,11 @@
 :usbid     "0x04b8" "0x1131"
 :status    :good
 :comment   "EP-8xxA?"
+
+:model     "PID 1132"
+:interface "USB"
+:usbid     "0x04b8" "0x1132"
+:status    :good
 
 :model     "PID 1133"
 :interface "USB"
@@ -545,3 +555,13 @@
 :usbid     "0x04b8" "0x1135"
 :status    :good
 :comment   "L61x0?"
+
+:model     "PID 1139"
+:interface "USB"
+:usbid     "0x04b8" "0x1139"
+:status    :good
+
+:model     "PID 113A"
+:interface "USB"
+:usbid     "0x04b8" "0x113A"
+:status    :good
