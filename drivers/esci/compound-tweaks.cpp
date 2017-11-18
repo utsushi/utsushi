@@ -565,7 +565,12 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
   defs.gmm = code_token::parameter::gmm::UG18;
 
   // Boost USB I/O throughput
-  defs.bsz = 256 * 1024;
+  if (   "PID 112D" == info.product_name ())
+  {
+    defs.bsz = 1024 * 1024;
+  }else {
+    defs.bsz = 256 * 1024;
+  }
 
   // Color correction parameters
   vector< double, 3 > exp;
@@ -625,6 +630,17 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
 
   static const vector< double, 3 > gamma_exponent_5 = exp;
   static const matrix< double, 3 > profile_matrix_5 = mat;
+  
+  exp[0] = 1.014;
+  exp[1] = 0.990;
+  exp[2] = 0.997;
+ 
+  mat[0][0] =  0.9803;  mat[0][1] =  0.0341;  mat[0][2] = -0.0144;
+  mat[1][0] =  0.0080;  mat[1][1] =  1.0308;  mat[1][2] = -0.0388;
+  mat[2][0] =  0.0112;  mat[2][1] = -0.1296;  mat[2][2] =  1.1184;
+
+  static const vector< double, 3 > gamma_exponent_6 = exp;
+  static const matrix< double, 3 > profile_matrix_6 = mat;
 
   static const std::map< std::string, const vector< double, 3 > >
     gamma_exponent = boost::assign::map_list_of
@@ -641,6 +657,8 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
     ("PID 1126",   gamma_exponent_4)
     //
     ("PID 1128",   gamma_exponent_5)
+    //
+    ("PID 112D",   gamma_exponent_6)
     ;
 
   static const std::map< std::string, const matrix< double, 3 > >
@@ -658,6 +676,8 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
     ("PID 1126",   profile_matrix_4)
     //
     ("PID 1128",   profile_matrix_5)
+    //
+    ("PID 112D",   profile_matrix_6)
     ;
 
   try {
