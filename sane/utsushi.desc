@@ -212,6 +212,11 @@
 :usbid     "0x04b8" "0x08ce"
 :status    :good
 
+:model     "WF-4720"
+:interface "USB"
+:usbid     "0x04b8" "0x1125"
+:status    :good
+
 :model     "WF-6530"
 :interface "USB"
 :usbid     "0x04b8" "0x08cd"
@@ -280,6 +285,16 @@
 :model     "XP-530"
 :interface "USB"
 :usbid     "0x04b8" "0x110c"
+:status    :good
+
+:model     "XP-540"
+:interface "USB"
+:usbid     "0x04b8" "0x1117"
+:status    :good
+
+:model     "XP-640"
+:interface "USB"
+:usbid     "0x04b8" "0x1117"
 :status    :good
 
 :model     "XP-830"
