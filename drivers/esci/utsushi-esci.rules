@@ -1,5 +1,6 @@
 #  utsushi-esci.rules -- bring up supported devices as scanners
 #  Copyright (C) 2012-2016  SEIKO EPSON CORPORATION
+#  Copyright (C) 2018  Olaf Meeuwissen
 #
 #  License: GPL-3.0+
 #  Author : EPSON AVASYS CORPORATION
@@ -18,7 +19,7 @@
 #  You ought to have received a copy of the GNU General Public License
 #  along with this package.  If not, see <http://www.gnu.org/licenses/>.
 
-ACTION!="add", GOTO="utsushi_esci_rules_end"
+ACTION!="add|bind", GOTO="utsushi_esci_rules_end"
 ENV{DEVTYPE}!="usb_device", GOTO="utsushi_esci_rules_end"
 ATTR{idVendor}!="04b8", GOTO="utsushi_esci_rules_end"
 
