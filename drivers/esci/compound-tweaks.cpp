@@ -565,7 +565,10 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
   defs.gmm = code_token::parameter::gmm::UG18;
 
   // Boost USB I/O throughput
-  if (   "PID 112D" == info.product_name ())
+  if (   "PID 1128" == info.product_name () || "PID 113B" == info.product_name ())
+  {
+    defs.bsz = 1024 * 1024;
+  }else if (   "PID 112D" == info.product_name ())
   {
     defs.bsz = 1024 * 1024;
   }else {
@@ -657,6 +660,7 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
     ("PID 1126",   gamma_exponent_4)
     //
     ("PID 1128",   gamma_exponent_5)
+    ("PID 113B",   gamma_exponent_5)
     //
     ("PID 112D",   gamma_exponent_6)
     ;
@@ -676,6 +680,7 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
     ("PID 1126",   profile_matrix_4)
     //
     ("PID 1128",   profile_matrix_5)
+    ("PID 113B",   profile_matrix_5)
     //
     ("PID 112D",   profile_matrix_6)
     ;
