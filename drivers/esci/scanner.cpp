@@ -179,6 +179,11 @@ libdrv_esci_LTX_scanner_factory (const scanner::info& info, scanner::ptr& rv)
         {
           sp = make_shared< EP_30VA > (cnx);
         }
+      else if (info.product_name () == "PID 112E"
+	    )
+        {
+          sp = make_shared< PX_M884F > (cnx);
+        }
       else if (info.product_name () == "PID 1133"
 	    )
         {
