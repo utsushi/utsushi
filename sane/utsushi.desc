@@ -217,6 +217,11 @@
 :usbid     "0x04b8" "0x08ce"
 :status    :good
 
+:model     "PX-M884F"
+:interface "USB"
+:usbid     "0x04b8" "0x112e"
+:status    :good
+
 :model     "WF-4720"
 :interface "USB"
 :usbid     "0x04b8" "0x1125"
@@ -511,6 +516,7 @@
 :interface "USB"
 :usbid     "0x04b8" "0x1128"
 :status    :good
+:comment   "PX-Mxxx?"
 
 :model     "PID 1129"
 :interface "USB"
@@ -585,3 +591,9 @@
 :interface "USB"
 :usbid     "0x04b8" "0x113A"
 :status    :good
+
+:model     "PID 113B"
+:interface "USB"
+:usbid     "0x04b8" "0x113b"
+:status    :good
+:comment   "PX-Mxxx?"
