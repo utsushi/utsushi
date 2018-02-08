@@ -1,5 +1,5 @@
 ;;;  utsushi.desc                               -*- emacs-lisp -*- (sort of)
-;;;  Copyright (C) 2015-2017  Olaf Meeuwissen
+;;;  Copyright (C) 2015-2018  Olaf Meeuwissen
 ;;;
 ;;;  License: GPL-3.0+
 ;;;  Author : Olaf Meeuwissen
@@ -520,7 +520,7 @@
 
 :model     "PID 1129"
 :interface "USB"
-:usbid     "0x04b8" "0x1129b"
+:usbid     "0x04b8" "0x1129"
 :status    :good
 :comment   "L61x0?"
 
@@ -589,7 +589,7 @@
 
 :model     "PID 113A"
 :interface "USB"
-:usbid     "0x04b8" "0x113A"
+:usbid     "0x04b8" "0x113a"
 :status    :good
 
 :model     "PID 113B"
