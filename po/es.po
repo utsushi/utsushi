@@ -21,7 +21,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: utsushi 0.14.0\n"
 "Report-Msgid-Bugs-To: linux-scanner@epson.jp\n"
-"POT-Creation-Date: 2018-01-29 15:20+0900\n"
+"POT-Creation-Date: 2018-02-02 09:24+0900\n"
 "PO-Revision-Date: 2016-02-24 09:02+0900\n"
 "Last-Translator: SEIKO EPSON CORPORATION <linux-scanner@epson.jp>\n"
 "Language-Team: Spanish\n"
@@ -283,7 +283,7 @@ msgid "Grayscale"
 msgstr "Grises"
 
 #: drivers/esci/extended-scanner.cpp:328
-#: drivers/esci/grammar-capabilities.cpp:686 drivers/esci/scanner.cpp:294
+#: drivers/esci/grammar-capabilities.cpp:686 drivers/esci/scanner.cpp:297
 #: gtkmm/dialog.cpp:796 sane/handle.cpp:590 src/scan-cli.cpp:666
 msgid "Color"
 msgstr "Color"
@@ -347,23 +347,23 @@ msgstr "Verde"
 msgid "Blue"
 msgstr "Azul"
 
-#: drivers/esci/scanner.cpp:291
+#: drivers/esci/scanner.cpp:294
 msgid "ADF - Double-sided"
 msgstr "ADF - Doble cara"
 
-#: drivers/esci/scanner.cpp:292
+#: drivers/esci/scanner.cpp:295
 msgid "ADF - Single-sided"
 msgstr "ADF - Una cara"
 
-#: drivers/esci/scanner.cpp:293
+#: drivers/esci/scanner.cpp:296
 msgid "Black & White"
 msgstr "Blanco y negro"
 
-#: drivers/esci/scanner.cpp:295
+#: drivers/esci/scanner.cpp:298
 msgid "Mode"
 msgstr "Modo"
 
-#: drivers/esci/scanner.cpp:296
+#: drivers/esci/scanner.cpp:299
 msgid "Text/Line Art"
 msgstr "Texto/Dibujo Lineal"
 

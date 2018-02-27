@@ -568,7 +568,7 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
   if (   "PID 1128" == info.product_name () || "PID 113B" == info.product_name ())
   {
     defs.bsz = 1024 * 1024;
-  }else if (   "PID 112D" == info.product_name ())
+  }else if ( "PID 112D" == info.product_name () || "PID 113C" == info.product_name ())
   {
     defs.bsz = 1024 * 1024;
   }else {
@@ -653,6 +653,7 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
     ("WF-6590",    gamma_exponent_1)
     //
     ("PID 1112",   gamma_exponent_2)
+    ("PID 113C",   gamma_exponent_2)
     //
     ("PID 1125",   gamma_exponent_3)
     ("PID 1127",   gamma_exponent_3)
@@ -673,6 +674,7 @@ PX_Mxxxx::PX_Mxxxx (const connexion::ptr& cnx)
     ("WF-6590",    profile_matrix_1)
     //
     ("PID 1112",   profile_matrix_2)
+    ("PID 113C",   profile_matrix_2)
     //
     ("PID 1125",   profile_matrix_3)
     ("PID 1127",   profile_matrix_3)
