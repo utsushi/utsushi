@@ -547,6 +547,11 @@
 :usbid     "0x04b8" "0x112d"
 :status    :good
 
+:model     "PID 112F"
+:interface "USB"
+:usbid     "0x04b8" "0x112f"
+:status    :good
+
 :model     "PID 1130"
 :interface "USB"
 :usbid     "0x04b8" "0x1130"
@@ -597,3 +602,13 @@
 :usbid     "0x04b8" "0x113b"
 :status    :good
 :comment   "PX-Mxxx?"
+
+:model     "PID 113C"
+:interface "USB"
+:usbid     "0x04b8" "0x113c"
+:status    :good
+
+:model     "PID 1140"
+:interface "USB"
+:usbid     "0x04b8" "0x1140"
+:status    :good
