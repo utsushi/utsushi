@@ -1551,6 +1551,12 @@ extended_scanner::configure_color_correction ()
 
   static const matrix< double, 3 > profile_matrix_5 = mat;
 
+  mat[0][0] =  0.9864;  mat[0][1] =  0.0248;  mat[0][2] = -0.0112;
+  mat[1][0] =  0.0021;  mat[1][1] =  1.0100;  mat[1][2] = -0.0121;
+  mat[2][0] =  0.0139;  mat[2][1] = -0.1249;  mat[2][2] =  1.1110;
+
+  static const matrix< double, 3 > profile_matrix_6 = mat;
+
   static const std::map< std::string, const matrix< double, 3 > >
     profile_matrix = boost::assign::map_list_of
     ("PID 08C0", profile_matrix_1)
@@ -1591,10 +1597,16 @@ extended_scanner::configure_color_correction ()
     ("PID 1120", profile_matrix_4)
     ("PID 1121", profile_matrix_4)
     ("PID 1122", profile_matrix_4)
+    ("PID 113D", profile_matrix_4)
+    ("PID 113E", profile_matrix_4)
+    ("PID 113F", profile_matrix_4)
     //
     ("GT-S650",        profile_matrix_5)
     ("Perfection V19", profile_matrix_5)
     ("Perfection V39", profile_matrix_5)
+    //
+    ("PID 1142", profile_matrix_6)
+    ("PID 1143", profile_matrix_6)
     ;
 
   try {

@@ -75,6 +75,9 @@ DERIVED_COMPOUND_(compound_scanner, EP_30VA,
 DERIVED_COMPOUND_(compound_scanner, EP_8xxA,
                   void configure ();
 );
+DERIVED_COMPOUND_(compound_scanner, L3xxx,
+                  void configure ();
+);
 DERIVED_COMPOUND_(compound_scanner, EP_810A,
                   void configure ();
 );
