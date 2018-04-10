@@ -603,12 +603,33 @@
 :status    :good
 :comment   "PX-Mxxx?"
 
-:model     "PID 113C"
+:model     "PID 113D"
 :interface "USB"
-:usbid     "0x04b8" "0x113c"
+:usbid     "0x04b8" "0x113d"
+:status    :good
+
+:model     "PID 113E"
+:interface "USB"
+:usbid     "0x04b8" "0x113e"
+:status    :good
+
+:model     "PID 113F"
+:interface "USB"
+:usbid     "0x04b8" "0x113f"
 :status    :good
 
 :model     "PID 1140"
 :interface "USB"
 :usbid     "0x04b8" "0x1140"
 :status    :good
+
+:model     "PID 1142"
+:interface "USB"
+:usbid     "0x04b8" "0x1142"
+:status    :good
+
+:model     "PID 1143"
+:interface "USB"
+:usbid     "0x04b8" "0x1143"
+:status    :good
+:comment   "L3xxx?"
